@@ -1,4 +1,4 @@
-CFLAGS=-Ilibuv/include -I/usr/local/include/luvit/luajit -I/usr/local/include/luvit/http_parser -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -Werror -fPIC
+CFLAGS=-Ilibuv/include -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -Werror -fPIC
 LIBS=-lm -lpthread -lrt
 
 all: luv.so
