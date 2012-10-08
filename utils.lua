@@ -140,7 +140,7 @@ function utils.print(...)
     arguments[i] = tostring(arguments[i])
   end
 
-  io.stdout:write(table.concat(arguments, "\t") .. "\n")
+  utils.stdout:write(table.concat(arguments, "\t") .. "\n")
 end
 
 -- A nice global data dumper
@@ -152,7 +152,19 @@ function utils.prettyPrint(...)
     arguments[i] = utils.dump(arguments[i])
   end
 
-  io.stdout:write(table.concat(arguments, "\t") .. "\n")
+  utils.stdout:write(table.concat(arguments, "\t") .. "\n")
+end
+
+-- prettyprint to stderr
+function utils.debug(...)
+  local n = select('#', ...)
+  local arguments = { ... }
+
+  for i = 1, n do
+    arguments[i] = utils.dump(arguments[i])
+  end
+
+  utils.stderr:write(table.concat(arguments, "\t") .. "\n")
 end
 
 

@@ -1,4 +1,7 @@
-local p = require('utils').prettyPrint
+local utils = require('utils')
+local p = utils.prettyPrint
+local print = utils.print
+utils.stdout = io.stdout
 
 local luv = require('luv')
 
