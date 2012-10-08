@@ -5,4 +5,6 @@
 #include <lauxlib.h>
 #include "uv.h"
 
+void luv_setfuncs(lua_State *L, const luaL_Reg *l);
+
 #endif
