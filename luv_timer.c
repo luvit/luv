@@ -3,6 +3,7 @@
 #include "common.h"
 
 static int luv_start(lua_State* L) {
+  luaL_error(L, "TODO: Implement luv_listen");
   return 0;
 }
 

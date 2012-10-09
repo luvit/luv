@@ -7,8 +7,7 @@ static void on_close(uv_handle_t* handle) {
 }
 
 static int luv_close(lua_State* L) {
-  luaL_checktype(L, 1, LUA_TUSERDATA);
-  uv_handle_t* handle = (uv_handle_t*)lua_touserdata(L, 1);
+  uv_handle_t* handle = luv_get_handle(L, 1);
   fprintf(stderr, "close \tlhandle=%p handle=%p\n", handle->data, handle);
 
   if (uv_is_closing(handle)) {

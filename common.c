@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "common.h"
 
 // lua 5.1.x and 5.2.x compatable way to mass set functions on an object
@@ -8,3 +9,74 @@ void luv_setfuncs(lua_State *L, const luaL_Reg *l) {
   }
 }
 
+/* Initialize a new lhandle and push the new userdata on the stack. */
+static luv_handle_t* luv_handle_create(lua_State* L, size_t size, const char* type, int mask) {
+
+  /* Create the userdata and set it's metatable */
+  luv_handle_t* lhandle = (luv_handle_t*)lua_newuserdata(L, sizeof(luv_handle_t));
+  luaL_getmetatable(L, type);
+  lua_setmetatable(L, -2);
+
+  /* Create a local environment for storing stuff */
+  lua_newtable(L);
+  lua_setfenv (L, -2);
+
+  /* Initialize and return the lhandle */
+  lhandle->handle = (uv_handle_t*)malloc(size);
+  lhandle->handle->data = lhandle; /* Point back to lhandle from handle */
+  lhandle->refCount = 0;
+  lhandle->ref = LUA_NOREF;
+  lhandle->mask = mask;
+  lhandle->L = L;
+  printf("Created %s lhandle %p handle %p\n", type, lhandle, lhandle->handle);
+
+  /* if handle create in a coroutine, we need hold the coroutine */
+  if (lua_pushthread(L)) {
+    // L is mainthread
+    lua_pop(L, 1);
+    lhandle->threadref = LUA_NOREF;
+  } else {
+    lhandle->threadref = luaL_ref(L, LUA_REGISTRYINDEX);
+  }
+
+  return lhandle;
+}
+
+uv_timer_t* luv_create_timer(lua_State* L) {
+  luv_handle_t* lhandle = luv_handle_create(L, sizeof(uv_timer_t), "uv_timer", LUV_TIMER_MASK);
+  return (uv_timer_t*)lhandle->handle;
+}
+
+uv_tcp_t* luv_create_tcp(lua_State* L) {
+  luv_handle_t* lhandle = luv_handle_create(L, sizeof(uv_tcp_t), "uv_tcp", LUV_TCP_MASK);
+  return (uv_tcp_t*)lhandle->handle;
+}
+
+static luv_handle_t* luv_get_lhandle(lua_State* L, int index, int type) {
+  luaL_checktype(L, index, LUA_TUSERDATA);
+  luv_handle_t* lhandle = (luv_handle_t*)lua_touserdata(L, index);
+  if ((lhandle->mask & type) == 0) {
+    luaL_error(L, "Invalid type for userdata %d not in %d", type, lhandle->mask);
+  }
+  return lhandle;
+}
+
+uv_handle_t* luv_get_handle(lua_State* L, int index) {
+  luv_handle_t* lhandle = luv_get_lhandle(L, index, LUV_HANDLE);
+  return (uv_handle_t*)lhandle->handle;
+}
+
+uv_timer_t* luv_get_timer(lua_State* L, int index) {
+  luv_handle_t* lhandle = luv_get_lhandle(L, index, LUV_TIMER);
+  return (uv_timer_t*)lhandle->handle;
+}
+
+uv_stream_t* luv_get_stream(lua_State* L, int index) {
+  luv_handle_t* lhandle = luv_get_lhandle(L, index, LUV_STREAM);
+  return (uv_stream_t*)lhandle->handle;
+}
+
+uv_tcp_t* luv_get_tcp(lua_State* L, int index) {
+  luv_handle_t* lhandle = luv_get_lhandle(L, index, LUV_TCP);
+  return (uv_tcp_t*)lhandle->handle;
+}

@@ -11,6 +11,8 @@
 
 LUALIB_API int luaopen_luv (lua_State *L) {
 
+  luv_main_thread = L;
+
   // Create userdata metatables
   luaL_newmetatable(L, "uv_handle");
   luaL_newmetatable(L, "uv_timer");
