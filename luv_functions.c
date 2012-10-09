@@ -7,7 +7,7 @@ static int new_tcp(lua_State* L) {
   if (uv_tcp_init(uv_default_loop(), handle)) {
     luaL_error(L, "Problem initializing tcp handle %p", handle);
   }
-  fprintf(stderr, "new tcp \tlhandle=%p handle=%p\n", handle->data, handle);
+//  fprintf(stderr, "new tcp \tlhandle=%p handle=%p\n", handle->data, handle);
   return 1;
 }
 
@@ -16,7 +16,7 @@ static int new_timer(lua_State* L) {
   if (uv_timer_init(uv_default_loop(), handle)) {
     luaL_error(L, "Problem initializing timer handle %p", handle);
   }
-  fprintf(stderr, "new timer \tlhandle=%p handle=%p\n", handle->data, handle);
+//  fprintf(stderr, "new timer \tlhandle=%p handle=%p\n", handle->data, handle);
   return 1;
 }
 

@@ -4,6 +4,9 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include "uv.h"
+#include "stdlib.h"
+#include "assert.h"
+
 
 /* Unique type codes for each uv type */
 enum luv_type {
@@ -32,6 +35,12 @@ typedef struct {
   int mask;
 } luv_handle_t;
 
+typedef struct {
+  luv_handle_t* lhandle;
+  int data_ref;
+  int callback_ref;
+} luv_req_t;
+
 void luv_setfuncs(lua_State *L, const luaL_Reg *l);
 
 lua_State* luv_main_thread;
@@ -48,5 +57,8 @@ void luv_handle_ref(lua_State* L, luv_handle_t* lhandle, int index);
 void luv_handle_unref(lua_State* L, luv_handle_t* lhandle);
 
 lua_State* luv_prepare_event(luv_handle_t* lhandle);
+lua_State* luv_prepare_callback(luv_req_t* lreq);
+int luv_get_callback(lua_State* L, int index, const char* name);
+
 
 #endif

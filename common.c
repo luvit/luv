@@ -111,6 +111,7 @@ void luv_handle_unref(lua_State* L, luv_handle_t* lhandle) {
   }
 }
 
+// Get L from a lhandle (moving to the main thread if needed) and push the userdata on the stack.
 lua_State* luv_prepare_event(luv_handle_t* lhandle) {
   lua_State* L = lhandle->L;
   assert(lhandle->refCount); /* sanity check */
@@ -122,6 +123,33 @@ lua_State* luv_prepare_event(luv_handle_t* lhandle) {
   } else {
     luaL_error(L, "TODO: Implement moving to main thread before calling callback");
   }
+  return L;
+}
+
+// Get a named callback.  If it's there, push the function and the userdata on the stack.
+// otherwise leave the stack clean and return 0
+int luv_get_callback(lua_State* L, int index, const char* name) {
+  /* Get the connection handler */
+  lua_getfenv(L, index);
+  lua_getfield(L, -1, name);
+  lua_remove(L, -2);
+
+  int isfunc = lua_isfunction(L, -1);
+  if (isfunc) {
+    if (index < 0) index--; // Relative indexes need adjusting
+    lua_pushvalue(L, index);
+  } else {
+    lua_pop(L, 1); // Remove the non function from the stack.
+  }
+  return isfunc;
+}
+
+lua_State* luv_prepare_callback(luv_req_t* lreq) {
+  luv_handle_t* lhandle = lreq->lhandle;
+  lua_State* L = lhandle->L;
+  lua_rawgeti(L, LUA_REGISTRYINDEX, lreq->callback_ref);
+  luaL_unref(L, LUA_REGISTRYINDEX, lreq->data_ref);
+  luaL_unref(L, LUA_REGISTRYINDEX, lreq->callback_ref);
   return L;
 }
 

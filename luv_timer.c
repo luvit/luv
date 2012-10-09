@@ -4,18 +4,8 @@
 
 static void on_timeout(uv_timer_t* handle, int status) {
   lua_State* L = luv_prepare_event(handle->data);
-
-  /* Get the timeout handler */
-  lua_getfenv(L, -1);
-  lua_getfield(L, -1, "ontimeout");
-  lua_remove(L, -2);
-  
-  /* call it */
-  if (lua_isfunction(L, -1)) {
-    lua_pushvalue(L, -2); // set self to timer
+  if (luv_get_callback(L, -1, "ontimeout")) {
     lua_call(L, 1, 0);
-  } else {
-    lua_pop(L, 1);
   }
 }
 
