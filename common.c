@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <assert.h>
 #include "common.h"
 
 // lua 5.1.x and 5.2.x compatable way to mass set functions on an object
@@ -28,7 +29,7 @@ static luv_handle_t* luv_handle_create(lua_State* L, size_t size, const char* ty
   lhandle->ref = LUA_NOREF;
   lhandle->mask = mask;
   lhandle->L = L;
-  printf("Created %s lhandle %p handle %p\n", type, lhandle, lhandle->handle);
+//  printf("Created %s lhandle %p handle %p\n", type, lhandle, lhandle->handle);
 
   /* if handle create in a coroutine, we need hold the coroutine */
   if (lua_pushthread(L)) {
@@ -80,3 +81,47 @@ uv_tcp_t* luv_get_tcp(lua_State* L, int index) {
   luv_handle_t* lhandle = luv_get_lhandle(L, index, LUV_TCP);
   return (uv_tcp_t*)lhandle->handle;
 }
+
+/* This needs to be called when an async function is started on a lhandle. */
+void luv_handle_ref(lua_State* L, luv_handle_t* lhandle, int index) {
+//  printf("luv_handle_ref\t%d %p:%p\n", lhandle->mask, lhandle, lhandle->handle);
+  /* If it's inactive, store a ref. */
+  if (!lhandle->refCount) {
+    lua_pushvalue(L, index);
+    lhandle->ref = luaL_ref(L, LUA_REGISTRYINDEX);
+//    printf("makeStrong\t%d lhandle=%p handle=%p\n", lhandle->mask, lhandle, lhandle->handle);
+  }
+  lhandle->refCount++;
+}
+
+/* This needs to be called when an async callback fires on a lhandle. */
+void luv_handle_unref(lua_State* L, luv_handle_t* lhandle) {
+//  printf("luv_handle_unref\t%d %p:%p\n", lhandle->mask, lhandle, lhandle->handle);
+  lhandle->refCount--;
+  assert(lhandle->refCount >= 0);
+  /* If it's now inactive, clear the ref */
+  if (!lhandle->refCount) {
+    luaL_unref(L, LUA_REGISTRYINDEX, lhandle->ref);
+    if (lhandle->threadref != LUA_NOREF) {
+      luaL_unref(L, LUA_REGISTRYINDEX, lhandle->threadref);
+      lhandle->threadref = LUA_NOREF;
+    }
+    lhandle->ref = LUA_NOREF;
+//    printf("makeWeak\t%d lhandle=%p handle=%p\n", lhandle->mask, lhandle, lhandle->handle);
+  }
+}
+
+lua_State* luv_prepare_event(luv_handle_t* lhandle) {
+  lua_State* L = lhandle->L;
+  assert(lhandle->refCount); /* sanity check */
+  assert(lhandle->ref != LUA_NOREF); /* the ref should be there */
+  lua_rawgeti(L, LUA_REGISTRYINDEX, lhandle->ref);
+  if (lua_pushthread(L)) {
+    // in main thread, good
+    lua_pop(L, 1);
+  } else {
+    luaL_error(L, "TODO: Implement moving to main thread before calling callback");
+  }
+  return L;
+}
+

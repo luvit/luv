@@ -3,12 +3,25 @@
 #include "common.h"
 
 static void on_close(uv_handle_t* handle) {
-  fprintf(stderr, "on_close \tlhandle=%p handle=%p\n", handle->data, handle);
+  lua_State* L = luv_prepare_event(handle->data);
+
+  luv_handle_unref(L, handle->data);
+
+  lua_getfenv(L, -1);
+  lua_getfield(L, -1, "onclose");
+  lua_remove(L, -2);
+  
+  if (lua_isfunction(L, -1)) {
+    lua_pushvalue(L, -2); // push self
+    lua_call(L, 1, 0);
+  } else {
+    lua_pop(L, 1);
+  }
 }
 
 static int luv_close(lua_State* L) {
   uv_handle_t* handle = luv_get_handle(L, 1);
-  fprintf(stderr, "close \tlhandle=%p handle=%p\n", handle->data, handle);
+//  fprintf(stderr, "close \tlhandle=%p handle=%p\n", handle->data, handle);
 
   if (uv_is_closing(handle)) {
     fprintf(stderr, "WARNING: Handle already closing \tlhandle=%p handle=%p\n", handle->data, handle);
@@ -16,6 +29,7 @@ static int luv_close(lua_State* L) {
   }
 
   uv_close(handle, on_close);
+  luv_handle_ref(L, handle->data, 1);
   return 0;
 }
 

@@ -44,4 +44,9 @@ uv_timer_t* luv_get_timer(lua_State* L, int index);
 uv_stream_t* luv_get_stream(lua_State* L, int index);
 uv_tcp_t* luv_get_tcp(lua_State* L, int index);
 
+void luv_handle_ref(lua_State* L, luv_handle_t* lhandle, int index);
+void luv_handle_unref(lua_State* L, luv_handle_t* lhandle);
+
+lua_State* luv_prepare_event(luv_handle_t* lhandle);
+
 #endif

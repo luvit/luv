@@ -8,6 +8,14 @@
 #include "luv_tcp.c"
 
 
+int luv_newindex(lua_State* L) {
+  lua_getfenv(L, 1);
+  lua_pushvalue(L, 2);
+  lua_pushvalue(L, 3);
+  lua_rawset(L, -3);
+  lua_pop(L, 1);
+  return 0;
+}
 
 LUALIB_API int luaopen_luv (lua_State *L) {
 
@@ -52,10 +60,17 @@ LUALIB_API int luaopen_luv (lua_State *L) {
   lua_setfield(L, -2, "__index");
   lua_setmetatable(L, -2);
 
-  lua_setfield(L, -5, "__index");
-  lua_setfield(L, -5, "__index");
-  lua_setfield(L, -5, "__index");
-  lua_setfield(L, -5, "__index");
+  lua_setfield(L, -5, "__index"); // tcp
+  lua_pushcfunction(L, luv_newindex);
+  lua_setfield(L, -5, "__newindex");
+
+  lua_setfield(L, -5, "__index"); // stream
+
+  lua_setfield(L, -5, "__index"); // timer
+  lua_pushcfunction(L, luv_newindex);
+  lua_setfield(L, -5, "__newindex");
+
+  lua_setfield(L, -5, "__index"); // handle
 
   lua_pop(L, 4);
 

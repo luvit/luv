@@ -6,17 +6,52 @@ local luv = require('luv')
 
 p("luv", require('luv'))
 
-local timer = luv.newTimer()
+local function setTimeout(timeout, callback)
+  local timer = luv.newTimer()
+  function timer:ontimeout()
+    p("ontimeout", self)
+    timer:stop()
+    timer:close()
+    callback(self)
+  end
+  function timer:onclose()
+    p("ontimerclose", self)
+  end
+  timer:start(timeout, 0)
+  return timer
+end
 
-p("timer", timer)
-local timer_m = getmetatable(timer).__index
-p("timer_m", timer_m)
-local handle_m = getmetatable(timer_m).__index
-p("handle_m", handle_m)
+local function clearTimeout(timer)
+  timer:stop()
+  timer:close()
+end
 
-timer:close()
+local function setInterval(interval, callback)
+  local timer = luv.newTimer()
+  function timer:ontimeout()
+    p("interval", self)
+    callback(self)
+  end
+  function timer:onclose()
+    p("onintervalclose", self)
+  end
+  timer:start(interval, interval)
+  return timer
+end
+
+local clearInterval = clearTimeout
+
+local i = setInterval(300, function()
+  print("interval...")
+end)
+
+setTimeout(1000, function()
+  clearInterval(i)
+end)
+
+
 repeat
-  print("tick.")
+  print("\ntick.")
 until luv.runOnce() == 0
 
 print("done")
