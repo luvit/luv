@@ -2,14 +2,14 @@
 #define LIB_LUV_STREAM
 #include "common.h"
 
-uv_buf_t luv_on_alloc(uv_handle_t* handle, size_t suggested_size) {
+static uv_buf_t luv_on_alloc(uv_handle_t* handle, size_t suggested_size) {
   uv_buf_t buf;
   buf.base = malloc(suggested_size);
   buf.len = suggested_size;
   return buf;
 }
 
-void luv_on_read(uv_stream_t* handle, ssize_t nread, uv_buf_t buf) {
+static void luv_on_read(uv_stream_t* handle, ssize_t nread, uv_buf_t buf) {
   lua_State* L = luv_prepare_event(handle->data);
 
   if (nread >= 0) {
