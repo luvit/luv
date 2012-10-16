@@ -35,11 +35,8 @@ find_package(Threads REQUIRED)
 list(APPEND LIBS ${CMAKE_THREAD_LIBS_INIT})
 
 # build libuv
-message("submodule" "?")
 execute_process(WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-  COMMAND git submodule update --init libuv
-  OUTPUT_VARIABLE RC)
-message("submodule" "!")
+  COMMAND git submodule update --init libuv)
 file(COPY "${PROJECT_SOURCE_DIR}/cmake/uv/CMakeLists.txt"
   DESTINATION "${PROJECT_SOURCE_DIR}/libuv")
 add_subdirectory("${PROJECT_SOURCE_DIR}/libuv")
