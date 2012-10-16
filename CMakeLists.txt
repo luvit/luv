@@ -49,4 +49,8 @@ target_link_libraries(luv ${LIBS})
 set_target_properties(luv PROPERTIES PREFIX "")
 
 # install
-install(TARGETS luv LIBRARY DESTINATION "${INSTALL_CMOD}")
+if(INSTALL_CMOD)
+  install(TARGETS luv LIBRARY DESTINATION "${INSTALL_CMOD}")
+else()
+  message("WARNING: " "No install destination is given. Manually copy luv.so")
+endif()
