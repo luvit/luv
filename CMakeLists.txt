@@ -26,7 +26,7 @@ list(APPEND SOURCES
 )
 
 # find lua/luajit
-include(cmake/FindLua.cmake)
+include(FindLua.cmake)
 include_directories(${LUA_INCLUDE_DIR})
 list(APPEND LIBS ${LUA_LIBRARIES})
 
@@ -35,12 +35,8 @@ find_package(Threads REQUIRED)
 list(APPEND LIBS ${CMAKE_THREAD_LIBS_INIT})
 
 # build libuv
-execute_process(WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-  COMMAND git submodule update --init libuv)
-file(COPY "${PROJECT_SOURCE_DIR}/cmake/uv/CMakeLists.txt"
-  DESTINATION "${PROJECT_SOURCE_DIR}/libuv")
-add_subdirectory("${PROJECT_SOURCE_DIR}/libuv")
-include_directories("${PROJECT_SOURCE_DIR}/libuv/include")
+add_subdirectory("${PROJECT_SOURCE_DIR}/deps/libuv")
+include_directories("${PROJECT_SOURCE_DIR}/deps/libuv/include")
 list(APPEND LIBS uv rt)
 
 # build target module

@@ -1,7 +1,7 @@
 package = "luv"
 version = "scm-1"
 source = {
-  url = "git://github.com/creationix/luv.git"
+  url = "git://github.com/creationix/luv"
 }
 description = {
   summary  = "libuv binding for Lua",
