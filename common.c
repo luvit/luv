@@ -83,22 +83,24 @@ uv_tcp_t* luv_get_tcp(lua_State* L, int index) {
 }
 
 /* This needs to be called when an async function is started on a lhandle. */
-void luv_handle_ref(lua_State* L, luv_handle_t* lhandle, int index) {
+void luv_handle_ref(lua_State* L, luv_handle_t* lhandle, int index, const char *TAG) {
 //  printf("luv_handle_ref\t%d %p:%p\n", lhandle->mask, lhandle, lhandle->handle);
   /* If it's inactive, store a ref. */
+///printf("%s ref\t%d lhandle=%p handle=%p REFS{%d}\n", TAG, lhandle->mask, lhandle, lhandle->handle, lhandle->refCount);
   if (!lhandle->refCount) {
     lua_pushvalue(L, index);
     lhandle->ref = luaL_ref(L, LUA_REGISTRYINDEX);
-//    printf("makeStrong\t%d lhandle=%p handle=%p\n", lhandle->mask, lhandle, lhandle->handle);
+    //printf("makeStrong\t%d lhandle=%p handle=%p\n", lhandle->mask, lhandle, lhandle->handle);
   }
   lhandle->refCount++;
 }
 
 /* This needs to be called when an async callback fires on a lhandle. */
-void luv_handle_unref(lua_State* L, luv_handle_t* lhandle) {
+void luv_handle_unref(lua_State* L, luv_handle_t* lhandle, const char *TAG) {
 //  printf("luv_handle_unref\t%d %p:%p\n", lhandle->mask, lhandle, lhandle->handle);
   lhandle->refCount--;
   assert(lhandle->refCount >= 0);
+///printf("%s unref\t%d lhandle=%p handle=%p REFS{%d}\n", TAG, lhandle->mask, lhandle, lhandle->handle, lhandle->refCount);
   /* If it's now inactive, clear the ref */
   if (!lhandle->refCount) {
     luaL_unref(L, LUA_REGISTRYINDEX, lhandle->ref);
@@ -107,7 +109,7 @@ void luv_handle_unref(lua_State* L, luv_handle_t* lhandle) {
       lhandle->threadref = LUA_NOREF;
     }
     lhandle->ref = LUA_NOREF;
-//    printf("makeWeak\t%d lhandle=%p handle=%p\n", lhandle->mask, lhandle, lhandle->handle);
+    //printf("makeWeak\t%d lhandle=%p handle=%p\n", lhandle->mask, lhandle, lhandle->handle);
   }
 }
 
@@ -148,7 +150,9 @@ lua_State* luv_prepare_callback(luv_req_t* lreq) {
   luv_handle_t* lhandle = lreq->lhandle;
   lua_State* L = lhandle->L;
   lua_rawgeti(L, LUA_REGISTRYINDEX, lreq->callback_ref);
-  luaL_unref(L, LUA_REGISTRYINDEX, lreq->data_ref);
+  if (lreq->data_ref != LUA_NOREF) {
+    luaL_unref(L, LUA_REGISTRYINDEX, lreq->data_ref);
+  }
   luaL_unref(L, LUA_REGISTRYINDEX, lreq->callback_ref);
   return L;
 }

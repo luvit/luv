@@ -16,13 +16,13 @@ static int luv_timer_start(lua_State* L) {
   if (uv_timer_start(handle, on_timeout, timeout, repeat)) {
     luaL_error(L, "Problem starting timer");
   }
-  luv_handle_ref(L, handle->data, 1);
+  luv_handle_ref(L, handle->data, 1, "TIMER_START");
   return 0;
 }
 
 static int luv_timer_stop(lua_State* L) {
   uv_timer_t* handle = luv_get_timer(L, 1);
-  luv_handle_unref(L, handle->data);
+  luv_handle_unref(L, handle->data, "TIMER_STOP");
   if (uv_timer_stop(handle)) {
     luaL_error(L, "Problem stopping timer");
   }

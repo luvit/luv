@@ -50,7 +50,7 @@ static void luv_after_write(uv_write_t* req, int status) {
     lua_pop(L, 1);
   }
 
-  luv_handle_unref(L, req->handle->data);
+  luv_handle_unref(L, req->handle->data, "AFTER_WRITE");
   free(req->data);
   free(req);
 }
@@ -63,7 +63,7 @@ static void luv_after_shutdown(uv_shutdown_t* req, int status) {
     lua_pop(L, 1);
   }
 
-  luv_handle_unref(L, req->handle->data);
+  luv_handle_unref(L, req->handle->data, "AFTER_SHUTDOWN");
   free(req->data);
   free(req);
 }
@@ -71,13 +71,13 @@ static void luv_after_shutdown(uv_shutdown_t* req, int status) {
 static int luv_read_start(lua_State* L) {
   uv_stream_t* handle = luv_get_stream(L, 1);
   uv_read_start(handle, luv_on_alloc, luv_on_read);
-  luv_handle_ref(L, handle->data, 1);
+  luv_handle_ref(L, handle->data, 1, "READ_START");
   return 0;
 }
 
 static int luv_read_stop(lua_State* L) {
   uv_stream_t* handle = luv_get_stream(L, 1);
-  luv_handle_unref(L, handle->data);
+  luv_handle_unref(L, handle->data, "READ_STOP");
   uv_read_stop(handle);
   return 0;
 }
@@ -90,7 +90,7 @@ static int luv_listen(lua_State* L) {
     luaL_error(L, "Problem listening");
   }
 
-  luv_handle_ref(L, handle->data, 1);
+  luv_handle_ref(L, handle->data, 1, "LISTEN");
   return 0;
 }
 
@@ -125,13 +125,15 @@ static int luv_write(lua_State* L) {
   lua_pushvalue(L, 3);
   lreq->callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-  luv_handle_ref(L, handle->data, 1);
+  luv_handle_ref(L, handle->data, 1, "WRITE");
 
   uv_write(req, handle, &buf, 1, luv_after_write);
   return 0;
 }
 
 static int luv_shutdown(lua_State* L) {
+  luv_read_stop(L);
+
   uv_stream_t* handle = luv_get_stream(L, 1);
 
   uv_shutdown_t* req = (uv_shutdown_t*)malloc(sizeof(uv_shutdown_t));
@@ -144,7 +146,7 @@ static int luv_shutdown(lua_State* L) {
   lua_pushvalue(L, 2);
   lreq->callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-  luv_handle_ref(L, handle->data, 1);
+  luv_handle_ref(L, handle->data, 1, "SHUTDOWN");
 
   uv_shutdown(req, handle, luv_after_shutdown);
 

@@ -10,7 +10,7 @@ static void luv_after_connect(uv_connect_t* req, int status) {
     lua_pop(L, 1);
   }
 
-  luv_handle_unref(L, req->handle->data);
+  luv_handle_unref(L, req->handle->data, "AFTER_CONNECT");
   free(req->data);
   free(req);
 }
@@ -129,7 +129,7 @@ static int luv_tcp_connect(lua_State* L) {
   lua_pushvalue(L, 4);
   lreq->callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-  luv_handle_ref(L, handle->data, 1);
+  luv_handle_ref(L, handle->data, 1, "CONNECT");
   return 0;
 }
 

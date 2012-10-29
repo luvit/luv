@@ -5,7 +5,7 @@
 static void on_close(uv_handle_t* handle) {
   lua_State* L = luv_prepare_event(handle->data);
 
-  luv_handle_unref(L, handle->data);
+  luv_handle_unref(L, handle->data, "HANDLE_ON_CLOSE");
 
   lua_getfenv(L, -1);
   lua_getfield(L, -1, "onclose");
@@ -29,7 +29,7 @@ static int luv_close(lua_State* L) {
   }
 
   uv_close(handle, on_close);
-  luv_handle_ref(L, handle->data, 1);
+  luv_handle_ref(L, handle->data, 1, "HANDLE_CLOSE");
   return 0;
 }
 
