@@ -1,7 +1,7 @@
 CFLAGS=-Ilibuv/include -I/usr/local/include/luajit-2.0 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -Wall -Werror -fPIC
 LIBS=-lm -lpthread -lrt
 
-all: luv.so
+all: direct.so
 
 libuv/libuv.a:
 	CPPFLAGS=-fPIC $(MAKE) -C libuv
@@ -12,8 +12,14 @@ common.o: common.c common.h
 luv.o: luv.c luv.h luv_functions.c luv_handle.c luv_stream.c luv_tcp.c luv_timer.c
 	$(CC) -c $< -o $@ ${CFLAGS}
 
+direct.o: direct.c direct.h
+	$(CC) -c $< -o $@ ${CFLAGS}
+
 luv.so: luv.o libuv/libuv.a common.o
 	$(CC) -o luv.so luv.o libuv/libuv.a common.o ${LIBS} -shared
+
+direct.so: direct.o libuv/libuv.a common.o
+	$(CC) -o direct.so direct.o libuv/libuv.a common.o ${LIBS} -shared
 
 clean:
 	rm -f *.so *.o
