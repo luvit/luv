@@ -11,7 +11,9 @@ static uv_buf_t luv_on_alloc(uv_handle_t* handle, size_t suggested_size) {
 
 static void luv_on_read(uv_stream_t* handle, ssize_t nread, uv_buf_t buf) {
   lua_State* L = luv_prepare_event(handle->data);
-
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L) - 1;
+#endif
   if (nread >= 0) {
 
     if (luv_get_callback(L, -1, "ondata")) {
@@ -30,21 +32,36 @@ static void luv_on_read(uv_stream_t* handle, ssize_t nread, uv_buf_t buf) {
       assert(0);
     }
   }
+  /* Release the userdata */
+  lua_pop(L, 1);
 
   free(buf.base);
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
 }
 
 static void luv_on_connection(uv_stream_t* handle, int status) {
   lua_State* L = luv_prepare_event(handle->data);
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L) - 1;
+#endif
   if (luv_get_callback(L, -1, "onconnection")) {
     lua_call(L, 1, 0);
   }
+  lua_pop(L, 1);
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
 }
 
 static void luv_after_write(uv_write_t* req, int status) {
   lua_State* L = luv_prepare_callback(req->data);
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L) - 1;
+#endif
   if (lua_isfunction(L, -1)) {
-     lua_call(L, 0, 0);
+    lua_call(L, 0, 0);
   } else {
     lua_pop(L, 1);
   }
@@ -52,12 +69,18 @@ static void luv_after_write(uv_write_t* req, int status) {
   luv_handle_unref(L, req->handle->data);
   free(req->data);
   free(req);
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
 }
 
 static void luv_after_shutdown(uv_shutdown_t* req, int status) {
   lua_State* L = luv_prepare_callback(req->data);
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L) - 1;
+#endif
   if (lua_isfunction(L, -1)) {
-     lua_call(L, 0, 0);
+    lua_call(L, 0, 0);
   } else {
     lua_pop(L, 1);
   }
@@ -65,23 +88,41 @@ static void luv_after_shutdown(uv_shutdown_t* req, int status) {
   luv_handle_unref(L, req->handle->data);
   free(req->data);
   free(req);
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
 }
 
 static int luv_read_start(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
   uv_stream_t* handle = luv_get_stream(L, 1);
   uv_read_start(handle, luv_on_alloc, luv_on_read);
   luv_handle_ref(L, handle->data, 1);
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
   return 0;
 }
 
 static int luv_read_stop(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
   uv_stream_t* handle = luv_get_stream(L, 1);
   luv_handle_unref(L, handle->data);
   uv_read_stop(handle);
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
   return 0;
 }
 
 static int luv_listen(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
   uv_stream_t* handle = luv_get_stream(L, 1);
   int backlog_size = luaL_optint(L, 2, 128);
 
@@ -90,19 +131,31 @@ static int luv_listen(lua_State* L) {
   }
 
   luv_handle_ref(L, handle->data, 1);
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
   return 0;
 }
 
 static int luv_accept(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
   uv_stream_t* server = luv_get_stream(L, 1);
   uv_stream_t* client = luv_get_stream(L, 2);
   if (uv_accept(server, client)) {
     luaL_error(L, "Problem accepting client");
   }
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
   return 0;
 }
 
 static int luv_write(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
   uv_stream_t* handle = luv_get_stream(L, 1);
 
   size_t len;
@@ -127,10 +180,16 @@ static int luv_write(lua_State* L) {
   luv_handle_ref(L, handle->data, 1);
 
   uv_write(req, handle, &buf, 1, luv_after_write);
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
   return 0;
 }
 
 static int luv_shutdown(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
   uv_stream_t* handle = luv_get_stream(L, 1);
 
   uv_shutdown_t* req = (uv_shutdown_t*)malloc(sizeof(uv_shutdown_t));
@@ -147,18 +206,33 @@ static int luv_shutdown(lua_State* L) {
 
   uv_shutdown(req, handle, luv_after_shutdown);
 
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
   return 0;
 }
 
 static int luv_is_readable(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
   uv_stream_t* handle = luv_get_stream(L, 1);
   lua_pushboolean(L, uv_is_readable(handle));
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top + 1);
+#endif
   return 1;
 }
 
 static int luv_is_writable(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
   uv_stream_t* handle = luv_get_stream(L, 1);
   lua_pushboolean(L, uv_is_writable(handle));
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top + 1);
+#endif
   return 1;
 }
 

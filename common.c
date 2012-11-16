@@ -114,6 +114,9 @@ void luv_handle_unref(lua_State* L, luv_handle_t* lhandle) {
 // Get L from a lhandle (moving to the main thread if needed) and push the userdata on the stack.
 lua_State* luv_prepare_event(luv_handle_t* lhandle) {
   lua_State* L = lhandle->L;
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
   assert(lhandle->refCount); /* sanity check */
   assert(lhandle->ref != LUA_NOREF); /* the ref should be there */
   lua_rawgeti(L, LUA_REGISTRYINDEX, lhandle->ref);
@@ -123,6 +126,9 @@ lua_State* luv_prepare_event(luv_handle_t* lhandle) {
   } else {
     luaL_error(L, "TODO: Implement moving to main thread before calling callback");
   }
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top + 1);
+#endif
   return L;
 }
 
@@ -144,12 +150,20 @@ int luv_get_callback(lua_State* L, int index, const char* name) {
   return isfunc;
 }
 
+/* returns the lua_State* and pushes the callback onto the stack */
+/* STACK +1 */
 lua_State* luv_prepare_callback(luv_req_t* lreq) {
   luv_handle_t* lhandle = lreq->lhandle;
   lua_State* L = lhandle->L;
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
   lua_rawgeti(L, LUA_REGISTRYINDEX, lreq->callback_ref);
   luaL_unref(L, LUA_REGISTRYINDEX, lreq->data_ref);
   luaL_unref(L, LUA_REGISTRYINDEX, lreq->callback_ref);
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top + 1);
+#endif
   return L;
 }
 
