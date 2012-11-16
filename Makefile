@@ -3,7 +3,7 @@ LIBS=-lm -lpthread -lrt
 
 all: luv.so
 
-libuvlibuv.a:
+libuv/libuv.a:
 	CPPFLAGS=-fPIC $(MAKE) -C libuv
 
 common.o: common.c common.h
