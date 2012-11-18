@@ -4,6 +4,9 @@
 
 static void luv_after_connect(uv_connect_t* req, int status) {
   lua_State* L = luv_prepare_callback(req->data);
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L) - 1;
+#endif
   if (lua_isfunction(L, -1)) {
      lua_call(L, 0, 0);
   } else {
@@ -13,9 +16,15 @@ static void luv_after_connect(uv_connect_t* req, int status) {
   luv_handle_unref(L, req->handle->data);
   free(req->data);
   free(req);
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
 }
 
 static int luv_tcp_bind(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
   uv_tcp_t* handle = luv_get_tcp(L, 1);
   const char* host = luaL_checkstring(L, 2);
   int port = luaL_checkint(L, 3);
@@ -26,10 +35,16 @@ static int luv_tcp_bind(lua_State* L) {
     luaL_error(L, "Problem binding");
   }
 
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
   return 0;
 }
 
 static int luv_tcp_getsockname(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
   uv_tcp_t* handle = luv_get_tcp(L, 1);
   int port = 0;
   char ip[INET6_ADDRSTRLEN];
@@ -62,12 +77,17 @@ static int luv_tcp_getsockname(lua_State* L) {
   lua_pushstring(L, ip);
   lua_setfield(L, -2, "address");
 
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top + 1);
+#endif
   return 1;
-
 }
 
 
 static int luv_tcp_getpeername(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
   uv_tcp_t* handle = luv_get_tcp(L, 1);
   int port = 0;
   char ip[INET6_ADDRSTRLEN];
@@ -100,10 +120,16 @@ static int luv_tcp_getpeername(lua_State* L) {
   lua_pushstring(L, ip);
   lua_setfield(L, -2, "address");
 
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top + 1);
+#endif
   return 1;
 }
 
 static int luv_tcp_connect(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
   uv_tcp_t* handle = luv_get_tcp(L, 1);
 
   const char* ip_address = luaL_checkstring(L, 2);
@@ -130,6 +156,9 @@ static int luv_tcp_connect(lua_State* L) {
   lreq->callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
   luv_handle_ref(L, handle->data, 1);
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
   return 0;
 }
 
