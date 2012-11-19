@@ -160,10 +160,6 @@ static int luv_write(lua_State* L) {
 #endif
   uv_stream_t* handle = luv_get_stream(L, 1);
 
-  size_t len;
-  const char* chunk = luaL_checklstring(L, 2, &len);
-  uv_buf_t buf = uv_buf_init((char*)chunk, len);
-
   uv_write_t* req = (uv_write_t*)malloc(sizeof(uv_write_t));
   luv_req_t* lreq = (luv_req_t*)malloc(sizeof(luv_req_t));
 
@@ -181,7 +177,26 @@ static int luv_write(lua_State* L) {
 
   luv_handle_ref(L, handle->data, 1);
 
-  uv_write(req, handle, &buf, 1, luv_after_write);
+  if (lua_istable(L, 2)) {
+    int length, i;
+    uv_buf_t* bufs;
+    length = lua_objlen(L, 2);
+    bufs = (uv_buf_t*)malloc(sizeof(uv_buf_t) * length);
+    for (i = 0; i < length; i++) {
+      lua_rawgeti(L, 2, i + 1);
+      size_t len;
+      const char* chunk = luaL_checklstring(L, -1, &len);
+      bufs[i] = uv_buf_init((char*)chunk, len);
+      lua_pop(L, 1);
+    }
+    uv_write(req, handle, bufs, length, luv_after_write);
+  }
+  else {
+    size_t len;
+    const char* chunk = luaL_checklstring(L, 2, &len);
+    uv_buf_t buf = uv_buf_init((char*)chunk, len);
+    uv_write(req, handle, &buf, 1, luv_after_write);
+  }
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
 #endif
