@@ -23,11 +23,13 @@ static void luv_on_read(uv_stream_t* handle, ssize_t nread, uv_buf_t buf) {
 
   } else {
     uv_err_t err = uv_last_error(uv_default_loop());
+    uv_close((uv_handle_t*)handle, NULL);
     if (err.code == UV_EOF) {
       if (luv_get_callback(L, -1, "onend")) {
         lua_call(L, 1, 0);
       }
-    } else {
+    } else if (err.code != UV_ECONNRESET) {
+      /* TODO: route reset events somewhere so the user knows about them */
       fprintf(stderr, "TODO: Implement async error handling\n");
       assert(0);
     }
