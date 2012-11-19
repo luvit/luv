@@ -190,6 +190,8 @@ static int luv_write(lua_State* L) {
       lua_pop(L, 1);
     }
     uv_write(req, handle, bufs, length, luv_after_write);
+    /* TODO: find out if it's safe to free this soon */
+    free(bufs);
   }
   else {
     size_t len;
