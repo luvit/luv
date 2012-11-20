@@ -5,7 +5,7 @@
 static void on_close(uv_handle_t* handle) {
   lua_State* L = luv_prepare_event(handle->data);
 #ifdef LUV_STACK_CHECK
-  int top = lua_gettop(L) - 1;
+  int top = lua_gettop(L);
 #endif
 
   luv_handle_unref(L, handle->data);
