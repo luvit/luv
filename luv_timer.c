@@ -10,6 +10,7 @@ static void on_timeout(uv_timer_t* handle, int status) {
   if (luv_get_callback(L, -1, "ontimeout")) {
     lua_call(L, 1, 0);
   }
+  lua_pop(L, 1);
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
 #endif
