@@ -7,18 +7,8 @@ static void on_close(uv_handle_t* handle) {
 #ifdef LUV_STACK_CHECK
   int top = lua_gettop(L) - 1;
 #endif
-
-  luv_handle_unref(L, handle->data);
-
-  lua_getfenv(L, -1);
-  lua_getfield(L, -1, "onclose");
-  lua_remove(L, -2);
-
-  if (lua_isfunction(L, -1)) {
-    lua_pushvalue(L, -2); // push self
+  if (luv_get_callback(L, -1, "onclose")) {
     lua_call(L, 1, 0);
-  } else {
-    lua_pop(L, 1);
   }
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
