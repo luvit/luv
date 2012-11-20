@@ -150,7 +150,6 @@ int luv_get_callback(lua_State* L, int index, const char* name) {
   } else {
     lua_pop(L, 1); // Remove the non function from the stack.
   }
-  printf("lua_gettop(L)=%d top=%d isfunc=%d\n", lua_gettop(L), top, isfunc);
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top + (isfunc ? 2 : 0));
 #endif
