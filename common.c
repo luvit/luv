@@ -132,9 +132,12 @@ lua_State* luv_prepare_event(luv_handle_t* lhandle) {
   return L;
 }
 
-// Get a named callback.  If it's there, push the function and the userdata on the stack.
+// Get a named callback.  If it's there, push the function on the stack.
 // otherwise leave the stack clean and return 0
 int luv_get_callback(lua_State* L, int index, const char* name) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
   /* Get the connection handler */
   lua_getfenv(L, index);
   lua_getfield(L, -1, name);
@@ -147,6 +150,9 @@ int luv_get_callback(lua_State* L, int index, const char* name) {
   } else {
     lua_pop(L, 1); // Remove the non function from the stack.
   }
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top + (isfunc ? 1 : 0));
+#endif
   return isfunc;
 }
 
