@@ -10,6 +10,7 @@ static void on_close(uv_handle_t* handle) {
   if (luv_get_callback(L, -1, "onclose")) {
     lua_call(L, 1, 0);
   }
+  lua_pop(L, 1);
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
 #endif
