@@ -20,6 +20,17 @@ static int new_timer(lua_State* L) {
   return 1;
 }
 
+static int new_tty(lua_State* L) {
+  uv_tty_t* handle = luv_create_tty(L);
+  uv_file fd = luaL_checkint(L, 1);
+  int readable = lua_toboolean(L, 2);
+  if (uv_tty_init(uv_default_loop(), handle, fd, readable)) {
+    luaL_error(L, "Problem initializing tty handle %p", handle);
+  }
+//  fprintf(stderr, "new timer \tlhandle=%p handle=%p\n", handle->data, handle);
+  return 1;
+}
+
 static int luv_run_once(lua_State* L) {
   int ret = uv_run_once(uv_default_loop());
   lua_pushinteger(L, ret);
@@ -64,14 +75,15 @@ static int luv_now(lua_State* L) {
 }
 
 static const luaL_reg luv_functions[] = {
-  {"newTcp", new_tcp},
-  {"newTimer", new_timer},
+  {"new_tcp", new_tcp},
+  {"new_timer", new_timer},
+  {"new_tty", new_tty},
   {"run", luv_run},
-  {"runOnce", luv_run_once},
-  {"guessHandle", luv_guess_handle},
+  {"run_once", luv_run_once},
+  {"guess_handle", luv_guess_handle},
   {"ref", luv_ref},
   {"unref", luv_unref},
-  {"updateTime", luv_update_time},
+  {"update_time", luv_update_time},
   {"now", luv_now},
   {NULL, NULL}
 };
