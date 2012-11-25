@@ -162,12 +162,54 @@ static int luv_tcp_connect(lua_State* L) {
   return 0;
 }
 
+/* Enable/disable Nagle's algorithm. */
+static int luv_tcp_nodelay(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
+  uv_tcp_t* handle = luv_get_tcp(L, 1);
+  luaL_checkany(L, 2);
+  int enable = lua_toboolean(L, 2);
+  if (uv_tcp_nodelay(handle, enable)) {
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "tcp_nodelay: %s", uv_strerror(err));
+  }
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
+  return 0;
+}
+
+/* Enable/disable TCP keep-alive. */
+static int luv_tcp_keepalive(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
+  uv_tcp_t* handle = luv_get_tcp(L, 1);
+  luaL_checkany(L, 2);
+  int enable = lua_toboolean(L, 2);
+  unsigned int delay;
+  if (enable) {
+    delay = luaL_checkint(L, 3);
+  }
+  if (uv_tcp_keepalive(handle, enable, delay)) {
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "tcp_keepalive: %s", uv_strerror(err));
+  }
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
+  return 0;
+}
+
 
 static const luaL_reg luv_tcp_m[] = {
   {"bind", luv_tcp_bind},
   {"getsockname", luv_tcp_getsockname},
   {"getpeername", luv_tcp_getpeername},
   {"connect", luv_tcp_connect},
+  {"nodelay", luv_tcp_nodelay},
+  {"keepalive", luv_tcp_keepalive},
   {NULL, NULL}
 };
 
