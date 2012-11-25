@@ -43,6 +43,25 @@ static int luv_guess_handle(lua_State* L) {
   return 1;
 }
 
+static int luv_ref(lua_State* L) {
+  uv_ref(luv_get_handle(L, 1));
+  return 0;
+}
+
+static int luv_unref(lua_State* L) {
+  uv_unref(luv_get_handle(L, 1));
+  return 0;
+}
+
+static int luv_update_time(lua_State* L) {
+  uv_update_time(uv_default_loop());
+  return 0;
+}
+
+static int luv_now(lua_State* L) {
+  lua_pushnumber(L, uv_now(uv_default_loop()));
+  return 1;
+}
 
 static const luaL_reg luv_functions[] = {
   {"newTcp", new_tcp},
@@ -50,6 +69,10 @@ static const luaL_reg luv_functions[] = {
   {"run", luv_run},
   {"runOnce", luv_run_once},
   {"guessHandle", luv_guess_handle},
+  {"ref", luv_ref},
+  {"unref", luv_unref},
+  {"updateTime", luv_update_time},
+  {"now", luv_now},
   {NULL, NULL}
 };
 
