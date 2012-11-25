@@ -131,18 +131,6 @@ function utils.dump(o, depth)
   return tostring(o)
 end
 
--- Replace print
-function utils.print(...)
-  local n = select('#', ...)
-  local arguments = { ... }
-
-  for i = 1, n do
-    arguments[i] = tostring(arguments[i])
-  end
-
-  utils.stdout:write(table.concat(arguments, "\t") .. "\n")
-end
-
 -- A nice global data dumper
 function utils.prettyPrint(...)
   local n = select('#', ...)
@@ -152,7 +140,7 @@ function utils.prettyPrint(...)
     arguments[i] = utils.dump(arguments[i])
   end
 
-  utils.stdout:write(table.concat(arguments, "\t") .. "\n")
+  io.stdout:write(table.concat(arguments, "\t") .. "\n")
 end
 
 -- prettyprint to stderr
@@ -164,31 +152,8 @@ function utils.debug(...)
     arguments[i] = utils.dump(arguments[i])
   end
 
-  utils.stderr:write(table.concat(arguments, "\t") .. "\n")
+  io.stderr:write(table.concat(arguments, "\t") .. "\n")
 end
-
 
 return utils
 
---print("nil", utils.dump(nil))
-
---print("number", utils.dump(42))
-
---print("boolean", utils.dump(true), utils.dump(false))
-
---print("string", dump("\"Hello\""), dump("world\nwith\r\nnewlines\r\t\n"))
-
---print("funct", dump(print))
-
---print("table", dump({
---  ["nil"] = nil,
---  ["8"] = 8,
---  ["number"] = 42,
---  ["boolean"] = true,
---  ["table"] = {age = 29, name="Tim"},
---  ["string"] = "Another String",
---  ["function"] = dump,
---  ["thread"] = coroutine.create(dump),
---  [print] = {{"deep"},{{"nesting"}},3,4,5},
---  [{1,2,3}] = {4,5,6}
---}))

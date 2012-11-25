@@ -1,77 +1,76 @@
 local utils = require('utils')
 local p = utils.prettyPrint
-local print = utils.print
-utils.stdout = io.stdout
 
-local serverPort = os.getenv("IP") or "0.0.0.0"
+local port = os.getenv("IP") or "0.0.0.0"
 
-local luv = require('luv')
+local uv = require('luv')
 
-local function createServer(host, port, onConnection)
-  local server = luv.newTcp()
-  server:bind(host, port)
+local function create_server(host, port, on_connection)
+  local server = uv.new_tcp()
+  p(1, server)
+  uv.tcp_bind(server, host, port)
   function server:onconnection()
-    local client = luv.newTcp()
-    server:accept(client)
-    onConnection(client)
+    local client = uv.new_tcp()
+    uv.accept(server, client)
+    on_connection(client)
   end
-  server:listen()
+  uv.listen(server)
   return server
 end
 
-local server = createServer(serverPort, 0, function (client)
-  p("new client", client, client:getsockname(), client:getpeername())
+
+local server = create_server(port, 0, function (client)
+  p("new client", client, uv.tcp_getsockname(client), uv.tcp_getpeername(client))
   function client:ondata(chunk)
     p("ondata", chunk)
-    client:write(chunk, function ()
+    uv.write(client, chunk, function ()
       p("written", chunk)
     end)
   end
   function client:onend()
     p("onend")
-    client:shutdown(function ()
+    uv.shutdown(client, function ()
       p("onshutdown")
-      client:close()
+      uv.close(client)
     end)
   end
   function client:onclose()
     p("client onclose")
   end
-  client:readStart()
+  uv.read_start(client)
 end)
 function server:onclose()
   p("server closed")
 end
-local serverAddress = server:getsockname()
-p("server", server, serverAddress)
+local address = uv.tcp_getsockname(server)
+p("server", server, address)
 
-local client = luv.newTcp()
-client:connect(serverAddress.address, serverAddress.port, function ()
-  client:readStart()
+local client = uv.new_tcp()
+uv.tcp_connect(client, address.address, address.port, function ()
+  uv.read_start(client)
   p("writing from client")
   function client:ondata(chunk)
     p("received at client", chunk)
-    client:shutdown(function ()
+    uv.shutdown(client, function ()
       p("client done shutting down")
     end)
   end
   function client:onend()
     p("client received end")
-    client:close()
+    uv.close(client)
   end
   function client:onclose()
     p("client closed")
-    server:close()
+    uv.close(server)
   end
-  client:write("Hello")
-  client:write("World", function ()
+  uv.write(client, "Hello")
+  uv.write(client, "World", function ()
     p("written from client")
   end)
 
 end)
 repeat
   print("\nTick..")
-until luv.runOnce() == 0
+until uv.run_once() == 0
 
 print("done")
-

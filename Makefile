@@ -9,7 +9,7 @@ libuv/libuv.a:
 common.o: common.c common.h
 	$(CC) -c $< -o $@ ${CFLAGS}
 
-luv.o: luv.c luv.h luv_functions.c luv_handle.c luv_stream.c luv_tcp.c luv_timer.c
+luv.o: luv.c luv.h luv_functions.c
 	$(CC) -c $< -o $@ ${CFLAGS}
 
 luv.so: luv.o libuv/libuv.a common.o

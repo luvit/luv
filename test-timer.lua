@@ -1,33 +1,29 @@
-local utils = require('utils')
-local p = utils.prettyPrint
-utils.stdout = io.stdout
+local p = require('utils').prettyPrint
 
-local luv = require('luv')
+local uv = require('luv')
 
-p("luv", require('luv'))
-
-local function setTimeout(timeout, callback)
-  local timer = luv.newTimer()
+local function set_timeout(timeout, callback)
+  local timer = uv.new_timer()
   function timer:ontimeout()
     p("ontimeout", self)
-    timer:stop()
-    timer:close()
+    uv.timer_stop(timer)
+    uv.close(timer)
     callback(self)
   end
   function timer:onclose()
     p("ontimerclose", self)
   end
-  timer:start(timeout, 0)
+  uv.timer_start(timer, timeout, 0)
   return timer
 end
 
-local function clearTimeout(timer)
-  timer:stop()
-  timer:close()
+local function clear_timeout(timer)
+  uv.timer_stop(timer)
+  uv.close(timer)
 end
 
-local function setInterval(interval, callback)
-  local timer = luv.newTimer()
+local function set_interval(interval, callback)
+  local timer = uv.new_timer()
   function timer:ontimeout()
     p("interval", self)
     callback(self)
@@ -35,24 +31,24 @@ local function setInterval(interval, callback)
   function timer:onclose()
     p("onintervalclose", self)
   end
-  timer:start(interval, interval)
+  uv.timer_start(timer, interval, interval)
   return timer
 end
 
-local clearInterval = clearTimeout
+local clear_interval = clear_timeout
 
-local i = setInterval(300, function()
+local i = set_interval(300, function()
   print("interval...")
 end)
 
-setTimeout(1000, function()
-  clearInterval(i)
+set_timeout(1000, function()
+  clear_interval(i)
 end)
 
 
 repeat
   print("\ntick.")
-until luv.runOnce() == 0
+until uv.run_once() == 0
 
 print("done")
 

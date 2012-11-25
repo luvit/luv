@@ -11,11 +11,11 @@ void luv_setfuncs(lua_State *L, const luaL_Reg *l) {
 }
 
 /* Initialize a new lhandle and push the new userdata on the stack. */
-static luv_handle_t* luv_handle_create(lua_State* L, size_t size, const char* type, int mask) {
+static luv_handle_t* luv_handle_create(lua_State* L, size_t size, int mask) {
 
   /* Create the userdata and set it's metatable */
   luv_handle_t* lhandle = (luv_handle_t*)lua_newuserdata(L, sizeof(luv_handle_t));
-  luaL_getmetatable(L, type);
+  luaL_getmetatable(L, "luv_handle");
   lua_setmetatable(L, -2);
 
   /* Create a local environment for storing stuff */
@@ -44,18 +44,23 @@ static luv_handle_t* luv_handle_create(lua_State* L, size_t size, const char* ty
 }
 
 uv_timer_t* luv_create_timer(lua_State* L) {
-  luv_handle_t* lhandle = luv_handle_create(L, sizeof(uv_timer_t), "uv_timer", LUV_TIMER_MASK);
+  luv_handle_t* lhandle = luv_handle_create(L, sizeof(uv_timer_t), LUV_TIMER_MASK);
   return (uv_timer_t*)lhandle->handle;
 }
 
 uv_tcp_t* luv_create_tcp(lua_State* L) {
-  luv_handle_t* lhandle = luv_handle_create(L, sizeof(uv_tcp_t), "uv_tcp", LUV_TCP_MASK);
+  luv_handle_t* lhandle = luv_handle_create(L, sizeof(uv_tcp_t), LUV_TCP_MASK);
   return (uv_tcp_t*)lhandle->handle;
+}
+
+uv_tty_t* luv_create_tty(lua_State* L) {
+  luv_handle_t* lhandle = luv_handle_create(L, sizeof(uv_tty_t), LUV_TTY_MASK);
+  return (uv_tty_t*)lhandle->handle;
 }
 
 static luv_handle_t* luv_get_lhandle(lua_State* L, int index, int type) {
   luaL_checktype(L, index, LUA_TUSERDATA);
-  luv_handle_t* lhandle = (luv_handle_t*)lua_touserdata(L, index);
+  luv_handle_t* lhandle = (luv_handle_t*)luaL_checkudata(L, index, "luv_handle");
   if ((lhandle->mask & type) == 0) {
     luaL_error(L, "Invalid type for userdata %d not in %d", type, lhandle->mask);
   }
@@ -80,6 +85,11 @@ uv_stream_t* luv_get_stream(lua_State* L, int index) {
 uv_tcp_t* luv_get_tcp(lua_State* L, int index) {
   luv_handle_t* lhandle = luv_get_lhandle(L, index, LUV_TCP);
   return (uv_tcp_t*)lhandle->handle;
+}
+
+uv_tty_t* luv_get_tty(lua_State* L, int index) {
+  luv_handle_t* lhandle = luv_get_lhandle(L, index, LUV_TTY);
+  return (uv_tty_t*)lhandle->handle;
 }
 
 /* This needs to be called when an async function is started on a lhandle. */
