@@ -31,11 +31,25 @@ static int luv_run(lua_State* L) {
   return 0;
 }
 
+static int luv_guess_handle(lua_State* L) {
+  uv_file file = luaL_checkint(L, 1);
+  switch (uv_guess_handle(file)) {
+#define XX(uc, lc) case UV_##uc: lua_pushstring(L, #uc); break;
+  UV_HANDLE_TYPE_MAP(XX)
+#undef XX
+    case UV_FILE: lua_pushstring(L, "FILE"); break;
+    default: lua_pushstring(L, "UNKNOWN"); break;
+  }
+  return 1;
+}
+
+
 static const luaL_reg luv_functions[] = {
   {"newTcp", new_tcp},
   {"newTimer", new_timer},
   {"run", luv_run},
   {"runOnce", luv_run_once},
+  {"guessHandle", luv_guess_handle},
   {NULL, NULL}
 };
 
