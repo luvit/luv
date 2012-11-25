@@ -617,6 +617,45 @@ static int luv_tcp_keepalive(lua_State* L) {
 
 /******************************************************************************/
 
+static int luv_tty_set_mode(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
+  uv_tty_t* handle = luv_get_tty(L, 1);
+  int mode = luaL_checkint(L, 2);
+  if (uv_tty_set_mode(handle, mode)) {
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "tty_set_mode: %s", uv_strerror(err));
+  }
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
+  return 0;
+}
+
+static int luv_tty_reset_mode(lua_State* L) {
+  uv_tty_reset_mode();
+  return 0;
+}
+
+static int luv_tty_get_winsize(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
+  uv_tty_t* handle = luv_get_tty(L, 1);
+  int width, height;
+  if(uv_tty_get_winsize(handle, &width, &height)) {
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "tty_get_winsize: %s", uv_strerror(err));
+  }
+  lua_pushinteger(L, width);
+  lua_pushinteger(L, height);
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top + 2);
+#endif
+  return 2;
+}
+
 /******************************************************************************/
 
 static const luaL_reg luv_functions[] = {
@@ -652,6 +691,10 @@ static const luaL_reg luv_functions[] = {
   {"tcp_connect", luv_tcp_connect},
   {"tcp_nodelay", luv_tcp_nodelay},
   {"tcp_keepalive", luv_tcp_keepalive},
+
+  {"tty_set_mode", luv_tty_set_mode},
+  {"tty_reset_mode", luv_tty_reset_mode},
+  {"tty_get_winsize", luv_tty_get_winsize},
 
   {NULL, NULL}
 };
