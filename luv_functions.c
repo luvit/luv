@@ -434,8 +434,8 @@ static int luv_write(lua_State* L) {
 #endif
   uv_stream_t* handle = luv_get_stream(L, 1);
 
-  uv_write_t* req = (uv_write_t*)malloc(sizeof(uv_write_t));
-  luv_req_t* lreq = (luv_req_t*)malloc(sizeof(luv_req_t));
+  uv_write_t* req = malloc(sizeof(*req));
+  luv_req_t* lreq = malloc(sizeof(*lreq));
 
   req->data = (void*)lreq;
 
@@ -453,9 +453,8 @@ static int luv_write(lua_State* L) {
 
   if (lua_istable(L, 2)) {
     int length, i;
-    uv_buf_t* bufs;
     length = lua_objlen(L, 2);
-    bufs = (uv_buf_t*)malloc(sizeof(uv_buf_t) * length);
+    uv_buf_t* bufs = malloc(sizeof(uv_buf_t) * length);
     for (i = 0; i < length; i++) {
       lua_rawgeti(L, 2, i + 1);
       size_t len;
@@ -485,8 +484,8 @@ static int luv_shutdown(lua_State* L) {
 #endif
   uv_stream_t* handle = luv_get_stream(L, 1);
 
-  uv_shutdown_t* req = (uv_shutdown_t*)malloc(sizeof(uv_shutdown_t));
-  luv_req_t* lreq = (luv_req_t*)malloc(sizeof(luv_req_t));
+  uv_shutdown_t* req = malloc(sizeof(*req));
+  luv_req_t* lreq = malloc(sizeof(*lreq));
 
   req->data = (void*)lreq;
 
@@ -667,8 +666,8 @@ static int luv_tcp_connect(lua_State* L) {
 
   struct sockaddr_in address = uv_ip4_addr(ip_address, port);
 
-  uv_connect_t* req = (uv_connect_t*)malloc(sizeof(uv_connect_t));
-  luv_req_t* lreq = (luv_req_t*)malloc(sizeof(luv_req_t));
+  uv_connect_t* req = malloc(sizeof(*req));
+  luv_req_t* lreq = malloc(sizeof(*lreq));
 
   req->data = (void*)lreq;
 
@@ -832,8 +831,8 @@ static int luv_pipe_connect(lua_State* L) {
   uv_pipe_t* handle = luv_get_pipe(L, 1);
   const char* name = luaL_checkstring(L, 2);
 
-  uv_connect_t* req = (uv_connect_t*)malloc(sizeof(uv_connect_t));
-  luv_req_t* lreq = (luv_req_t*)malloc(sizeof(luv_req_t));
+  uv_connect_t* req = malloc(sizeof(*req));
+  luv_req_t* lreq = malloc(sizeof(*lreq));
   req->data = (void*)lreq;
   lreq->lhandle = handle->data;
 
@@ -1016,7 +1015,7 @@ static void on_fs(uv_fs_t *req) {
 }
 
 #define FS_CALL(func, index, ...)                                              \
-  uv_fs_t* req = (uv_fs_t*)malloc(sizeof(uv_fs_t));                            \
+  uv_fs_t* req = malloc(sizeof(*req));                                         \
   if (lua_isnone(L, index)) {                                                  \
     if (uv_fs_##func(uv_default_loop(), req, __VA_ARGS__, NULL) < 0) {         \
       push_fs_error(L, req);                                                   \
@@ -1030,7 +1029,7 @@ static void on_fs(uv_fs_t *req) {
     return argc;                                                               \
   }                                                                            \
   luaL_checktype(L, index, LUA_TFUNCTION);                                     \
-  luv_callback_t* callback = (luv_callback_t*)malloc(sizeof(luv_callback_t));  \
+  luv_callback_t* callback = malloc(sizeof(*callback));                        \
   callback->L = L;                                                             \
   lua_pushvalue(L, index);                                                     \
   callback->ref = luaL_ref(L, LUA_REGISTRYINDEX);                              \
@@ -1047,7 +1046,7 @@ static void on_fs(uv_fs_t *req) {
 // TODO: get this into libuv itself, there is no reason it couldn't store this
 // for us.
 #define FS_CALL2(func, index, ...)                                             \
-  uv_fs_t* req = (uv_fs_t*)malloc(sizeof(uv_fs_t));                            \
+  uv_fs_t* req = malloc(sizeof(*req));                                         \
   if (lua_isnone(L, index)) {                                                  \
     if (uv_fs_##func(uv_default_loop(), req, __VA_ARGS__, NULL) < 0) {         \
       push_fs_error(L, req);                                                   \
@@ -1062,7 +1061,7 @@ static void on_fs(uv_fs_t *req) {
     return argc;                                                               \
   }                                                                            \
   luaL_checktype(L, index, LUA_TFUNCTION);                                     \
-  luv_callback_t* callback = (luv_callback_t*)malloc(sizeof(luv_callback_t));  \
+  luv_callback_t* callback = malloc(sizeof(*callback));                        \
   callback->L = L;                                                             \
   lua_pushvalue(L, index);                                                     \
   callback->ref = luaL_ref(L, LUA_REGISTRYINDEX);                              \
@@ -1096,7 +1095,7 @@ static int luv_fs_read(lua_State* L) {
   if (!lua_isnil(L, 3)) {
     offset = luaL_checkint(L, 3);
   }
-  char* buffer = (char*)malloc(length + 1);
+  char* buffer = malloc(length + 1);
   FS_CALL2(read, 4, file, buffer, length, offset);
 }
 
@@ -1104,7 +1103,7 @@ static int luv_fs_write(lua_State* L) {
   uv_file file = luaL_checkint(L, 1);
   size_t length;
   const char* string = luaL_checklstring(L, 2, &length);
-  char* buffer = (char*)malloc(length + 1);
+  char* buffer = malloc(length + 1);
   uv_strlcpy(buffer, string, length + 1);
   off_t offset = -1;
   if (!lua_isnil(L, 3)) {
