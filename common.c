@@ -193,3 +193,14 @@ lua_State* luv_prepare_callback(luv_req_t* lreq) {
   return L;
 }
 
+void luv_call(lua_State *C, int nargs, int nresults) {
+  // Get the main thread to compare with C
+  lua_getfield(C, LUA_REGISTRYINDEX, "MAINTHREAD");
+  lua_State* L = lua_tothread(C, -1);
+  lua_pop(C, 1);
+  if (L != C) {
+    // Move the function call to the main thread if it's in a coroutine
+    lua_xmove(C, L, 1 + nargs);
+  }
+  lua_call(L, nargs, nresults);
+}

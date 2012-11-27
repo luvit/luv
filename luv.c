@@ -51,9 +51,12 @@ static int luv_tostring(lua_State* L) {
   return 1;
 }
 
+
 LUALIB_API int luaopen_luv (lua_State *L) {
 
-  luv_main_thread = L;
+  // Store the main thread
+  assert(lua_pushthread(L));
+  lua_setfield(L, LUA_REGISTRYINDEX, "MAINTHREAD");
 
   luaL_newmetatable(L, "luv_handle");
   lua_pushcfunction(L, luv_newindex);

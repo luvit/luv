@@ -242,7 +242,7 @@ static void on_close(uv_handle_t* handle) {
   int top = lua_gettop(L) - 1;
 #endif
   if (luv_get_callback(L, -1, "onclose")) {
-    lua_call(L, 1, 0);
+    luv_call(L, 1, 0);
   }
   lua_pop(L, 1);
 #ifdef LUV_STACK_CHECK
@@ -345,7 +345,7 @@ static void on_timeout(uv_timer_t* handle, int status) {
   int top = lua_gettop(L) - 1;
 #endif
   if (luv_get_callback(L, -1, "ontimeout")) {
-    lua_call(L, 1, 0);
+    luv_call(L, 1, 0);
   }
   lua_pop(L, 1);
 #ifdef LUV_STACK_CHECK
@@ -447,14 +447,14 @@ static void luv_on_read(uv_stream_t* handle, ssize_t nread, uv_buf_t buf) {
 
     if (luv_get_callback(L, -1, "ondata")) {
       lua_pushlstring (L, buf.base, nread);
-      lua_call(L, 2, 0);
+      luv_call(L, 2, 0);
     }
 
   } else {
     uv_err_t err = uv_last_error(uv_default_loop());
     if (err.code == UV_EOF) {
       if (luv_get_callback(L, -1, "onend")) {
-        lua_call(L, 1, 0);
+        luv_call(L, 1, 0);
       }
     } else if (err.code != UV_ECONNRESET) {
       uv_close((uv_handle_t*)handle, NULL);
@@ -478,7 +478,7 @@ static void luv_on_connection(uv_stream_t* handle, int status) {
   int top = lua_gettop(L) - 1;
 #endif
   if (luv_get_callback(L, -1, "onconnection")) {
-    lua_call(L, 1, 0);
+    luv_call(L, 1, 0);
   }
   lua_pop(L, 1);
 #ifdef LUV_STACK_CHECK
@@ -492,7 +492,7 @@ static void luv_after_write(uv_write_t* req, int status) {
   int top = lua_gettop(L) - 1;
 #endif
   if (lua_isfunction(L, -1)) {
-    lua_call(L, 0, 0);
+    luv_call(L, 0, 0);
   } else {
     lua_pop(L, 1);
   }
@@ -511,7 +511,7 @@ static void luv_after_shutdown(uv_shutdown_t* req, int status) {
   int top = lua_gettop(L) - 1;
 #endif
   if (lua_isfunction(L, -1)) {
-    lua_call(L, 0, 0);
+    luv_call(L, 0, 0);
   } else {
     lua_pop(L, 1);
   }
@@ -693,7 +693,7 @@ static void luv_after_connect(uv_connect_t* req, int status) {
   int top = lua_gettop(L) - 1;
 #endif
   if (lua_isfunction(L, -1)) {
-     lua_call(L, 0, 0);
+     luv_call(L, 0, 0);
   } else {
     lua_pop(L, 1);
   }
@@ -1168,7 +1168,7 @@ static void on_fs(uv_fs_t *req) {
   uv_fs_req_cleanup(req);
   free(req);
 
-  lua_call(L, argc, 0);
+  luv_call(L, argc, 0);
 }
 
 #define FS_CALL(func, index, ...)                                              \
