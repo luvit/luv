@@ -5,7 +5,8 @@
 static int new_tcp(lua_State* L) {
   uv_tcp_t* handle = luv_create_tcp(L);
   if (uv_tcp_init(uv_default_loop(), handle)) {
-    luaL_error(L, "Problem initializing tcp handle %p", handle);
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "new_tcp: %s", uv_strerror(err));
   }
 //  fprintf(stderr, "new tcp \tlhandle=%p handle=%p\n", handle->data, handle);
   return 1;
@@ -14,7 +15,8 @@ static int new_tcp(lua_State* L) {
 static int new_timer(lua_State* L) {
   uv_timer_t* handle = luv_create_timer(L);
   if (uv_timer_init(uv_default_loop(), handle)) {
-    luaL_error(L, "Problem initializing timer handle %p", handle);
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "new_timer: %s", uv_strerror(err));
   }
 //  fprintf(stderr, "new timer \tlhandle=%p handle=%p\n", handle->data, handle);
   return 1;
@@ -25,9 +27,20 @@ static int new_tty(lua_State* L) {
   uv_file fd = luaL_checkint(L, 1);
   int readable = lua_toboolean(L, 2);
   if (uv_tty_init(uv_default_loop(), handle, fd, readable)) {
-    luaL_error(L, "Problem initializing tty handle %p", handle);
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "new_tty: %s", uv_strerror(err));
   }
 //  fprintf(stderr, "new timer \tlhandle=%p handle=%p\n", handle->data, handle);
+  return 1;
+}
+
+static int new_pipe(lua_State* L) {
+  uv_pipe_t* handle = luv_create_pipe(L);
+  int ipc = lua_toboolean(L, 1);
+  if (uv_pipe_init(uv_default_loop(), handle, ipc)) {
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "new_pipe: %s", uv_strerror(err));
+  }
   return 1;
 }
 
@@ -116,15 +129,17 @@ static void on_walk(uv_handle_t* handle, void* arg) {
   lua_State* L = callback->L;
   /* Get the callback and push the type */
   lua_rawgeti(L, LUA_REGISTRYINDEX, callback->ref);
-  switch (handle->type) {
-#define XX(uc, lc) case UV_##uc: lua_pushstring(L, #uc); break;
-  UV_HANDLE_TYPE_MAP(XX)
-#undef XX
-    default: lua_pushstring(L, "UNKNOWN"); break;
-  }
   luv_handle_t* lhandle = (luv_handle_t*)handle->data;
   assert(L == lhandle->L); // Make sure the lua states match
   lua_rawgeti(L, LUA_REGISTRYINDEX, lhandle->ref);
+
+  switch (lhandle->handle->type) {
+#define XX(uc, lc) case UV_##uc: lua_pushfstring(L, "uv_%s_t: %p", #lc, lhandle->handle); break;
+  UV_HANDLE_TYPE_MAP(XX)
+#undef XX
+    default: lua_pushfstring(L, "userdata: %p", lhandle->handle); break;
+  }
+
   lua_call(L, 2, 0);
 }
 
@@ -158,6 +173,11 @@ static int luv_ref(lua_State* L) {
 static int luv_unref(lua_State* L) {
   uv_unref(luv_get_handle(L, 1));
   return 0;
+}
+
+static int luv_is_closing(lua_State* L) {
+  lua_pushboolean(L, uv_is_closing(luv_get_handle(L, 1)));
+  return 1;
 }
 
 /******************************************************************************/
@@ -625,6 +645,22 @@ static int luv_tcp_connect(lua_State* L) {
   return 0;
 }
 
+static int luv_tcp_open(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
+  uv_tcp_t* handle = luv_get_tcp(L, 1);
+  uv_os_sock_t sock = luaL_checkint(L, 2);
+  if (uv_tcp_open(handle, sock)) {
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "tcp_open: %s", uv_strerror(err));
+  }
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
+  return 0;
+}
+
 /* Enable/disable Nagle's algorithm. */
 static int luv_tcp_nodelay(lua_State* L) {
 #ifdef LUV_STACK_CHECK
@@ -642,6 +678,8 @@ static int luv_tcp_nodelay(lua_State* L) {
 #endif
   return 0;
 }
+
+
 
 /* Enable/disable TCP keep-alive. */
 static int luv_tcp_keepalive(lua_State* L) {
@@ -708,10 +746,70 @@ static int luv_tty_get_winsize(lua_State* L) {
 
 /******************************************************************************/
 
+static int luv_pipe_open(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
+  uv_pipe_t* handle = luv_get_pipe(L, 1);
+  uv_file file = luaL_checkint(L, 2);
+  if (uv_pipe_open(handle, file)) {
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "pipe_open: %s", uv_strerror(err));
+  }
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
+  return 0;
+}
+
+static int luv_pipe_bind(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
+  uv_pipe_t* handle = luv_get_pipe(L, 1);
+  const char* name = luaL_checkstring(L, 2);
+  if (uv_pipe_bind(handle, name)) {
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "pipe_name: %s", uv_strerror(err));
+  }
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
+  return 0;
+}
+
+static int luv_pipe_connect(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
+  uv_pipe_t* handle = luv_get_pipe(L, 1);
+  const char* name = luaL_checkstring(L, 2);
+
+  uv_connect_t* req = (uv_connect_t*)malloc(sizeof(uv_connect_t));
+  luv_req_t* lreq = (luv_req_t*)malloc(sizeof(luv_req_t));
+  req->data = (void*)lreq;
+  lreq->lhandle = handle->data;
+
+  uv_pipe_connect(req, handle, name, luv_after_connect);
+
+  lreq->data_ref = LUA_NOREF;
+  lua_pushvalue(L, 3);
+  lreq->callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+  luv_handle_ref(L, handle->data, 1);
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
+  return 0;
+}
+
+/******************************************************************************/
+
 static const luaL_reg luv_functions[] = {
   {"new_tcp", new_tcp},
   {"new_timer", new_timer},
   {"new_tty", new_tty},
+  {"new_pipe", new_pipe},
   {"run", luv_run},
   {"run_once", luv_run_once},
   {"guess_handle", luv_guess_handle},
@@ -723,6 +821,7 @@ static const luaL_reg luv_functions[] = {
   {"close", luv_close},
   {"ref", luv_ref},
   {"unref", luv_unref},
+  {"is_closing", luv_is_closing},
 
   {"timer_start", luv_timer_start},
   {"timer_stop", luv_timer_stop},
@@ -741,12 +840,17 @@ static const luaL_reg luv_functions[] = {
   {"tcp_getsockname", luv_tcp_getsockname},
   {"tcp_getpeername", luv_tcp_getpeername},
   {"tcp_connect", luv_tcp_connect},
+  {"tcp_open", luv_tcp_open},
   {"tcp_nodelay", luv_tcp_nodelay},
   {"tcp_keepalive", luv_tcp_keepalive},
 
   {"tty_set_mode", luv_tty_set_mode},
   {"tty_reset_mode", luv_tty_reset_mode},
   {"tty_get_winsize", luv_tty_get_winsize},
+
+  {"pipe_open", luv_pipe_open},
+  {"pipe_bind", luv_pipe_bind},
+  {"pipe_connect", luv_pipe_connect},
 
   {NULL, NULL}
 };
