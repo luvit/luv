@@ -948,9 +948,8 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
       return 1;
 
     case UV_FS_READ:
-      fprintf(stderr, "TODO: Implement read handler\n");
-      //lua_pushlstring(L, ref->buf, req->result);
-      return 0;
+      lua_pushlstring(L, req->ptr, req->result);
+      return 1;
 
     case UV_FS_READDIR:
       {
@@ -1044,6 +1043,39 @@ static void on_fs(uv_fs_t *req) {
   }                                                                            \
   return 0;                                                                    \
 
+// HACK: Hacked version that patches req->ptr to hold buffer
+// TODO: get this into libuv itself, there is no reason it couldn't store this
+// for us.
+#define FS_CALL2(func, index, ...)                                             \
+  uv_fs_t* req = (uv_fs_t*)malloc(sizeof(uv_fs_t));                            \
+  if (lua_isnone(L, index)) {                                                  \
+    if (uv_fs_##func(uv_default_loop(), req, __VA_ARGS__, NULL) < 0) {         \
+      push_fs_error(L, req);                                                   \
+      uv_fs_req_cleanup(req);                                                  \
+      free(req);                                                               \
+      return lua_error(L);                                                     \
+    }                                                                          \
+    req->ptr = buffer;                                              /* HACK */ \
+    int argc = push_fs_result(L, req);                                         \
+    uv_fs_req_cleanup(req);                                                    \
+    free(req);                                                                 \
+    return argc;                                                               \
+  }                                                                            \
+  luaL_checktype(L, index, LUA_TFUNCTION);                                     \
+  luv_callback_t* callback = (luv_callback_t*)malloc(sizeof(luv_callback_t));  \
+  callback->L = L;                                                             \
+  lua_pushvalue(L, index);                                                     \
+  callback->ref = luaL_ref(L, LUA_REGISTRYINDEX);                              \
+  req->data = (void*)callback;                                                 \
+  if (uv_fs_##func(uv_default_loop(), req, __VA_ARGS__, on_fs) < 0) {          \
+    push_fs_error(L, req);                                                     \
+    uv_fs_req_cleanup(req);                                                    \
+    free(req);                                                                 \
+    return lua_error(L);                                                       \
+  }                                                                            \
+  req->ptr = buffer;                                                /* HACK */ \
+  return 0;                                                                    \
+
 
 static int luv_fs_open(lua_State* L) {
   const char* path = luaL_checkstring(L, 1);
@@ -1058,37 +1090,28 @@ static int luv_fs_close(lua_State* L) {
 }
 
 static int luv_fs_read(lua_State* L) {
-  return luaL_error(L, "TODO: implement luv_fs_read");
-//  uv_file file = luaL_checkint(L, 1);
-//  int offset = -1;
-//  int length;
-//  uv_fs_t* req;
-//  void* buf;
-//  if (!lua_isnil(L, 2)) {
-//    offset = luaL_checkint(L, 2);
-//  }
-//  length = luaL_checkint(L, 3);
-//  req = luv_fs_store_callback(L, 4);
-//  buf = malloc(length);
-//  ((luv_fs_ref_t*)req->data)->buf = buf;
-//  FS_CALL(read, 4, NULL, file, buf, length, offset);
+  uv_file file = luaL_checkint(L, 1);
+  size_t length = luaL_checkint(L, 2);
+  off_t offset = -1;
+  if (!lua_isnil(L, 3)) {
+    offset = luaL_checkint(L, 3);
+  }
+  char* buffer = (char*)malloc(length + 1);
+  FS_CALL2(read, 4, file, buffer, length, offset);
 }
 
 static int luv_fs_write(lua_State* L) {
-  return luaL_error(L, "TODO: implement luv_fs_write");
-//  uv_file file = luaL_checkint(L, 1);
-//  off_t offset = luaL_checkint(L, 2);
-//  size_t length;
-//  uv_fs_t* req;
-//  void* chunk = (void*)luaL_checklstring(L, 3, &length);
-//  luv_fs_ref_t* ref = luv_fs_ref_alloc(L);
-//  luv_io_ctx_init(&ref->cbs);
-//  luv_io_ctx_add(L, &ref->cbs, 3);
-//  luv_io_ctx_callback_add(L, &ref->cbs, 4);
-//  req = &ref->fs_req;
-//  FS_CALL(write, 4, NULL, file, chunk, length, offset);
+  uv_file file = luaL_checkint(L, 1);
+  size_t length;
+  const char* string = luaL_checklstring(L, 2, &length);
+  char* buffer = (char*)malloc(length + 1);
+  uv_strlcpy(buffer, string, length + 1);
+  off_t offset = -1;
+  if (!lua_isnil(L, 3)) {
+    offset = luaL_checkint(L, 3);
+  }
+  FS_CALL2(write, 4, file, buffer, length, offset);
 }
-
 
 static int luv_fs_unlink(lua_State* L) {
   const char* path = luaL_checkstring(L, 1);
@@ -1110,7 +1133,6 @@ static int luv_fs_readdir(lua_State* L) {
   const char* path = luaL_checkstring(L, 1);
   FS_CALL(readdir, 2, path, 0);
 }
-
 
 static int luv_fs_stat(lua_State* L) {
   const char* path = luaL_checkstring(L, 1);
