@@ -204,7 +204,8 @@ static int luv_timer_start(lua_State* L) {
   int64_t timeout = luaL_checkinteger(L, 2);
   int64_t repeat = luaL_checkinteger(L, 3);
   if (uv_timer_start(handle, on_timeout, timeout, repeat)) {
-    luaL_error(L, "Problem starting timer");
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "timer_start: %s", uv_strerror(err));
   }
   luv_handle_ref(L, handle->data, 1);
 #ifdef LUV_STACK_CHECK
@@ -220,13 +221,56 @@ static int luv_timer_stop(lua_State* L) {
   uv_timer_t* handle = luv_get_timer(L, 1);
   luv_handle_unref(L, handle->data);
   if (uv_timer_stop(handle)) {
-    luaL_error(L, "Problem stopping timer");
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "timer_stop: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
 #endif
   return 0;
 }
+
+static int luv_timer_again(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
+  uv_timer_t* handle = luv_get_timer(L, 1);
+  if (uv_timer_again(handle)) {
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "timer_again: %s", uv_strerror(err));
+  }
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
+  return 0;
+}
+
+static int luv_timer_set_repeat(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
+  uv_timer_t* handle = luv_get_timer(L, 1);
+  int64_t repeat = luaL_checkint(L, 2);
+  uv_timer_set_repeat(handle, repeat);
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
+  return 0;
+}
+
+static int luv_timer_get_repeat(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
+  uv_timer_t* handle = luv_get_timer(L, 1);
+  lua_pushinteger(L, uv_timer_get_repeat(handle));
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top + 1);
+#endif
+  return 1;
+}
+
+
 
 /******************************************************************************/
 
@@ -357,7 +401,8 @@ static int luv_listen(lua_State* L) {
   int backlog_size = luaL_optint(L, 2, 128);
 
   if (uv_listen(handle, backlog_size, luv_on_connection)) {
-    luaL_error(L, "Problem listening");
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "listen: %s", uv_strerror(err));
   }
 
   luv_handle_ref(L, handle->data, 1);
@@ -374,7 +419,8 @@ static int luv_accept(lua_State* L) {
   uv_stream_t* server = luv_get_stream(L, 1);
   uv_stream_t* client = luv_get_stream(L, 2);
   if (uv_accept(server, client)) {
-    luaL_error(L, "Problem accepting client");
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "accept: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
@@ -515,7 +561,8 @@ static int luv_tcp_bind(lua_State* L) {
   struct sockaddr_in address = uv_ip4_addr(host, port);
 
   if (uv_tcp_bind(handle, address)) {
-    luaL_error(L, "Problem binding");
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "tcp_bind: %s", uv_strerror(err));
   }
 
 #ifdef LUV_STACK_CHECK
@@ -825,6 +872,9 @@ static const luaL_reg luv_functions[] = {
 
   {"timer_start", luv_timer_start},
   {"timer_stop", luv_timer_stop},
+  {"timer_again", luv_timer_again},
+  {"timer_set_repeat", luv_timer_set_repeat},
+  {"timer_get_repeat", luv_timer_get_repeat},
 
   {"write", luv_write},
   {"shutdown", luv_shutdown},
