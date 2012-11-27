@@ -85,7 +85,6 @@ static int luv_close(lua_State* L) {
   int top = lua_gettop(L);
 #endif
   uv_handle_t* handle = luv_get_handle(L, 1);
-//  fprintf(stderr, "close \tlhandle=%p handle=%p\n", handle->data, handle);
 
   if (uv_is_closing(handle)) {
     fprintf(stderr, "WARNING: Handle already closing \tlhandle=%p handle=%p\n", handle->data, handle);
@@ -94,6 +93,57 @@ static int luv_close(lua_State* L) {
 
   uv_close(handle, on_close);
   luv_handle_ref(L, handle->data, 1);
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
+  return 0;
+}
+
+static int luv_is_active(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
+  uv_handle_t* handle = luv_get_handle(L, 1);
+  lua_pushboolean(L, uv_is_active(handle));
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top + 1);
+#endif
+  return 1;
+}
+
+static void on_walk(uv_handle_t* handle, void* arg) {
+  luv_callback_t* callback = (luv_callback_t*)arg;
+  lua_State* L = callback->L;
+  /* Get the callback and push the type */
+  lua_rawgeti(L, LUA_REGISTRYINDEX, callback->ref);
+  switch (handle->type) {
+#define XX(uc, lc) case UV_##uc: lua_pushstring(L, #uc); break;
+  UV_HANDLE_TYPE_MAP(XX)
+#undef XX
+    default: lua_pushstring(L, "UNKNOWN"); break;
+  }
+  luv_handle_t* lhandle = (luv_handle_t*)handle->data;
+  assert(L == lhandle->L); // Make sure the lua states match
+  lua_rawgeti(L, LUA_REGISTRYINDEX, lhandle->ref);
+  lua_call(L, 2, 0);
+}
+
+static int luv_walk(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
+  luaL_checktype(L, 1, LUA_TFUNCTION);
+  luv_callback_t callback;
+  /* Store the callback as a ref */
+  callback.L = L;
+  lua_pushvalue(L, 1);
+  callback.ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+  /* Walk the list */
+  uv_walk(uv_default_loop(), on_walk, &callback);
+
+  /* unref the callback */
+  luaL_unref(L, LUA_REGISTRYINDEX, callback.ref);
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
 #endif
@@ -668,6 +718,8 @@ static const luaL_reg luv_functions[] = {
   {"update_time", luv_update_time},
   {"now", luv_now},
 
+  {"is_active", luv_is_active},
+  {"walk", luv_walk},
   {"close", luv_close},
   {"ref", luv_ref},
   {"unref", luv_unref},

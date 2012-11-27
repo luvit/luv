@@ -43,6 +43,11 @@ typedef struct {
   int callback_ref;
 } luv_req_t;
 
+typedef struct {
+  lua_State* L;
+  int ref;
+} luv_callback_t;
+
 void luv_setfuncs(lua_State *L, const luaL_Reg *l);
 
 lua_State* luv_main_thread;
