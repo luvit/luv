@@ -1,6 +1,14 @@
 #ifndef LIB_LUV_COMMON
 #define LIB_LUV_COMMON
 
+#ifndef PATH_MAX
+#define PATH_MAX (8096)
+#endif
+
+#ifndef MAX_TITLE_LENGTH
+#define MAX_TITLE_LENGTH (8192)
+#endif
+
 #include <lua.h>
 #include <lauxlib.h>
 #include "uv.h"
@@ -50,6 +58,7 @@ typedef struct {
   int ref;
 } luv_callback_t;
 
+
 void luv_setfuncs(lua_State *L, const luaL_Reg *l);
 
 lua_State* luv_main_thread;
@@ -72,6 +81,5 @@ void luv_handle_unref(lua_State* L, luv_handle_t* lhandle);
 lua_State* luv_prepare_event(luv_handle_t* lhandle);
 lua_State* luv_prepare_callback(luv_req_t* lreq);
 int luv_get_callback(lua_State* L, int index, const char* name);
-
 
 #endif
