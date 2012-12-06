@@ -4,7 +4,7 @@
 #include "luv_functions.c"
 
 static int luv_newindex(lua_State* L) {
-  lua_getfenv(L, 1);
+  lua_getuservalue(L, 1);
   lua_pushvalue(L, 2);
   lua_pushvalue(L, 3);
   lua_rawset(L, -3);
@@ -30,7 +30,7 @@ static int luv_index(lua_State* L) {
     return 1;
   }
 
-  lua_getfenv(L, 1);
+  lua_getuservalue(L, 1);
   lua_pushvalue(L, 2);
   lua_rawget(L, -2);
   lua_remove(L, -2);
@@ -66,7 +66,6 @@ LUALIB_API int luaopen_luv (lua_State *L) {
   lua_pop(L, 1);
 
   // Module exports
-  lua_newtable (L);
-  luv_setfuncs(L, luv_functions);
+  luaL_newlib(L, luv_functions);
   return 1;
 }
