@@ -2,14 +2,6 @@
 #include <assert.h>
 #include "common.h"
 
-// lua 5.1.x and 5.2.x compatable way to mass set functions on an object
-void luv_setfuncs(lua_State *L, const luaL_Reg *l) {
-  for (; l->name != NULL; l++) {
-    lua_pushcfunction(L, l->func);
-    lua_setfield(L, -2, l->name);
-  }
-}
-
 /* Initialize a new lhandle and push the new userdata on the stack. */
 static luv_handle_t* luv_handle_create(lua_State* L, size_t size, int mask) {
 
@@ -20,7 +12,7 @@ static luv_handle_t* luv_handle_create(lua_State* L, size_t size, int mask) {
 
   /* Create a local environment for storing stuff */
   lua_newtable(L);
-  lua_setfenv (L, -2);
+  lua_setuservalue(L, -2);
 
   /* Initialize and return the lhandle */
   lhandle->handle = (uv_handle_t*)malloc(size);
@@ -159,7 +151,7 @@ int luv_get_callback(lua_State* L, int index, const char* name) {
   int top = lua_gettop(L);
 #endif
   /* Get the connection handler */
-  lua_getfenv(L, index);
+  lua_getuservalue(L, index);
   lua_getfield(L, -1, name);
   lua_remove(L, -2);
 
