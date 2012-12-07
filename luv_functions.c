@@ -226,7 +226,7 @@ static int luv_interface_addresses(lua_State* L) {
     lua_setfield(L, -2, "address");
     lua_pushstring(L, family);
     lua_setfield(L, -2, "family");
-    lua_rawseti(L, -2, lua_objlen (L, -2) + 1);
+    lua_rawseti(L, -2, lua_rawlen (L, -2) + 1);
     lua_pop(L, 1);
   }
   uv_free_interface_addresses(interfaces, count);
@@ -610,7 +610,7 @@ static int luv_write(lua_State* L) {
 
   if (lua_istable(L, 2)) {
     int length, i;
-    length = lua_objlen(L, 2);
+    length = lua_rawlen(L, 2);
     uv_buf_t* bufs = malloc(sizeof(uv_buf_t) * length);
     for (i = 0; i < length; i++) {
       lua_rawgeti(L, 2, i + 1);
@@ -1396,7 +1396,7 @@ static int luv_fs_fchown(lua_State* L) {
 
 /******************************************************************************/
 
-static const luaL_reg luv_functions[] = {
+static const luaL_Reg luv_functions[] = {
   {"new_tcp", new_tcp},
   {"new_timer", new_timer},
   {"new_tty", new_tty},
