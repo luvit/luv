@@ -9,11 +9,13 @@
 #define MAX_TITLE_LENGTH (8192)
 #endif
 
+#include <stdlib.h>
+#include <assert.h>
+
 #include <lua.h>
 #include <lauxlib.h>
+
 #include "uv.h"
-#include "stdlib.h"
-#include "assert.h"
 
 #if LUA_VERSION_NUM < 502
 /* lua_rawlen: Not entirely correct, but should work anyway */
