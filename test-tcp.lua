@@ -71,6 +71,6 @@ uv.tcp_connect(client, address.address, address.port, function ()
 end)
 repeat
   print("\nTick..")
-until uv.run_once() == 0
+until uv.run('once') == 0
 
 print("done")

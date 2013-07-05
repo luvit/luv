@@ -44,15 +44,16 @@ static int new_pipe(lua_State* L) {
   return 1;
 }
 
-static int luv_run_once(lua_State* L) {
-  int ret = uv_run_once(uv_default_loop());
-  lua_pushinteger(L, ret);
-  return 1;
-}
-
 static int luv_run(lua_State* L) {
-  uv_run(uv_default_loop());
-  return 0;
+  const char* mode_string = luaL_checkstring(L, 1);
+  int mode;
+  if (strcmp(mode_string, "default") == 0) mode = UV_RUN_DEFAULT;
+  else if (strcmp(mode_string, "once") == 0) mode = UV_RUN_DEFAULT;
+  else if (strcmp(mode_string, "nowait") == 0) mode = UV_RUN_DEFAULT;
+  else return luaL_error(L, "most must be one of 'default', 'once', or 'nowait'");
+  int res = uv_run(uv_default_loop(), mode);
+  lua_pushinteger(L, res);
+  return 1;
 }
 
 static int luv_guess_handle(lua_State* L) {
@@ -1008,7 +1009,7 @@ static int luv_pipe_connect(lua_State* L) {
 
 /******************************************************************************/
 
-static void luv_push_stats_table(lua_State* L, uv_statbuf_t* s) {
+static void luv_push_stats_table(lua_State* L, uv_stat_t* s) {
   lua_newtable(L);
   lua_pushinteger(L, s->st_dev);
   lua_setfield(L, -2, "dev");
@@ -1096,7 +1097,7 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
     case UV_FS_STAT:
     case UV_FS_LSTAT:
     case UV_FS_FSTAT:
-      luv_push_stats_table(L, (uv_statbuf_t*)req->ptr);
+      luv_push_stats_table(L, (uv_stat_t*)req->ptr);
       return 1;
 
     case UV_FS_READLINK:
@@ -1402,7 +1403,6 @@ static const luaL_Reg luv_functions[] = {
   {"new_tty", new_tty},
   {"new_pipe", new_pipe},
   {"run", luv_run},
-  {"run_once", luv_run_once},
   {"guess_handle", luv_guess_handle},
   {"update_time", luv_update_time},
   {"now", luv_now},
