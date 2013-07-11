@@ -893,7 +893,7 @@ static int luv_tcp_keepalive(lua_State* L) {
   uv_tcp_t* handle = luv_get_tcp(L, 1);
   luaL_checkany(L, 2);
   int enable = lua_toboolean(L, 2);
-  unsigned int delay;
+  unsigned int delay = 0;
   if (enable) {
     delay = luaL_checkint(L, 3);
   }
