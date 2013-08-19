@@ -48,8 +48,8 @@ static int luv_run(lua_State* L) {
   const char* mode_string = luaL_checkstring(L, 1);
   int mode;
   if (strcmp(mode_string, "default") == 0) mode = UV_RUN_DEFAULT;
-  else if (strcmp(mode_string, "once") == 0) mode = UV_RUN_DEFAULT;
-  else if (strcmp(mode_string, "nowait") == 0) mode = UV_RUN_DEFAULT;
+  else if (strcmp(mode_string, "once") == 0) mode = UV_RUN_ONCE;
+  else if (strcmp(mode_string, "nowait") == 0) mode = UV_RUN_NOWAIT;
   else return luaL_error(L, "most must be one of 'default', 'once', or 'nowait'");
   int res = uv_run(uv_default_loop(), mode);
   lua_pushinteger(L, res);
