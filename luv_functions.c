@@ -1009,7 +1009,7 @@ static int luv_pipe_connect(lua_State* L) {
 
 /******************************************************************************/
 
-static void luv_push_stats_table(lua_State* L, uv_stat_t* s) {
+static void luv_push_stats_table(lua_State* L, uv_statbuf_t* s) {
   lua_newtable(L);
   lua_pushinteger(L, s->st_dev);
   lua_setfield(L, -2, "dev");
@@ -1027,11 +1027,11 @@ static void luv_push_stats_table(lua_State* L, uv_stat_t* s) {
   lua_setfield(L, -2, "rdev");
   lua_pushinteger(L, s->st_size);
   lua_setfield(L, -2, "size");
-  lua_pushinteger(L, s->st_atim.tv_sec);
+  lua_pushinteger(L, s->st_atime);
   lua_setfield(L, -2, "atime");
-  lua_pushinteger(L, s->st_mtim.tv_sec);
+  lua_pushinteger(L, s->st_mtime);
   lua_setfield(L, -2, "mtime");
-  lua_pushinteger(L, s->st_ctim.tv_sec);
+  lua_pushinteger(L, s->st_ctime);
   lua_setfield(L, -2, "ctime");
   lua_pushboolean(L, S_ISREG(s->st_mode));
   lua_setfield(L, -2, "is_file");
@@ -1097,7 +1097,7 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
     case UV_FS_STAT:
     case UV_FS_LSTAT:
     case UV_FS_FSTAT:
-      luv_push_stats_table(L, (uv_stat_t*)req->ptr);
+      luv_push_stats_table(L, (uv_statbuf_t*)req->ptr);
       return 1;
 
     case UV_FS_READLINK:
