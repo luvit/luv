@@ -1117,6 +1117,88 @@ static int luv_spawn(lua_State* L) {
   return 5;
 }
 
+static int luv_parse_signal(lua_State* L, int slot) {
+  if (lua_isnumber(L, slot)) {
+    return lua_tonumber(L, slot);
+  }
+  if (lua_isstring(L, slot)) {
+    const char* string = lua_tostring(L, slot);
+#ifdef SIGHUP
+    if (strcmp(string, "SIGHUP") == 0) return SIGHUP;
+#endif
+#ifdef SIGINT
+    if (strcmp(string, "SIGINT") == 0) return SIGINT;
+#endif
+#ifdef SIGQUIT
+    if (strcmp(string, "SIGQUIT") == 0) return SIGQUIT;
+#endif
+#ifdef SIGILL
+    if (strcmp(string, "SIGILL") == 0) return SIGILL;
+#endif
+#ifdef SIGTRAP
+    if (strcmp(string, "SIGTRAP") == 0) return SIGTRAP;
+#endif
+#ifdef SIGABRT
+    if (strcmp(string, "SIGABRT") == 0) return SIGABRT;
+#endif
+#ifdef SIGIOT
+    if (strcmp(string, "SIGIOT") == 0) return SIGIOT;
+#endif
+#ifdef SIGBUS
+    if (strcmp(string, "SIGBUS") == 0) return SIGBUS;
+#endif
+#ifdef SIGFPE
+    if (strcmp(string, "SIGFPE") == 0) return SIGFPE;
+#endif
+#ifdef SIGKILL
+    if (strcmp(string, "SIGKILL") == 0) return SIGKILL;
+#endif
+#ifdef SIGUSR1
+    if (strcmp(string, "SIGUSR1") == 0) return SIGUSR1;
+#endif
+#ifdef SIGSEGV
+    if (strcmp(string, "SIGSEGV") == 0) return SIGSEGV;
+#endif
+#ifdef SIGUSR2
+    if (strcmp(string, "SIGUSR2") == 0) return SIGUSR2;
+#endif
+#ifdef SIGPIPE
+    if (strcmp(string, "SIGPIPE") == 0) return SIGPIPE;
+#endif
+#ifdef SIGALRM
+    if (strcmp(string, "SIGALRM") == 0) return SIGALRM;
+#endif
+#ifdef SIGTERM
+    if (strcmp(string, "SIGTERM") == 0) return SIGTERM;
+#endif
+    return luaL_error(L, "Unknown signal '%s'", string);
+  }
+  /* TODO: add more signals and use a macro mabye? */
+  return SIGTERM;
+}
+
+static int luv_kill(lua_State* L) {
+  int pid = luaL_checkint(L, 1);
+  int signum = luv_parse_signal(L, 2);
+  printf("pid=%d signum=%d\n", pid, signum);
+  uv_err_t err = uv_kill(pid, signum);
+  if (err.code) {
+    return luaL_error(L, "kill: %s", uv_strerror(err));
+  }
+  return 0;
+}
+
+static int luv_process_kill(lua_State* L) {
+  uv_process_t* handle = luv_get_process(L, 1);
+  int signum = luv_parse_signal(L, 2);
+  printf("handle=%p signum=%d\n", handle, signum);
+  if (uv_process_kill(handle, signum)) {
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "process_kill: %s", uv_strerror(err));
+  }
+  return 0;
+}
+
 /******************************************************************************/
 
 static void luv_push_stats_table(lua_State* L, uv_statbuf_t* s) {
@@ -1569,6 +1651,8 @@ static const luaL_Reg luv_functions[] = {
   {"pipe_connect", luv_pipe_connect},
 
   {"spawn", luv_spawn},
+  {"kill", luv_kill},
+  {"process_kill", luv_process_kill},
 
   {"fs_open", luv_fs_open},
   {"fs_close", luv_fs_close},
