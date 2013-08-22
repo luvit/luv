@@ -21,7 +21,7 @@ static luv_handle_t* luv_handle_create(lua_State* L, size_t size, int mask) {
   lhandle->ref = LUA_NOREF;
   lhandle->mask = mask;
   lhandle->L = L;
-//  printf("Created %s lhandle %p handle %p\n", type, lhandle, lhandle->handle);
+//  printf("Created lhandle %p handle %p\n", lhandle, lhandle->handle);
 
   /* if handle create in a coroutine, we need hold the coroutine */
   if (lua_pushthread(L)) {
@@ -56,7 +56,7 @@ uv_pipe_t* luv_create_pipe(lua_State* L) {
 }
 
 uv_process_t* luv_create_process(lua_State* L) {
-  luv_handle_t* lhandle = luv_handle_create(L, sizeof(uv_pipe_t), LUV_PROCESS_MASK);
+  luv_handle_t* lhandle = luv_handle_create(L, sizeof(uv_process_t), LUV_PROCESS_MASK);
   return (uv_process_t*)lhandle->handle;
 }
 

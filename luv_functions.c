@@ -1010,7 +1010,6 @@ static int luv_pipe_connect(lua_State* L) {
 /******************************************************************************/
 
 void luv_process_on_exit(uv_process_t* process, int exit_status, int term_signal) {
-  printf("EXIT! %p\n", process);
   lua_State* L = luv_prepare_event(process->data);
 #ifdef LUV_STACK_CHECK
   int top = lua_gettop(L) - 1;
@@ -1029,17 +1028,34 @@ void luv_process_on_exit(uv_process_t* process, int exit_status, int term_signal
 
 static int luv_spawn(lua_State* L) {
   const char* command = luaL_checkstring(L, 1);
-  uv_process_t* process = luv_create_process(L);
-  printf("SPAWN! %p\n", process);
+  uv_process_t* handle = luv_create_process(L);
 
   uv_stdio_container_t stdio[3];
   memset(stdio, 0, sizeof(stdio));
+
+  uv_pipe_t* stdin_pipe = luv_create_pipe(L);
+  if (uv_pipe_init(uv_default_loop(), stdin_pipe, 0)) {
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "stdin_pipe: %s", uv_strerror(err));
+  }
   stdio[0].flags = UV_CREATE_PIPE | UV_READABLE_PIPE;
-  stdio[0].data.stream = (uv_stream_t*)luv_create_pipe(L);
-  stdio[1].flags = UV_CREATE_PIPE | UV_WRITABLE_PIPE;
-  stdio[1].data.stream = (uv_stream_t*)luv_create_pipe(L);
-  stdio[2].flags = UV_CREATE_PIPE | UV_WRITABLE_PIPE;
-  stdio[2].data.stream = (uv_stream_t*)luv_create_pipe(L);
+  stdio[0].data.stream = (uv_stream_t*)stdin_pipe;
+
+  uv_pipe_t* stdout_pipe = luv_create_pipe(L);
+  if (uv_pipe_init(uv_default_loop(), stdout_pipe, 0)) {
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "stdout_pipe: %s", uv_strerror(err));
+  }
+  stdio[1].flags = UV_CREATE_PIPE | UV_READABLE_PIPE;
+  stdio[1].data.stream = (uv_stream_t*)stdout_pipe;
+
+  uv_pipe_t* stderr_pipe = luv_create_pipe(L);
+  if (uv_pipe_init(uv_default_loop(), stderr_pipe, 0)) {
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "stderr_pipe: %s", uv_strerror(err));
+  }
+  stdio[2].flags = UV_CREATE_PIPE | UV_READABLE_PIPE;
+  stdio[2].data.stream = (uv_stream_t*)stderr_pipe;
 
   /* Parse the args array */
   size_t argc = lua_objlen(L, 2) + 1;
@@ -1052,7 +1068,6 @@ static int luv_spawn(lua_State* L) {
     lua_pop(L, 1);
   }
   args[argc] = NULL;
-  printf("argc %d\n", (int)argc);
 
   char* cwd;
   /* Get the cwd */
@@ -1087,15 +1102,17 @@ static int luv_spawn(lua_State* L) {
   options.stdio_count = 3;
   options.stdio = stdio;
 
-  int r = uv_spawn(uv_default_loop(), process, options);
+  int r = uv_spawn(uv_default_loop(), handle, options);
   free(args);
   if (r) {
     uv_err_t err = uv_last_error(uv_default_loop());
     return luaL_error(L, "spawn: %s", uv_strerror(err));
   }
 
+  luv_handle_ref(L, handle->data, -4);
+
   /* Return the Pid */
-  lua_pushinteger(L, process->pid);
+  lua_pushinteger(L, handle->pid);
 
   return 5;
 }

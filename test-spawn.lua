@@ -2,13 +2,28 @@ local p = require('utils').prettyPrint
 
 local uv = require('luv')
 
---local ls = uv.spawn("touch", {"me"}, {cwd="/home/tim"})
-local ls = uv.spawn("touch", {"me"})
-p("child", ls)
-function ls:onexit(code, signal)
-  print("EXIT")
-  p{code=code,signal=signal}
+local handle, stdin, stdout, stderr, pid = uv.spawn("curl", {"-i", "http://luvit.io"})
+--local handle, stdin, stdout, stderr, pid = uv.spawn("ls", {"-l"}, {cwd="/home/tim"})
+--local handle, stdin, stdout, stderr, pid = uv.spawn("touch", {"me"})
+p(handle, {stdin=stdin,stdout=stdout,stderr=stderr, pid=pid})
+function handle:onexit(code, signal)
+  p("EXIT", {code=code,signal=signal})
 end
+function stdout:ondata(chunk)
+  p("STDOUT.DATA", chunk)
+end
+function stderr:ondata(chunk)
+  p("STDERR.DATA", chunk)
+end
+function stdout:onend()
+  p("STDOUT.END")
+end
+function stderr:onend()
+  p("STDERR.END")
+end
+uv.read_start(stderr)
+uv.read_start(stdout)
+
 
 repeat
   print("\ntick.")
