@@ -1009,6 +1009,14 @@ static int luv_pipe_connect(lua_State* L) {
 
 /******************************************************************************/
 
+static int luv_spawn(lua_State* L) {
+  uv_process_t* child = luv_create_process(L);
+  printf("child %p\n", child);
+  return 1;
+}
+
+/******************************************************************************/
+
 static void luv_push_stats_table(lua_State* L, uv_statbuf_t* s) {
   lua_newtable(L);
   lua_pushinteger(L, s->st_dev);
@@ -1457,6 +1465,8 @@ static const luaL_Reg luv_functions[] = {
   {"pipe_open", luv_pipe_open},
   {"pipe_bind", luv_pipe_bind},
   {"pipe_connect", luv_pipe_connect},
+
+  {"spawn", luv_spawn},
 
   {"fs_open", luv_fs_open},
   {"fs_close", luv_fs_close},

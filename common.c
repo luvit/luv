@@ -55,6 +55,11 @@ uv_pipe_t* luv_create_pipe(lua_State* L) {
   return (uv_pipe_t*)lhandle->handle;
 }
 
+uv_process_t* luv_create_process(lua_State* L) {
+  luv_handle_t* lhandle = luv_handle_create(L, sizeof(uv_pipe_t), LUV_PROCESS_MASK);
+  return (uv_process_t*)lhandle->handle;
+}
+
 static luv_handle_t* luv_get_lhandle(lua_State* L, int index, int type) {
   luaL_checktype(L, index, LUA_TUSERDATA);
   luv_handle_t* lhandle = (luv_handle_t*)luaL_checkudata(L, index, "luv_handle");
@@ -92,6 +97,11 @@ uv_tty_t* luv_get_tty(lua_State* L, int index) {
 uv_pipe_t* luv_get_pipe(lua_State* L, int index) {
   luv_handle_t* lhandle = luv_get_lhandle(L, index, LUV_PIPE);
   return (uv_pipe_t*)lhandle->handle;
+}
+
+uv_process_t* luv_get_process(lua_State* L, int index) {
+  luv_handle_t* lhandle = luv_get_lhandle(L, index, LUV_PROCESS);
+  return (uv_process_t*)lhandle->handle;
 }
 
 /* This needs to be called when an async function is started on a lhandle. */
