@@ -1171,9 +1171,69 @@ static int luv_parse_signal(lua_State* L, int slot) {
 #ifdef SIGTERM
     if (strcmp(string, "SIGTERM") == 0) return SIGTERM;
 #endif
+#ifdef SIGCHLD
+    if (strcmp(string, "SIGCHLD") == 0) return SIGCHLD;
+#endif
+#ifdef SIGSTKFLT
+    if (strcmp(string, "SIGSTKFLT") == 0) return SIGSTKFLT;
+#endif
+#ifdef SIGCONT
+    if (strcmp(string, "SIGCONT") == 0) return SIGCONT;
+#endif
+#ifdef SIGSTOP
+    if (strcmp(string, "SIGSTOP") == 0) return SIGSTOP;
+#endif
+#ifdef SIGTSTP
+    if (strcmp(string, "SIGTSTP") == 0) return SIGTSTP;
+#endif
+#ifdef SIGBREAK
+    if (strcmp(string, "SIGBREAK") == 0) return SIGBREAK;
+#endif
+#ifdef SIGTTIN
+    if (strcmp(string, "SIGTTIN") == 0) return SIGTTIN;
+#endif
+#ifdef SIGTTOU
+    if (strcmp(string, "SIGTTOU") == 0) return SIGTTOU;
+#endif
+#ifdef SIGURG
+    if (strcmp(string, "SIGURG") == 0) return SIGURG;
+#endif
+#ifdef SIGXCPU
+    if (strcmp(string, "SIGXCPU") == 0) return SIGXCPU;
+#endif
+#ifdef SIGXFSZ
+    if (strcmp(string, "SIGXFSZ") == 0) return SIGXFSZ;
+#endif
+#ifdef SIGVTALRM
+    if (strcmp(string, "SIGVTALRM") == 0) return SIGVTALRM;
+#endif
+#ifdef SIGPROF
+    if (strcmp(string, "SIGPROF") == 0) return SIGPROF;
+#endif
+#ifdef SIGWINCH
+    if (strcmp(string, "SIGWINCH") == 0) return SIGWINCH;
+#endif
+#ifdef SIGIO
+    if (strcmp(string, "SIGIO") == 0) return SIGIO;
+#endif
+#ifdef SIGPOLL
+# if SIGPOLL != SIGIO
+    if (strcmp(string, "SIGPOLL") == 0) return SIGPOLL;
+# endif
+#endif
+#ifdef SIGLOST
+    if (strcmp(string, "SIGLOST") == 0) return SIGLOST;
+#endif
+#ifdef SIGPWR
+# if SIGPWR != SIGLOST
+    if (strcmp(string, "SIGPWR") == 0) return SIGPWR;
+# endif
+#endif
+#ifdef SIGSYS
+    if (strcmp(string, "SIGSYS") == 0) return SIGSYS;
+#endif
     return luaL_error(L, "Unknown signal '%s'", string);
   }
-  /* TODO: add more signals and use a macro mabye? */
   return SIGTERM;
 }
 
