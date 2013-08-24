@@ -1240,7 +1240,7 @@ static int luv_parse_signal(lua_State* L, int slot) {
 static int luv_kill(lua_State* L) {
   int pid = luaL_checkint(L, 1);
   int signum = luv_parse_signal(L, 2);
-  printf("pid=%d signum=%d\n", pid, signum);
+  //printf("pid=%d signum=%d\n", pid, signum);
   uv_err_t err = uv_kill(pid, signum);
   if (err.code) {
     return luaL_error(L, "kill: %s", uv_strerror(err));
@@ -1251,7 +1251,7 @@ static int luv_kill(lua_State* L) {
 static int luv_process_kill(lua_State* L) {
   uv_process_t* handle = luv_get_process(L, 1);
   int signum = luv_parse_signal(L, 2);
-  printf("handle=%p signum=%d\n", handle, signum);
+  //printf("handle=%p signum=%d\n", handle, signum);
   if (uv_process_kill(handle, signum)) {
     uv_err_t err = uv_last_error(uv_default_loop());
     return luaL_error(L, "process_kill: %s", uv_strerror(err));
