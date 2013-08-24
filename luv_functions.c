@@ -101,11 +101,11 @@ static int luv_execpath(lua_State* L) {
 static int luv_cwd(lua_State* L) {
   size_t size = 2*PATH_MAX;
   char path[2*PATH_MAX];
-  if (uv_exepath(path, &size)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  uv_err_t err = uv_cwd(path, size);
+  if (err.code) {
     return luaL_error(L, "uv_cwd: %s", uv_strerror(err));
   }
-  lua_pushlstring(L, path, size);
+  lua_pushstring(L, path);
   return 1;
 }
 
