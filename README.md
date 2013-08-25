@@ -3,36 +3,48 @@ luv
 
 Bare [libuv][] bindings for [lua][]
 
-This is [lua][]/[luajit][] bindings for [libuv][], the evented library that powers [node.js][].  If you want a more opinionated framework with an improved module system over what stock lua provides, look at the [luvit][] project.
+This is [lua][]/[luajit][] bindings for [libuv][], the evented library that
+powers [node.js][].  If you want a more opinionated framework with an improved
+module system over what stock lua provides, look at the [luvit][] project.
 
 ## Build Instructions
 
-This is a native module using the lua C addon API.  Libuv is included as a git submodule and is required to build.
+This is a native module using the lua C addon API.  Libuv is included as a git
+submodule and is required to build.
 
-To use, first setup a lua build environment.  The easiest way on linux is to download the latest lua or luajit (I recommend luajit) release and build from source and install to `/usr/local`.  Or if you use your system's native package management make sure to install the development package for lua.
+To use, first setup a lua build environment.  The easiest way on linux is to
+download the latest lua or luajit (I recommend luajit) release and build from
+source and install to `/usr/local`.  Or if you use your system's native package
+management make sure to install the development package for lua.
 
-Once you have a lua build environment, use the included `Makefile` to build `luv.so`.  This single file will contain all of libuv along with the nessecary lua bindings to make it a lua module.
+Once you have a lua build environment, use the included `Makefile` to build
+`luv.so`.  This single file will contain all of libuv along with the nessecary
+lua bindings to make it a lua module.
 
 ## API
 
-Luv tries to stick as close to the libuv API as possible while still being easy to use.  This means it's mostly a flat list of functions.
+Luv tries to stick as close to the libuv API as possible while still being easy
+to use.  This means it's mostly a flat list of functions.
 
-I'll show some basic examples and go over the lua API here, but extensive docs can be found at the [uv book][] site.
+I'll show some basic examples and go over the lua API here, but extensive docs
+can be found at the [uv book][] site.
 
 ## Constructors
 
-Libuv is a sort-of object oriented API.  There is a hierchary of object types (implemented as structs internally).
+Libuv is a sort-of object oriented API.  There is a hierchary of object types
+(implemented as structs internally).
 
  - `uv_handle_t` - The base abstract type.  All subtypes can also be used in functions that expect handles.
    - `uv_timer_t` - The type for timeouts and intervals.  Create instances using `new_timer()`.
    - `uv_stream_t` - A shared abstract type for all stream-like types.
      - `uv_tcp_t` - Handle type for TCP servers and clients.  Create using `new_tcp()`.
      - `uv_tty_t` - A special stream for wrapping TTY file descriptors.  Create using `new_tty(fd, readable)`.
-     - `uv_pipe` - A 
+     - `uv_pipe` - A
 
 ### new_tcp() -> uv_tcp_t
 
-Create a new tcp userdata.  This can later be turned into a TCP server or client.
+Create a new tcp userdata.  This can later be turned into a TCP server or
+client.
 
 ```lua
 local server = uv.new_tcp()
@@ -40,9 +52,12 @@ local server = uv.new_tcp()
 
 ### new_tty(fd, readable) -> uv_tty_t
 
-Create a new tty userdata.  This is good for wrapping stdin, stdout, and stderr when the process is used via tty.  The tty type inherits from the stream type in libuv.
+Create a new tty userdata.  This is good for wrapping stdin, stdout, and stderr
+when the process is used via tty.  The tty type inherits from the stream type in
+libuv.
 
-`fd` is an integer (0 for stdin, 1 for stdout, 2 for stderr). `readable` is a boolean (usually only for stdin).
+`fd is an integer (0 for stdin, 1 for stdout, 2 for stderr). readable is a
+`boolean (usually only for stdin).
 
 ```lua
 local std = {
@@ -54,7 +69,9 @@ local std = {
 
 ### new_pipe(ipc) -> uv_pipe_t
 
-Create a new pipe userdata.  Pipes can be used for many things such as named pipes, anonymous pipes, child_process stdio, or even file stream pipes.  `ipc` is normally `false` or omitted except for advanced usage.
+Create a new pipe userdata.  Pipes can be used for many things such as named
+pipes, anonymous pipes, child_process stdio, or even file stream pipes.  `ipc`
+is normally `false` or omitted except for advanced usage.
 
 ```lua
 local pipe = uv.new_pipe()
@@ -62,7 +79,9 @@ local pipe = uv.new_pipe()
 
 ### guess_handle(fd) -> type string
 
-Given a file descriptor, this will guess the type of stream.  This is especially useful to find out if stdin, stdout, and stderr are indeed TTY streams or if they are something else.
+Given a file descriptor, this will guess the type of stream.  This is especially
+useful to find out if stdin, stdout, and stderr are indeed TTY streams or if
+they are something else.
 
 ```lua
 local stdin
@@ -79,7 +98,9 @@ Force libuv to internally update it's time.
 
 ### now() -> timestamp
 
-Get a relative timestamp. The value is in milliseconds, but is only good for relative measurements, not dates.  Use `update_time()` if you are getting stale values.
+Get a relative timestamp. The value is in milliseconds, but is only good for
+relative measurements, not dates.  Use `update_time()` if you are getting stale
+values.
 
 ```lua
 uv.update_time()
@@ -97,7 +118,11 @@ Get the load average as 3 returned integers.
 
 ### execpath() -> path to executable
 
-Gives the absolute path to the executable.  This would usually be wherever luajit or lua is installed on your system.  Useful for writing portable applications that embed their own copy of lua and want to load resources relative to it in the filesystem.  This is much more reliable and useful than simply getting `argv[0]`.
+Gives the absolute path to the executable.  This would usually be wherever
+luajit or lua is installed on your system.  Useful for writing portable
+applications that embed their own copy of lua and want to load resources
+relative to it in the filesystem.  This is much more reliable and useful than
+simply getting `argv[0]`.
 
 ```lua
 local path = uv.execpath()
@@ -123,19 +148,22 @@ Get the number of byyed of total memory.
 
 ### get_process_title() -> title
 
-NOTE: currently does not work on some platforms because we're a library and can't access `argc` and `argv` directly.
+NOTE: currently does not work on some platforms because we're a library and
+can't access `argc` and `argv` directly.
 
 Get the current process title as reported in tools like top.
 
 ### set_process_title(title)
 
-NOTE: currently does not work on some platforms because we're a library and can't access `argc` and `argv` directly.
+NOTE: currently does not work on some platforms because we're a library and
+can't access `argc` and `argv` directly.
 
 Get the current process title as reported in tools like top.
 
 ### hrtime() -> timestamp
 
-High-resolution timestamp in ms as a floating point number.  Value is relative and not absolute like a date based timestamp.
+High-resolution timestamp in ms as a floating point number.  Value is relative
+and not absolute like a date based timestamp.
 
 ### uptime() -> uptime
 
@@ -182,7 +210,8 @@ Return detailed information about network interfaces.
 
 ## is_active(handle) -> boolean
 
-Returns 1 if the prepare/check/idle/timer handle has been started, 0 otherwise. For other handle types this always returns 1.
+Returns 1 if the prepare/check/idle/timer handle has been started, 0 otherwise.
+For other handle types this always returns 1.
 
 ### walk(callback)
 
@@ -196,17 +225,21 @@ end)
 
 ### ref(handle)
 
-Increment the refcount of a handle manually.  Only handles with positive refcounts will hold the main event loop open.
+Increment the refcount of a handle manually.  Only handles with positive
+refcounts will hold the main event loop open.
 
 ### unref(handle)
 
-Decrement the refcount of a handle manually.  Only handles with positive refcounts will hold the main event loop open.
+Decrement the refcount of a handle manually.  Only handles with positive
+refcounts will hold the main event loop open.
 
-This is useful for things like a background interval that doesn't prevent the process from exiting naturally.
+This is useful for things like a background interval that doesn't prevent the
+process from exiting naturally.
 
 ### close(handle)
 
-Tell a handle.  Attach an `onclose` handler if you wish to be notified when it's complete.
+Tell a handle.  Attach an `onclose` handler if you wish to be notified when it's
+complete.
 
 ```lua
 function handle:onclose()
@@ -222,7 +255,8 @@ Lets you know if a handle is already closing.
 
 ## Timers
 
-Luv provides non-blocking timers so that you can schedule code to run on an interval or after a period of timeout.
+Luv provides non-blocking timers so that you can schedule code to run on an
+interval or after a period of timeout.
 
 The `uv_timer_t` handle type if a direct desccendent of `uv_handle_t`.
 
@@ -240,7 +274,8 @@ local function setTimeout(fn, ms)
 end
 ```
 
-And here is an example of implementing a JavaScript style `setInterval` function:
+And here is an example of implementing a JavaScript style `setInterval`
+function:
 
 ```lua
 local function setInterval(fn, ms)
@@ -258,7 +293,8 @@ local clearTimer(handle)
 end
 ```
 
-And here is a more advanced example that creates a repeating timer that halves the delay each iteration till it's down to 1ms.
+And here is a more advanced example that creates a repeating timer that halves
+the delay each iteration till it's down to 1ms.
 
 ```lua
 local handle = uv.new_timer()
@@ -280,11 +316,14 @@ uv.timer_start(handle, delay, 0)
 
 ### new_timer() -> uv_timer_t
 
-Create a new timer userdata.  Later this can be turned into a timeout or interval using the timer functions.
+Create a new timer userdata.  Later this can be turned into a timeout or
+interval using the timer functions.
 
 ### timer_start(timer, timeout, repeat)
 
-Given a timer handle, start it with a timeout and repeat.  To create a one-shot timeout, set repeat to zero.  For a recurring interval, set the same value to repeat.  Attach the `ontimeout` listener to know when it timeouts.
+Given a timer handle, start it with a timeout and repeat.  To create a one-shot
+timeout, set repeat to zero.  For a recurring interval, set the same value to
+repeat.  Attach the `ontimeout` listener to know when it timeouts.
 
 ### timer_stop(timer)
 
@@ -296,7 +335,8 @@ Use this to resume a stopped timer.
 
 ### timer_set_repeat(timer, repeat)
 
-Give the timer a new repeat value.  If it was stopped, you'll need to resume it as well after setting this.
+Give the timer a new repeat value.  If it was stopped, you'll need to resume it
+as well after setting this.
 
 ### timer_get_repeat(timer) -> repeat
 
@@ -304,9 +344,10 @@ Read the repeat value out of a timer instance
 
 ## Streams
 
-Stream is a common interface between several libuv types.  Concrete types that are also streams include `uv_tty_t`, `uv_tcp_t`, and `uv_pipe_t`.
+Stream is a common interface between several libuv types.  Concrete types that
+are also streams include `uv_tty_t`, `uv_tcp_t`, and `uv_pipe_t`.-w
 
-> 
+>
 >   {"write", luv_write},
 >   {"shutdown", luv_shutdown},
 >   {"read_start", luv_read_start},
@@ -316,7 +357,7 @@ Stream is a common interface between several libuv types.  Concrete types that a
 >   {"write", luv_write},
 >   {"is_readable", luv_is_readable},
 >   {"is_writable", luv_is_writable},
-> 
+>
 >   {"tcp_bind", luv_tcp_bind},
 >   {"tcp_getsockname", luv_tcp_getsockname},
 >   {"tcp_getpeername", luv_tcp_getpeername},
@@ -324,19 +365,19 @@ Stream is a common interface between several libuv types.  Concrete types that a
 >   {"tcp_open", luv_tcp_open},
 >   {"tcp_nodelay", luv_tcp_nodelay},
 >   {"tcp_keepalive", luv_tcp_keepalive},
-> 
+>
 >   {"tty_set_mode", luv_tty_set_mode},
 >   {"tty_reset_mode", luv_tty_reset_mode},
 >   {"tty_get_winsize", luv_tty_get_winsize},
-> 
+>
 >   {"pipe_open", luv_pipe_open},
 >   {"pipe_bind", luv_pipe_bind},
 >   {"pipe_connect", luv_pipe_connect},
-> 
+>
 >   {"spawn", luv_spawn},
 >   {"kill", luv_kill},
 >   {"process_kill", luv_process_kill},
-> 
+>
 >   {"fs_open", luv_fs_open},
 >   {"fs_close", luv_fs_close},
 >   {"fs_read", luv_fs_read},
@@ -362,7 +403,7 @@ Stream is a common interface between several libuv types.  Concrete types that a
 >   {"fs_fchmod", luv_fs_fchmod},
 >   {"fs_chown", luv_fs_chown},
 >   {"fs_fchown", luv_fs_fchown},
-> 
+>
 
 [lua]: http://www.lua.org/
 [luajit]: http://luajit.org/
