@@ -46,6 +46,23 @@ set_timeout(1000, function()
 end)
 
 
+local handle = uv.new_timer()
+local delay = 1024
+function handle:ontimeout()
+  p("tick", delay)
+  delay = delay / 2
+  if delay >= 1 then
+    uv.timer_set_repeat(handle, delay)
+    uv.timer_again(handle)
+  else
+    uv.timer_stop(handle)
+    uv.close(handle)
+    p("done")
+  end
+end
+uv.timer_start(handle, delay, 0)
+
+
 repeat
   print("\ntick.")
 until uv.run('once') == 0

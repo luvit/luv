@@ -38,14 +38,6 @@ Create a new tcp userdata.  This can later be turned into a TCP server or client
 local server = uv.new_tcp()
 ```
 
-### new_timer() -> uv_timer_t
-
-Create a new timer userdata.  Later this can be turned into a timeout or interval using the timer functions.
-
-```lua
-local timer = uv.new_timer()
-```
-
 ### new_tty(fd, readable) -> uv_tty_t
 
 Create a new tty userdata.  This is good for wrapping stdin, stdout, and stderr when the process is used via tty.  The tty type inherits from the stream type in libuv.
@@ -227,13 +219,93 @@ uv.close(handle)
 
 Lets you know if a handle is already closing.
 
-TODO: document these...
 
->   {"timer_start", luv_timer_start},
->   {"timer_stop", luv_timer_stop},
->   {"timer_again", luv_timer_again},
->   {"timer_set_repeat", luv_timer_set_repeat},
->   {"timer_get_repeat", luv_timer_get_repeat},
+## Timers
+
+Luv provides non-blocking timers so that you can schedule code to run on an interval or after a period of timeout.
+
+The `uv_timer_t` handle type if a direct desccendent of `uv_handle_t`.
+
+Here is an example of how to implement a JavaScript style `setTimeout` function:
+
+```lua
+local function setTimeout(fn, ms)
+  local handle = uv.new_timer()
+  function handle:ontimeout()
+    fn()
+    uv.timer_stop(handle)
+    ub.close(handle)
+  end
+  uv.timer_start(handle)
+end
+```
+
+And here is an example of implementing a JavaScript style `setInterval` function:
+
+```lua
+local function setInterval(fn, ms)
+  local handle = uv.new_timer()
+  function handle:ontimeout()
+    fn();
+  end
+  uv.timer_start(handle, ms, ms)
+  return handle
+end
+
+local clearTimer(handle)
+  uv.timer_stop(handle)
+  uv.close(handle)
+end
+```
+
+And here is a more advanced example that creates a repeating timer that halves the delay each iteration till it's down to 1ms.
+
+```lua
+local handle = uv.new_timer()
+local delay = 1024
+function handle:ontimeout()
+  p("tick", delay)
+  delay = delay / 2
+  if delay >= 1 then
+    uv.timer_set_repeat(handle, delay)
+    uv.timer_again(handle)
+  else
+    uv.timer_stop(handle)
+    uv.close(handle)
+    p("done")
+  end
+end
+uv.timer_start(handle, delay, 0)
+```
+
+### new_timer() -> uv_timer_t
+
+Create a new timer userdata.  Later this can be turned into a timeout or interval using the timer functions.
+
+### timer_start(timer, timeout, repeat)
+
+Given a timer handle, start it with a timeout and repeat.  To create a one-shot timeout, set repeat to zero.  For a recurring interval, set the same value to repeat.  Attach the `ontimeout` listener to know when it timeouts.
+
+### timer_stop(timer)
+
+Stop a timer.  Use this to cancel timeouts or intervals.
+
+### timer_again(timer)
+
+Use this to resume a stopped timer.
+
+### timer_set_repeat(timer, repeat)
+
+Give the timer a new repeat value.  If it was stopped, you'll need to resume it as well after setting this.
+
+### timer_get_repeat(timer) -> repeat
+
+Read the repeat value out of a timer instance
+
+## Streams
+
+Stream is a common interface between several libuv types.  Concrete types that are also streams include `uv_tty_t`, `uv_tcp_t`, and `uv_pipe_t`.
+
 > 
 >   {"write", luv_write},
 >   {"shutdown", luv_shutdown},
