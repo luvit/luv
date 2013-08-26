@@ -29,7 +29,7 @@ to use.  This means it's mostly a flat list of functions.
 I'll show some basic examples and go over the lua API here, but extensive docs
 can be found at the [uv book][] site.
 
-## Constructors
+## Types
 
 Libuv is a sort-of object oriented API.  There is a hierchary of object types
 (implemented as structs internally).
@@ -39,7 +39,179 @@ Libuv is a sort-of object oriented API.  There is a hierchary of object types
    - `uv_stream_t` - A shared abstract type for all stream-like types.
      - `uv_tcp_t` - Handle type for TCP servers and clients.  Create using `new_tcp()`.
      - `uv_tty_t` - A special stream for wrapping TTY file descriptors.  Create using `new_tty(fd, readable)`.
-     - `uv_pipe` - A
+     - `uv_pipe` - A generic stream.  Can represent inter-process pipes, named pipes, anonymous pipes, etc...
+
+## Handles
+
+The base type for all libuv types is the handle.  These functions are common
+for all libuv types.
+
+### ref(handle)
+
+Increment the refcount of a handle manually.  Only handles with positive
+refcounts will hold the main event loop open.
+
+### unref(handle)
+
+Decrement the refcount of a handle manually.  Only handles with positive
+refcounts will hold the main event loop open.
+
+This is useful for things like a background interval that doesn't prevent the
+process from exiting naturally.
+
+### close(handle)
+
+Tell a handle.  Attach an `onclose` handler if you wish to be notified when it's
+complete.
+
+```lua
+function handle:onclose()
+  -- Now it's closed
+end
+uv.close(handle)
+```
+
+### is_closing(handle) -> boolean
+
+Lets you know if a handle is already closing.
+
+## is_active(handle) -> boolean
+
+Returns 1 if the prepare/check/idle/timer handle has been started, 0 otherwise.
+For other handle types this always returns 1.
+
+### walk(callback)
+
+Walk all active handles.
+
+```lua
+uv.walk(function (handle, description)
+  -- Do something with this information.
+end)
+```
+
+## Timers
+
+Luv provides non-blocking timers so that you can schedule code to run on an
+interval or after a period of timeout.
+
+The `uv_timer_t` handle type if a direct desccendent of `uv_handle_t`.
+
+Here is an example of how to implement a JavaScript style `setTimeout` function:
+
+```lua
+local function setTimeout(fn, ms)
+  local handle = uv.new_timer()
+  function handle:ontimeout()
+    fn()
+    uv.timer_stop(handle)
+    ub.close(handle)
+  end
+  uv.timer_start(handle)
+end
+```
+
+And here is an example of implementing a JavaScript style `setInterval`
+function:
+
+```lua
+local function setInterval(fn, ms)
+  local handle = uv.new_timer()
+  function handle:ontimeout()
+    fn();
+  end
+  uv.timer_start(handle, ms, ms)
+  return handle
+end
+
+local clearTimer(handle)
+  uv.timer_stop(handle)
+  uv.close(handle)
+end
+```
+
+And here is a more advanced example that creates a repeating timer that halves
+the delay each iteration till it's down to 1ms.
+
+```lua
+local handle = uv.new_timer()
+local delay = 1024
+function handle:ontimeout()
+  p("tick", delay)
+  delay = delay / 2
+  if delay >= 1 then
+    uv.timer_set_repeat(handle, delay)
+    uv.timer_again(handle)
+  else
+    uv.timer_stop(handle)
+    uv.close(handle)
+    p("done")
+  end
+end
+uv.timer_start(handle, delay, 0)
+```
+
+### new_timer() -> uv_timer_t
+
+Create a new timer userdata.  Later this can be turned into a timeout or
+interval using the timer functions.
+
+### timer_start(timer, timeout, repeat)
+
+Given a timer handle, start it with a timeout and repeat.  To create a one-shot
+timeout, set repeat to zero.  For a recurring interval, set the same value to
+repeat.  Attach the `ontimeout` listener to know when it timeouts.
+
+### timer_stop(timer)
+
+Stop a timer.  Use this to cancel timeouts or intervals.
+
+### timer_again(timer)
+
+Use this to resume a stopped timer.
+
+### timer_set_repeat(timer, repeat)
+
+Give the timer a new repeat value.  If it was stopped, you'll need to resume it
+as well after setting this.
+
+### timer_get_repeat(timer) -> repeat
+
+Read the repeat value out of a timer instance
+
+## Streams
+
+Stream is a common interface between several libuv types.  Concrete types that
+are also streams include `uv_tty_t`, `uv_tcp_t`, and `uv_pipe_t`.
+
+The handle functions also accept streams as handles.
+
+### write(stream, value[s], [callback])
+
+Write a value (or array of values) to a stream.  The optional callback is to know when
+it's done writing.
+
+### shutdown(stream, [callback])
+
+Flush a stream and shut it down with optional completion callback.
+
+### read_start(stream)
+
+Tell a readable stream to start pulling from it's input source.
+
+### read_stop(stream)
+
+Tell a readable stream to stop pulling from it's input source.
+
+>   {"listen", luv_listen},
+>   {"accept", luv_accept},
+>   {"write", luv_write},
+>   {"is_readable", luv_is_readable},
+>   {"is_writable", luv_is_writable},
+
+## TCP
+
+TCP is for TCP network streams.  It works with all the stream functions as well
 
 ### new_tcp() -> uv_tcp_t
 
@@ -49,6 +221,23 @@ client.
 ```lua
 local server = uv.new_tcp()
 ```
+
+>   {"tcp_bind", luv_tcp_bind},
+>   {"tcp_getsockname", luv_tcp_getsockname},
+>   {"tcp_getpeername", luv_tcp_getpeername},
+>   {"tcp_connect", luv_tcp_connect},
+>   {"tcp_open", luv_tcp_open},
+>   {"tcp_nodelay", luv_tcp_nodelay},
+>   {"tcp_keepalive", luv_tcp_keepalive},
+
+## TTY
+
+TTY is for stdio file descriptors that are connected to interactive terminals
+and exposes them as streams.
+
+>   {"tty_set_mode", luv_tty_set_mode},
+>   {"tty_reset_mode", luv_tty_reset_mode},
+>   {"tty_get_winsize", luv_tty_get_winsize},
 
 ### new_tty(fd, readable) -> uv_tty_t
 
@@ -67,6 +256,12 @@ local std = {
 }
 ```
 
+## Pipe
+
+>   {"pipe_open", luv_pipe_open},
+>   {"pipe_bind", luv_pipe_bind},
+>   {"pipe_connect", luv_pipe_connect},
+
 ### new_pipe(ipc) -> uv_pipe_t
 
 Create a new pipe userdata.  Pipes can be used for many things such as named
@@ -76,6 +271,45 @@ is normally `false` or omitted except for advanced usage.
 ```lua
 local pipe = uv.new_pipe()
 ```
+
+## Processes
+
+>   {"spawn", luv_spawn},
+>   {"kill", luv_kill},
+>   {"process_kill", luv_process_kill},
+
+## File System
+
+>   {"fs_open", luv_fs_open},
+>   {"fs_close", luv_fs_close},
+>   {"fs_read", luv_fs_read},
+>   {"fs_write", luv_fs_write},
+>   {"fs_stat", luv_fs_stat},
+>   {"fs_fstat", luv_fs_fstat},
+>   {"fs_lstat", luv_fs_lstat},
+>   {"fs_unlink", luv_fs_unlink},
+>   {"fs_mkdir", luv_fs_mkdir},
+>   {"fs_rmdir", luv_fs_rmdir},
+>   {"fs_readdir", luv_fs_readdir},
+>   {"fs_rename", luv_fs_rename},
+>   {"fs_fsync", luv_fs_fsync},
+>   {"fs_fdatasync", luv_fs_fdatasync},
+>   {"fs_ftruncate", luv_fs_ftruncate},
+>   {"fs_sendfile", luv_fs_sendfile},
+>   {"fs_chmod", luv_fs_chmod},
+>   {"fs_utime", luv_fs_utime},
+>   {"fs_futime", luv_fs_futime},
+>   {"fs_link", luv_fs_link},
+>   {"fs_symlink", luv_fs_symlink},
+>   {"fs_readlink", luv_fs_readlink},
+>   {"fs_fchmod", luv_fs_fchmod},
+>   {"fs_chown", luv_fs_chown},
+>   {"fs_fchown", luv_fs_fchown},
+
+## Miscellaneous
+
+Libuv exposes a lot of random, but useful functions that help when interacting
+with the underlying operating system.
 
 ### guess_handle(fd) -> type string
 
@@ -208,202 +442,6 @@ Return detailed information about network interfaces.
 }
 ```
 
-## is_active(handle) -> boolean
-
-Returns 1 if the prepare/check/idle/timer handle has been started, 0 otherwise.
-For other handle types this always returns 1.
-
-### walk(callback)
-
-Walk all active handles.
-
-```lua
-uv.walk(function (handle, description)
-  -- Do something with this information.
-end)
-```
-
-### ref(handle)
-
-Increment the refcount of a handle manually.  Only handles with positive
-refcounts will hold the main event loop open.
-
-### unref(handle)
-
-Decrement the refcount of a handle manually.  Only handles with positive
-refcounts will hold the main event loop open.
-
-This is useful for things like a background interval that doesn't prevent the
-process from exiting naturally.
-
-### close(handle)
-
-Tell a handle.  Attach an `onclose` handler if you wish to be notified when it's
-complete.
-
-```lua
-function handle:onclose()
-  -- Now it's closed
-end
-uv.close(handle)
-```
-
-### is_closing(handle) -> boolean
-
-Lets you know if a handle is already closing.
-
-
-## Timers
-
-Luv provides non-blocking timers so that you can schedule code to run on an
-interval or after a period of timeout.
-
-The `uv_timer_t` handle type if a direct desccendent of `uv_handle_t`.
-
-Here is an example of how to implement a JavaScript style `setTimeout` function:
-
-```lua
-local function setTimeout(fn, ms)
-  local handle = uv.new_timer()
-  function handle:ontimeout()
-    fn()
-    uv.timer_stop(handle)
-    ub.close(handle)
-  end
-  uv.timer_start(handle)
-end
-```
-
-And here is an example of implementing a JavaScript style `setInterval`
-function:
-
-```lua
-local function setInterval(fn, ms)
-  local handle = uv.new_timer()
-  function handle:ontimeout()
-    fn();
-  end
-  uv.timer_start(handle, ms, ms)
-  return handle
-end
-
-local clearTimer(handle)
-  uv.timer_stop(handle)
-  uv.close(handle)
-end
-```
-
-And here is a more advanced example that creates a repeating timer that halves
-the delay each iteration till it's down to 1ms.
-
-```lua
-local handle = uv.new_timer()
-local delay = 1024
-function handle:ontimeout()
-  p("tick", delay)
-  delay = delay / 2
-  if delay >= 1 then
-    uv.timer_set_repeat(handle, delay)
-    uv.timer_again(handle)
-  else
-    uv.timer_stop(handle)
-    uv.close(handle)
-    p("done")
-  end
-end
-uv.timer_start(handle, delay, 0)
-```
-
-### new_timer() -> uv_timer_t
-
-Create a new timer userdata.  Later this can be turned into a timeout or
-interval using the timer functions.
-
-### timer_start(timer, timeout, repeat)
-
-Given a timer handle, start it with a timeout and repeat.  To create a one-shot
-timeout, set repeat to zero.  For a recurring interval, set the same value to
-repeat.  Attach the `ontimeout` listener to know when it timeouts.
-
-### timer_stop(timer)
-
-Stop a timer.  Use this to cancel timeouts or intervals.
-
-### timer_again(timer)
-
-Use this to resume a stopped timer.
-
-### timer_set_repeat(timer, repeat)
-
-Give the timer a new repeat value.  If it was stopped, you'll need to resume it
-as well after setting this.
-
-### timer_get_repeat(timer) -> repeat
-
-Read the repeat value out of a timer instance
-
-## Streams
-
-Stream is a common interface between several libuv types.  Concrete types that
-are also streams include `uv_tty_t`, `uv_tcp_t`, and `uv_pipe_t`.-w
-
->
->   {"write", luv_write},
->   {"shutdown", luv_shutdown},
->   {"read_start", luv_read_start},
->   {"read_stop", luv_read_stop},
->   {"listen", luv_listen},
->   {"accept", luv_accept},
->   {"write", luv_write},
->   {"is_readable", luv_is_readable},
->   {"is_writable", luv_is_writable},
->
->   {"tcp_bind", luv_tcp_bind},
->   {"tcp_getsockname", luv_tcp_getsockname},
->   {"tcp_getpeername", luv_tcp_getpeername},
->   {"tcp_connect", luv_tcp_connect},
->   {"tcp_open", luv_tcp_open},
->   {"tcp_nodelay", luv_tcp_nodelay},
->   {"tcp_keepalive", luv_tcp_keepalive},
->
->   {"tty_set_mode", luv_tty_set_mode},
->   {"tty_reset_mode", luv_tty_reset_mode},
->   {"tty_get_winsize", luv_tty_get_winsize},
->
->   {"pipe_open", luv_pipe_open},
->   {"pipe_bind", luv_pipe_bind},
->   {"pipe_connect", luv_pipe_connect},
->
->   {"spawn", luv_spawn},
->   {"kill", luv_kill},
->   {"process_kill", luv_process_kill},
->
->   {"fs_open", luv_fs_open},
->   {"fs_close", luv_fs_close},
->   {"fs_read", luv_fs_read},
->   {"fs_write", luv_fs_write},
->   {"fs_stat", luv_fs_stat},
->   {"fs_fstat", luv_fs_fstat},
->   {"fs_lstat", luv_fs_lstat},
->   {"fs_unlink", luv_fs_unlink},
->   {"fs_mkdir", luv_fs_mkdir},
->   {"fs_rmdir", luv_fs_rmdir},
->   {"fs_readdir", luv_fs_readdir},
->   {"fs_rename", luv_fs_rename},
->   {"fs_fsync", luv_fs_fsync},
->   {"fs_fdatasync", luv_fs_fdatasync},
->   {"fs_ftruncate", luv_fs_ftruncate},
->   {"fs_sendfile", luv_fs_sendfile},
->   {"fs_chmod", luv_fs_chmod},
->   {"fs_utime", luv_fs_utime},
->   {"fs_futime", luv_fs_futime},
->   {"fs_link", luv_fs_link},
->   {"fs_symlink", luv_fs_symlink},
->   {"fs_readlink", luv_fs_readlink},
->   {"fs_fchmod", luv_fs_fchmod},
->   {"fs_chown", luv_fs_chown},
->   {"fs_fchown", luv_fs_fchown},
->
 
 [lua]: http://www.lua.org/
 [luajit]: http://luajit.org/
