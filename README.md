@@ -399,9 +399,37 @@ Connect to a named pipe via a path.
 
 ## Processes
 
->   {"spawn", luv_spawn},
->   {"kill", luv_kill},
->   {"process_kill", luv_process_kill},
+Luv has powerful support for non-blocking child-processes complete with three
+streams for stdin, stdout, and stderr.
+
+### spawn(command, [args], [options]) -> process, stdin, stdout, stderr, pid
+
+Create a child-process.  Command is the executable to spawn.  If an args array
+is provided, those are the extra arguments passed to the process.
+
+Available options are:
+
+ - `cwd` - The cwd to run the child process in.
+ - `env` - A table of key-value pairs for a custom environment for the child.
+
+```lua
+local child, stdout, stdin, stderr, pid = uv.spawn("ls", {"-lh"}, {cwd = "/home/tim"})
+-- the stdio values are pipe streams.
+```
+
+### process_kill(process, [signal])
+
+Kill a child process.  If no signal is specefied, then it will default to
+`SIGTERM`.
+
+The signal can be either an interger or a string like `"SIGTERM"`.
+
+Note that even though this is called "kill", some signals don't actually kill
+the process.
+
+### kill(fd, signal)
+
+Kill an arbitrary process by pid.  Otherwise same semantics as `process_kill`.
 
 ## File System
 
