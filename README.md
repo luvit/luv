@@ -433,10 +433,19 @@ Kill an arbitrary process by pid.  Otherwise same semantics as `process_kill`.
 
 ## File System
 
->   {"fs_open", luv_fs_open},
->   {"fs_close", luv_fs_close},
->   {"fs_read", luv_fs_read},
->   {"fs_write", luv_fs_write},
+All filesystem commands can be run in blocking or non-blocking mode.
+
+If you want non-blocking mode, provide a callback at the end and it will be
+called when the operation is complete.
+
+### fs_open(path, flags, mode, [callback]) -> fd
+
+### fs_close(fd, [callback])
+
+### fs_read(fd, length, offset, [callback]) -> value
+
+### fs_write(fd, value, offset, [callback]) -> bytes written
+
 >   {"fs_stat", luv_fs_stat},
 >   {"fs_fstat", luv_fs_fstat},
 >   {"fs_lstat", luv_fs_lstat},
