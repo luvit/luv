@@ -230,7 +230,7 @@ Check if a stream is writable.
 
 ## TCP
 
-TCP is for TCP network streams.  It works with all the stream functions as well
+TCP is for network streams.  It works with all the stream functions as well
 
 An example server:
 
@@ -341,19 +341,61 @@ Get the window size of a tty.
 
 ## Pipe
 
->   {"pipe_open", luv_pipe_open},
->   {"pipe_bind", luv_pipe_bind},
->   {"pipe_connect", luv_pipe_connect},
+Pipes can be used for many things such as named pipes, anonymous pipes,
+child_process stdio, or even file stream pipes.
+
+Named pipes work much like TCP clients and servers using the same stream
+functions.
+
+Server example:
+
+```lua
+local server = uv.new_pipe()
+uv.pipe_bind(server, "/tmp/myserver")
+function server:onconnection()
+  local client = uv.new_pipe()
+  uv.accept(server, client)
+  -- now do something with the client...
+end
+uv.listen(server)
+```
+
+Client example:
+
+```lua
+local client = uv.new_pipe()
+function client:ondata(chunk)
+  -- handle data
+end
+function client:onend()
+  -- handle end
+  uv.close(client)
+end
+uv.pipe_connect(client, "/tmp/myserver", function ()
+  uv.read_start(client)
+  uv.write(client, "Hello")
+  uv.write(client, "World", function ()
+    -- both were written
+  end)
+end)
+```
 
 ### new_pipe(ipc) -> uv_pipe_t
 
-Create a new pipe userdata.  Pipes can be used for many things such as named
-pipes, anonymous pipes, child_process stdio, or even file stream pipes.  `ipc`
-is normally `false` or omitted except for advanced usage.
+Create a new pipe userdata.  `ipc` is normally `false` or omitted except for
+advanced usage.
 
-```lua
-local pipe = uv.new_pipe()
-```
+### pipe_open(pipe, fd)
+
+Open a file descriptor as a pipe.
+
+### pipe_bind(pipe, path)
+
+Create a named pipe by providing a filesystem path
+
+### pipe_connect(pipe, path)
+
+Connect to a named pipe via a path.
 
 ## Processes
 
