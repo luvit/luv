@@ -1,5 +1,6 @@
 uv = require('luv')
 local utils = require('utils')
+local stdin
 if uv.guess_handle(0) ~= "TTY" or
    uv.guess_handle(1) ~= "TTY" then
   error "stdio must be a tty"
