@@ -271,11 +271,11 @@ end)
 Create a new tcp userdata.  This can later be turned into a TCP server or
 client.
 
-## tcp_bind(tcp, host, port)
+### tcp_bind(tcp, host, port)
 
 Bind to a TCP port on the system.  Used mostly for creating servers.
 
-## tcp_getsockname(tcp) -> sockname
+### tcp_getsockname(tcp) -> sockname
 
 Get the local address of a TCP socket or server.
 
@@ -310,10 +310,6 @@ Enable or disable TCP keepalive on the socket.
 TTY is for stdio file descriptors that are connected to interactive terminals
 and exposes them as streams.
 
->   {"tty_set_mode", luv_tty_set_mode},
->   {"tty_reset_mode", luv_tty_reset_mode},
->   {"tty_get_winsize", luv_tty_get_winsize},
-
 ### new_tty(fd, readable) -> uv_tty_t
 
 Create a new tty userdata.  This is good for wrapping stdin, stdout, and stderr
@@ -330,6 +326,18 @@ local std = {
   err = uv.new_tty(2)
 }
 ```
+
+### tty_set_mode(tty, mode)
+
+Set the mode of a tty stream.
+
+### tty_reset_mode(tty)
+
+Reset the mode of a tty stream.
+
+### tty_get_winsize(tty) -> width, height
+
+Get the window size of a tty.
 
 ## Pipe
 
