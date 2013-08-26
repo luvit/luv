@@ -78,8 +78,8 @@ Lets you know if a handle is already closing.
 
 ## is_active(handle) -> boolean
 
-Returns 1 if the prepare/check/idle/timer handle has been started, 0 otherwise.
-For other handle types this always returns 1.
+Returns true if the prepare/check/idle/timer handle has been started, false
+otherwise. For other handle types this always returns true.
 
 ### walk(callback)
 
@@ -271,14 +271,39 @@ end)
 Create a new tcp userdata.  This can later be turned into a TCP server or
 client.
 
+## tcp_bind(tcp, host, port)
 
->   {"tcp_bind", luv_tcp_bind},
->   {"tcp_getsockname", luv_tcp_getsockname},
->   {"tcp_getpeername", luv_tcp_getpeername},
->   {"tcp_connect", luv_tcp_connect},
->   {"tcp_open", luv_tcp_open},
->   {"tcp_nodelay", luv_tcp_nodelay},
->   {"tcp_keepalive", luv_tcp_keepalive},
+Bind to a TCP port on the system.  Used mostly for creating servers.
+
+## tcp_getsockname(tcp) -> sockname
+
+Get the local address of a TCP socket or server.
+
+```lua
+> uv.tcp_getsockname(server)
+{ address = "0.0.0.0", family = 2, port = 5000 }
+```
+
+### tcp_getpeername(tcp)
+
+Get the remote address from a TCP socket.
+
+### tcp_connect(tcp, host, port, [callback])
+
+Connect to a remote TCP server.  The optional callback will be called when the
+connection finishes.
+
+### tcp_open(tcp, fd)
+
+Open an existing file descriptor.  Used to share TCP connections between processes.
+
+### tcp_nodelay(tcp, value)
+
+Enable or disable [nagle] on the TCP socket.
+
+### tcp_keepalive(tcp, value)
+
+Enable or disable TCP keepalive on the socket.
 
 ## TTY
 
@@ -499,3 +524,4 @@ Return detailed information about network interfaces.
 [node.js]: http://nodejs.org/
 [luvit]: http://luvit.io/
 [uv book]: http://nikhilm.github.io/uvbook/
+[nagle]: http://en.wikipedia.org/wiki/Nagle's_algorithm
