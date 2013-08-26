@@ -1690,7 +1690,6 @@ static const luaL_Reg luv_functions[] = {
   {"read_stop", luv_read_stop},
   {"listen", luv_listen},
   {"accept", luv_accept},
-  {"write", luv_write},
   {"is_readable", luv_is_readable},
   {"is_writable", luv_is_writable},
 
