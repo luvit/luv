@@ -446,27 +446,45 @@ called when the operation is complete.
 
 ### fs_write(fd, value, offset, [callback]) -> bytes written
 
->   {"fs_stat", luv_fs_stat},
->   {"fs_fstat", luv_fs_fstat},
->   {"fs_lstat", luv_fs_lstat},
->   {"fs_unlink", luv_fs_unlink},
->   {"fs_mkdir", luv_fs_mkdir},
->   {"fs_rmdir", luv_fs_rmdir},
->   {"fs_readdir", luv_fs_readdir},
->   {"fs_rename", luv_fs_rename},
->   {"fs_fsync", luv_fs_fsync},
->   {"fs_fdatasync", luv_fs_fdatasync},
->   {"fs_ftruncate", luv_fs_ftruncate},
->   {"fs_sendfile", luv_fs_sendfile},
->   {"fs_chmod", luv_fs_chmod},
->   {"fs_utime", luv_fs_utime},
->   {"fs_futime", luv_fs_futime},
->   {"fs_link", luv_fs_link},
->   {"fs_symlink", luv_fs_symlink},
->   {"fs_readlink", luv_fs_readlink},
->   {"fs_fchmod", luv_fs_fchmod},
->   {"fs_chown", luv_fs_chown},
->   {"fs_fchown", luv_fs_fchown},
+### fs_stat(path, [callback]) -> stat
+
+### fs_fstat(fd, [callback]) -> stat
+
+### fs_lstat(path, [callback]) -> stat
+
+### fs_unlink(path, [callback])
+
+### fs_mkdir(path, mode, [callback])
+
+### fs_rmdir(path, [callback])
+
+### fs_rename(path, new_path, [callback])
+
+### fs_fsync(fd, [callback])
+
+### fs_fdatasync(fd, [callback])
+
+### fs_ftruncate(fd, offset, [callback])
+
+### fs_sendfile(out_fd, in_fd, in_offset, length, [callback]) -> bytes written
+
+### fs_chmod(path, mode, [callback])
+
+### fs_fchmod(fd, mode, [callback])
+
+### fs_chown(path, uid, gid, [callback])
+
+### fs_fchown(fd, uid, git, [callback])
+
+### fs_utime(path, atime, mtime, [callback])
+
+### fs_futime(fd, atime, mtime, [callback])
+
+### fs_link(path, new_path, [callback])
+
+### fs_symlink(path, new_path, flags, [callback])
+
+### fs_readlink(path, [callback]) -> target
 
 ## Miscellaneous
 
