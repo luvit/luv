@@ -419,7 +419,7 @@ local child, stdout, stdin, stderr, pid = uv.spawn("ls", {"-lh"}, {cwd = "/home/
 
 ### process_kill(process, [signal])
 
-Kill a child process.  If no signal is specefied, then it will default to
+Kill a child process.  If no signal is specified, then it will default to
 `SIGTERM`.
 
 The signal can be either an interger or a string like `"SIGTERM"`.
