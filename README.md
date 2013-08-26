@@ -40,6 +40,7 @@ Libuv is a sort-of object oriented API.  There is a hierchary of object types
      - `uv_tcp_t` - Handle type for TCP servers and clients.  Create using `new_tcp()`.
      - `uv_tty_t` - A special stream for wrapping TTY file descriptors.  Create using `new_tty(fd, readable)`.
      - `uv_pipe` - A generic stream.  Can represent inter-process pipes, named pipes, anonymous pipes, etc...
+   - `uv_process_t` - The type for spawned child processes.
 
 ## Handles
 
@@ -199,28 +200,77 @@ Flush a stream and shut it down with optional completion callback.
 
 Tell a readable stream to start pulling from it's input source.
 
+Data events can be caught by adding an `onread` function on the stream.
+
 ### read_stop(stream)
 
 Tell a readable stream to stop pulling from it's input source.
 
->   {"listen", luv_listen},
->   {"accept", luv_accept},
->   {"write", luv_write},
->   {"is_readable", luv_is_readable},
->   {"is_writable", luv_is_writable},
+### listen(stream)
+
+For streams that are able to accept connections, this tells them to start
+listening.
+
+To handle the connections, attach an `onconnection` function to the stream.
+
+### accept(server, client)
+
+When a server stream gets a connection, it needs to create a client stream and
+accept it.
+
+See TCP for an example.
+
+### is_readable(stream) -> boolean
+
+Check if a stream is readable.
+
+### is_writable(stream) -> boolean
+
+Check if a stream is writable.
 
 ## TCP
 
 TCP is for TCP network streams.  It works with all the stream functions as well
+
+An example server:
+
+```lua
+local server = uv.new_tcp()
+uv.tcp_bind(server, "0.0.0.0", 8080)
+function server:onconnection()
+  local client = uv.new_tcp()
+  uv.accept(server, client)
+  print("A client connected")
+  -- now do something with the client...
+end
+uv.listen(server)
+```
+
+An example client:
+
+```lua
+local client = uv.new_tcp()
+function client:ondata(chunk)
+  -- handle data
+end
+function client:onend()
+  -- handle end
+  uv.close(client)
+end
+uv.tcp_connect(client, "127.0.0.1", 8080, function ()
+  uv.read_start(client)
+  uv.write(client, "Hello")
+  uv.write(client, "World", function ()
+    -- both were written
+  end)
+end)
+```
 
 ### new_tcp() -> uv_tcp_t
 
 Create a new tcp userdata.  This can later be turned into a TCP server or
 client.
 
-```lua
-local server = uv.new_tcp()
-```
 
 >   {"tcp_bind", luv_tcp_bind},
 >   {"tcp_getsockname", luv_tcp_getsockname},
