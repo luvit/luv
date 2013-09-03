@@ -1,5 +1,4 @@
-local utils = require('utils')
-local p = utils.prettyPrint
+local p = require('lib/utils').prettyPrint
 
 local port = os.getenv("IP") or "0.0.0.0"
 

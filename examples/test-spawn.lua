@@ -1,4 +1,4 @@
-local p = require('utils').prettyPrint
+local p = require('lib/utils').prettyPrint
 
 local uv = require('luv')
 
