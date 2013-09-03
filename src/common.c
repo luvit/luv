@@ -142,12 +142,6 @@ lua_State* luv_prepare_event(luv_handle_t* lhandle) {
   assert(lhandle->refCount); /* sanity check */
   assert(lhandle->ref != LUA_NOREF); /* the ref should be there */
   lua_rawgeti(L, LUA_REGISTRYINDEX, lhandle->ref);
-  if (lua_pushthread(L)) {
-    // in main thread, good
-    lua_pop(L, 1);
-  } else {
-    luaL_error(L, "TODO: Implement moving to main thread before calling callback");
-  }
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top + 1);
 #endif
