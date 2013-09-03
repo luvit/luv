@@ -14,15 +14,16 @@ option(USE_STRICT "Treat warning as errors" ${USE_STRICT})
 #configure_file(cmake/config.h.in config.h)
 
 # setup compiler flags
-add_definitions(-fPIC)
+add_definitions(-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -fPIC)
 if(USE_STRICT)
   add_definitions(-Wall -Werror)
 endif()
+# debug Lua stack
+add_definitions(-DLUV_STACK_CHECK)
 
 # collect source files
 list(APPEND SOURCES
-  luv.c common.c luv_functions.c luv_handle.c luv_stream.c
-  luv_tcp.c luv_timer.c
+  luv.c common.c luv_functions.c
 )
 
 # find lua/luajit
@@ -35,8 +36,8 @@ find_package(Threads REQUIRED)
 list(APPEND LIBS ${CMAKE_THREAD_LIBS_INIT})
 
 # build libuv
-#execute_process(WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-#  COMMAND git submodule update --init libuv)
+execute_process(WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+  COMMAND git submodule update --init libuv)
 file(COPY "${PROJECT_SOURCE_DIR}/cmake/uv/CMakeLists.txt"
   DESTINATION "${PROJECT_SOURCE_DIR}/libuv")
 add_subdirectory("${PROJECT_SOURCE_DIR}/libuv")

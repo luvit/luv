@@ -52,7 +52,6 @@ set(UV_WIN32_SRCS
     )
 
 set(UV_POSIX_SRCS
-    include/uv-private/ev.h
     include/uv-private/uv-unix.h
     include/uv-private/uv-linux.h
     include/uv-private/uv-sunos.h
@@ -62,10 +61,6 @@ set(UV_POSIX_SRCS
     src/unix/core.c
     src/unix/dl.c
     src/unix/error.c
-    src/unix/ev/ev.c
-    src/unix/ev/ev_vars.h
-    src/unix/ev/ev_wrap.h
-    src/unix/ev/event.h
     src/unix/fs.c
     src/unix/getaddrinfo.c
     src/unix/internal.h
