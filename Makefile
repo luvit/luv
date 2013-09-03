@@ -29,3 +29,4 @@ luv.so: temp/luv.o libuv/libuv.a temp/common.o
 clean:
 	make -C libuv clean
 	rm -rf temp
+	rm -f luv.so
