@@ -346,9 +346,12 @@ static void on_timeout(uv_timer_t* handle, int status) {
   int top = lua_gettop(L) - 1;
 #endif
   if (luv_get_callback(L, -1, "ontimeout")) {
+    lua_remove(L, -3);
     luv_call(L, 1, 0);
   }
-  lua_pop(L, 1);
+  else {
+    lua_pop(L, 1);
+  }
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
 #endif
