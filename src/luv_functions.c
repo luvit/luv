@@ -343,14 +343,22 @@ static int luv_is_closing(lua_State* L) {
 static void on_timeout(uv_timer_t* handle, int status) {
   lua_State* L = luv_prepare_event(handle->data);
 #ifdef LUV_STACK_CHECK
-  int top = lua_gettop(L) - 1;
+  int top = lua_gettop(L);
 #endif
+  luv_stack_dump(L, top, "after luv_prepare_event");
   if (luv_get_callback(L, -1, "ontimeout")) {
+    luv_stack_dump(L, top, "after luv_get_callback");
+    lua_remove(L, -3);
+    luv_stack_dump(L, top, "after luv_remove");
     luv_call(L, 1, 0);
+    luv_stack_dump(L, top, "after luv_call");
   }
-  lua_pop(L, 1);
+  else {
+    lua_pop(L, 1);
+    luv_stack_dump(L, top, "after lua_pop");
+  }
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assert(lua_gettop(L) == top- 1);
 #endif
 }
 
