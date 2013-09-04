@@ -358,7 +358,7 @@ static void on_timeout(uv_timer_t* handle, int status) {
     luv_stack_dump(L, top, "after lua_pop");
   }
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top- 1);
+  assert(lua_gettop(L) == top - 1);
 #endif
 }
 
