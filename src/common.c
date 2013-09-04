@@ -165,10 +165,10 @@ int luv_get_callback(lua_State* L, int index, const char* name) {
     if (index < 0) index--; // Relative indexes need adjusting
     lua_pushvalue(L, index);
     if (index < 0) index--; // Relative indexes need adjusting
-    lua_remove(L, index); // Remove the userdata
   } else {
-    lua_pop(L, 2); // Remove the non function and the userdata.
+    lua_pop(L, 1); // Remove the non function
   }
+  lua_remove(L, index); // Remove the userdata
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top + (isfunc ? 1 : -1));
 #endif
