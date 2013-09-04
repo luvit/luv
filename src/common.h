@@ -93,7 +93,7 @@ void luv_handle_unref(lua_State* L, luv_handle_t* lhandle);
 
 lua_State* luv_prepare_event(luv_handle_t* lhandle);
 lua_State* luv_prepare_callback(luv_req_t* lreq);
-int luv_get_callback(lua_State* L, int index, const char* name);
+int luv_get_callback(lua_State* L, const char* name);
 void luv_call (lua_State *L, int nargs, int nresults);
 
 void luv_stack_dump(lua_State* L, int top, const char* name);

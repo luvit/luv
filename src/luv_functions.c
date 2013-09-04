@@ -242,7 +242,7 @@ static void on_close(uv_handle_t* handle) {
 #ifdef LUV_STACK_CHECK
   int top = lua_gettop(L) - 1;
 #endif
-  if (luv_get_callback(L, -1, "onclose")) {
+  if (luv_get_callback(L, "onclose")) {
     luv_call(L, 1, 0);
   }
 #ifdef LUV_STACK_CHECK
@@ -344,7 +344,7 @@ static void on_timeout(uv_timer_t* handle, int status) {
 #ifdef LUV_STACK_CHECK
   int top = lua_gettop(L) - 1;
 #endif
-  if (luv_get_callback(L, -1, "ontimeout")) {
+  if (luv_get_callback(L, "ontimeout")) {
     luv_call(L, 1, 0);
   }
 #ifdef LUV_STACK_CHECK
@@ -444,14 +444,14 @@ static void luv_on_read(uv_stream_t* handle, ssize_t nread, uv_buf_t buf) {
 #endif
   if (nread >= 0) {
 
-    if (luv_get_callback(L, -1, "ondata")) {
+    if (luv_get_callback(L, "ondata")) {
       lua_pushlstring (L, buf.base, nread);
       luv_call(L, 2, 0);
     }
   } else {
     uv_err_t err = uv_last_error(uv_default_loop());
     if (err.code == UV_EOF) {
-      if (luv_get_callback(L, -1, "onend")) {
+      if (luv_get_callback(L, "onend")) {
         luv_call(L, 1, 0);
       }
     } else if (err.code != UV_ECONNRESET) {
@@ -473,7 +473,7 @@ static void luv_on_connection(uv_stream_t* handle, int status) {
 #ifdef LUV_STACK_CHECK
   int top = lua_gettop(L) - 1;
 #endif
-  if (luv_get_callback(L, -1, "onconnection")) {
+  if (luv_get_callback(L, "onconnection")) {
     luv_call(L, 1, 0);
   }
 #ifdef LUV_STACK_CHECK
@@ -1008,7 +1008,7 @@ void luv_process_on_exit(uv_process_t* process, int exit_status, int term_signal
 #ifdef LUV_STACK_CHECK
   int top = lua_gettop(L) - 1;
 #endif
-  if (luv_get_callback(L, -1, "onexit")) {
+  if (luv_get_callback(L, "onexit")) {
     lua_pushinteger(L, exit_status);
     lua_pushinteger(L, term_signal);
     luv_call(L, 3, 0);

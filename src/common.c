@@ -151,24 +151,22 @@ lua_State* luv_prepare_event(luv_handle_t* lhandle) {
 // Get a named callback.  If it's there, push the function and the userdata on the stack.
 // otherwise return 0
 // either way, the original userdata is removed.
-int luv_get_callback(lua_State* L, int index, const char* name) {
+int luv_get_callback(lua_State* L, const char* name) {
 #ifdef LUV_STACK_CHECK
   int top = lua_gettop(L);
 #endif
   /* Get the connection handler */
-  lua_getuservalue(L, index);
+  lua_getuservalue(L, -1);
   lua_getfield(L, -1, name);
   lua_remove(L, -2); // Remove the uservalue
 
   int isfunc = lua_isfunction(L, -1);
   if (isfunc) {
-    if (index < 0) index--; // Relative indexes need adjusting
-    lua_pushvalue(L, index);
-    if (index < 0) index--; // Relative indexes need adjusting
+    lua_pushvalue(L, -2);
+    lua_remove(L, -3); // Remove the original userdata
   } else {
-    lua_pop(L, 1); // Remove the non function
+    lua_pop(L, 2); // Remove the non function and the userdata
   }
-  lua_remove(L, index); // Remove the userdata
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top + (isfunc ? 1 : -1));
 #endif
