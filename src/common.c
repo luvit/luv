@@ -197,3 +197,41 @@ void luv_call(lua_State *C, int nargs, int nresults) {
   }
   lua_call(L, nargs, nresults);
 }
+
+void luv_stack_dump(lua_State* L, int top, const char* name) {
+  int i, l;
+  printf("\nAPI STACK DUMP: %s\n", name);
+  for (i = top, l = lua_gettop(L); i <= l; i++) {
+    const char* typename = lua_typename(L, lua_type(L, i));
+    switch (lua_type(L, i)) {
+      case LUA_TNIL:
+        printf("  %d: %s\n", i, typename);
+        break;
+      case LUA_TNUMBER:
+        printf("  %d: %s\t%f\n", i, typename, lua_tonumber(L, i));
+        break;
+      case LUA_TBOOLEAN:
+        printf("  %d: %s\n\t%s", i, typename, lua_toboolean(L, i) ? "true" : "false");
+        break;
+      case LUA_TSTRING:
+        printf("  %d: %s\t%s\n", i, typename, lua_tostring(L, i));
+        break;
+      case LUA_TTABLE:
+        printf("  %d: %s\n", i, typename);
+        break;
+      case LUA_TFUNCTION:
+        printf("  %d: %s\t%p\n", i, typename, lua_tocfunction(L, i));
+        break;
+      case LUA_TUSERDATA:
+        printf("  %d: %s\t%p\n", i, typename, lua_touserdata(L, i));
+        break;
+      case LUA_TTHREAD:
+        printf("  %d: %s\t%p\n", i, typename, lua_tothread(L, i));
+        break;
+      case LUA_TLIGHTUSERDATA:
+        printf("  %d: %s\t%p\n", i, typename, lua_touserdata(L, i));
+        break;
+    }
+  }
+  printf("\n");
+}
