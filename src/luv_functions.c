@@ -245,7 +245,6 @@ static void on_close(uv_handle_t* handle) {
   if (luv_get_callback(L, -1, "onclose")) {
     luv_call(L, 1, 0);
   }
-  lua_pop(L, 1);
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
 #endif
@@ -346,11 +345,7 @@ static void on_timeout(uv_timer_t* handle, int status) {
   int top = lua_gettop(L) - 1;
 #endif
   if (luv_get_callback(L, -1, "ontimeout")) {
-    lua_remove(L, -3);
     luv_call(L, 1, 0);
-  }
-  else {
-    lua_pop(L, 1);
   }
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
@@ -453,7 +448,6 @@ static void luv_on_read(uv_stream_t* handle, ssize_t nread, uv_buf_t buf) {
       lua_pushlstring (L, buf.base, nread);
       luv_call(L, 2, 0);
     }
-
   } else {
     uv_err_t err = uv_last_error(uv_default_loop());
     if (err.code == UV_EOF) {
@@ -467,8 +461,6 @@ static void luv_on_read(uv_stream_t* handle, ssize_t nread, uv_buf_t buf) {
       assert(0);
     }
   }
-  /* Release the userdata */
-  lua_pop(L, 1);
 
   free(buf.base);
 #ifdef LUV_STACK_CHECK
@@ -484,7 +476,6 @@ static void luv_on_connection(uv_stream_t* handle, int status) {
   if (luv_get_callback(L, -1, "onconnection")) {
     luv_call(L, 1, 0);
   }
-  lua_pop(L, 1);
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
 #endif
@@ -1022,7 +1013,6 @@ void luv_process_on_exit(uv_process_t* process, int exit_status, int term_signal
     lua_pushinteger(L, term_signal);
     luv_call(L, 3, 0);
   }
-  lua_pop(L, 1);
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
 #endif
