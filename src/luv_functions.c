@@ -268,8 +268,10 @@ static void on_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
       uv_inet_ntop(curr->ai_family, addr, ip, INET6_ADDRSTRLEN);
       lua_pushstring(L, ip);
       lua_setfield(L, -2, "addr");
-      lua_pushinteger(L, ntohs(port));
-      lua_setfield(L, -2, "port");
+      if (ntohs(port)) {
+        lua_pushinteger(L, ntohs(port));
+        lua_setfield(L, -2, "port");
+      }
       if (curr->ai_socktype == SOCK_STREAM) {
         lua_pushstring(L, "STREAM");
         lua_setfield(L, -2, "socktype");
