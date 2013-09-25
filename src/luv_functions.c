@@ -456,7 +456,7 @@ static int luv_getaddrinfo(lua_State* L) {
   req = malloc(sizeof(*req));
   req->data = (void*)callback;
 
-  printf("node=%p service=%p hints=%p\n", node, service, hints);
+  // printf("node=%p service=%p hints=%p\n", node, service, hints);
   // Make the call
   if (uv_getaddrinfo(uv_default_loop(), req, on_addrinfo, node, service, hints)) {
     uv_err_t err = uv_last_error(uv_default_loop());
