@@ -237,8 +237,10 @@ static int luv_interface_addresses(lua_State* L) {
 /******************************************************************************/
 
 static void on_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo* res) {
-  luv_req_t* lreq = req->data;
-  lua_State* L = luv_prepare_callback(lreq);
+  luv_callback_t* callback = req->data;
+  lua_State* L = callback->L;
+  /* Get the callback and push the type */
+  lua_rawgeti(L, LUA_REGISTRYINDEX, callback->ref);
 
   lua_newtable(L);
   struct addrinfo* curr = res;
@@ -314,40 +316,152 @@ static void on_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
   }
   luv_call(L, 1, 0);
 
-  luv_handle_unref(L, lreq->lhandle);
-  free(lreq->lhandle);
-  free(lreq);
+  // luv_handle_unref(L, lreq->lhandle);
+  free(callback);
   free(req);
   uv_freeaddrinfo(res);
 }
 
 static int luv_getaddrinfo(lua_State* L) {
+  const char* node;
+  const char* service;
   uv_getaddrinfo_t* req;
-  luv_req_t* lreq;
-  luv_handle_t* lhandle;
-  const char* node = NULL;
-  const char* service = NULL;
+  luv_callback_t* callback;
+  struct addrinfo hints_s;
+  struct addrinfo* hints = &hints_s;
 
-  if (!lua_isnoneornil(L, 1)) node = luaL_checkstring(L, 1);
-  if (!lua_isnoneornil(L, 2)) service = luaL_checkstring(L, 2);
-  luaL_checktype(L, 3, LUA_TFUNCTION);
+  if (!lua_isnil(L, 1)) node = luaL_checkstring(L, 1);
+  else node = NULL;
+  if (!lua_isnil(L, 2)) service = luaL_checkstring(L, 2);
+  else service = NULL;
+  if (!lua_isnil(L, 3)) luaL_checktype(L, 3, LUA_TTABLE);
+  else hints = NULL;
+  luaL_checktype(L, 4, LUA_TFUNCTION);
 
+  if (hints) {
+    // Initialize the hints
+    memset(hints, 0, sizeof(struct addrinfo));
+
+    // Process the `family` hint.
+    lua_getfield(L, 3, "family");
+    switch (lua_tointeger(L, -1)) {
+      case 0:
+        hints->ai_family = AF_UNSPEC;
+        break;
+      case 4:
+        hints->ai_family = AF_INET;
+        break;
+      case 6:
+        hints->ai_family = AF_INET6;
+        break;
+      default:
+        return luaL_error(L, "`family` must be integer 0 (any), 4 (IPv4), or 6 (IPv6)");
+        break;
+    }
+    lua_pop(L, 1);
+
+    // Process `socktype` hint
+    lua_getfield(L, 3, "socktype");
+    if (!lua_isnil(L, -1)) {
+      const char* socktype = luaL_checkstring(L, -1);
+      if (strcmp(socktype, "STREAM") == 0) {
+        hints->ai_socktype = SOCK_STREAM;
+      }
+      else if (strcmp(socktype, "DGRAM") == 0) {
+        hints->ai_socktype = SOCK_DGRAM;
+      }
+      else {
+        return luaL_error(L, "`socktype` must be 'STREAM' or 'DGRAM' or nil");
+      }
+    }
+    lua_pop(L, 1);
+
+    // Process the `protocol` hint
+    lua_getfield(L, 3, "protocol");
+    if (!lua_isnil(L, -1)) {
+      const char* protocol = luaL_checkstring(L, -1);
+      if (strcmp(protocol, "UNIX") == 0) {
+        hints->ai_protocol = AF_UNIX;
+      }
+      else if (strcmp(protocol, "INET") == 0) {
+        hints->ai_protocol = AF_INET;
+      }
+      else if (strcmp(protocol, "INET6") == 0) {
+        hints->ai_protocol = AF_INET6;
+      }
+      else if (strcmp(protocol, "IPX") == 0) {
+        hints->ai_protocol = AF_IPX;
+      }
+      else if (strcmp(protocol, "NETLINK") == 0) {
+        hints->ai_protocol = AF_NETLINK;
+      }
+      else if (strcmp(protocol, "X25") == 0) {
+        hints->ai_protocol = AF_X25;
+      }
+      else if (strcmp(protocol, "AX25") == 0) {
+        hints->ai_protocol = AF_AX25;
+      }
+      else if (strcmp(protocol, "ATMPVC") == 0) {
+        hints->ai_protocol = AF_ATMPVC;
+      }
+      else if (strcmp(protocol, "APPLETALK") == 0) {
+        hints->ai_protocol = AF_APPLETALK;
+      }
+      else if (strcmp(protocol, "PACKET") == 0) {
+        hints->ai_protocol = AF_PACKET;
+      }
+      else {
+        return luaL_error(L, "Unknown protocol");
+      }
+    }
+    lua_pop(L, 1);
+
+    lua_getfield(L, 3, "addrconfig");
+    if (lua_toboolean(L, -1)) hints->ai_flags |=  AI_ADDRCONFIG;
+    lua_pop(L, 1);
+
+    lua_getfield(L, 3, "v4mapped");
+    if (lua_toboolean(L, -1)) hints->ai_flags |=  AI_V4MAPPED;
+    lua_pop(L, 1);
+
+    lua_getfield(L, 3, "all");
+    if (lua_toboolean(L, -1)) hints->ai_flags |=  AI_ALL;
+    lua_pop(L, 1);
+
+    lua_getfield(L, 3, "numerichost");
+    if (lua_toboolean(L, -1)) hints->ai_flags |=  AI_NUMERICHOST;
+    lua_pop(L, 1);
+
+    lua_getfield(L, 3, "passive");
+    if (lua_toboolean(L, -1)) hints->ai_flags |=  AI_PASSIVE;
+    lua_pop(L, 1);
+
+    lua_getfield(L, 3, "numericserv");
+    if (lua_toboolean(L, -1)) hints->ai_flags |=  AI_NUMERICSERV;
+    lua_pop(L, 1);
+
+    lua_getfield(L, 3, "canonname");
+    if (lua_toboolean(L, -1)) hints->ai_flags |=  AI_CANONNAME;
+    lua_pop(L, 1);
+  }
+
+  // Store the callback
+  callback = malloc(sizeof(*callback));
+  callback->L = L;
+  lua_pushvalue(L, 4);
+  callback->ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+  // Create the request
   req = malloc(sizeof(*req));
-  lreq = malloc(sizeof(*lreq));
-  lhandle = malloc(sizeof(*lhandle));
-  req->data = (void*)lreq;
-  lreq->lhandle = lhandle;
-  lhandle->L = L;
-  lreq->data_ref = LUA_NOREF;
-  lua_pushvalue(L, 3);
-  lreq->callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+  req->data = (void*)callback;
 
-  luv_handle_ref(L, lhandle, 1);
-
-  if (uv_getaddrinfo(uv_default_loop(), req, on_addrinfo, node, service, NULL)) {
+  printf("node=%p service=%p hints=%p\n", node, service, hints);
+  // Make the call
+  if (uv_getaddrinfo(uv_default_loop(), req, on_addrinfo, node, service, hints)) {
     uv_err_t err = uv_last_error(uv_default_loop());
     return luaL_error(L, "getaddrinfo: %s", uv_strerror(err));
   }
+
   return 0;
 }
 
