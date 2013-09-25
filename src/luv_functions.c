@@ -239,33 +239,39 @@ static int luv_interface_addresses(lua_State* L) {
 static void on_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo* res) {
   luv_callback_t* callback = req->data;
   lua_State* L = callback->L;
-  /* Get the callback and push the type */
+  /* Get the callback and remove the reference to it. */
   lua_rawgeti(L, LUA_REGISTRYINDEX, callback->ref);
+  luaL_unref(L, LUA_REGISTRYINDEX, callback->ref);
+  free(callback);
+  free(req);
 
   lua_newtable(L);
   struct addrinfo* curr = res;
   char ip[INET6_ADDRSTRLEN];
   const char *addr;
+  int port;
   int i = 1;
   for (curr = res; curr; curr = curr->ai_next) {
     if (curr->ai_family == AF_INET || curr->ai_family == AF_INET6) {
       lua_newtable(L);
       if (curr->ai_family == AF_INET) {
         addr = (char*) &((struct sockaddr_in*) curr->ai_addr)->sin_addr;
+        port = ((struct sockaddr_in*) curr->ai_addr)->sin_port;
+        printf("addr='%s' port6=%d\n", addr, port);
         lua_pushstring(L, "IPv4");
         lua_setfield(L, -2, "family");
-        lua_pushinteger(L, ((struct sockaddr_in*) curr->ai_addr)->sin_port);
-        lua_setfield(L, -2, "port");
       } else {
         addr = (char*) &((struct sockaddr_in6*) curr->ai_addr)->sin6_addr;
+        port = ((struct sockaddr_in6*) curr->ai_addr)->sin6_port;
+        printf("addr6='%s' port6=%d\n", addr, port);
         lua_pushstring(L, "IPv6");
         lua_setfield(L, -2, "family");
-        lua_pushinteger(L, ((struct sockaddr_in6*) curr->ai_addr)->sin6_port);
-        lua_setfield(L, -2, "port");
       }
       uv_inet_ntop(curr->ai_family, addr, ip, INET6_ADDRSTRLEN);
       lua_pushstring(L, ip);
       lua_setfield(L, -2, "addr");
+      lua_pushinteger(L, ntohs(port));
+      lua_setfield(L, -2, "port");
       if (curr->ai_socktype == SOCK_STREAM) {
         lua_pushstring(L, "STREAM");
         lua_setfield(L, -2, "socktype");
@@ -314,12 +320,9 @@ static void on_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
       lua_rawseti(L, -2, i++);
     }
   }
-  luv_call(L, 1, 0);
-
-  // luv_handle_unref(L, lreq->lhandle);
-  free(callback);
-  free(req);
   uv_freeaddrinfo(res);
+
+  luv_call(L, 1, 0);
 }
 
 static int luv_getaddrinfo(lua_State* L) {
