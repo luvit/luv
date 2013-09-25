@@ -257,13 +257,11 @@ static void on_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
       if (curr->ai_family == AF_INET) {
         addr = (char*) &((struct sockaddr_in*) curr->ai_addr)->sin_addr;
         port = ((struct sockaddr_in*) curr->ai_addr)->sin_port;
-        printf("addr='%s' port6=%d\n", addr, port);
         lua_pushstring(L, "IPv4");
         lua_setfield(L, -2, "family");
       } else {
         addr = (char*) &((struct sockaddr_in6*) curr->ai_addr)->sin6_addr;
         port = ((struct sockaddr_in6*) curr->ai_addr)->sin6_port;
-        printf("addr6='%s' port6=%d\n", addr, port);
         lua_pushstring(L, "IPv6");
         lua_setfield(L, -2, "family");
       }
