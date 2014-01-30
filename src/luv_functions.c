@@ -478,6 +478,7 @@ static void on_close(uv_handle_t* handle) {
   if (luv_get_callback(L, "onclose")) {
     luv_call(L, 1, 0);
   }
+  luv_handle_unref(L, handle->data);
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
 #endif
