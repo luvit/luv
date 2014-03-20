@@ -708,7 +708,8 @@ static void luv_on_connection(uv_stream_t* handle, int status) {
   int top = lua_gettop(L) - 1;
 #endif
   if (luv_get_callback(L, "onconnection")) {
-    luv_call(L, 1, 0);
+     lua_pushinteger (L, status);
+     luv_call(L, 2, 0);
   }
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
@@ -922,7 +923,8 @@ static void luv_after_connect(uv_connect_t* req, int status) {
   int top = lua_gettop(L) - 1;
 #endif
   if (lua_isfunction(L, -1)) {
-     luv_call(L, 0, 0);
+     lua_pushinteger (L, status);
+     luv_call(L, 1, 0);
   } else {
     lua_pop(L, 1);
   }
@@ -1722,7 +1724,7 @@ static int luv_fs_open(lua_State* L) {
 
 static int luv_fs_close(lua_State* L) {
   uv_file file = luaL_checkint(L, 1);
-  FS_CALL(close, 4, file);
+  FS_CALL(close, 2, file);
 }
 
 static int luv_fs_read(lua_State* L) {
