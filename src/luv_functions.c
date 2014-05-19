@@ -281,36 +281,56 @@ static void on_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
         lua_setfield(L, -2, "socktype");
       }
       switch (curr->ai_protocol) {
+#ifdef AF_UNIX
         case AF_UNIX:
           lua_pushstring(L, "UNIX");
           break;
+#endif
+#ifdef AF_INET
         case AF_INET:
           lua_pushstring(L, "INET");
           break;
+#endif
+#ifdef AF_INET6
         case AF_INET6:
           lua_pushstring(L, "INET6");
           break;
+#endif
+#ifdef AF_IPX
         case AF_IPX:
           lua_pushstring(L, "IPX");
           break;
+#endif
+#ifdef AF_NETLINK
         case AF_NETLINK:
           lua_pushstring(L, "NETLINK");
           break;
+#endif
+#ifdef AF_X25
         case AF_X25:
           lua_pushstring(L, "X25");
           break;
+#endif
+#ifdef AF_AX25
         case AF_AX25:
           lua_pushstring(L, "AX25");
           break;
+#endif
+#ifdef AF_ATMPVC
         case AF_ATMPVC:
           lua_pushstring(L, "ATMPVC");
           break;
+#endif
+#ifdef AF_APPLETALK
         case AF_APPLETALK:
           lua_pushstring(L, "APPLETALK");
           break;
+#endif
+#ifdef AF_PACKET
         case AF_PACKET:
           lua_pushstring(L, "PACKET");
           break;
+#endif
         default:
           lua_pushstring(L, NULL);
       }
@@ -383,37 +403,67 @@ static int luv_getaddrinfo(lua_State* L) {
     lua_getfield(L, 3, "protocol");
     if (!lua_isnil(L, -1)) {
       const char* protocol = luaL_checkstring(L, -1);
+#ifdef AF_UNIX
       if (strcmp(protocol, "UNIX") == 0) {
         hints->ai_protocol = AF_UNIX;
       }
-      else if (strcmp(protocol, "INET") == 0) {
+      else
+#endif
+#ifdef AF_INET
+      if (strcmp(protocol, "INET") == 0) {
         hints->ai_protocol = AF_INET;
       }
-      else if (strcmp(protocol, "INET6") == 0) {
+      else
+#endif
+#ifdef AF_INET6
+      if (strcmp(protocol, "INET6") == 0) {
         hints->ai_protocol = AF_INET6;
       }
-      else if (strcmp(protocol, "IPX") == 0) {
+      else
+#endif
+#ifdef AF_IPX
+      if (strcmp(protocol, "IPX") == 0) {
         hints->ai_protocol = AF_IPX;
       }
-      else if (strcmp(protocol, "NETLINK") == 0) {
+      else
+#endif
+#ifdef AF_NETLINK
+      if (strcmp(protocol, "NETLINK") == 0) {
         hints->ai_protocol = AF_NETLINK;
       }
-      else if (strcmp(protocol, "X25") == 0) {
+      else
+#endif
+#ifdef AF_X25
+      if (strcmp(protocol, "X25") == 0) {
         hints->ai_protocol = AF_X25;
       }
-      else if (strcmp(protocol, "AX25") == 0) {
+      else
+#endif
+#ifdef AF_AX25
+      if (strcmp(protocol, "AX25") == 0) {
         hints->ai_protocol = AF_AX25;
       }
-      else if (strcmp(protocol, "ATMPVC") == 0) {
+      else
+#endif
+#ifdef AF_ATMPVC
+      if (strcmp(protocol, "ATMPVC") == 0) {
         hints->ai_protocol = AF_ATMPVC;
       }
-      else if (strcmp(protocol, "APPLETALK") == 0) {
+      else
+#endif
+#ifdef AF_APPLETALK
+      if (strcmp(protocol, "APPLETALK") == 0) {
         hints->ai_protocol = AF_APPLETALK;
       }
-      else if (strcmp(protocol, "PACKET") == 0) {
+      else
+#endif
+#ifdef AF_PACKET
+      if (strcmp(protocol, "PACKET") == 0) {
         hints->ai_protocol = AF_PACKET;
       }
-      else {
+      else
+#endif
+      {
         return luaL_error(L, "Unknown protocol");
       }
     }
