@@ -490,7 +490,14 @@ static int luv_getaddrinfo(lua_State* L) {
     lua_pop(L, 1);
 
     lua_getfield(L, 3, "numericserv");
-    if (lua_toboolean(L, -1)) hints->ai_flags |=  AI_NUMERICSERV;
+    if (lua_toboolean(L, -1)) {
+        hints->ai_flags |=  AI_NUMERICSERV;
+        /* On OS X upto at least OSX 10.9, getaddrinfo crashes
+         * if AI_NUMERICSERV is set and the servname is NULL or "0".
+         * This workaround avoids a segfault in libsystem.
+         */
+        if(NULL == service) service = "00";
+    }
     lua_pop(L, 1);
 
     lua_getfield(L, 3, "canonname");
