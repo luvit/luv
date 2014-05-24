@@ -2,10 +2,14 @@
 #define LIB_LUV_FUNCTIONS
 #include "common.h"
 
+#ifndef LUA_OK
+#define LUA_OK 0
+#endif
+
 static int new_tcp(lua_State* L) {
   uv_tcp_t* handle = luv_create_tcp(L);
-  if (uv_tcp_init(uv_default_loop(), handle)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err;
+  if ((err = uv_tcp_init(uv_default_loop(), handle)) >= 0) {
     return luaL_error(L, "new_tcp: %s", uv_strerror(err));
   }
 //  fprintf(stderr, "new tcp \tlhandle=%p handle=%p\n", handle->data, handle);
@@ -14,8 +18,8 @@ static int new_tcp(lua_State* L) {
 
 static int new_timer(lua_State* L) {
   uv_timer_t* handle = luv_create_timer(L);
-  if (uv_timer_init(uv_default_loop(), handle)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err;
+  if ((err = uv_timer_init(uv_default_loop(), handle)) >= 0) {
     return luaL_error(L, "new_timer: %s", uv_strerror(err));
   }
 //  fprintf(stderr, "new timer \tlhandle=%p handle=%p\n", handle->data, handle);
@@ -26,8 +30,8 @@ static int new_tty(lua_State* L) {
   uv_tty_t* handle = luv_create_tty(L);
   uv_file fd = luaL_checkint(L, 1);
   int readable = lua_toboolean(L, 2);
-  if (uv_tty_init(uv_default_loop(), handle, fd, readable)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err;
+  if ((err = uv_tty_init(uv_default_loop(), handle, fd, readable)) >= 0) {
     return luaL_error(L, "new_tty: %s", uv_strerror(err));
   }
 //  fprintf(stderr, "new timer \tlhandle=%p handle=%p\n", handle->data, handle);
@@ -37,8 +41,8 @@ static int new_tty(lua_State* L) {
 static int new_pipe(lua_State* L) {
   uv_pipe_t* handle = luv_create_pipe(L);
   int ipc = lua_toboolean(L, 1);
-  if (uv_pipe_init(uv_default_loop(), handle, ipc)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err;
+  if ((err = uv_pipe_init(uv_default_loop(), handle, ipc)) >= 0) {
     return luaL_error(L, "new_pipe: %s", uv_strerror(err));
   }
   return 1;
@@ -90,8 +94,8 @@ static int luv_loadavg(lua_State* L) {
 static int luv_execpath(lua_State* L) {
   size_t size = 2*PATH_MAX;
   char exec_path[2*PATH_MAX];
-  if (uv_exepath(exec_path, &size)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err;
+  if ((err = uv_exepath(exec_path, &size)) >= 0) {
     return luaL_error(L, "uv_exepath: %s", uv_strerror(err));
   }
   lua_pushlstring(L, exec_path, size);
@@ -101,38 +105,34 @@ static int luv_execpath(lua_State* L) {
 static int luv_cwd(lua_State* L) {
   size_t size = 2*PATH_MAX;
   char path[2*PATH_MAX];
-  uv_err_t err = uv_cwd(path, size);
-  if (err.code) {
+  int err;
+  if((err = uv_cwd(path, &size)) >= 0)
     return luaL_error(L, "uv_cwd: %s", uv_strerror(err));
-  }
   lua_pushstring(L, path);
   return 1;
 }
 
 static int luv_chdir(lua_State* L) {
-  uv_err_t err = uv_chdir(luaL_checkstring(L, 1));
-  if (err.code) {
+  int err;
+  if((err = uv_chdir(luaL_checkstring(L, 1))) >= 0) 
     return luaL_error(L, "uv_chdir: %s", uv_strerror(err));
-  }
   return 0;
 }
 
 static int luv_get_process_title(lua_State* L) {
   char title[MAX_TITLE_LENGTH];
-  uv_err_t err = uv_get_process_title(title, MAX_TITLE_LENGTH);
-  if (err.code) {
+  int err;
+  if((err = uv_get_process_title(title, MAX_TITLE_LENGTH)) >= 0)
     return luaL_error(L, "uv_get_process_title: %s", uv_strerror(err));
-  }
   lua_pushstring(L, title);
   return 1;
 }
 
 static int luv_set_process_title(lua_State* L) {
   const char* title = luaL_checkstring(L, 1);
-  uv_err_t err = uv_set_process_title(title);
-  if (err.code) {
+  int err;
+  if((err = uv_set_process_title(title)) >= 0)
     return luaL_error(L, "uv_set_process_title: %s", uv_strerror(err));
-  }
   return 0;
 }
 
@@ -329,9 +329,6 @@ static void push_addrinfo(lua_State* L, struct addrinfo* curr) {
 static void push_addrinfos(lua_State* L, struct addrinfo* res) {
   lua_newtable(L);
   struct addrinfo* curr = res;
-  char ip[INET6_ADDRSTRLEN];
-  const char *addr;
-  int port;
   int i = 1;
   for (curr = res; curr; curr = curr->ai_next) {
     if (curr->ai_family == AF_INET || curr->ai_family == AF_INET6) {
@@ -527,8 +524,8 @@ static int luv_getaddrinfo(lua_State* L) {
 
   // printf("node=%p service=%p hints=%p\n", node, service, hints);
   // Make the call
-  if (uv_getaddrinfo(uv_default_loop(), req, on_addrinfo, node, service, hints)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err;
+  if ((err = uv_getaddrinfo(uv_default_loop(), req, on_addrinfo, node, service, hints)) >= 0) {
     return luaL_error(L, "getaddrinfo: %s", uv_strerror(err));
   }
 
@@ -640,7 +637,7 @@ static int luv_is_closing(lua_State* L) {
 
 /******************************************************************************/
 
-static void on_timeout(uv_timer_t* handle, int status) {
+static void on_timeout(uv_timer_t* handle) {
   lua_State* L = luv_prepare_event(handle->data);
 #ifdef LUV_STACK_CHECK
   int top = lua_gettop(L) - 1;
@@ -660,8 +657,8 @@ static int luv_timer_start(lua_State* L) {
   uv_timer_t* handle = luv_get_timer(L, 1);
   int64_t timeout = luaL_checkinteger(L, 2);
   int64_t repeat = luaL_checkinteger(L, 3);
-  if (uv_timer_start(handle, on_timeout, timeout, repeat)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err;
+  if ((err = uv_timer_start(handle, on_timeout, timeout, repeat)) >= 0) {
     return luaL_error(L, "timer_start: %s", uv_strerror(err));
   }
   luv_handle_ref(L, handle->data, 1);
@@ -677,8 +674,8 @@ static int luv_timer_stop(lua_State* L) {
 #endif
   uv_timer_t* handle = luv_get_timer(L, 1);
   luv_handle_unref(L, handle->data);
-  if (uv_timer_stop(handle)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err;
+  if ((err = uv_timer_stop(handle)) >= 0) {
     return luaL_error(L, "timer_stop: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
@@ -692,8 +689,8 @@ static int luv_timer_again(lua_State* L) {
   int top = lua_gettop(L);
 #endif
   uv_timer_t* handle = luv_get_timer(L, 1);
-  if (uv_timer_again(handle)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err;
+  if ((err = uv_timer_again(handle)) >= 0) {
     return luaL_error(L, "timer_again: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
@@ -731,14 +728,12 @@ static int luv_timer_get_repeat(lua_State* L) {
 
 /******************************************************************************/
 
-static uv_buf_t luv_on_alloc(uv_handle_t* handle, size_t suggested_size) {
-  uv_buf_t buf;
-  buf.base = malloc(suggested_size);
-  buf.len = suggested_size;
-  return buf;
+static void luv_on_alloc(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
+  buf->base = malloc(suggested_size);
+  buf->len = suggested_size;
 }
 
-static void luv_on_read(uv_stream_t* handle, ssize_t nread, uv_buf_t buf) {
+static void luv_on_read(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf) {
   lua_State* L = luv_prepare_event(handle->data);
 #ifdef LUV_STACK_CHECK
   int top = lua_gettop(L) - 1;
@@ -746,16 +741,15 @@ static void luv_on_read(uv_stream_t* handle, ssize_t nread, uv_buf_t buf) {
   if (nread >= 0) {
 
     if (luv_get_callback(L, "ondata")) {
-      lua_pushlstring (L, buf.base, nread);
+      lua_pushlstring (L, buf->base, nread);
       luv_call(L, 2, 0);
     }
   } else {
-    uv_err_t err = uv_last_error(uv_default_loop());
-    if (err.code == UV_EOF) {
+    if (nread == UV_EOF) {
       if (luv_get_callback(L, "onend")) {
         luv_call(L, 1, 0);
       }
-    } else if (err.code != UV_ECONNRESET) {
+    } else if (nread != UV_ECONNRESET) {
       uv_close((uv_handle_t*)handle, NULL);
       /* TODO: route reset events somewhere so the user knows about them */
       fprintf(stderr, "TODO: Implement async error handling\n");
@@ -763,7 +757,7 @@ static void luv_on_read(uv_stream_t* handle, ssize_t nread, uv_buf_t buf) {
     }
   }
 
-  free(buf.base);
+  free(buf->base);
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
 #endif
@@ -853,8 +847,8 @@ static int luv_listen(lua_State* L) {
   uv_stream_t* handle = luv_get_stream(L, 1);
   int backlog_size = luaL_optint(L, 2, 128);
 
-  if (uv_listen(handle, backlog_size, luv_on_connection)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err;
+  if ((err = uv_listen(handle, backlog_size, luv_on_connection)) >= 0) {
     return luaL_error(L, "listen: %s", uv_strerror(err));
   }
 
@@ -871,8 +865,8 @@ static int luv_accept(lua_State* L) {
 #endif
   uv_stream_t* server = luv_get_stream(L, 1);
   uv_stream_t* client = luv_get_stream(L, 2);
-  if (uv_accept(server, client)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err;
+  if ((err = uv_accept(server, client)) >= 0) {
     return luaL_error(L, "accept: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
@@ -1019,11 +1013,11 @@ struct bind_addrinfo_info {
  */
 
 static void on_bind_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo* res) {
+    struct bind_addrinfo_info* bindinfo = (struct bind_addrinfo_info*) req->data;
+    lua_State* L = bindinfo->L;
 #ifdef LUV_STACK_CHECK
   int top = lua_gettop(L);
 #endif
-    struct bind_addrinfo_info* bindinfo = (struct bind_addrinfo_info* req->data);
-    lua_State* L = bindinfo->L;
     lua_rawgeti(L, LUA_REGISTRYINDEX, bindinfo->handle);
     luaL_unref(L, LUA_REGISTRYINDEX, bindinfo->handle);
     uv_tcp_t* handle = luv_get_tcp(L,-1);
@@ -1039,10 +1033,12 @@ static void on_bind_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo*
     luaL_unref(L, LUA_REGISTRYINDEX, bindinfo->on_bound);
 
     free(req); // and your little bindinfo too
-    req = bindinfo = NULL;
+    req = NULL;
+    bindinfo = NULL;
 
     struct addrinfo* curr = res;
-    for(;curr;curr = curr->ai-next) {
+    int err;
+    for(;curr;curr = curr->ai_next) {
         if(0 == lua_isnil(L, -2)) {
             lua_pushvalue(L, -2); // check_address
             push_addrinfo(L,curr);
@@ -1053,17 +1049,16 @@ static void on_bind_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo*
                 continue;
         }
         
-        if(uv_tcp_bind(handle,curr->ai_addr)) {
+        if((err = uv_tcp_bind(handle,curr->ai_addr,0)) >= 0) {
             /* don't raise an exception here, because we might be able to
              * bind to the other addresses
              */
-            uv_err_t err = uv_last_error(uv_default_loop());
             lua_pushvalue(L,-1); // on_bound
             lua_pushboolean(L, 0); // not bound
             push_addrinfo(L, curr); // address chosen
             lua_pushinteger(L,err);
             lua_pushstring(L,uv_strerror(err));
-            int status = luv_pcall(L, 4, 0);
+            int status = lua_pcall(L, 4, 0, 0);
             if(status != LUA_OK) {
                 uv_freeaddrinfo(res);
                 lua_error(L);
@@ -1072,7 +1067,7 @@ static void on_bind_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo*
             lua_pushvalue(L, -1); // on_bound
             lua_pushboolean(L, 1); // OK was bound
             push_addrinfo(L, curr); // address chosen
-            push_value(L, -6); // handle
+            lua_pushvalue(L, -6); // handle
             /* can't bind twice, so may as well leave here. */
             uv_freeaddrinfo(res);
             luv_call(L, 3, 0);
@@ -1094,8 +1089,7 @@ static int luv_tcp_bind(lua_State* L) {
 #ifdef LUV_STACK_CHECK
   int top = lua_gettop(L);
 #endif
-  uv_tcp_t* handle = luv_get_tcp(L, 1);
-  const char* host = luaL_checkstring(L, 2);
+  const char* node = luaL_checkstring(L, 2);
   const char* service = lua_tostring(L, 3);
 
   struct addrinfo hints;
@@ -1103,25 +1097,25 @@ static int luv_tcp_bind(lua_State* L) {
   hints.ai_flags = AI_PASSIVE;
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_family = AF_UNSPEC;
-  uv_getaddrinfo_t* req = malloc(sizeof(*req) + sizeof(bind_addrinfo_info));
+  uv_getaddrinfo_t* req = malloc(sizeof(*req) + sizeof(struct bind_addrinfo_info));
 
-  struct bind_addrinfo_info *bindinfo = req + sizeof(*req);
-  lua_getvalue(L, 1);
+  struct bind_addrinfo_info *bindinfo = (void*)req + sizeof(*req);
+  lua_pushvalue(L, 1);
   bindinfo->handle = luaL_ref(L, LUA_REGISTRYINDEX);
-  lua_getvalue(L, 4);
+  lua_pushvalue(L, 4);
   bindinfo->on_bound = luaL_ref(L, LUA_REGISTRYINDEX);
   if lua_isnil(L, 5) {
       bindinfo->check_address = LUA_NOREF;
   } else {
-    lua_getvalue(L, 5);
-      bindinfo->check_address = luaL_ref(L, LUA_REGISTRYINDEX);
+    lua_pushvalue(L, 5);
+    bindinfo->check_address = luaL_ref(L, LUA_REGISTRYINDEX);
   }
   bindinfo->L = L;
 
   req->data = (void*)bindinfo;
 
-  if (uv_getaddrinfo(uv_default_loop(), req, on_bind_addrinfo, node, service, &hints)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err;
+  if ((err = uv_getaddrinfo(uv_default_loop(), req, on_bind_addrinfo, node, service, &hints)) >= 0) {
     return luaL_error(L, "bind getaddrinfo: %s", uv_strerror(err));
   }
 
@@ -1143,8 +1137,8 @@ static int luv_tcp_getsockname(lua_State* L) {
   struct sockaddr_storage address;
   int addrlen = sizeof(address);
 
-  if (uv_tcp_getsockname(handle, (struct sockaddr*)(&address), &addrlen)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err;
+  if ((err = uv_tcp_getsockname(handle, (struct sockaddr*)(&address), &addrlen)) >= 0) {
     return luaL_error(L, "tcp_getsockname: %s", uv_strerror(err));
   }
 
@@ -1186,8 +1180,8 @@ static int luv_tcp_getpeername(lua_State* L) {
   struct sockaddr_storage address;
   int addrlen = sizeof(address);
 
-  if (uv_tcp_getpeername(handle, (struct sockaddr*)(&address), &addrlen)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err = 0;
+  if ((err = uv_tcp_getpeername(handle, (struct sockaddr*)(&address), &addrlen)) >= 0) {
     return luaL_error(L, "tcp_getpeername: %s", uv_strerror(err));
   }
 
@@ -1216,36 +1210,65 @@ static int luv_tcp_getpeername(lua_State* L) {
   return 1;
 }
 
+struct conn_addrinfo_info {
+    int handle;
+    int on_connected;
+    lua_State* L;
+};
+
+void on_connect_addrinfo(uv_getaddrinfo_t* addrreq, int status, struct addrinfo* res) {
+    luv_req_t* lreq = addrreq->data;
+    lua_State* L = lreq->lhandle->L;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lreq->data_ref);
+    luaL_unref(L, LUA_REGISTRYINDEX, lreq->data_ref);
+    lreq->data_ref = LUA_NOREF;
+    uv_tcp_t* handle = luv_get_tcp(L, -1);
+
+
+  uv_connect_t* req = malloc(sizeof(*req));
+
+  req->data = (void*)lreq;
+
+  int err = 0;
+  if ((err = uv_tcp_connect(req, handle, res->ai_addr, luv_after_connect)) >= 0) {
+    lua_pop(L, 1);
+    free(req->data);
+    free(req);
+    luaL_error(L, "tcp_connect: %s", uv_strerror(err));
+  }
+  lua_pop(L, 1);
+
+}
+
 static int luv_tcp_connect(lua_State* L) {
 #ifdef LUV_STACK_CHECK
   int top = lua_gettop(L);
 #endif
   uv_tcp_t* handle = luv_get_tcp(L, 1);
 
-  const char* ip_address = luaL_checkstring(L, 2);
-  int port = luaL_checkint(L, 3);
+  const char* node = luaL_checkstring(L, 2);
+  const char* service = luaL_checkstring(L, 3);
+  struct addrinfo hints;
+  memset(&hints,0,sizeof(hints));
+  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_family = AF_UNSPEC;
 
-  struct sockaddr_in address = uv_ip4_addr(ip_address, port);
-
-  uv_connect_t* req = malloc(sizeof(*req));
   luv_req_t* lreq = malloc(sizeof(*lreq));
+  lreq->lhandle = handle->data; // = L ?
 
-  req->data = (void*)lreq;
-
-  lreq->lhandle = handle->data;
-
-  if (uv_tcp_connect(req, handle, address, luv_after_connect)) {
-    free(req->data);
-    free(req);
-    uv_err_t err = uv_last_error(uv_default_loop());
-    return luaL_error(L, "tcp_connect: %s", uv_strerror(err));
-  }
-
-  lreq->data_ref = LUA_NOREF;
+  lua_pushvalue(L, 1); // handle
+  lreq->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
   lua_pushvalue(L, 4);
   lreq->callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
   luv_handle_ref(L, handle->data, 1);
+
+  uv_getaddrinfo_t* req = malloc(sizeof(*req));
+
+  req->data = lreq;
+
+  uv_getaddrinfo(uv_default_loop(),req,on_connect_addrinfo,node,service,&hints);
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
 #endif
@@ -1258,8 +1281,8 @@ static int luv_tcp_open(lua_State* L) {
 #endif
   uv_tcp_t* handle = luv_get_tcp(L, 1);
   uv_os_sock_t sock = luaL_checkint(L, 2);
-  if (uv_tcp_open(handle, sock)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err = 0;
+  if ((err = uv_tcp_open(handle, sock)) >= 0) {
     return luaL_error(L, "tcp_open: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
@@ -1276,8 +1299,8 @@ static int luv_tcp_nodelay(lua_State* L) {
   uv_tcp_t* handle = luv_get_tcp(L, 1);
   luaL_checkany(L, 2);
   int enable = lua_toboolean(L, 2);
-  if (uv_tcp_nodelay(handle, enable)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err = 0;
+  if ((err = uv_tcp_nodelay(handle, enable)) >= 0) {
     return luaL_error(L, "tcp_nodelay: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
@@ -1300,8 +1323,8 @@ static int luv_tcp_keepalive(lua_State* L) {
   if (enable) {
     delay = luaL_checkint(L, 3);
   }
-  if (uv_tcp_keepalive(handle, enable, delay)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err = 0;
+  if ((err = uv_tcp_keepalive(handle, enable, delay)) >= 0) {
     return luaL_error(L, "tcp_keepalive: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
@@ -1318,8 +1341,8 @@ static int luv_tty_set_mode(lua_State* L) {
 #endif
   uv_tty_t* handle = luv_get_tty(L, 1);
   int mode = luaL_checkint(L, 2);
-  if (uv_tty_set_mode(handle, mode)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err = 0;
+  if ((err = uv_tty_set_mode(handle, mode)) >= 0) {
     return luaL_error(L, "tty_set_mode: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
@@ -1339,8 +1362,8 @@ static int luv_tty_get_winsize(lua_State* L) {
 #endif
   uv_tty_t* handle = luv_get_tty(L, 1);
   int width, height;
-  if(uv_tty_get_winsize(handle, &width, &height)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err = 0;
+  if((err = uv_tty_get_winsize(handle, &width, &height)) >= 0) {
     return luaL_error(L, "tty_get_winsize: %s", uv_strerror(err));
   }
   lua_pushinteger(L, width);
@@ -1359,8 +1382,8 @@ static int luv_pipe_open(lua_State* L) {
 #endif
   uv_pipe_t* handle = luv_get_pipe(L, 1);
   uv_file file = luaL_checkint(L, 2);
-  if (uv_pipe_open(handle, file)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err;
+  if ((err = uv_pipe_open(handle, file)) >= 0) {
     return luaL_error(L, "pipe_open: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
@@ -1375,8 +1398,8 @@ static int luv_pipe_bind(lua_State* L) {
 #endif
   uv_pipe_t* handle = luv_get_pipe(L, 1);
   const char* name = luaL_checkstring(L, 2);
-  if (uv_pipe_bind(handle, name)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err;
+  if ((err = uv_pipe_bind(handle, name)) >= 0) {
     return luaL_error(L, "pipe_name: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
@@ -1412,7 +1435,7 @@ static int luv_pipe_connect(lua_State* L) {
 
 /******************************************************************************/
 
-void luv_process_on_exit(uv_process_t* process, int exit_status, int term_signal) {
+void luv_process_on_exit(uv_process_t* process, int64_t exit_status, int term_signal) {
   lua_State* L = luv_prepare_event(process->data);
 #ifdef LUV_STACK_CHECK
   int top = lua_gettop(L) - 1;
@@ -1435,25 +1458,23 @@ static int luv_spawn(lua_State* L) {
   uv_stdio_container_t stdio[3];
   memset(stdio, 0, sizeof(stdio));
 
+  int err;
   uv_pipe_t* stdin_pipe = luv_create_pipe(L);
-  if (uv_pipe_init(uv_default_loop(), stdin_pipe, 0)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  if ((err = uv_pipe_init(uv_default_loop(), stdin_pipe, 0)) >= 0) {
     return luaL_error(L, "stdin_pipe: %s", uv_strerror(err));
   }
   stdio[0].flags = UV_CREATE_PIPE | UV_READABLE_PIPE;
   stdio[0].data.stream = (uv_stream_t*)stdin_pipe;
 
   uv_pipe_t* stdout_pipe = luv_create_pipe(L);
-  if (uv_pipe_init(uv_default_loop(), stdout_pipe, 0)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  if ((err = uv_pipe_init(uv_default_loop(), stdout_pipe, 0)) >= 0) {
     return luaL_error(L, "stdout_pipe: %s", uv_strerror(err));
   }
   stdio[1].flags = UV_CREATE_PIPE | UV_READABLE_PIPE;
   stdio[1].data.stream = (uv_stream_t*)stdout_pipe;
 
   uv_pipe_t* stderr_pipe = luv_create_pipe(L);
-  if (uv_pipe_init(uv_default_loop(), stderr_pipe, 0)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  if ((err = uv_pipe_init(uv_default_loop(), stderr_pipe, 0))) {
     return luaL_error(L, "stderr_pipe: %s", uv_strerror(err));
   }
   stdio[2].flags = UV_CREATE_PIPE | UV_READABLE_PIPE;
@@ -1504,11 +1525,10 @@ static int luv_spawn(lua_State* L) {
   options.stdio_count = 3;
   options.stdio = stdio;
 
-  int r = uv_spawn(uv_default_loop(), handle, options);
+  int r = uv_spawn(uv_default_loop(), handle, &options);
   free(args);
   if (r) {
-    uv_err_t err = uv_last_error(uv_default_loop());
-    return luaL_error(L, "spawn: %s", uv_strerror(err));
+    return luaL_error(L, "spawn: %s", uv_strerror(r));
   }
 
   luv_handle_ref(L, handle->data, -4);
@@ -1643,8 +1663,8 @@ static int luv_kill(lua_State* L) {
   int pid = luaL_checkint(L, 1);
   int signum = luv_parse_signal(L, 2);
   //printf("pid=%d signum=%d\n", pid, signum);
-  uv_err_t err = uv_kill(pid, signum);
-  if (err.code) {
+  int err = uv_kill(pid, signum);
+  if (err) {
     return luaL_error(L, "kill: %s", uv_strerror(err));
   }
   return 0;
@@ -1654,8 +1674,8 @@ static int luv_process_kill(lua_State* L) {
   uv_process_t* handle = luv_get_process(L, 1);
   int signum = luv_parse_signal(L, 2);
   //printf("handle=%p signum=%d\n", handle, signum);
-  if (uv_process_kill(handle, signum)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
+  int err;
+  if ((err = uv_process_kill(handle, signum)) >= 0) {
     return luaL_error(L, "process_kill: %s", uv_strerror(err));
   }
   return 0;
@@ -1663,7 +1683,7 @@ static int luv_process_kill(lua_State* L) {
 
 /******************************************************************************/
 
-static void luv_push_stats_table(lua_State* L, uv_statbuf_t* s) {
+static void luv_push_stats_table(lua_State* L, uv_stat_t* s) {
   lua_newtable(L);
   lua_pushinteger(L, s->st_dev);
   lua_setfield(L, -2, "dev");
@@ -1751,7 +1771,7 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
     case UV_FS_STAT:
     case UV_FS_LSTAT:
     case UV_FS_FSTAT:
-      luv_push_stats_table(L, (uv_statbuf_t*)req->ptr);
+      luv_push_stats_table(L, (uv_stat_t*)req->ptr);
       return 1;
 
     case UV_FS_READLINK:
@@ -1788,9 +1808,7 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
 
 // Pushes a formatted error string onto the stack
 static void push_fs_error(lua_State* L, uv_fs_t* req) {
-  uv_err_t err;
-  memset(&err, 0, sizeof err);
-  err.code = (uv_err_code)req->errorno;
+  int err = req->result;
   if (req->path) {
     lua_pushfstring(L, "%s: %s \"%s\"", uv_err_name(err), uv_strerror(err), req->path);
   }
@@ -1907,21 +1925,25 @@ static int luv_fs_read(lua_State* L) {
   if (!lua_isnil(L, 3)) {
     offset = luaL_checkint(L, 3);
   }
-  char* buffer = malloc(length + 1);
-  FS_CALL2(read, 4, file, buffer, length, offset);
+  uv_buf_t* buffer = malloc(sizeof(*buffer));
+  buffer->base = malloc(length + 1);
+  buffer->len = length;
+  FS_CALL2(read, 4, file, buffer, 1, offset);
 }
 
 static int luv_fs_write(lua_State* L) {
   uv_file file = luaL_checkint(L, 1);
   size_t length;
   const char* string = luaL_checklstring(L, 2, &length);
-  char* buffer = malloc(length);
-  memcpy(buffer, string, length);
+  uv_buf_t* buffer = malloc(length + 1 + sizeof(*buffer));
+  buffer->base = (void*)buffer + sizeof(*buffer);
+  buffer->len = length;
+  memcpy(buffer->base, string, length);
   off_t offset = -1;
   if (!lua_isnil(L, 3)) {
     offset = luaL_checkint(L, 3);
   }
-  FS_CALL2(write, 4, file, buffer, length, offset);
+  FS_CALL2(write, 4, file, buffer, 1, offset);
 }
 
 static int luv_fs_unlink(lua_State* L) {
