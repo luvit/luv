@@ -236,15 +236,97 @@ static int luv_interface_addresses(lua_State* L) {
 
 /******************************************************************************/
 
-static void on_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo* res) {
-  luv_callback_t* callback = req->data;
-  lua_State* L = callback->L;
-  /* Get the callback and remove the reference to it. */
-  lua_rawgeti(L, LUA_REGISTRYINDEX, callback->ref);
-  luaL_unref(L, LUA_REGISTRYINDEX, callback->ref);
-  free(callback);
-  free(req);
+static void push_addrinfo(lua_State* L, struct addrinfo* curr) {
+  char ip[INET6_ADDRSTRLEN];
+  const char *addr;
+  int port;
+  lua_newtable(L);
+  if (curr->ai_family == AF_INET) {
+      addr = (char*) &((struct sockaddr_in*) curr->ai_addr)->sin_addr;
+      port = ((struct sockaddr_in*) curr->ai_addr)->sin_port;
+      lua_pushstring(L, "IPv4");
+      lua_setfield(L, -2, "family");
+  } else {
+      addr = (char*) &((struct sockaddr_in6*) curr->ai_addr)->sin6_addr;
+      port = ((struct sockaddr_in6*) curr->ai_addr)->sin6_port;
+      lua_pushstring(L, "IPv6");
+      lua_setfield(L, -2, "family");
+  }
+  uv_inet_ntop(curr->ai_family, addr, ip, INET6_ADDRSTRLEN);
+  lua_pushstring(L, ip);
+  lua_setfield(L, -2, "addr");
+  if (ntohs(port)) {
+      lua_pushinteger(L, ntohs(port));
+      lua_setfield(L, -2, "port");
+  }
+  if (curr->ai_socktype == SOCK_STREAM) {
+      lua_pushstring(L, "STREAM");
+      lua_setfield(L, -2, "socktype");
+  }
+  else if (curr->ai_socktype == SOCK_DGRAM) {
+      lua_pushstring(L, "DGRAM");
+      lua_setfield(L, -2, "socktype");
+  }
+  switch (curr->ai_protocol) {
+#ifdef AF_UNIX
+      case AF_UNIX:
+          lua_pushstring(L, "UNIX");
+          break;
+#endif
+#ifdef AF_INET
+      case AF_INET:
+          lua_pushstring(L, "INET");
+          break;
+#endif
+#ifdef AF_INET6
+      case AF_INET6:
+          lua_pushstring(L, "INET6");
+          break;
+#endif
+#ifdef AF_IPX
+      case AF_IPX:
+          lua_pushstring(L, "IPX");
+          break;
+#endif
+#ifdef AF_NETLINK
+      case AF_NETLINK:
+          lua_pushstring(L, "NETLINK");
+          break;
+#endif
+#ifdef AF_X25
+      case AF_X25:
+          lua_pushstring(L, "X25");
+          break;
+#endif
+#ifdef AF_AX25
+      case AF_AX25:
+          lua_pushstring(L, "AX25");
+          break;
+#endif
+#ifdef AF_ATMPVC
+      case AF_ATMPVC:
+          lua_pushstring(L, "ATMPVC");
+          break;
+#endif
+#ifdef AF_APPLETALK
+      case AF_APPLETALK:
+          lua_pushstring(L, "APPLETALK");
+          break;
+#endif
+#ifdef AF_PACKET
+      case AF_PACKET:
+          lua_pushstring(L, "PACKET");
+          break;
+#endif
+      default:
+          lua_pushstring(L, NULL);
+  }
+  lua_setfield(L, -2, "protocol");
+  lua_pushstring(L, curr->ai_canonname);
+  lua_setfield(L, -2, "canonname");
+}
 
+static void push_addrinfos(lua_State* L, struct addrinfo* res) {
   lua_newtable(L);
   struct addrinfo* curr = res;
   char ip[INET6_ADDRSTRLEN];
@@ -253,95 +335,23 @@ static void on_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
   int i = 1;
   for (curr = res; curr; curr = curr->ai_next) {
     if (curr->ai_family == AF_INET || curr->ai_family == AF_INET6) {
-      lua_newtable(L);
-      if (curr->ai_family == AF_INET) {
-        addr = (char*) &((struct sockaddr_in*) curr->ai_addr)->sin_addr;
-        port = ((struct sockaddr_in*) curr->ai_addr)->sin_port;
-        lua_pushstring(L, "IPv4");
-        lua_setfield(L, -2, "family");
-      } else {
-        addr = (char*) &((struct sockaddr_in6*) curr->ai_addr)->sin6_addr;
-        port = ((struct sockaddr_in6*) curr->ai_addr)->sin6_port;
-        lua_pushstring(L, "IPv6");
-        lua_setfield(L, -2, "family");
-      }
-      uv_inet_ntop(curr->ai_family, addr, ip, INET6_ADDRSTRLEN);
-      lua_pushstring(L, ip);
-      lua_setfield(L, -2, "addr");
-      if (ntohs(port)) {
-        lua_pushinteger(L, ntohs(port));
-        lua_setfield(L, -2, "port");
-      }
-      if (curr->ai_socktype == SOCK_STREAM) {
-        lua_pushstring(L, "STREAM");
-        lua_setfield(L, -2, "socktype");
-      }
-      else if (curr->ai_socktype == SOCK_DGRAM) {
-        lua_pushstring(L, "DGRAM");
-        lua_setfield(L, -2, "socktype");
-      }
-      switch (curr->ai_protocol) {
-#ifdef AF_UNIX
-        case AF_UNIX:
-          lua_pushstring(L, "UNIX");
-          break;
-#endif
-#ifdef AF_INET
-        case AF_INET:
-          lua_pushstring(L, "INET");
-          break;
-#endif
-#ifdef AF_INET6
-        case AF_INET6:
-          lua_pushstring(L, "INET6");
-          break;
-#endif
-#ifdef AF_IPX
-        case AF_IPX:
-          lua_pushstring(L, "IPX");
-          break;
-#endif
-#ifdef AF_NETLINK
-        case AF_NETLINK:
-          lua_pushstring(L, "NETLINK");
-          break;
-#endif
-#ifdef AF_X25
-        case AF_X25:
-          lua_pushstring(L, "X25");
-          break;
-#endif
-#ifdef AF_AX25
-        case AF_AX25:
-          lua_pushstring(L, "AX25");
-          break;
-#endif
-#ifdef AF_ATMPVC
-        case AF_ATMPVC:
-          lua_pushstring(L, "ATMPVC");
-          break;
-#endif
-#ifdef AF_APPLETALK
-        case AF_APPLETALK:
-          lua_pushstring(L, "APPLETALK");
-          break;
-#endif
-#ifdef AF_PACKET
-        case AF_PACKET:
-          lua_pushstring(L, "PACKET");
-          break;
-#endif
-        default:
-          lua_pushstring(L, NULL);
-      }
-      lua_setfield(L, -2, "protocol");
-      lua_pushstring(L, curr->ai_canonname);
-      lua_setfield(L, -2, "canonname");
-      lua_rawseti(L, -2, i++);
+        push_addrinfo(L, curr);
+        lua_rawseti(L, -2, i++);
     }
   }
-  uv_freeaddrinfo(res);
+}
 
+
+static void on_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo* res) {
+  luv_callback_t* callback = req->data;
+  lua_State* L = callback->L;
+  /* Get the callback and remove the reference to it. */
+  lua_rawgeti(L, LUA_REGISTRYINDEX, callback->ref);
+  luaL_unref(L, LUA_REGISTRYINDEX, callback->ref);
+  free(callback);
+  free(req);
+  push_addrinfos(L,res);
+  uv_freeaddrinfo(res);
   luv_call(L, 1, 0);
 }
 
@@ -992,19 +1002,127 @@ static void luv_after_connect(uv_connect_t* req, int status) {
 #endif
 }
 
+struct bind_addrinfo_info {
+    int handle;
+    int check_address;
+    int on_bound;
+    lua_State* L;
+};
+
+/* on_bound 
+ * = function(bound?, address, errnum, error) ... end 
+ * = function(bound?, address, handle) ... end
+ *
+ * check_address
+ * = function(address) ... end => true if good address to bind
+ * address like in getaddrinfo, .addr, .name, .port etc
+ */
+
+static void on_bind_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo* res) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
+    struct bind_addrinfo_info* bindinfo = (struct bind_addrinfo_info* req->data);
+    lua_State* L = bindinfo->L;
+    lua_rawgeti(L, LUA_REGISTRYINDEX, bindinfo->handle);
+    luaL_unref(L, LUA_REGISTRYINDEX, bindinfo->handle);
+    uv_tcp_t* handle = luv_get_tcp(L,-1);
+
+    if(bindinfo->check_address == LUA_NOREF) {
+        lua_pushnil(L);
+    } else {
+        lua_rawgeti(L, LUA_REGISTRYINDEX, bindinfo->check_address);
+        luaL_unref(L, LUA_REGISTRYINDEX, bindinfo->check_address);
+    }
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, bindinfo->on_bound);
+    luaL_unref(L, LUA_REGISTRYINDEX, bindinfo->on_bound);
+
+    free(req); // and your little bindinfo too
+    req = bindinfo = NULL;
+
+    struct addrinfo* curr = res;
+    for(;curr;curr = curr->ai-next) {
+        if(0 == lua_isnil(L, -2)) {
+            lua_pushvalue(L, -2); // check_address
+            push_addrinfo(L,curr);
+            luv_call(L, 1, 1);
+            int good = lua_toboolean(L,-1);
+            lua_pop(L, 1);
+            if(good == 0) // skip
+                continue;
+        }
+        
+        if(uv_tcp_bind(handle,curr->ai_addr)) {
+            /* don't raise an exception here, because we might be able to
+             * bind to the other addresses
+             */
+            uv_err_t err = uv_last_error(uv_default_loop());
+            lua_pushvalue(L,-1); // on_bound
+            lua_pushboolean(L, 0); // not bound
+            push_addrinfo(L, curr); // address chosen
+            lua_pushinteger(L,err);
+            lua_pushstring(L,uv_strerror(err));
+            int status = luv_pcall(L, 4, 0);
+            if(status != LUA_OK) {
+                uv_freeaddrinfo(res);
+                lua_error(L);
+            }
+        } else {
+            lua_pushvalue(L, -1); // on_bound
+            lua_pushboolean(L, 1); // OK was bound
+            push_addrinfo(L, curr); // address chosen
+            push_value(L, -6); // handle
+            /* can't bind twice, so may as well leave here. */
+            uv_freeaddrinfo(res);
+            luv_call(L, 3, 0);
+#ifdef LUV_STACK_CHECK
+            assert(lua_gettop(L) == top);
+#endif
+            return;
+        }
+    }
+
+    uv_freeaddrinfo(res);
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
+}
+
+/* server:bind("::","http",on_bound,check_address=nil) */
 static int luv_tcp_bind(lua_State* L) {
 #ifdef LUV_STACK_CHECK
   int top = lua_gettop(L);
 #endif
   uv_tcp_t* handle = luv_get_tcp(L, 1);
   const char* host = luaL_checkstring(L, 2);
-  int port = luaL_checkint(L, 3);
+  const char* service = lua_tostring(L, 3);
 
-  struct sockaddr_in address = uv_ip4_addr(host, port);
+  struct addrinfo hints;
+  memset(&hints,0,sizeof(hints));
+  hints.ai_flags = AI_PASSIVE;
+  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_family = AF_UNSPEC;
+  uv_getaddrinfo_t* req = malloc(sizeof(*req) + sizeof(bind_addrinfo_info));
 
-  if (uv_tcp_bind(handle, address)) {
+  struct bind_addrinfo_info *bindinfo = req + sizeof(*req);
+  lua_getvalue(L, 1);
+  bindinfo->handle = luaL_ref(L, LUA_REGISTRYINDEX);
+  lua_getvalue(L, 4);
+  bindinfo->on_bound = luaL_ref(L, LUA_REGISTRYINDEX);
+  if lua_isnil(L, 5) {
+      bindinfo->check_address = LUA_NOREF;
+  } else {
+    lua_getvalue(L, 5);
+      bindinfo->check_address = luaL_ref(L, LUA_REGISTRYINDEX);
+  }
+  bindinfo->L = L;
+
+  req->data = (void*)bindinfo;
+
+  if (uv_getaddrinfo(uv_default_loop(), req, on_bind_addrinfo, node, service, &hints)) {
     uv_err_t err = uv_last_error(uv_default_loop());
-    return luaL_error(L, "tcp_bind: %s", uv_strerror(err));
+    return luaL_error(L, "bind getaddrinfo: %s", uv_strerror(err));
   }
 
 #ifdef LUV_STACK_CHECK
