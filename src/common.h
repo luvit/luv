@@ -17,6 +17,8 @@
 
 #include "uv.h"
 
+#define assertEqual(a,b) if(a != b) { printf("%s:%d ERROR: Expected %d, Got %d\n",__FILE__,__LINE__,b,a); abort(); }
+
 #if LUA_VERSION_NUM < 502
 /* lua_rawlen: Not entirely correct, but should work anyway */
 #	define lua_rawlen lua_objlen

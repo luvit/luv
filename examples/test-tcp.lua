@@ -5,19 +5,28 @@ local port = os.getenv("IP") or "0.0.0.0"
 local uv = require('luv')
 
 local function create_server(host, port, on_connection, on_listening)
-  local server = uv.new_tcp()
-  server:bind(host, port, function(bound, address, handle, err) 
+  uv.tcp_bind(host, port, function(bound, address, server) 
       if bound then
           p(1, server)
           function server:onconnection()
               local client = uv.new_tcp()
-              uv.accept(client)
+              uv.accept(server,client)
               on_connection(client,server)
           end
           uv.listen(server)
           on_listening(server)
+      else
+          print("Couldn't bind?",server)
+          for n,v in pairs(address) do
+              print('',n,v)
+          end
       end
-  end)
+  end, (function(address)
+  for n,v in pairs(address) do
+      print(n,v)
+  end
+  return true
+  end))
 end
 
 

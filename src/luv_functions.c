@@ -544,7 +544,7 @@ static void on_close(uv_handle_t* handle) {
   }
   luv_handle_unref(L, handle->data);
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
 }
 
@@ -562,7 +562,7 @@ static int luv_close(lua_State* L) {
   uv_close(handle, on_close);
   luv_handle_ref(L, handle->data, 1);
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -615,7 +615,7 @@ static int luv_walk(lua_State* L) {
   /* unref the callback */
   luaL_unref(L, LUA_REGISTRYINDEX, callback.ref);
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -646,7 +646,7 @@ static void on_timeout(uv_timer_t* handle) {
     luv_call(L, 1, 0);
   }
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
 }
 
@@ -663,7 +663,7 @@ static int luv_timer_start(lua_State* L) {
   }
   luv_handle_ref(L, handle->data, 1);
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -679,7 +679,7 @@ static int luv_timer_stop(lua_State* L) {
     return luaL_error(L, "timer_stop: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -694,7 +694,7 @@ static int luv_timer_again(lua_State* L) {
     return luaL_error(L, "timer_again: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -707,7 +707,7 @@ static int luv_timer_set_repeat(lua_State* L) {
   int64_t repeat = luaL_checkint(L, 2);
   uv_timer_set_repeat(handle, repeat);
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -759,7 +759,7 @@ static void luv_on_read(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
 
   free(buf->base);
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
 }
 
@@ -772,7 +772,7 @@ static void luv_on_connection(uv_stream_t* handle, int status) {
     luv_call(L, 1, 0);
   }
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
 }
 
@@ -791,7 +791,7 @@ static void luv_after_write(uv_write_t* req, int status) {
   free(req->data);
   free(req);
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
 }
 
@@ -810,7 +810,7 @@ static void luv_after_shutdown(uv_shutdown_t* req, int status) {
   free(req->data);
   free(req);
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
 }
 
@@ -822,7 +822,7 @@ static int luv_read_start(lua_State* L) {
   uv_read_start(handle, luv_on_alloc, luv_on_read);
   luv_handle_ref(L, handle->data, 1);
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -835,7 +835,7 @@ static int luv_read_stop(lua_State* L) {
   luv_handle_unref(L, handle->data);
   uv_read_stop(handle);
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -854,7 +854,7 @@ static int luv_listen(lua_State* L) {
 
   luv_handle_ref(L, handle->data, 1);
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -870,7 +870,7 @@ static int luv_accept(lua_State* L) {
     return luaL_error(L, "accept: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -920,7 +920,7 @@ static int luv_write(lua_State* L) {
     uv_write(req, handle, &buf, 1, luv_after_write);
   }
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -946,7 +946,7 @@ static int luv_shutdown(lua_State* L) {
   uv_shutdown(req, handle, luv_after_shutdown);
 
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -992,7 +992,7 @@ static void luv_after_connect(uv_connect_t* req, int status) {
   free(req->data);
   free(req);
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
 }
 
@@ -1005,11 +1005,11 @@ struct bind_addrinfo_info {
 
 /* on_bound 
  * = function(bound?, address, errnum, error) ... end 
- * = function(bound?, address, handle) ... end
+ * = function(bound?, address, server) ... end
  *
  * check_address
  * = function(address) ... end => true if good address to bind
- * address like in getaddrinfo, .addr, .name, .port etc
+ * address like one element in getaddrinfo result, .addr, .name, .port etc
  */
 
 static void on_bind_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo* res) {
@@ -1018,8 +1018,7 @@ static void on_bind_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo*
 #ifdef LUV_STACK_CHECK
   int top = lua_gettop(L);
 #endif
-    lua_rawgeti(L, LUA_REGISTRYINDEX, bindinfo->handle);
-    luaL_unref(L, LUA_REGISTRYINDEX, bindinfo->handle);
+    new_tcp(L);
     uv_tcp_t* handle = luv_get_tcp(L,-1);
 
     if(bindinfo->check_address == LUA_NOREF) {
@@ -1067,47 +1066,51 @@ static void on_bind_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo*
             lua_pushvalue(L, -1); // on_bound
             lua_pushboolean(L, 1); // OK was bound
             push_addrinfo(L, curr); // address chosen
-            lua_pushvalue(L, -6); // handle
+            lua_pushvalue(L, -6); // server
             /* can't bind twice, so may as well leave here. */
             uv_freeaddrinfo(res);
             luv_call(L, 3, 0);
+            lua_pop(L, 3); // handle, check_address, on_bound
 #ifdef LUV_STACK_CHECK
-            assert(lua_gettop(L) == top);
+            assertEqual(lua_gettop(L),top);
 #endif
             return;
         }
     }
 
+    // really should throw an error here.
+    // no addresses were found at all?
+
     uv_freeaddrinfo(res);
+    lua_pop(L, 3); // handle, check_address, on_bound
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
 }
 
-/* server:bind("::","http",on_bound,check_address=nil) */
+/* uv.tcp_bind("::","http",on_bound,check_address=nil) */
 static int luv_tcp_bind(lua_State* L) {
 #ifdef LUV_STACK_CHECK
   int top = lua_gettop(L);
 #endif
-  const char* node = luaL_checkstring(L, 2);
-  const char* service = lua_tostring(L, 3);
+  const char* node = luaL_checkstring(L, 1);
+  const char* service = lua_tostring(L, 2);
 
   struct addrinfo hints;
   memset(&hints,0,sizeof(hints));
   hints.ai_flags = AI_PASSIVE;
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_family = AF_UNSPEC;
+
   uv_getaddrinfo_t* req = malloc(sizeof(*req) + sizeof(struct bind_addrinfo_info));
 
   struct bind_addrinfo_info *bindinfo = (void*)req + sizeof(*req);
-  lua_pushvalue(L, 1);
-  bindinfo->handle = luaL_ref(L, LUA_REGISTRYINDEX);
-  lua_pushvalue(L, 4);
+  lua_pushvalue(L, 3);
   bindinfo->on_bound = luaL_ref(L, LUA_REGISTRYINDEX);
-  if lua_isnil(L, 5) {
+  if lua_isnil(L, 4) {
       bindinfo->check_address = LUA_NOREF;
   } else {
-    lua_pushvalue(L, 5);
+    lua_pushvalue(L, 4);
     bindinfo->check_address = luaL_ref(L, LUA_REGISTRYINDEX);
   }
   bindinfo->L = L;
@@ -1120,7 +1123,7 @@ static int luv_tcp_bind(lua_State* L) {
   }
 
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -1270,7 +1273,7 @@ static int luv_tcp_connect(lua_State* L) {
 
   uv_getaddrinfo(uv_default_loop(),req,on_connect_addrinfo,node,service,&hints);
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -1286,7 +1289,7 @@ static int luv_tcp_open(lua_State* L) {
     return luaL_error(L, "tcp_open: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -1304,7 +1307,7 @@ static int luv_tcp_nodelay(lua_State* L) {
     return luaL_error(L, "tcp_nodelay: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -1328,7 +1331,7 @@ static int luv_tcp_keepalive(lua_State* L) {
     return luaL_error(L, "tcp_keepalive: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -1346,7 +1349,7 @@ static int luv_tty_set_mode(lua_State* L) {
     return luaL_error(L, "tty_set_mode: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -1387,7 +1390,7 @@ static int luv_pipe_open(lua_State* L) {
     return luaL_error(L, "pipe_open: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -1403,7 +1406,7 @@ static int luv_pipe_bind(lua_State* L) {
     return luaL_error(L, "pipe_name: %s", uv_strerror(err));
   }
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -1428,7 +1431,7 @@ static int luv_pipe_connect(lua_State* L) {
 
   luv_handle_ref(L, handle->data, 1);
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
   return 0;
 }
@@ -1446,7 +1449,7 @@ void luv_process_on_exit(uv_process_t* process, int64_t exit_status, int term_si
     luv_call(L, 3, 0);
   }
 #ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
+  assertEqual(lua_gettop(L),top);
 #endif
 
 }
