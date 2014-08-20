@@ -1,0 +1,13 @@
+CFLAGS=$(shell luvit --cflags)
+LIBS=$(shell luvit --libs)
+
+all: luv.luvit
+
+%.o: src/%.c src/%.h
+	$(CC) -c $< -o $@ ${CFLAGS}
+
+luv.luvit: luv.o common.o
+	$(CC) -o luv.luvit luv.o common.o ${LIBS}
+
+clean:
+	rm -f luv.o luv.luvit
