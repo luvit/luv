@@ -1380,7 +1380,7 @@ static int luv_spawn(lua_State* L) {
   options.exit_cb = luv_process_on_exit;
   options.file = command;
   options.args = args;
-  options.env = NULL;
+  options.env = env;
   options.cwd = cwd;
   options.flags = 0;
   options.stdio_count = 3;
