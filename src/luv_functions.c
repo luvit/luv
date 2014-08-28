@@ -1396,6 +1396,9 @@ static int luv_spawn(lua_State* L) {
   uv_process_t* handle = luv_create_process(L);
   int r = uv_spawn(uv_default_loop(), handle, options);
   free(args);
+  free(stdio);
+  free(env);
+
   if (r) {
     uv_err_t err = uv_last_error(uv_default_loop());
     return luaL_error(L, "spawn: %s", uv_strerror(err));
