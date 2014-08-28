@@ -1312,66 +1312,73 @@ void luv_process_on_exit(uv_process_t* process, int exit_status, int term_signal
 
 static int luv_spawn(lua_State* L) {
   const char* command = luaL_checkstring(L, 1);
-  uv_process_t* handle = luv_create_process(L);
 
-  uv_stdio_container_t stdio[3];
-  memset(stdio, 0, sizeof(stdio));
-
-  uv_pipe_t* stdin_pipe = luv_create_pipe(L);
-  if (uv_pipe_init(uv_default_loop(), stdin_pipe, 0)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
-    return luaL_error(L, "stdin_pipe: %s", uv_strerror(err));
-  }
-  stdio[0].flags = UV_CREATE_PIPE | UV_READABLE_PIPE;
-  stdio[0].data.stream = (uv_stream_t*)stdin_pipe;
-
-  uv_pipe_t* stdout_pipe = luv_create_pipe(L);
-  if (uv_pipe_init(uv_default_loop(), stdout_pipe, 0)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
-    return luaL_error(L, "stdout_pipe: %s", uv_strerror(err));
-  }
-  stdio[1].flags = UV_CREATE_PIPE | UV_READABLE_PIPE;
-  stdio[1].data.stream = (uv_stream_t*)stdout_pipe;
-
-  uv_pipe_t* stderr_pipe = luv_create_pipe(L);
-  if (uv_pipe_init(uv_default_loop(), stderr_pipe, 0)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
-    return luaL_error(L, "stderr_pipe: %s", uv_strerror(err));
-  }
-  stdio[2].flags = UV_CREATE_PIPE | UV_READABLE_PIPE;
-  stdio[2].data.stream = (uv_stream_t*)stderr_pipe;
-
-  /* Parse the args array */
+  /* process the args list */
+  /* +1 for inserted command at front */
   size_t argc = lua_objlen(L, 2) + 1;
-  char** args = malloc((argc + 1) * sizeof(char*));
+  /* +1 for null terminator at end */
+  char** args = malloc((argc + 1) * sizeof(*args));
   args[0] = strdup(command);
   size_t i;
-  for (i = 1; i < argc; i++) {
+  for (i = 1; i < argc; ++i) {
     lua_rawgeti(L, 2, i);
     args[i] = (char*)lua_tostring(L, -1);
     lua_pop(L, 1);
   }
   args[argc] = NULL;
 
-  char* cwd;
   /* Get the cwd */
   lua_getfield(L, 3, "cwd");
-  cwd = (char*)lua_tostring(L, -1);
+  char* cwd = (char*)lua_tostring(L, -1);
   lua_pop(L, 1);
 
   /* Get the env */
-  char** env;
+  char** env = NULL;
   lua_getfield(L, 3, "env");
-  env = NULL;
   if (lua_type(L, -1) == LUA_TTABLE) {
     argc = lua_objlen(L, -1);
     env = malloc((argc + 1) * sizeof(char*));
-    for (i = 0; i < argc; i++) {
+    for (i = 0; i < argc; ++i) {
       lua_rawgeti(L, -1, i + 1);
       env[i] = (char*)lua_tostring(L, -1);
       lua_pop(L, 1);
     }
     env[argc] = NULL;
+  }
+  lua_pop(L, 1);
+
+  /* get the stdio list */
+  size_t stdioc = 0;
+  uv_stdio_container_t* stdio = NULL;
+  lua_getfield(L, 3, "stdio");
+  if (lua_type(L, -1) == LUA_TTABLE) {
+    stdioc = lua_objlen(L, -1);
+    stdio = malloc(stdioc * sizeof(*stdio));
+    for (i = 0; i < stdioc; ++i) {
+      lua_rawgeti(L, -1, i + 1);
+      /* integers are assumed to be file descripters */
+      if (lua_type(L, -1) == LUA_TNUMBER) {
+        stdio[i].flags = UV_INHERIT_FD;
+        stdio[i].data.fd = lua_tointeger(L, -1);
+      }
+      /* userdata is assumed to be a uv_stream_t instance */
+      else if (lua_type(L, -1) == LUA_TUSERDATA) {
+        uv_stream_t* stream = luv_get_stream(L, -1);
+        if (stream->type == UV_NAMED_PIPE) {
+          /* TODO: make this work for pipes with existing FDs */
+
+          stdio[i].flags = UV_CREATE_PIPE | UV_READABLE_PIPE | UV_WRITABLE_PIPE;
+        }
+        else {
+          stdio[i].flags = UV_INHERIT_STREAM;
+        }
+        stdio[i].data.stream = stream;
+      }
+      else {
+        stdio[i].flags = UV_IGNORE;
+      }
+      lua_pop(L, 1);
+    }
   }
   lua_pop(L, 1);
 
@@ -1383,9 +1390,10 @@ static int luv_spawn(lua_State* L) {
   options.env = env;
   options.cwd = cwd;
   options.flags = 0;
-  options.stdio_count = 3;
+  options.stdio_count = stdioc;
   options.stdio = stdio;
 
+  uv_process_t* handle = luv_create_process(L);
   int r = uv_spawn(uv_default_loop(), handle, options);
   free(args);
   if (r) {
@@ -1393,12 +1401,12 @@ static int luv_spawn(lua_State* L) {
     return luaL_error(L, "spawn: %s", uv_strerror(err));
   }
 
-  luv_handle_ref(L, handle->data, -4);
+  luv_handle_ref(L, handle->data, -1);
 
   /* Return the Pid */
   lua_pushinteger(L, handle->pid);
 
-  return 5;
+  return 2;
 }
 
 static int luv_parse_signal(lua_State* L, int slot) {
