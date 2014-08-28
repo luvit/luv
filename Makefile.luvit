@@ -3,11 +3,14 @@ LIBS=$(shell luvit --libs)
 
 all: luv.luvit
 
-%.o: src/%.c src/%.h
+common.o: src/common.c src/common.h
+	$(CC) -c $< -o $@ ${CFLAGS}
+
+luv.o: src/luv.c src/luv.h src/luv_functions.c
 	$(CC) -c $< -o $@ ${CFLAGS}
 
 luv.luvit: luv.o common.o
-	$(CC) -o luv.luvit luv.o common.o ${LIBS}
+	$(CC) ${SHARED_LIB_FLAGS} ${LIBS}
 
 clean:
-	rm -f luv.o luv.luvit
+	rm -f luv.luvit *.o
