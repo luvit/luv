@@ -1774,12 +1774,12 @@ static int luv_fs_open(lua_State* L) {
   const char* path = luaL_checkstring(L, 1);
   int flags = luv_string_to_flags(L, luaL_checkstring(L, 2));
   int mode = luaL_checkint(L, 3);
-  FS_CALL(open, 2, path, flags, mode);
+  FS_CALL(open, 4, path, flags, mode);
 }
 
 static int luv_fs_close(lua_State* L) {
   uv_file file = luaL_checkint(L, 1);
-  FS_CALL(close, 4, file);
+  FS_CALL(close, 2, file);
 }
 
 static int luv_fs_read(lua_State* L) {
