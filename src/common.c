@@ -61,8 +61,9 @@ uv_process_t* luv_create_process(lua_State* L) {
 }
 
 static luv_handle_t* luv_get_lhandle(lua_State* L, int index, int type) {
+  luv_handle_t* lhandle;
   luaL_checktype(L, index, LUA_TUSERDATA);
-  luv_handle_t* lhandle = (luv_handle_t*)luaL_checkudata(L, index, "luv_handle");
+  lhandle = (luv_handle_t*)luaL_checkudata(L, index, "luv_handle");
   if ((lhandle->mask & type) == 0) {
     luaL_error(L, "Invalid type for userdata %d not in %d", type, lhandle->mask);
   }
@@ -152,6 +153,7 @@ lua_State* luv_prepare_event(luv_handle_t* lhandle) {
 // otherwise return 0
 // either way, the original userdata is removed.
 int luv_get_callback(lua_State* L, const char* name) {
+  int isfunc;
 #ifdef LUV_STACK_CHECK
   int top = lua_gettop(L);
 #endif
@@ -160,7 +162,7 @@ int luv_get_callback(lua_State* L, const char* name) {
   lua_getfield(L, -1, name);
   lua_remove(L, -2); // Remove the uservalue
 
-  int isfunc = lua_isfunction(L, -1);
+  isfunc = lua_isfunction(L, -1);
   if (isfunc) {
     lua_pushvalue(L, -2);
     lua_remove(L, -3); // Remove the original userdata
