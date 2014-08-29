@@ -65,7 +65,7 @@ LUALIB_API int luaopen_luv (lua_State *L) {
   lua_setfield(L, -2, "__tostring");
   lua_pop(L, 1);
 
-  // Module exports
+  /* Module exports */
   luaL_newlib(L, luv_functions);
   return 1;
 }
