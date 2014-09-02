@@ -44,6 +44,11 @@ uv_tcp_t* luv_create_tcp(lua_State* L) {
   return (uv_tcp_t*)lhandle->handle;
 }
 
+uv_udp_t* luv_create_udp(lua_State* L) {
+  luv_handle_t* lhandle = luv_handle_create(L, sizeof(uv_udp_t), LUV_UDP_MASK);
+  return (uv_udp_t*)lhandle->handle;
+}
+
 uv_tty_t* luv_create_tty(lua_State* L) {
   luv_handle_t* lhandle = luv_handle_create(L, sizeof(uv_tty_t), LUV_TTY_MASK);
   return (uv_tty_t*)lhandle->handle;
@@ -87,6 +92,11 @@ uv_stream_t* luv_get_stream(lua_State* L, int index) {
 uv_tcp_t* luv_get_tcp(lua_State* L, int index) {
   luv_handle_t* lhandle = luv_get_lhandle(L, index, LUV_TCP);
   return (uv_tcp_t*)lhandle->handle;
+}
+
+uv_udp_t* luv_get_udp(lua_State* L, int index) {
+  luv_handle_t* lhandle = luv_get_lhandle(L, index, LUV_UDP);
+  return (uv_udp_t*)lhandle->handle;
 }
 
 uv_tty_t* luv_get_tty(lua_State* L, int index) {

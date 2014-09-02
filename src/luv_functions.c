@@ -34,6 +34,16 @@ static int new_tcp(lua_State* L) {
   return 1;
 }
 
+static int new_udp(lua_State* L) {
+  uv_udp_t* handle = luv_create_udp(L);
+  if (uv_udp_init(uv_default_loop(), handle)) {
+    uv_err_t err = uv_last_error(uv_default_loop());
+    return luaL_error(L, "new_udp: %s", uv_strerror(err));
+  }
+  /* fprintf(stderr, "new tcp \tlhandle=%p handle=%p\n", handle->data, handle); */
+  return 1;
+}
+
 static int new_timer(lua_State* L) {
   uv_timer_t* handle = luv_create_timer(L);
   if (uv_timer_init(uv_default_loop(), handle)) {
@@ -2077,6 +2087,7 @@ static const luaL_Reg luv_functions[] = {
   {"new_tcp", new_tcp},
   {"new_timer", new_timer},
   {"new_tty", new_tty},
+  {"new_udp", new_udp},
   {"new_pipe", new_pipe},
   {"run", luv_run},
   {"guess_handle", luv_guess_handle},
