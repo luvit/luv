@@ -21,11 +21,10 @@ static luv_handle_t* luv_handle_create(lua_State* L, size_t size, int mask) {
   lhandle->ref = LUA_NOREF;
   lhandle->mask = mask;
   lhandle->L = L;
-//  printf("Created lhandle %p handle %p\n", lhandle, lhandle->handle);
 
   /* if handle create in a coroutine, we need hold the coroutine */
   if (lua_pushthread(L)) {
-    // L is mainthread
+    /* L is mainthread */
     lua_pop(L, 1);
     lhandle->threadref = LUA_NOREF;
   } else {
@@ -107,19 +106,16 @@ uv_process_t* luv_get_process(lua_State* L, int index) {
 
 /* This needs to be called when an async function is started on a lhandle. */
 void luv_handle_ref(lua_State* L, luv_handle_t* lhandle, int index) {
-//  printf("luv_handle_ref\t%d %p:%p\n", lhandle->mask, lhandle, lhandle->handle);
   /* If it's inactive, store a ref. */
   if (!lhandle->refCount) {
     lua_pushvalue(L, index);
     lhandle->ref = luaL_ref(L, LUA_REGISTRYINDEX);
-//    printf("makeStrong\t%d lhandle=%p handle=%p\n", lhandle->mask, lhandle, lhandle->handle);
   }
   lhandle->refCount++;
 }
 
 /* This needs to be called when an async callback fires on a lhandle. */
 void luv_handle_unref(lua_State* L, luv_handle_t* lhandle) {
-//  printf("luv_handle_unref\t%d %p:%p\n", lhandle->mask, lhandle, lhandle->handle);
   lhandle->refCount--;
   assert(lhandle->refCount >= 0);
   /* If it's now inactive, clear the ref */
@@ -130,11 +126,10 @@ void luv_handle_unref(lua_State* L, luv_handle_t* lhandle) {
       lhandle->threadref = LUA_NOREF;
     }
     lhandle->ref = LUA_NOREF;
-//    printf("makeWeak\t%d lhandle=%p handle=%p\n", lhandle->mask, lhandle, lhandle->handle);
   }
 }
 
-// Get L from a lhandle (moving to the main thread if needed) and push the userdata on the stack.
+/* Get L from a lhandle (moving to the main thread if needed) and push the userdata on the stack. */
 lua_State* luv_prepare_event(luv_handle_t* lhandle) {
   lua_State* L = lhandle->L;
 #ifdef LUV_STACK_CHECK
@@ -149,9 +144,9 @@ lua_State* luv_prepare_event(luv_handle_t* lhandle) {
   return L;
 }
 
-// Get a named callback.  If it's there, push the function and the userdata on the stack.
-// otherwise return 0
-// either way, the original userdata is removed.
+/* Get a named callback.  If it's there, push the function and the userdata on the stack.
+   otherwise return 0
+   either way, the original userdata is removed. */
 int luv_get_callback(lua_State* L, const char* name) {
   int isfunc;
 #ifdef LUV_STACK_CHECK
@@ -160,14 +155,14 @@ int luv_get_callback(lua_State* L, const char* name) {
   /* Get the connection handler */
   lua_getuservalue(L, -1);
   lua_getfield(L, -1, name);
-  lua_remove(L, -2); // Remove the uservalue
+  lua_remove(L, -2); /* Remove the uservalue */
 
   isfunc = lua_isfunction(L, -1);
   if (isfunc) {
     lua_pushvalue(L, -2);
-    lua_remove(L, -3); // Remove the original userdata
+    lua_remove(L, -3); /* Remove the original userdata */
   } else {
-    lua_pop(L, 2); // Remove the non function and the userdata
+    lua_pop(L, 2); /* Remove the non function and the userdata */
   }
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top + (isfunc ? 1 : -1));
@@ -195,7 +190,7 @@ lua_State* luv_prepare_callback(luv_req_t* lreq) {
 void luv_call(lua_State *C, int nargs, int nresults) {
   lua_State* L = luv_main_thread;
   if (L != C) {
-    // Move the function call to the main thread if it's in a coroutine
+    /* Move the function call to the main thread if it's in a coroutine */
     lua_xmove(C, L, 1 + nargs);
   }
   lua_call(L, nargs, nresults);

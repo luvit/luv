@@ -31,7 +31,6 @@ static int new_tcp(lua_State* L) {
     uv_err_t err = uv_last_error(uv_default_loop());
     return luaL_error(L, "new_tcp: %s", uv_strerror(err));
   }
-//  fprintf(stderr, "new tcp \tlhandle=%p handle=%p\n", handle->data, handle);
   return 1;
 }
 
@@ -41,7 +40,6 @@ static int new_timer(lua_State* L) {
     uv_err_t err = uv_last_error(uv_default_loop());
     return luaL_error(L, "new_timer: %s", uv_strerror(err));
   }
-//  fprintf(stderr, "new timer \tlhandle=%p handle=%p\n", handle->data, handle);
   return 1;
 }
 
@@ -53,7 +51,6 @@ static int new_tty(lua_State* L) {
     uv_err_t err = uv_last_error(uv_default_loop());
     return luaL_error(L, "new_tty: %s", uv_strerror(err));
   }
-//  fprintf(stderr, "new timer \tlhandle=%p handle=%p\n", handle->data, handle);
   return 1;
 }
 
@@ -386,10 +383,10 @@ static int luv_getaddrinfo(lua_State* L) {
   luaL_checktype(L, 4, LUA_TFUNCTION);
 
   if (hints) {
-    // Initialize the hints
+    /* Initialize the hints */
     memset(hints, 0, sizeof(struct addrinfo));
 
-    // Process the `family` hint.
+    /* Process the `family` hint. */
     lua_getfield(L, 3, "family");
     switch (lua_tointeger(L, -1)) {
       case 0:
@@ -407,7 +404,7 @@ static int luv_getaddrinfo(lua_State* L) {
     }
     lua_pop(L, 1);
 
-    // Process `socktype` hint
+    /* Process `socktype` hint */
     lua_getfield(L, 3, "socktype");
     if (!lua_isnil(L, -1)) {
       const char* socktype = luaL_checkstring(L, -1);
@@ -423,7 +420,7 @@ static int luv_getaddrinfo(lua_State* L) {
     }
     lua_pop(L, 1);
 
-    // Process the `protocol` hint
+    /* Process the `protocol` hint */
     lua_getfield(L, 3, "protocol");
     if (!lua_isnil(L, -1)) {
       const char* protocol = luaL_checkstring(L, -1);
@@ -529,18 +526,17 @@ static int luv_getaddrinfo(lua_State* L) {
     lua_pop(L, 1);
   }
 
-  // Store the callback
+  /* Store the callback */
   callback = malloc(sizeof(*callback));
   callback->L = L;
   lua_pushvalue(L, 4);
   callback->ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-  // Create the request
+  /* Create the request */
   req = malloc(sizeof(*req));
   req->data = (void*)callback;
 
-  // printf("node=%p service=%p hints=%p\n", node, service, hints);
-  // Make the call
+  /* Make the call */
   if (uv_getaddrinfo(uv_default_loop(), req, on_addrinfo, node, service, hints)) {
     uv_err_t err = uv_last_error(uv_default_loop());
     return luaL_error(L, "getaddrinfo: %s", uv_strerror(err));
@@ -603,7 +599,7 @@ static void on_walk(uv_handle_t* handle, void* arg) {
   /* Get the callback and push the type */
   lua_rawgeti(L, LUA_REGISTRYINDEX, callback->ref);
   lhandle = (luv_handle_t*)handle->data;
-  assert(L == lhandle->L); // Make sure the lua states match
+  assert(L == lhandle->L); /* Make sure the lua states match */
   lua_rawgeti(L, LUA_REGISTRYINDEX, lhandle->ref);
 
   switch (lhandle->handle->type) {
@@ -953,11 +949,11 @@ static int luv_write(lua_State* L) {
 
   lreq->lhandle = handle->data;
 
-  // Reference the string in the registry
+  /* Reference the string in the registry */
   lua_pushvalue(L, 2);
   lreq->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-  // Reference the callback in the registry
+  /* Reference the callback in the registry */
   lua_pushvalue(L, 3);
   lreq->callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
@@ -1664,7 +1660,6 @@ static int luv_parse_signal(lua_State* L, int slot) {
 static int luv_kill(lua_State* L) {
   int pid = luaL_checkint(L, 1);
   int signum = luv_parse_signal(L, 2);
-  //printf("pid=%d signum=%d\n", pid, signum);
   uv_err_t err = uv_kill(pid, signum);
   if (err.code) {
     return luaL_error(L, "kill: %s", uv_strerror(err));
@@ -1675,7 +1670,6 @@ static int luv_kill(lua_State* L) {
 static int luv_process_kill(lua_State* L) {
   uv_process_t* handle = luv_get_process(L, 1);
   int signum = luv_parse_signal(L, 2);
-  //printf("handle=%p signum=%d\n", handle, signum);
   if (uv_process_kill(handle, signum)) {
     uv_err_t err = uv_last_error(uv_default_loop());
     return luaL_error(L, "process_kill: %s", uv_strerror(err));
@@ -1741,8 +1735,8 @@ static int luv_string_to_flags(lua_State* L, const char* string) {
   return luaL_error(L, "Unknown file open flag '%s'", string);
 }
 
-// Processes a result and pushes the data onto the stack
-// returns the number of items pushed
+/* Processes a result and pushes the data onto the stack
+   returns the number of items pushed */
 static int push_fs_result(lua_State* L, uv_fs_t* req) {
 
   switch (req->fs_type) {
@@ -1808,7 +1802,7 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
 
 }
 
-// Pushes a formatted error string onto the stack
+/* Pushes a formatted error string onto the stack */
 static void push_fs_error(lua_State* L, uv_fs_t* req) {
   uv_err_t err;
   memset(&err, 0, sizeof err);
@@ -1823,11 +1817,11 @@ static void push_fs_error(lua_State* L, uv_fs_t* req) {
 
 static void on_fs(uv_fs_t *req) {
   int argc;
-  // Get the lua state
+  /* Get the lua state */
   luv_callback_t* callback = (luv_callback_t*)req->data;
   lua_State* L = callback->L;
 
-  // Get the callback and push on the lua stack
+  /* Get the callback and push on the lua stack */
   lua_rawgeti(L, LUA_REGISTRYINDEX, callback->ref);
   luaL_unref(L, LUA_REGISTRYINDEX, callback->ref);
   free(callback);
@@ -1841,7 +1835,7 @@ static void on_fs(uv_fs_t *req) {
     argc = 1 + push_fs_result(L, req);
   }
 
-  // Cleanup the req
+  /* Cleanup the req */
   uv_fs_req_cleanup(req);
   free(req);
 
@@ -1878,9 +1872,9 @@ static void on_fs(uv_fs_t *req) {
   }                                                                            \
   return 0;                                                                    \
 
-// HACK: Hacked version that patches req->ptr to hold buffer
-// TODO: get this into libuv itself, there is no reason it couldn't store this
-// for us.
+/* HACK: Hacked version that patches req->ptr to hold buffer
+   TODO: get this into libuv itself, there is no reason it couldn't store this
+   for us. */
 #define FS_CALL2(func, index, ...)                                             \
 {                                                                              \
   luv_callback_t* callback;                                                    \
