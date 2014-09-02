@@ -40,7 +40,6 @@ static int new_udp(lua_State* L) {
     uv_err_t err = uv_last_error(uv_default_loop());
     return luaL_error(L, "new_udp: %s", uv_strerror(err));
   }
-  /* fprintf(stderr, "new tcp \tlhandle=%p handle=%p\n", handle->data, handle); */
   return 1;
 }
 
