@@ -7,12 +7,23 @@
 # include <sys/stat.h>
 # define S_ISREG(x)  (((x) & _S_IFMT) == _S_IFREG)
 # define S_ISDIR(x)  (((x) & _S_IFMT) == _S_IFDIR)
-# define S_ISFIFO(x) (((x) & _S_IFMT) == _S_IFIFO) 
-# define S_ISCHR(x)  (((x) & _S_IFMT) == _S_IFCHR) 
+# define S_ISFIFO(x) (((x) & _S_IFMT) == _S_IFIFO)
+# define S_ISCHR(x)  (((x) & _S_IFMT) == _S_IFCHR)
 # define S_ISBLK(x)  0
 # define S_ISLNK(x)  0
 # define S_ISSOCK(x) 0
 #endif
+
+static const char* type_to_string(uv_handle_type type) {
+  switch (type) {
+#define XX(uc, lc) case UV_##uc: return ""#lc"";
+    UV_HANDLE_TYPE_MAP(XX)
+#undef XX
+    case UV_UNKNOWN_HANDLE: return "unknown";
+    case UV_FILE: return "file";
+    default: return "";
+  }
+}
 
 static int new_tcp(lua_State* L) {
   uv_tcp_t* handle = luv_create_tcp(L);
@@ -773,6 +784,37 @@ static void luv_on_read(uv_stream_t* handle, ssize_t nread, uv_buf_t buf) {
 #endif
 }
 
+static void luv_on_read2(uv_pipe_t* handle, ssize_t nread, uv_buf_t buf, uv_handle_type pending) {
+  lua_State* L = luv_prepare_event(handle->data);
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L) - 1;
+#endif
+  if (nread >= 0) {
+    if (luv_get_callback(L, "ondata")) {
+      lua_pushlstring(L, buf.base, nread);
+      lua_pushstring(L, type_to_string(pending));
+      luv_call(L, 3, 0);
+    }
+  } else {
+    uv_err_t err = uv_last_error(uv_default_loop());
+    if (err.code == UV_EOF) {
+      if (luv_get_callback(L, "onend")) {
+        luv_call(L, 1, 0);
+      }
+    } else if (err.code != UV_ECONNRESET) {
+      uv_close((uv_handle_t*)handle, NULL);
+      /* TODO: route reset events somewhere so the user knows about them */
+      fprintf(stderr, "TODO: Implement async error handling\n");
+      assert(0);
+    }
+  }
+
+  free(buf.base);
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
+}
+
 static void luv_on_connection(uv_stream_t* handle, int status) {
   lua_State* L = luv_prepare_event(handle->data);
 #ifdef LUV_STACK_CHECK
@@ -830,6 +872,19 @@ static int luv_read_start(lua_State* L) {
 #endif
   uv_stream_t* handle = luv_get_stream(L, 1);
   uv_read_start(handle, luv_on_alloc, luv_on_read);
+  luv_handle_ref(L, handle->data, 1);
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
+  return 0;
+}
+
+static int luv_read2_start(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
+  uv_stream_t* handle = luv_get_stream(L, 1);
+  uv_read2_start(handle, luv_on_alloc, luv_on_read2);
   luv_handle_ref(L, handle->data, 1);
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
@@ -930,6 +985,59 @@ static int luv_write(lua_State* L) {
     const char* chunk = luaL_checklstring(L, 2, &len);
     uv_buf_t buf = uv_buf_init((char*)chunk, len);
     uv_write(req, handle, &buf, 1, luv_after_write);
+  }
+#ifdef LUV_STACK_CHECK
+  assert(lua_gettop(L) == top);
+#endif
+  return 0;
+}
+
+static int luv_write2(lua_State* L) {
+#ifdef LUV_STACK_CHECK
+  int top = lua_gettop(L);
+#endif
+  uv_stream_t* handle = luv_get_stream(L, 1);
+
+  uv_write_t* req = malloc(sizeof(*req));
+  luv_req_t* lreq = malloc(sizeof(*lreq));
+
+  req->data = (void*)lreq;
+
+  lreq->lhandle = handle->data;
+
+  // Reference the string in the registry
+  lua_pushvalue(L, 2);
+  lreq->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+  // Get the stream handle to send
+  uv_stream_t* send_handle = luv_get_stream(L, 3);
+
+  // Reference the callback in the registry
+  lua_pushvalue(L, 4);
+  lreq->callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+  luv_handle_ref(L, handle->data, 1);
+
+  if (lua_istable(L, 2)) {
+    int length, i;
+    length = lua_rawlen(L, 2);
+    uv_buf_t* bufs = malloc(sizeof(uv_buf_t) * length);
+    for (i = 0; i < length; i++) {
+      lua_rawgeti(L, 2, i + 1);
+      size_t len;
+      const char* chunk = luaL_checklstring(L, -1, &len);
+      bufs[i] = uv_buf_init((char*)chunk, len);
+      lua_pop(L, 1);
+    }
+    uv_write2(req, handle, bufs, length, send_handle, luv_after_write);
+    /* TODO: find out if it's safe to free this soon */
+    free(bufs);
+  }
+  else {
+    size_t len;
+    const char* chunk = luaL_checklstring(L, 2, &len);
+    uv_buf_t buf = uv_buf_init((char*)chunk, len);
+    uv_write2(req, handle, &buf, 1, send_handle, luv_after_write);
   }
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
@@ -2009,8 +2117,10 @@ static const luaL_Reg luv_functions[] = {
   {"timer_get_repeat", luv_timer_get_repeat},
 
   {"write", luv_write},
+  {"write2", luv_write2},
   {"shutdown", luv_shutdown},
   {"read_start", luv_read_start},
+  {"read2_start", luv_read2_start},
   {"read_stop", luv_read_stop},
   {"listen", luv_listen},
   {"accept", luv_accept},
