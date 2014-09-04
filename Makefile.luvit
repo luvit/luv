@@ -10,7 +10,7 @@ luv.o: src/luv.c src/luv.h src/luv_functions.c
 	$(CC) -c $< -o $@ ${CFLAGS}
 
 luv.luvit: luv.o common.o
-	$(CC) ${SHARED_LIB_FLAGS} ${LIBS}
+	$(CC) $^ -o $@ ${SHARED_LIB_FLAGS} ${LIBS}
 
 clean:
 	rm -f luv.luvit *.o
