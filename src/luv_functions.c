@@ -1010,14 +1010,14 @@ static int luv_write2(lua_State* L) {
 
   lreq->lhandle = handle->data;
 
-  // Reference the string in the registry
+  /* Reference the string in the registry */
   lua_pushvalue(L, 2);
   lreq->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-  // Get the stream handle to send
+  /* Get the stream handle to send */
   uv_stream_t* send_handle = luv_get_stream(L, 3);
 
-  // Reference the callback in the registry
+  /* Reference the callback in the registry */
   lua_pushvalue(L, 4);
   lreq->callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
