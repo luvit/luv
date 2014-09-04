@@ -1,3 +1,4 @@
 *.o
 *.so
+luv.luvit
 .c9revisions
