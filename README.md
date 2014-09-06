@@ -402,19 +402,33 @@ Connect to a named pipe via a path.
 Luv has powerful support for non-blocking child-processes complete with three
 streams for stdin, stdout, and stderr.
 
-### spawn(command, [args], [options]) -> process, stdin, stdout, stderr, pid
+### spawn(command, args, options) -> process, pid
 
-Create a child-process.  Command is the executable to spawn.  If an args array
-is provided, those are the extra arguments passed to the process.
+Create a child-process.  Command is the executable to spawn.  Args is an array
+which are the arguments passed to the process.
 
 Available options are:
 
  - `cwd` - The cwd to run the child process in.
  - `env` - A table of key-value pairs for a custom environment for the child.
+ - `stdio` - An array of values to set file descriptors of the child process.
+             Value can be a file descriptor, a named pipe, or a stream.
+             Other values are ignored.
+             The array index 0, 1, 2 are corresponding to stdin, stdout, stderr
+             of the child process.
+
+The type of return value `process` is `uv_process_t`.
+
+An example with no argments.
 
 ```lua
-local child, stdout, stdin, stderr, pid = uv.spawn("ls", {"-lh"}, {cwd = "/home/tim"})
--- the stdio values are pipe streams.
+local child, pid = uv.spawn("ls", {}, {})
+```
+
+An example with an argument and the `cwd` option.
+
+```lua
+local child, pid = uv.spawn("ls", {"-lh"}, {cwd = "/home/tim"})
 ```
 
 ### process_kill(process, [signal])
