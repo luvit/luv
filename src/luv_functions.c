@@ -1006,6 +1006,8 @@ static int luv_write2(lua_State* L) {
   uv_write_t* req = malloc(sizeof(*req));
   luv_req_t* lreq = malloc(sizeof(*lreq));
 
+  uv_stream_t* send_handle;
+
   req->data = (void*)lreq;
 
   lreq->lhandle = handle->data;
@@ -1015,7 +1017,7 @@ static int luv_write2(lua_State* L) {
   lreq->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
   /* Get the stream handle to send */
-  uv_stream_t* send_handle = luv_get_stream(L, 3);
+  send_handle = luv_get_stream(L, 3);
 
   /* Reference the callback in the registry */
   lua_pushvalue(L, 4);
@@ -1025,12 +1027,14 @@ static int luv_write2(lua_State* L) {
 
   if (lua_istable(L, 2)) {
     int length, i;
+    uv_buf_t* bufs;
     length = lua_rawlen(L, 2);
-    uv_buf_t* bufs = malloc(sizeof(uv_buf_t) * length);
+    bufs = malloc(sizeof(uv_buf_t) * length);
     for (i = 0; i < length; i++) {
-      lua_rawgeti(L, 2, i + 1);
       size_t len;
-      const char* chunk = luaL_checklstring(L, -1, &len);
+      const char* chunk;
+      lua_rawgeti(L, 2, i + 1);
+      chunk = luaL_checklstring(L, -1, &len);
       bufs[i] = uv_buf_init((char*)chunk, len);
       lua_pop(L, 1);
     }
