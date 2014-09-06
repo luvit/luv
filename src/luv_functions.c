@@ -1454,7 +1454,7 @@ static int luv_spawn(lua_State* L) {
   int r;
   /* process the args list */
   /* +1 for inserted command at front */
-  size_t argc = lua_objlen(L, 2) + 1;
+  size_t argc = lua_rawlen(L, 2) + 1;
   /* +1 for null terminator at end */
   char** args = malloc((argc + 1) * sizeof(*args));
   args[0] = strdup(command);
@@ -1473,7 +1473,7 @@ static int luv_spawn(lua_State* L) {
   /* Get the env */
   lua_getfield(L, 3, "env");
   if (lua_type(L, -1) == LUA_TTABLE) {
-    argc = lua_objlen(L, -1);
+    argc = lua_rawlen(L, -1);
     env = malloc((argc + 1) * sizeof(char*));
     for (i = 0; i < argc; ++i) {
       lua_rawgeti(L, -1, i + 1);
@@ -1487,7 +1487,7 @@ static int luv_spawn(lua_State* L) {
   /* get the stdio list */
   lua_getfield(L, 3, "stdio");
   if (lua_type(L, -1) == LUA_TTABLE) {
-    stdioc = lua_objlen(L, -1);
+    stdioc = lua_rawlen(L, -1);
     stdio = malloc(stdioc * sizeof(*stdio));
     for (i = 0; i < stdioc; ++i) {
       lua_rawgeti(L, -1, i + 1);
