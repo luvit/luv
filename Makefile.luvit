@@ -1,5 +1,5 @@
-CFLAGS=$(shell luvit --cflags)
-LDFLAGS=$(shell luvit --libs)
+CFLAGS+=$(shell luvit --cflags)
+LDFLAGS+=$(shell luvit --libs)
 
 all: luv.luvit
 
