@@ -14,9 +14,13 @@
  *  limitations under the License.
  *
  */
+
 #ifndef LIB_LUV
 #define LIB_LUV
-#include "common.h"
+
+#include <lua.h>
+#include <lauxlib.h>
+#include "uv.h"
 
 LUALIB_API int luaopen_luv (lua_State *L);
 
