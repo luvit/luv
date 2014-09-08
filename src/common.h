@@ -18,7 +18,6 @@
 #include "uv.h"
 
 #if LUA_VERSION_NUM < 502
-/* lua_rawlen: Not entirely correct, but should work anyway */
 #	define lua_rawlen lua_objlen
 /* lua_...uservalue: Something very different, but it should get the job done */
 #	define lua_getuservalue lua_getfenv
