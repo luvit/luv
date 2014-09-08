@@ -70,6 +70,9 @@ static int luv_tostring(lua_State* L) {
 
 LUALIB_API int luaopen_luv (lua_State *L) {
 
+  #ifdef SIGPIPE
+    signal(SIGPIPE, SIG_IGN);
+  #endif
   luv_main_thread = L;
 
   luaL_newmetatable(L, "luv_handle");
