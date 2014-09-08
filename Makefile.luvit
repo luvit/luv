@@ -1,16 +1,27 @@
 CFLAGS=$(shell luvit --cflags)
-LIBS=$(shell luvit --libs)
+LDFLAGS=$(shell luvit --libs)
 
 all: luv.luvit
 
-common.o: src/common.c src/common.h
-	$(CC) -c $< -o $@ ${CFLAGS}
+SOURCE_FILES=\
+	src/dns.c \
+	src/fs.c \
+	src/handle.c \
+	src/luv.c \
+	src/luv.h \
+	src/misc.c \
+	src/pipe.c \
+	src/process.c \
+	src/stream.c \
+	src/tcp.c \
+	src/timer.c \
+	src/tty.c \
+	src/util.c
 
-luv.o: src/luv.c src/luv.h src/luv_functions.c
-	$(CC) -c $< -o $@ ${CFLAGS}
-
-luv.luvit: luv.o common.o
-	$(CC) $^ -o $@ ${SHARED_LIB_FLAGS} ${LIBS}
+luv.luvit: ${SOURCE_FILES} src/luv.h
+	$(CC) -c src/luv.c ${CFLAGS} -o luv.o
+	$(CC) luv.o ${LDFLAGS} -o $@
+	rm luv.o
 
 clean:
-	rm -f luv.luvit *.o
+	rm -f luv.luvit
