@@ -29,7 +29,27 @@ static int luv_index(lua_State* L) {
     }
     return 1;
   }
+  if (strcmp(key, "socket") == 0) {
+    luv_handle_t* lhandle = (luv_handle_t*)luaL_checkudata(L, 1, "luv_handle");
+    switch (lhandle->handle->type) {
+    case UV_TCP:
+      {
+        uv_tcp_t* handle = (uv_tcp_t*)lhandle->handle;
+        lua_pushinteger(L, handle->socket);
+      }
+      break;
+    case UV_UDP:
+      {
+        uv_udp_t* handle = (uv_udp_t*)lhandle->handle;
+        lua_pushinteger(L, handle->socket);
 
+      }
+      break;
+    default:
+      lua_pushnil(L);
+    }
+    return 1;
+  }
   lua_getuservalue(L, 1);
   lua_pushvalue(L, 2);
   lua_rawget(L, -2);
