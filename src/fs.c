@@ -193,11 +193,11 @@ static void on_fs(uv_fs_t *req) {
     argc = push_fs_result(L, req);                                             \
     uv_fs_req_cleanup(req);                                                    \
     free(req);                                                                 \
-    if (argc) return argc;                                                     \
-    if (!argc) {                                                               \
-      lua_pushboolean(L, 1);                                                   \
-      return 1;                                                                \
+    if (argc) {                                                                \
+      return argc;                                                             \
     }                                                                          \
+    lua_pushboolean(L, 1);                                                     \
+    return 1;                                                                  \
   }                                                                            \
   luaL_checktype(L, index, LUA_TFUNCTION);                                     \
   callback = malloc(sizeof(*callback));                                        \
