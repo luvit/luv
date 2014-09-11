@@ -347,6 +347,7 @@ static int new_timer(lua_State* L) {
 static int new_tty(lua_State* L) {
   uv_tty_t* handle = luv_create_tty(L);
   uv_file fd = luaL_checkint(L, 1);
+  luaL_checktype(L, 2, LUA_TBOOLEAN);
   int readable = lua_toboolean(L, 2);
   if (uv_tty_init(uv_default_loop(), handle, fd, readable)) {
     uv_err_t err = uv_last_error(uv_default_loop());
@@ -357,6 +358,7 @@ static int new_tty(lua_State* L) {
 
 static int new_pipe(lua_State* L) {
   uv_pipe_t* handle = luv_create_pipe(L);
+  luaL_checktype(L, 1, LUA_TBOOLEAN);
   int ipc = lua_toboolean(L, 1);
   if (uv_pipe_init(uv_default_loop(), handle, ipc)) {
     uv_err_t err = uv_last_error(uv_default_loop());
