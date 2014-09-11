@@ -187,6 +187,7 @@ static int luv_index(lua_State* L) {
     }
     return 1;
   }
+  /* Get socket handle if requested on tcp/udp handle */
   if (strcmp(key, "socket") == 0) {
     luv_handle_t* lhandle = (luv_handle_t*)luaL_checkudata(L, 1, "luv_handle");
     switch (lhandle->handle->type) {
