@@ -60,10 +60,9 @@
 
 static lua_State* luv_main_thread;
 
-
+#include "util.c"
 #include "loop.c"
 
-// #include "util.c"
 // #include "misc.c"
 // #include "dns.c"
 // #include "handle.c"
@@ -77,12 +76,21 @@ static lua_State* luv_main_thread;
 
 static const luaL_Reg luv_functions[] = {
   {"new_loop", new_loop},
+  {"loop_close", luv_loop_close},
+  {"run", luv_run},
+  {"loop_alive", luv_loop_alive},
+  {"stop", luv_stop},
+  {"backend_fd", luv_backend_fd},
+  {"backend_timeout", luv_backend_timeout},
+  {"now", luv_now},
+  {"update_time", luv_update_time},
+  {"walk", luv_walk},
+
   // {"new_tcp", new_tcp},
   // {"new_timer", new_timer},
   // {"new_tty", new_tty},
   // {"new_udp", new_udp},
   // {"new_pipe", new_pipe},
-  // {"run", luv_run},
   // {"guess_handle", luv_guess_handle},
   // {"update_time", luv_update_time},
   // {"now", luv_now},
@@ -235,6 +243,10 @@ LUALIB_API int luaopen_luv (lua_State *L) {
   // lua_pushcfunction(L, luv_tostring);
   // lua_setfield(L, -2, "__tostring");
   // lua_pop(L, 1);
+
+
+  luaL_newmetatable (L, "uv_loop");
+  lua_pop(L, 1);
 
   /* Module exports */
   luaL_newlib(L, luv_functions);

@@ -1,11 +1,11 @@
 CFLAGS+=-Ilibuv/include -g -I/usr/local/include \
 	-DLUV_STACK_CHECK -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 \
-	-Wall -Werror -fPIC
+	-Wall -Wextra -Wstrict-prototypes -Wold-style-definition -Wmissing-prototypes -Wmissing-declarations -Wdeclaration-after-statement
 
 uname_S=$(shell uname -s)
 ifeq (Darwin, $(uname_S))
 	LDFLAGS+=-bundle -bundle_loader /usr/local/bin/lua \
-		-framework CoreServices -framework Cocoa \
+		-framework CoreServices \
 		-L/usr/local/lib/
 else
 	LDFLAGS+=-shared -lrt
@@ -13,6 +13,7 @@ endif
 
 SOURCE_FILES=\
 	src/luv.c \
+	src/loop.c \
 	src/dns.c \
 	src/fs.c \
 	src/handle.c \

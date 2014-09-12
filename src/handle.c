@@ -60,47 +60,7 @@ static int luv_is_active(lua_State* L) {
   return 1;
 }
 
-static void on_walk(uv_handle_t* handle, void* arg) {
-  luv_callback_t* callback = (luv_callback_t*)arg;
-  lua_State* L = callback->L;
-  luv_handle_t* lhandle;
-  /* Get the callback and push the type */
-  lua_rawgeti(L, LUA_REGISTRYINDEX, callback->ref);
-  lhandle = (luv_handle_t*)handle->data;
-  assert(L == lhandle->L); /* Make sure the lua states match */
-  lua_rawgeti(L, LUA_REGISTRYINDEX, lhandle->ref);
 
-  switch (lhandle->handle->type) {
-#define XX(uc, lc) case UV_##uc: lua_pushfstring(L, "uv_%s_t: %p", #lc, lhandle->handle); break;
-  UV_HANDLE_TYPE_MAP(XX)
-#undef XX
-    default: lua_pushfstring(L, "userdata: %p", lhandle->handle); break;
-  }
-
-  lua_call(L, 2, 0);
-}
-
-static int luv_walk(lua_State* L) {
-  luv_callback_t callback;
-#ifdef LUV_STACK_CHECK
-  int top = lua_gettop(L);
-#endif
-  luaL_checktype(L, 1, LUA_TFUNCTION);
-  /* Store the callback as a ref */
-  callback.L = L;
-  lua_pushvalue(L, 1);
-  callback.ref = luaL_ref(L, LUA_REGISTRYINDEX);
-
-  /* Walk the list */
-  uv_walk(uv_default_loop(), on_walk, &callback);
-
-  /* unref the callback */
-  luaL_unref(L, LUA_REGISTRYINDEX, callback.ref);
-#ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
-#endif
-  return 0;
-}
 
 static int luv_ref(lua_State* L) {
   uv_ref(luv_get_handle(L, 1));
