@@ -28,10 +28,10 @@ static void luv_on_read(uv_stream_t* handle, ssize_t nread, uv_buf_t buf) {
   int top = lua_gettop(L) - 1;
 #endif
   if (nread >= 0) {
-
     if (luv_get_callback(L, "ondata")) {
+      lua_pushnil(L);
       lua_pushlstring (L, buf.base, nread);
-      luv_call(L, 2, 0);
+      luv_call(L, 3, 0);
     }
   } else {
     uv_err_t err = uv_last_error(uv_default_loop());
@@ -41,9 +41,8 @@ static void luv_on_read(uv_stream_t* handle, ssize_t nread, uv_buf_t buf) {
       }
     } else if (err.code != UV_ECONNRESET) {
       uv_close((uv_handle_t*)handle, NULL);
-      /* TODO: route reset events somewhere so the user knows about them */
-      fprintf(stderr, "TODO: Implement async error handling\n");
-      assert(0);
+      lua_pushstring(L, uv_strerror(err));
+      luv_call(L, 2, 0);
     }
   }
 
@@ -72,9 +71,8 @@ static void luv_on_read2(uv_pipe_t* handle, ssize_t nread, uv_buf_t buf, uv_hand
       }
     } else if (err.code != UV_ECONNRESET) {
       uv_close((uv_handle_t*)handle, NULL);
-      /* TODO: route reset events somewhere so the user knows about them */
-      fprintf(stderr, "TODO: Implement async error handling\n");
-      assert(0);
+      lua_pushstring(L, uv_strerror(err));
+      luv_call(L, 2, 0);
     }
   }
 

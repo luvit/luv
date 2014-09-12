@@ -29,6 +29,13 @@ static void on_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
   free(callback);
   free(req);
 
+  if(status == -1) {
+    uv_err_t err = uv_last_error(uv_default_loop());
+    lua_pushstring(L, uv_strerror(err));
+    luv_call(L, 1, 0);
+    return;
+  }
+  lua_pushnil(L);
   lua_newtable(L);
   for (curr = res; curr; curr = curr->ai_next) {
     if (curr->ai_family == AF_INET || curr->ai_family == AF_INET6) {
@@ -121,7 +128,7 @@ static void on_addrinfo(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
   }
   uv_freeaddrinfo(res);
 
-  luv_call(L, 1, 0);
+  luv_call(L, 2, 0);
 }
 
 static int luv_getaddrinfo(lua_State* L) {
