@@ -29,9 +29,8 @@ static void luv_on_read(uv_stream_t* handle, ssize_t nread, uv_buf_t buf) {
 #endif
   if (nread >= 0) {
     if (luv_get_callback(L, "ondata")) {
-      lua_pushnil(L);
       lua_pushlstring (L, buf.base, nread);
-      luv_call(L, 3, 0);
+      luv_call(L, 2, 0);
     }
   } else {
     uv_err_t err = uv_last_error(uv_default_loop());
@@ -41,8 +40,10 @@ static void luv_on_read(uv_stream_t* handle, ssize_t nread, uv_buf_t buf) {
       }
     } else if (err.code != UV_ECONNRESET) {
       uv_close((uv_handle_t*)handle, NULL);
-      lua_pushstring(L, uv_strerror(err));
-      luv_call(L, 2, 0);
+      if (luv_get_callback(L, "onerror")) {
+        lua_pushstring(L, uv_strerror(err));
+        luv_call(L, 2, 0);
+      }
     }
   }
 
@@ -71,8 +72,10 @@ static void luv_on_read2(uv_pipe_t* handle, ssize_t nread, uv_buf_t buf, uv_hand
       }
     } else if (err.code != UV_ECONNRESET) {
       uv_close((uv_handle_t*)handle, NULL);
-      lua_pushstring(L, uv_strerror(err));
-      luv_call(L, 2, 0);
+      if (luv_get_callback(L, "onerror")) {
+        lua_pushstring(L, uv_strerror(err));
+        luv_call(L, 2, 0);
+      }
     }
   }
 
@@ -101,7 +104,13 @@ static void luv_after_write(uv_write_t* req, int status) {
   int top = lua_gettop(L) - 1;
 #endif
   if (lua_isfunction(L, -1)) {
-    luv_call(L, 0, 0);
+    if (status == -1) {
+      uv_err_t err = uv_last_error(uv_default_loop());
+      lua_pushstring(L, uv_strerror(err));
+    } else {
+      lua_pushnil(L);
+    }
+    luv_call(L, 1, 0);
   } else {
     lua_pop(L, 1);
   }
