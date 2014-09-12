@@ -59,27 +59,6 @@ static void find_udata(lua_State* L, void* raw) {
   lua_remove(L, -2);                 // Remote udata_map
 }
 
-// /* Unique type codes for each uv type */
-// enum luv_type {
-//   LUV_HANDLE  = 0x01,
-//   LUV_TIMER   = 0x02,
-//   LUV_STREAM  = 0x04,
-//   LUV_TCP     = 0x08,
-//   LUV_UDP     = 0x10,
-//   LUV_TTY     = 0x20,
-//   LUV_PIPE    = 0x30,
-//   LUV_PROCESS = 0x80
-// };
-//
-// /* Mask is the types that can be extracted from this concrete type */
-// enum luv_mask {
-//   LUV_TIMER_MASK    = LUV_HANDLE | LUV_TIMER,
-//   LUV_TCP_MASK      = LUV_HANDLE | LUV_STREAM | LUV_TCP,
-//   LUV_UDP_MASK      = LUV_HANDLE | LUV_STREAM | LUV_UDP,
-//   LUV_TTY_MASK      = LUV_HANDLE | LUV_STREAM | LUV_TTY,
-//   LUV_PIPE_MASK     = LUV_HANDLE | LUV_STREAM | LUV_PIPE,
-//   LUV_PROCESS_MASK  = LUV_HANDLE | LUV_PROCESS
-// };
 //
 // /* luv handles are used as the userdata type that points to uv handles.
 //  * The luv handle is considered strong when it's "active" or has non-zero

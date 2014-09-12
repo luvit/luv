@@ -15,8 +15,16 @@
  *
  */
 
+static int luv_loop_tostring(lua_State* L) {
+  uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
+  lua_pushfstring(L, "uv_loop_t: %p", loop);
+  return 1;
+}
+
 static void loop_init(lua_State* L) {
   luaL_newmetatable (L, "uv_loop");
+  lua_pushcfunction(L, luv_loop_tostring);
+  lua_setfield(L, -2, "__tostring");
   lua_pop(L, 1);
 }
 

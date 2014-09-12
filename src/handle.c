@@ -15,16 +15,123 @@
  *
  */
 
-static void handle_init(lua_State* L) {
-  luaL_newmetatable (L, "uv_timer");
-  // TODO: setup metatables for handle types
+
+
+static int luv_newindex(lua_State* L) {
+  lua_getuservalue(L, 1);
+  lua_pushvalue(L, 2);
+  lua_pushvalue(L, 3);
+  lua_rawset(L, -3);
   lua_pop(L, 1);
+  return 0;
+}
+
+static int luv_index(lua_State* L) {
+
+  /* Get handle type if requested */
+  const char* key = lua_tostring(L, 2);
+  if (strcmp(key, "type") == 0) {
+    uv_handle_t* handle = luaL_checkudata(L, 1, "uv_handle");
+    switch (handle->type) {
+#define XX(uc, lc) case UV_##uc: lua_pushstring(L, #uc); break;
+    UV_HANDLE_TYPE_MAP(XX)
+#undef XX
+      default: lua_pushstring(L, "UNKNOWN"); break;
+    }
+    return 1;
+  }
+
+  lua_getuservalue(L, 1);
+  lua_pushvalue(L, 2);
+  lua_rawget(L, -2);
+  lua_remove(L, -2);
+  return 1;
+}
+
+static int luv_tostring(lua_State* L) {
+  uv_handle_t* handle = luaL_checkudata(L, 1, "uv_handle");
+  switch (handle->type) {
+#define XX(uc, lc) case UV_##uc: lua_pushfstring(L, "uv_"#lc"_t: %p", handle); break;
+  UV_HANDLE_TYPE_MAP(XX)
+#undef XX
+    default: lua_pushfstring(L, "userdata: %p", handle); break;
+  }
+  return 1;
+}
+
+static void handle_init(lua_State* L) {
+  luaL_newmetatable (L, "uv_handle");
+  lua_pushcfunction(L, luv_newindex);
+  lua_setfield(L, -2, "__newindex");
+  lua_pushcfunction(L, luv_index);
+  lua_setfield(L, -2, "__index");
+  lua_pushcfunction(L, luv_tostring);
+  lua_setfield(L, -2, "__tostring");
+  lua_pop(L, 1);
+}
+
+static uv_handle_t* luv_check_handle(lua_State* L, int index) {
+  return luaL_checkudata(L, index, "uv_handle");
+}
+
+// static uv_stream_t* luv_check_stream(lua_State* L, int index) {
+//   uv_stream_t* handle = luaL_checkudata(L, index, "uv_handle");
+//   luaL_argcheck(L,
+//     handle->type == UV_TCP ||
+//     handle->type == UV_TTY ||
+//     handle->type == UV_NAMED_PIPE ||
+//     handle->type == UV_UDP, index, "uv_stream_t subclass required");
+//   return handle;
+// }
+
+// static uv_tcp_t* luv_check_tcp(lua_State* L, int index) {
+//   uv_tcp_t* handle = luaL_checkudata(L, index, "uv_handle");
+//   luaL_argcheck(L, handle->type == UV_TCP, index, "uv_tcp_t required");
+//   return handle;
+// }
+//
+// static uv_tty_t* luv_check_tty(lua_State* L, int index) {
+//   uv_tty_t* handle = luaL_checkudata(L, index, "uv_handle");
+//   luaL_argcheck(L, handle->type == UV_TTY, index, "uv_tty_t required");
+//   return handle;
+// }
+//
+// static uv_pipe_t* luv_check_pipe(lua_State* L, int index) {
+//   uv_pipe_t* handle = luaL_checkudata(L, index, "uv_handle");
+//   luaL_argcheck(L, handle->type == UV_NAMED_PIPE, index, "uv_pipe_t required");
+//   return handle;
+// }
+//
+// static uv_udp_t* luv_check_udp(lua_State* L, int index) {
+//   uv_udp_t* handle = luaL_checkudata(L, index, "uv_handle");
+//   luaL_argcheck(L, handle->type == UV_UDP, index, "uv_udp_t required");
+//   return handle;
+// }
+//
+// static uv_timer_t* luv_check_timer(lua_State* L, int index) {
+//   uv_timer_t* handle = luaL_checkudata(L, index, "uv_handle");
+//   luaL_argcheck(L, handle->type == UV_TIMER, index, "uv_timer_t required");
+//   return handle;
+// }
+//
+// static uv_process_t* luv_check_process(lua_State* L, int index) {
+//   uv_process_t* handle = luaL_checkudata(L, index, "uv_handle");
+//   luaL_argcheck(L, handle->type == UV_PROCESS, index, "uv_process_t required");
+//   return handle;
+// }
+
+static int luv_is_active(lua_State* L) {
+  uv_handle_t* handle = luv_check_handle(L, 1);
+  int ret = uv_is_active(handle);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
 }
 
 static int new_timer(lua_State* L) {
   uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
   uv_timer_t* handle = lua_newuserdata(L, sizeof(*handle));
-  setup_udata(L, handle, "uv_timer");
+  setup_udata(L, handle, "uv_handle");
   int ret = uv_timer_init(loop, handle);
   if (ret < 0) return luv_error(L, ret);
   return 1;

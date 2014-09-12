@@ -85,6 +85,8 @@ static const luaL_Reg luv_functions[] = {
   {"walk", luv_walk},
 
   {"new_timer", new_timer},
+
+  {"is_active", luv_is_active},
   // {"new_tcp", new_tcp},
   // {"new_timer", new_timer},
   // {"new_tty", new_tty},
