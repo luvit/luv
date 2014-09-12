@@ -1,6 +1,6 @@
 CFLAGS+=-Ilibuv/include -g -I/usr/local/include \
 	-DLUV_STACK_CHECK -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 \
-	-Wall -Wextra -Wstrict-prototypes -Wold-style-definition -Wmissing-prototypes -Wmissing-declarations -Wdeclaration-after-statement
+	-Werror -Wall -Wextra -Wstrict-prototypes -Wold-style-definition -Wmissing-prototypes -Wmissing-declarations -Wdeclaration-after-statement
 
 uname_S=$(shell uname -s)
 ifeq (Darwin, $(uname_S))

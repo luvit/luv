@@ -15,6 +15,11 @@
  *
  */
 
+static void loop_init(lua_State* L) {
+  luaL_newmetatable (L, "uv_loop");
+  lua_pop(L, 1);
+}
+
 // uv.new_loop() -> loop
 static int new_loop(lua_State* L) {
   // Allocate the structure in the lua vm
@@ -98,11 +103,9 @@ static int luv_update_time(lua_State* L) {
 
 static void walk_cb(uv_handle_t* handle, void* arg) {
   lua_State* L = arg;
-  // TODO: send something more useful to lua side.
-  printf("walk L=%p handle=%p\n", L, handle);
-  lua_pushvalue(L, 2); // Copy the lua callback
-  lua_pushlightuserdata(L, handle); 
-  lua_call(L, 1,0);
+  lua_pushvalue(L, 2);   // Copy the lua callback
+  find_udata(L, handle); // Look up the userdata for this handle
+  lua_call(L, 1, 0);     // call the callback
 }
 
 static int luv_walk(lua_State* L) {

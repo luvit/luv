@@ -58,14 +58,12 @@
 #	define luaL_setfuncs(L,l,n) (assert(n==0), luaL_register(L,NULL,l))
 #endif
 
-static lua_State* luv_main_thread;
-
 #include "util.c"
 #include "loop.c"
+#include "handle.c"
 
 // #include "misc.c"
 // #include "dns.c"
-// #include "handle.c"
 // #include "timer.c"
 // #include "stream.c"
 // #include "tcp.c"
@@ -86,6 +84,7 @@ static const luaL_Reg luv_functions[] = {
   {"update_time", luv_update_time},
   {"walk", luv_walk},
 
+  {"new_timer", new_timer},
   // {"new_tcp", new_tcp},
   // {"new_timer", new_timer},
   // {"new_tty", new_tty},
@@ -232,23 +231,9 @@ static const luaL_Reg luv_functions[] = {
 
 
 LUALIB_API int luaopen_luv (lua_State *L) {
-
-  luv_main_thread = L;
-  //
-  // luaL_newmetatable(L, "luv_handle");
-  // lua_pushcfunction(L, luv_newindex);
-  // lua_setfield(L, -2, "__newindex");
-  // lua_pushcfunction(L, luv_index);
-  // lua_setfield(L, -2, "__index");
-  // lua_pushcfunction(L, luv_tostring);
-  // lua_setfield(L, -2, "__tostring");
-  // lua_pop(L, 1);
-
-
-  luaL_newmetatable (L, "uv_loop");
-  lua_pop(L, 1);
-
-  /* Module exports */
+  util_init(L);
+  loop_init(L);
+  handle_init(L);
   luaL_newlib(L, luv_functions);
   return 1;
 }

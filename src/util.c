@@ -15,12 +15,48 @@
  *
  */
 
-
 static int luv_error(lua_State* L, int ret) {
   lua_pushnil(L);
-  fprintf(stderr, "libuv %s: %s\n", uv_err_name(ret), uv_strerror(ret));
+  // For now log errors to stderr in case they aren't asserted or checked for.
+  fprintf(stderr, "%s: %s\n", uv_err_name(ret), uv_strerror(ret));
   lua_pushstring(L, uv_err_name(ret));
   return 2;
+}
+
+// Create a weak table for mapping pointers to userdata.
+static void util_init(lua_State* L) {
+  lua_newtable(L);
+  lua_newtable(L);
+  lua_pushstring(L, "kv");
+  lua_setfield(L, -2, "__mode");
+  lua_setmetatable(L, -2);
+  lua_setfield(L, LUA_REGISTRYINDEX, "udata_map");
+}
+
+// Given a userdata on top of the stack, give it a metatable and an environment.
+// +0 to stack
+static void setup_udata(lua_State* L, void* raw, const char* type) {
+  // Tag with the given metatable type
+  luaL_getmetatable(L, type);
+  lua_setmetatable(L, -2);
+  // Create a new environment for storing stuff
+  lua_newtable(L);
+  lua_setuservalue(L, -2);
+  // Record in the registry so we can match pointers to it later.
+  lua_getfield(L, LUA_REGISTRYINDEX, "udata_map");
+  lua_pushlightuserdata(L, raw); // push raw as lightudata
+  lua_pushvalue(L, -3);          // push copy of udata
+  lua_rawset(L, -3);             // udata_map[raw]=udata
+  lua_pop(L, 1);                 // pop udata_map
+}
+
+// Given a pointer, push the corresponding userdata on the stack (or nil)
+// +1 to stack [udata]
+static void find_udata(lua_State* L, void* raw) {
+  lua_getfield(L, LUA_REGISTRYINDEX, "udata_map");
+  lua_pushlightuserdata(L, raw);     // push pointer
+  lua_rawget(L, -2);                 // replace with userdata
+  lua_remove(L, -2);                 // Remote udata_map
 }
 
 // /* Unique type codes for each uv type */
