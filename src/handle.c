@@ -16,7 +16,7 @@
  */
 
 
-
+// Metamethod to allow storing anything in the userdata's environment
 static int luv_newindex(lua_State* L) {
   lua_getuservalue(L, 1);
   lua_pushvalue(L, 2);
@@ -26,8 +26,9 @@ static int luv_newindex(lua_State* L) {
   return 0;
 }
 
+// Metamethod to allow reading things out of the environment.
+// Special read-only "type".
 static int luv_index(lua_State* L) {
-
   /* Get handle type if requested */
   const char* key = lua_tostring(L, 2);
   if (strcmp(key, "type") == 0) {
@@ -48,6 +49,7 @@ static int luv_index(lua_State* L) {
   return 1;
 }
 
+// Show the libuv type instead of generic "userdata"
 static int luv_tostring(lua_State* L) {
   uv_handle_t* handle = luaL_checkudata(L, 1, "uv_handle");
   switch (handle->type) {
@@ -59,12 +61,23 @@ static int luv_tostring(lua_State* L) {
   return 1;
 }
 
+
+static int luv_pairs(lua_State* L) {
+  lua_getglobal(L, "pairs");
+  lua_getuservalue(L, 1);
+  lua_call(L, 1, 3);
+  return 3;
+}
+
+
 static void handle_init(lua_State* L) {
   luaL_newmetatable (L, "uv_handle");
   lua_pushcfunction(L, luv_newindex);
   lua_setfield(L, -2, "__newindex");
   lua_pushcfunction(L, luv_index);
   lua_setfield(L, -2, "__index");
+  lua_pushcfunction(L, luv_pairs);
+  lua_setfield(L, -2, "__pairs");
   lua_pushcfunction(L, luv_tostring);
   lua_setfield(L, -2, "__tostring");
   lua_pop(L, 1);
