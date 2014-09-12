@@ -19,8 +19,6 @@
 #define LIB_LUV
 
 #include <lua.h>
-#include <lauxlib.h>
-#include "uv.h"
 
 LUALIB_API int luaopen_luv (lua_State *L);
 
