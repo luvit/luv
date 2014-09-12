@@ -15,11 +15,14 @@
  *
  */
 
-#ifndef LIB_LUV
-#define LIB_LUV
+typedef struct {
+  uv_loop_t* loop;   /* The actual uv handle. memory managed by luv */
+  lua_State* L;        /* L and ref together form a reference to the userdata */
+  int threadref;       /* hold reference to coroutine if created in one */
+  int ref;             /* ref is null when refCount is 0 meaning we're weak */
+} luv_loop_t;
 
-#include <lua.h>
+static int new_loop(lua_State* L) {
+  return 0;
 
-LUALIB_API int luaopen_luv (lua_State *L);
-
-#endif
+}

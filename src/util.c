@@ -61,8 +61,6 @@ typedef struct {
   int ref;
 } luv_callback_t;
 
-static lua_State* luv_main_thread;
-
 /* Initialize a new lhandle and push the new userdata on the stack. */
 static luv_handle_t* luv_handle_create(lua_State* L, size_t size, int mask) {
 
