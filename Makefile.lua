@@ -12,10 +12,10 @@ else
 endif
 
 SOURCE_FILES=\
+	src/luv.c \
 	src/dns.c \
 	src/fs.c \
 	src/handle.c \
-	src/luv.c \
 	src/luv.h \
 	src/misc.c \
 	src/pipe.c \
@@ -28,13 +28,17 @@ SOURCE_FILES=\
 
 all: luv.so
 
-libuv/libuv.a:
-	CPPFLAGS=-fPIC $(MAKE) -C libuv
+libuv/out/Release/libuv.a:
+	cd libuv && ./gyp_uv.py && BUILDTYPE=Release ${MAKE} -C out && cd ..
 
-luv.so: ${SOURCE_FILES} libuv/libuv.a
-	$(CC) -c src/luv.c ${CFLAGS} -o luv.o
-	$(CC) luv.o libuv/libuv.a ${LDFLAGS} -o $@
-	rm luv.o
+libuv/out/Debug/libuv.a:
+	cd libuv && ./gyp_uv.py && BUILDTYPE=Debug ${MAKE} -C out && cd ..
+
+luv.o: ${SOURCE_FILES}
+	$(CC) -c $< ${CFLAGS} -o $@
+
+luv.so: luv.o libuv/out/Release/libuv.a
+	$(CC) $^ ${LDFLAGS} -o $@
 
 clean:
-	rm -f luv.so
+	rm -f luv.so *.o
