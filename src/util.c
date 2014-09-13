@@ -35,7 +35,8 @@ static void util_init(lua_State* L) {
 
 // Given a userdata on top of the stack, give it a metatable and an environment.
 // +0 to stack
-static void setup_udata(lua_State* L, void* raw, const char* type) {
+static void setup_udata(lua_State* L, uv_handle_t* handle, const char* type) {
+  handle->data = L;
   // Tag with the given metatable type
   luaL_getmetatable(L, type);
   lua_setmetatable(L, -2);
@@ -44,19 +45,19 @@ static void setup_udata(lua_State* L, void* raw, const char* type) {
   lua_setuservalue(L, -2);
   // Record in the registry so we can match pointers to it later.
   lua_getfield(L, LUA_REGISTRYINDEX, "udata_map");
-  lua_pushlightuserdata(L, raw); // push raw as lightudata
-  lua_pushvalue(L, -3);          // push copy of udata
-  lua_rawset(L, -3);             // udata_map[raw]=udata
-  lua_pop(L, 1);                 // pop udata_map
+  lua_pushlightuserdata(L, handle); // push raw as lightudata
+  lua_pushvalue(L, -3);             // push copy of udata
+  lua_rawset(L, -3);                // udata_map[raw]=udata
+  lua_pop(L, 1);                    // pop udata_map
 }
 
 // Given a pointer, push the corresponding userdata on the stack (or nil)
 // +1 to stack [udata]
-static void find_udata(lua_State* L, void* raw) {
+static void find_udata(lua_State* L, uv_handle_t* handle) {
   lua_getfield(L, LUA_REGISTRYINDEX, "udata_map");
-  lua_pushlightuserdata(L, raw);     // push pointer
-  lua_rawget(L, -2);                 // replace with userdata
-  lua_remove(L, -2);                 // Remote udata_map
+  lua_pushlightuserdata(L, handle); // push pointer
+  lua_rawget(L, -2);                // replace with userdata
+  lua_remove(L, -2);                // Remote udata_map
 }
 
 //

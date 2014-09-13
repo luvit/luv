@@ -87,6 +87,16 @@ static const luaL_Reg luv_functions[] = {
   {"new_timer", new_timer},
 
   {"is_active", luv_is_active},
+  {"is_closing", luv_is_closing},
+  {"close", luv_close},
+  {"ref", luv_ref},
+  {"unref", luv_unref},
+  {"has_ref", luv_has_ref},
+  {"send_buffer_size", luv_send_buffer_size},
+  {"recv_buffer_size", luv_recv_buffer_size},
+  {"fileno", luv_fileno},
+
+
   // {"new_tcp", new_tcp},
   // {"new_timer", new_timer},
   // {"new_tty", new_tty},

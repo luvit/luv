@@ -62,6 +62,7 @@ static int luv_tostring(lua_State* L) {
 }
 
 
+// Reuse the builtin pairs on the uservalue table.
 static int luv_pairs(lua_State* L) {
   lua_getglobal(L, "pairs");
   lua_getuservalue(L, 1);
@@ -141,10 +142,90 @@ static int luv_is_active(lua_State* L) {
   return 1;
 }
 
+static int luv_is_closing(lua_State* L) {
+  uv_handle_t* handle = luv_check_handle(L, 1);
+  int ret = uv_is_closing(handle);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}
+
+static void close_cb(uv_handle_t* handle) {
+  lua_State* L = handle->data;
+  lua_resume(L, NULL, 0);
+}
+
+static int luv_close(lua_State* L) {
+  uv_handle_t* handle = luv_check_handle(L, 1);
+  uv_close(handle, close_cb);
+  return lua_yield(L, 0);
+}
+
+static int luv_ref(lua_State* L) {
+  uv_handle_t* handle = luv_check_handle(L, 1);
+  uv_ref(handle);
+  return 0;
+}
+
+static int luv_unref(lua_State* L) {
+  uv_handle_t* handle = luv_check_handle(L, 1);
+  uv_unref(handle);
+  return 0;
+}
+
+static int luv_has_ref(lua_State* L) {
+  uv_handle_t* handle = luv_check_handle(L, 1);
+  int ret = uv_has_ref(handle);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}
+
+static int luv_send_buffer_size(lua_State* L) {
+  uv_handle_t* handle = luv_check_handle(L, 1);
+  int value;
+  int ret;
+  if (lua_isnoneornil(L, 2)) {
+    value = 0;
+  }
+  else {
+    value = luaL_checkinteger(L, 2);
+  }
+  ret = uv_send_buffer_size(handle, &value);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}
+
+static int luv_recv_buffer_size(lua_State* L) {
+  uv_handle_t* handle = luv_check_handle(L, 1);
+  int value;
+  int ret;
+  if (lua_isnoneornil(L, 2)) {
+    value = 0;
+  }
+  else {
+    value = luaL_checkinteger(L, 2);
+  }
+  ret = uv_recv_buffer_size(handle, &value);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}
+
+static int luv_fileno(lua_State* L) {
+  uv_handle_t* handle = luv_check_handle(L, 1);
+  uv_os_fd_t fd;
+  int ret = uv_fileno(handle, &fd);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, fd);
+  return 1;
+}
+
 static int new_timer(lua_State* L) {
   uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
   uv_timer_t* handle = lua_newuserdata(L, sizeof(*handle));
-  setup_udata(L, handle, "uv_handle");
+  setup_udata(L, (uv_handle_t*)handle, "uv_handle");
   int ret = uv_timer_init(loop, handle);
   if (ret < 0) return luv_error(L, ret);
   return 1;
