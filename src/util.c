@@ -15,12 +15,22 @@
  *
  */
 
-static int luv_error(lua_State* L, int ret) {
-  lua_pushnil(L);
-  // For now log errors to stderr in case they aren't asserted or checked for.
-  fprintf(stderr, "%s: %s\n", uv_err_name(ret), uv_strerror(ret));
-  lua_pushstring(L, uv_err_name(ret));
-  return 2;
+static void luv_stack_dump(lua_State* L, const char* name) {
+  int i, l;
+  printf("\nAPI STACK DUMP %p: %s\n", L, name);
+  for (i = 1, l = lua_gettop(L); i <= l; i++) {
+    lua_getglobal(L, "tostring");
+    lua_pushvalue(L, i);
+    lua_call(L, 1, 1);
+    printf("  %d %s\n", i, lua_tostring(L, -1));
+    lua_pop(L, 1);
+  }
+  assert(l == lua_gettop(L));
+}
+
+static int on_panic(lua_State* L) {
+  luv_stack_dump(L, "PANIC");
+  return 0;
 }
 
 // Create a weak table for mapping pointers to userdata.
@@ -31,6 +41,40 @@ static void util_init(lua_State* L) {
   lua_setfield(L, -2, "__mode");
   lua_setmetatable(L, -2);
   lua_setfield(L, LUA_REGISTRYINDEX, "udata_map");
+  lua_atpanic(L, on_panic);
+}
+
+static int luv_error(lua_State* L, int ret) {
+  lua_pushnil(L);
+  // For now log errors to stderr in case they aren't asserted or checked for.
+  fprintf(stderr, "%s: %s\n", uv_err_name(ret), uv_strerror(ret));
+  lua_pushstring(L, uv_err_name(ret));
+  return 2;
+}
+
+static void luv_ccall(lua_State* L, int nargs) {
+  int top = lua_gettop(L);
+  lua_State* T = lua_newthread(L);
+  lua_insert(L, -2 - nargs); // Push coroutine above function and userdata
+  lua_xmove(L, T, nargs + 1);
+  int ret = lua_resume(T, nargs);
+  lua_pop(L, 1);
+  if (ret && ret != LUA_YIELD) {
+    on_panic(T);
+  }
+  assert(lua_gettop(L) == top - nargs - 1);
+}
+
+static void luv_emit_event(lua_State* L, const char* name, int nargs) {
+  lua_getuservalue(L, -nargs);
+  lua_getfield(L, -1, name);
+  if (lua_type(L, -1) != LUA_TFUNCTION) {
+    lua_pop(L, 2 + nargs);
+    return;
+  }
+  lua_remove(L, -2); // Remove uservalue
+  lua_insert(L, -1 - nargs); // Push function above userdata
+  luv_ccall(L, nargs);
 }
 
 // Given a userdata on top of the stack, give it a metatable and an environment.
@@ -53,12 +97,13 @@ static void setup_udata(lua_State* L, uv_handle_t* handle, const char* type) {
 
 // Given a pointer, push the corresponding userdata on the stack (or nil)
 // +1 to stack [udata]
-static void find_udata(lua_State* L, uv_handle_t* handle) {
+static void find_udata(lua_State* L, void* handle) {
   lua_getfield(L, LUA_REGISTRYINDEX, "udata_map");
   lua_pushlightuserdata(L, handle); // push pointer
   lua_rawget(L, -2);                // replace with userdata
   lua_remove(L, -2);                // Remote udata_map
 }
+
 
 //
 // /* luv handles are used as the userdata type that points to uv handles.
@@ -289,44 +334,6 @@ static void find_udata(lua_State* L, uv_handle_t* handle) {
 //   lua_call(L, nargs, nresults);
 // }
 //
-// // Commented out because it's unused normally.
-// // static void luv_stack_dump(lua_State* L, int top, const char* name) {
-// //   int i, l;
-// //   printf("\nAPI STACK DUMP: %s\n", name);
-// //   for (i = top, l = lua_gettop(L); i <= l; i++) {
-// //     const char* typename = lua_typename(L, lua_type(L, i));
-// //     switch (lua_type(L, i)) {
-// //       case LUA_TNIL:
-// //         printf("  %d: %s\n", i, typename);
-// //         break;
-// //       case LUA_TNUMBER:
-// //         printf("  %d: %s\t%f\n", i, typename, lua_tonumber(L, i));
-// //         break;
-// //       case LUA_TBOOLEAN:
-// //         printf("  %d: %s\n\t%s", i, typename, lua_toboolean(L, i) ? "true" : "false");
-// //         break;
-// //       case LUA_TSTRING:
-// //         printf("  %d: %s\t%s\n", i, typename, lua_tostring(L, i));
-// //         break;
-// //       case LUA_TTABLE:
-// //         printf("  %d: %s\n", i, typename);
-// //         break;
-// //       case LUA_TFUNCTION:
-// //         printf("  %d: %s\t%p\n", i, typename, lua_tocfunction(L, i));
-// //         break;
-// //       case LUA_TUSERDATA:
-// //         printf("  %d: %s\t%p\n", i, typename, lua_touserdata(L, i));
-// //         break;
-// //       case LUA_TTHREAD:
-// //         printf("  %d: %s\t%p\n", i, typename, lua_tothread(L, i));
-// //         break;
-// //       case LUA_TLIGHTUSERDATA:
-// //         printf("  %d: %s\t%p\n", i, typename, lua_touserdata(L, i));
-// //         break;
-// //     }
-// //   }
-// //   printf("\n");
-// // }
 //
 // static const char* type_to_string(uv_handle_type type) {
 //   switch (type) {

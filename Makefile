@@ -1,1 +1,1 @@
-Makefile.lua
+Makefile.luajit

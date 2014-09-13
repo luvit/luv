@@ -61,10 +61,10 @@
 #include "util.c"
 #include "loop.c"
 #include "handle.c"
+#include "timer.c"
 
 // #include "misc.c"
 // #include "dns.c"
-// #include "timer.c"
 // #include "stream.c"
 // #include "tcp.c"
 // #include "tty.c"
@@ -73,6 +73,7 @@
 // #include "fs.c"
 
 static const luaL_Reg luv_functions[] = {
+  // loop.c
   {"new_loop", new_loop},
   {"loop_close", luv_loop_close},
   {"run", luv_run},
@@ -84,8 +85,7 @@ static const luaL_Reg luv_functions[] = {
   {"update_time", luv_update_time},
   {"walk", luv_walk},
 
-  {"new_timer", new_timer},
-
+  // handle.c
   {"is_active", luv_is_active},
   {"is_closing", luv_is_closing},
   {"close", luv_close},
@@ -95,6 +95,13 @@ static const luaL_Reg luv_functions[] = {
   {"send_buffer_size", luv_send_buffer_size},
   {"recv_buffer_size", luv_recv_buffer_size},
   {"fileno", luv_fileno},
+
+  // timer.c
+  {"new_timer", new_timer},
+  {"timer_start", luv_timer_start},
+  {"timer_stop", luv_timer_stop},
+  {"timer_again", luv_timer_again},
+  {"timer_set_repeat", luv_timer_set_repeat},
 
 
   // {"new_tcp", new_tcp},

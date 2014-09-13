@@ -121,13 +121,13 @@ static uv_handle_t* luv_check_handle(lua_State* L, int index) {
 //   luaL_argcheck(L, handle->type == UV_UDP, index, "uv_udp_t required");
 //   return handle;
 // }
-//
-// static uv_timer_t* luv_check_timer(lua_State* L, int index) {
-//   uv_timer_t* handle = luaL_checkudata(L, index, "uv_handle");
-//   luaL_argcheck(L, handle->type == UV_TIMER, index, "uv_timer_t required");
-//   return handle;
-// }
-//
+
+static uv_timer_t* luv_check_timer(lua_State* L, int index) {
+  uv_timer_t* handle = luaL_checkudata(L, index, "uv_handle");
+  luaL_argcheck(L, handle->type == UV_TIMER, index, "uv_timer_t required");
+  return handle;
+}
+
 // static uv_process_t* luv_check_process(lua_State* L, int index) {
 //   uv_process_t* handle = luaL_checkudata(L, index, "uv_handle");
 //   luaL_argcheck(L, handle->type == UV_PROCESS, index, "uv_process_t required");
@@ -152,12 +152,18 @@ static int luv_is_closing(lua_State* L) {
 
 static void close_cb(uv_handle_t* handle) {
   lua_State* L = handle->data;
-  lua_resume(L, NULL, 0);
+  int ret = lua_resume(L, 0);
+  if (ret && ret != LUA_YIELD) {
+    on_panic(L);
+  }
 }
 
 static int luv_close(lua_State* L) {
   uv_handle_t* handle = luv_check_handle(L, 1);
   uv_close(handle, close_cb);
+
+  // Wait for close to finish
+  handle->data = L;
   return lua_yield(L, 0);
 }
 
@@ -221,31 +227,6 @@ static int luv_fileno(lua_State* L) {
   lua_pushinteger(L, fd);
   return 1;
 }
-
-static int new_timer(lua_State* L) {
-  uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
-  uv_timer_t* handle = lua_newuserdata(L, sizeof(*handle));
-  setup_udata(L, (uv_handle_t*)handle, "uv_handle");
-  int ret = uv_timer_init(loop, handle);
-  if (ret < 0) return luv_error(L, ret);
-  return 1;
-}
-
-
-//   luv_handle_t* lhandle = (luv_handle_t*)lua_newuserdata(L, sizeof(luv_handle_t));
-//
-//   /* Create a local environment for storing stuff */
-//   lua_newtable(L);
-//   lua_setuservalue(L, -2);
-//
-//   /* Initialize and return the lhandle */
-//   lhandle->handle = (uv_handle_t*)malloc(size);
-//   lhandle->handle->data = lhandle; /* Point back to lhandle from handle */
-//   lhandle->refCount = 0;
-//   lhandle->ref = LUA_NOREF;
-//   lhandle->mask = mask;
-//   lhandle->L = L;
-
 
 // static int new_tcp(lua_State* L) {
 //   uv_tcp_t* handle = luv_create_tcp(L);

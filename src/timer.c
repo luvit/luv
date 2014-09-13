@@ -17,97 +17,49 @@
 
 static int new_timer(lua_State* L) {
   uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
-  uv_timer_t handle = lua_newuserdata(L, sizeof(handle));
-  luaL_getmetatable(L, "uv_handle");
-  lua_setmetatable(L, -2);
+  uv_timer_t* handle = lua_newuserdata(L, sizeof(*handle));
+  setup_udata(L, (uv_handle_t*)handle, "uv_handle");
   int ret = uv_timer_init(loop, handle);
   if (ret < 0) return luv_error(L, ret);
   return 1;
 }
 
-// static void on_timeout(uv_timer_t* handle, int status) {
-//   lua_State* L = luv_prepare_event(handle->data);
-// #ifdef LUV_STACK_CHECK
-//   int top = lua_gettop(L) - 1;
-// #endif
-//   if (luv_get_callback(L, "ontimeout")) {
-//     luv_call(L, 1, 0);
-//   }
-// #ifdef LUV_STACK_CHECK
-//   assert(lua_gettop(L) == top);
-// #endif
-// }
-//
-// static int luv_timer_start(lua_State* L) {
-// #ifdef LUV_STACK_CHECK
-//   int top = lua_gettop(L);
-// #endif
-//   uv_timer_t* handle = luv_get_timer(L, 1);
-//   int64_t timeout = luaL_checkinteger(L, 2);
-//   int64_t repeat = luaL_checkinteger(L, 3);
-//   if (uv_timer_start(handle, on_timeout, timeout, repeat)) {
-//     uv_err_t err = uv_last_error(uv_default_loop());
-//     return luaL_error(L, "timer_start: %s", uv_strerror(err));
-//   }
-//   luv_handle_ref(L, handle->data, 1);
-// #ifdef LUV_STACK_CHECK
-//   assert(lua_gettop(L) == top);
-// #endif
-//   return 0;
-// }
-//
-// static int luv_timer_stop(lua_State* L) {
-// #ifdef LUV_STACK_CHECK
-//   int top = lua_gettop(L);
-// #endif
-//   uv_timer_t* handle = luv_get_timer(L, 1);
-//   luv_handle_unref(L, handle->data);
-//   if (uv_timer_stop(handle)) {
-//     uv_err_t err = uv_last_error(uv_default_loop());
-//     return luaL_error(L, "timer_stop: %s", uv_strerror(err));
-//   }
-// #ifdef LUV_STACK_CHECK
-//   assert(lua_gettop(L) == top);
-// #endif
-//   return 0;
-// }
-//
-// static int luv_timer_again(lua_State* L) {
-// #ifdef LUV_STACK_CHECK
-//   int top = lua_gettop(L);
-// #endif
-//   uv_timer_t* handle = luv_get_timer(L, 1);
-//   if (uv_timer_again(handle)) {
-//     uv_err_t err = uv_last_error(uv_default_loop());
-//     return luaL_error(L, "timer_again: %s", uv_strerror(err));
-//   }
-// #ifdef LUV_STACK_CHECK
-//   assert(lua_gettop(L) == top);
-// #endif
-//   return 0;
-// }
-//
-// static int luv_timer_set_repeat(lua_State* L) {
-// #ifdef LUV_STACK_CHECK
-//   int top = lua_gettop(L);
-// #endif
-//   uv_timer_t* handle = luv_get_timer(L, 1);
-//   int64_t repeat = luaL_checkint(L, 2);
-//   uv_timer_set_repeat(handle, repeat);
-// #ifdef LUV_STACK_CHECK
-//   assert(lua_gettop(L) == top);
-// #endif
-//   return 0;
-// }
-//
-// static int luv_timer_get_repeat(lua_State* L) {
-// #ifdef LUV_STACK_CHECK
-//   int top = lua_gettop(L);
-// #endif
-//   uv_timer_t* handle = luv_get_timer(L, 1);
-//   lua_pushinteger(L, uv_timer_get_repeat(handle));
-// #ifdef LUV_STACK_CHECK
-//   assert(lua_gettop(L) == top + 1);
-// #endif
-//   return 1;
-// }
+static void timer_cb(uv_timer_t* handle) {
+  lua_State* L = (lua_State*)handle->data;
+  find_udata(L, handle);
+  luv_emit_event(L, "ontimeout", 1);
+}
+
+
+static int luv_timer_start(lua_State* L) {
+  uv_timer_t* handle = luv_check_timer(L, 1);
+  uint64_t timeout = luaL_checkinteger(L, 2);
+  uint64_t repeat = luaL_checkinteger(L, 3);
+  int ret = uv_timer_start(handle, timer_cb, timeout, repeat);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}
+
+static int luv_timer_stop(lua_State* L) {
+  uv_timer_t* handle = luv_check_timer(L, 1);
+  int ret = uv_timer_stop(handle);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}
+
+static int luv_timer_again(lua_State* L) {
+  uv_timer_t* handle = luv_check_timer(L, 1);
+  int ret = uv_timer_again(handle);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}
+
+static int luv_timer_set_repeat(lua_State* L) {
+  uv_timer_t* handle = luv_check_timer(L, 1);
+  uint64_t repeat = luaL_checkinteger(L, 2);
+  uv_timer_set_repeat(handle, repeat);
+  return 0;
+}
