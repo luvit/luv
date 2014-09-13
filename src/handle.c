@@ -152,7 +152,7 @@ static int luv_is_closing(lua_State* L) {
 
 static void close_cb(uv_handle_t* handle) {
   lua_State* L = handle->data;
-  int ret = lua_resume(L, 0);
+  int ret = lua_resume(L, NULL, 0);
   if (ret && ret != LUA_YIELD) {
     on_panic(L);
   }

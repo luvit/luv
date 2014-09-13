@@ -57,7 +57,7 @@ static void luv_ccall(lua_State* L, int nargs) {
   lua_State* T = lua_newthread(L);
   lua_insert(L, -2 - nargs); // Push coroutine above function and userdata
   lua_xmove(L, T, nargs + 1);
-  int ret = lua_resume(T, nargs);
+  int ret = lua_resume(T, L, nargs);
   lua_pop(L, 1);
   if (ret && ret != LUA_YIELD) {
     on_panic(T);
