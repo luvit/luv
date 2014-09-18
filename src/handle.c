@@ -39,9 +39,7 @@ static int luv_close(lua_State* L) {
     fprintf(stderr, "WARNING: Handle already closing \tlhandle=%p handle=%p\n", handle->data, (void*)handle);
     return 0;
   }
-
   uv_close(handle, on_close);
-  luv_handle_ref(L, handle->data, 1);
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
 #endif
