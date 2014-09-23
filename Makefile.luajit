@@ -26,6 +26,7 @@ SOURCE_FILES=\
 	src/tcp.c \
 	src/timer.c \
 	src/prepare.c \
+	src/check.c \
 	src/tty.c \
 	src/util.c
 

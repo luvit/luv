@@ -113,7 +113,7 @@ static void walk_cb(uv_handle_t* handle, void* arg) {
   lua_State* L = arg;
   lua_pushvalue(L, 2);   // Copy the lua callback
   find_udata(L, handle); // Look up the userdata for this handle
-  lua_call(L, 1, 0);     // call the callback
+  luv_ccall(L, 1);       // call the callback
 }
 
 static int luv_walk(lua_State* L) {

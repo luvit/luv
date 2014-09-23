@@ -3,6 +3,14 @@ local loop = uv.new_loop()
 local dump = require('lib/utils').dump
 local p = require('lib/utils').prettyPrint
 
+local function closeLoop()
+  print(loop, "Closing all handles in loop")
+  uv.walk(loop, function (handle)
+    print("Closing", handle)
+    uv.close(handle)
+  end)
+end
+
 local function test()
   coroutine.wrap(function ()
     local prep = uv.new_prepare(loop)
@@ -10,6 +18,12 @@ local function test()
     function prep:onprepare()
       assert(self == prep)
       print("prep")
+    end
+    local check = uv.new_check(loop)
+    uv.check_start(check)
+    function check:oncheck()
+      assert(self == check)
+      print("check")
     end
 
     local timer = uv.new_timer(loop)
@@ -22,9 +36,7 @@ local function test()
         p{["repeat"]= uv.timer_get_repeat(timer)}
         assert(self == timer)
         uv.timer_stop(self)
-        print(self, "Closing")
-        uv.close(self)
-        print(self, "Closed")
+        closeLoop()
       end
     end
     -- error "TEST ME2"
