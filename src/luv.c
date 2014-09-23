@@ -63,6 +63,7 @@
 #include "loop.c"
 #include "handle.c"
 #include "timer.c"
+#include "prepare.c"
 
 // #include "misc.c"
 // #include "dns.c"
@@ -104,6 +105,11 @@ static const luaL_Reg luv_functions[] = {
   {"timer_again", luv_timer_again},
   {"timer_set_repeat", luv_timer_set_repeat},
   {"timer_get_repeat", luv_timer_get_repeat},
+
+  // prepare.c
+  {"new_prepare", new_prepare},
+  {"prepare_start", luv_prepare_start},
+  {"prepare_stop", luv_prepare_stop},
 
 
   // {"new_tcp", new_tcp},

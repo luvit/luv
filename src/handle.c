@@ -128,6 +128,12 @@ static uv_timer_t* luv_check_timer(lua_State* L, int index) {
   return handle;
 }
 
+static uv_prepare_t* luv_check_prepare(lua_State* L, int index) {
+  uv_prepare_t* handle = luaL_checkudata(L, index, "uv_handle");
+  luaL_argcheck(L, handle->type == UV_PREPARE, index, "uv_prepare_t required");
+  return handle;
+}
+
 // static uv_process_t* luv_check_process(lua_State* L, int index) {
 //   uv_process_t* handle = luaL_checkudata(L, index, "uv_handle");
 //   luaL_argcheck(L, handle->type == UV_PROCESS, index, "uv_process_t required");

@@ -5,6 +5,13 @@ local p = require('lib/utils').prettyPrint
 
 local function test()
   coroutine.wrap(function ()
+    local prep = uv.new_prepare(loop)
+    uv.prepare_start(prep)
+    function prep:onprepare()
+      assert(self == prep)
+      print("prep")
+    end
+
     local timer = uv.new_timer(loop)
     function timer:ontimeout()
       assert(self == timer)
