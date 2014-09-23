@@ -1,5 +1,5 @@
-CFLAGS+=-Ilibuv/include -g -I/usr/local/include/luajit-2.0 \
-	-DLUV_STACK_CHECK -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 \
+CFLAGS+= -Ilibuv/include -g -I/usr/local/include/luajit-2.0\
+	-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64\
 	-Werror -Wall -Wextra -Wstrict-prototypes -Wold-style-definition -Wmissing-prototypes -Wmissing-declarations -Wdeclaration-after-statement
 
 uname_S=$(shell uname -s)
@@ -8,7 +8,8 @@ ifeq (Darwin, $(uname_S))
 		-framework CoreServices \
 		-L/usr/local/lib/
 else
-	LDFLAGS+=-shared -lrt
+	CFLAGS+= -fPIC
+	LDFLAGS+= -shared -lrt
 endif
 
 SOURCE_FILES=\
@@ -30,10 +31,10 @@ SOURCE_FILES=\
 all: luv.so
 
 libuv/out/Release/libuv.a:
-	cd libuv && ./gyp_uv.py && BUILDTYPE=Release ${MAKE} -C out && cd ..
+	cd libuv && ./gyp_uv.py && BUILDTYPE=Release CFLAGS=-fPIC  ${MAKE} -C out && cd ..
 
 libuv/out/Debug/libuv.a:
-	cd libuv && ./gyp_uv.py && BUILDTYPE=Debug ${MAKE} -C out && cd ..
+	cd libuv && ./gyp_uv.py && BUILDTYPE=Debug CFLAGS=-fPIC ${MAKE} -C out && cd ..
 
 luv.o: ${SOURCE_FILES}
 	$(CC) -c $< ${CFLAGS} -o $@
@@ -43,3 +44,6 @@ luv.so: luv.o libuv/out/Release/libuv.a
 
 clean:
 	rm -f luv.so *.o
+
+clean-all: clean
+	rm -rf libuv/out

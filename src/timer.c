@@ -18,8 +18,9 @@
 static int new_timer(lua_State* L) {
   uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
   uv_timer_t* handle = lua_newuserdata(L, sizeof(*handle));
+  int ret;
   setup_udata(L, (uv_handle_t*)handle, "uv_handle");
-  int ret = uv_timer_init(loop, handle);
+  ret = uv_timer_init(loop, handle);
   if (ret < 0) return luv_error(L, ret);
   return 1;
 }
@@ -62,4 +63,11 @@ static int luv_timer_set_repeat(lua_State* L) {
   uint64_t repeat = luaL_checkinteger(L, 2);
   uv_timer_set_repeat(handle, repeat);
   return 0;
+}
+
+static int luv_timer_get_repeat(lua_State* L) {
+  uv_timer_t* handle = luv_check_timer(L, 1);
+  uint64_t repeat = uv_timer_get_repeat(handle);
+  lua_pushinteger(L, repeat);
+  return 1;
 }

@@ -103,6 +103,7 @@ static const luaL_Reg luv_functions[] = {
   {"timer_stop", luv_timer_stop},
   {"timer_again", luv_timer_again},
   {"timer_set_repeat", luv_timer_set_repeat},
+  {"timer_get_repeat", luv_timer_get_repeat},
 
 
   // {"new_tcp", new_tcp},
