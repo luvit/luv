@@ -1,6 +1,8 @@
 local p = require('lib/utils').prettyPrint
 local uv = require('luv')
 
+p(uv)
+
 -- Helper to log all handles in a loop
 local function logHandles(loop, verbose)
   local handles = uv.walk(loop)
@@ -82,6 +84,7 @@ local function testPoll(loop)
     uv.poll_stop(poll)
   end
   uv.poll_start(poll, "r")
+  p("Press Enter to test poll handler")
 end
 
 -- Sanity check for uv_timer_t
@@ -113,6 +116,7 @@ local function testSignal(loop, callback)
     if callback then callback() end
   end
   uv.signal_start(signal, "SIGINT")
+  p("Press Control+C to test signal handler")
 end
 
 coroutine.wrap(function ()
