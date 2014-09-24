@@ -29,6 +29,7 @@ SOURCE_FILES=\
 	src/check.c \
 	src/idle.c \
 	src/async.c \
+	src/poll.c \
 	src/tty.c \
 	src/util.c
 

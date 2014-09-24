@@ -74,6 +74,16 @@ local function testAsync(loop)
   uv.async_send(async)
 end
 
+local function testPoll(loop)
+  local poll = uv.new_poll(loop, 0)
+  function poll:onpoll(err, evt)
+    p("onpoll", err, evt)
+    assert(self == poll)
+    uv.poll_stop(poll)
+  end
+  uv.poll_start(poll, "r")
+end
+
 -- Sanity check for uv_timer_t
 local function testTimer(loop, callback)
   local timer = uv.new_timer(loop)
@@ -110,6 +120,9 @@ coroutine.wrap(function ()
   collectgarbage()
   logHandles(loop)
   testAsync(loop)
+  collectgarbage()
+  logHandles(loop)
+  testPoll(loop)
   collectgarbage()
   logHandles(loop)
   testTimer(loop, function()
