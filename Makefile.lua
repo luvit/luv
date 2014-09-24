@@ -1,5 +1,5 @@
 CFLAGS+=-Ilibuv/include -g -I/usr/local/include \
-	-DLUV_STACK_CHECK -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 \
+	-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 \
 	-Werror -Wall -Wextra -Wstrict-prototypes -Wold-style-definition -Wmissing-prototypes -Wmissing-declarations -Wdeclaration-after-statement
 
 uname_S=$(shell uname -s)
@@ -8,6 +8,7 @@ ifeq (Darwin, $(uname_S))
 		-framework CoreServices \
 		-L/usr/local/lib/
 else
+	CFLAGS+= -fPIC
 	LDFLAGS+=-shared -lrt
 endif
 
@@ -33,10 +34,10 @@ SOURCE_FILES=\
 all: luv.so
 
 libuv/out/Release/libuv.a:
-	cd libuv && ./gyp_uv.py && BUILDTYPE=Release ${MAKE} -C out && cd ..
+	cd libuv && ./gyp_uv.py && BUILDTYPE=Release CFLAGS=-fPIC  ${MAKE} -C out && cd ..
 
 libuv/out/Debug/libuv.a:
-	cd libuv && ./gyp_uv.py && BUILDTYPE=Debug ${MAKE} -C out && cd ..
+	cd libuv && ./gyp_uv.py && BUILDTYPE=Debug CFLAGS=-fPIC  ${MAKE} -C out && cd ..
 
 luv.o: ${SOURCE_FILES}
 	$(CC) -c $< ${CFLAGS} -o $@
