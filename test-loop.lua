@@ -119,6 +119,15 @@ local function testSignal(loop, callback)
   p("Press Control+C to test signal handler")
 end
 
+local function testProcess(loop)
+  local process = uv.spawn(loop)
+  function process:onexit(exit_status, term_signal)
+    p("onexit", exit_status, term_signal)
+    assert(self == process)
+  end
+  uv.disable_stdio_inheritance()
+end
+
 coroutine.wrap(function ()
   local loop = uv.new_loop()
   collectgarbage()
@@ -139,6 +148,9 @@ coroutine.wrap(function ()
   collectgarbage()
   logHandles(loop)
   testTimer(loop)
+  collectgarbage()
+  logHandles(loop)
+  testProcess(loop)
   collectgarbage()
   logHandles(loop)
   testSignal(loop, function()

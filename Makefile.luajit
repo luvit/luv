@@ -21,7 +21,6 @@ SOURCE_FILES=\
 	src/luv.h \
 	src/misc.c \
 	src/pipe.c \
-	src/process.c \
 	src/stream.c \
 	src/tcp.c \
 	src/timer.c \
@@ -31,6 +30,7 @@ SOURCE_FILES=\
 	src/async.c \
 	src/poll.c \
 	src/signal.c \
+	src/process.c \
 	src/tty.c \
 	src/util.c
 

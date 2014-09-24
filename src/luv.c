@@ -69,6 +69,7 @@
 #include "async.c"
 #include "poll.c"
 #include "signal.c"
+#include "process.c"
 
 // #include "misc.c"
 // #include "dns.c"
@@ -76,7 +77,6 @@
 // #include "tcp.c"
 // #include "tty.c"
 // #include "pipe.c"
-// #include "process.c"
 // #include "fs.c"
 
 static const luaL_Reg luv_functions[] = {
@@ -139,6 +139,10 @@ static const luaL_Reg luv_functions[] = {
   {"new_signal", new_signal},
   {"signal_start", luv_signal_start},
   {"signal_stop", luv_signal_stop},
+
+  // process.c
+  {"disable_stdio_inheritance", luv_disable_stdio_inheritance},
+  {"spawn", luv_spawn},
 
   // {"new_tcp", new_tcp},
   // {"new_timer", new_timer},
