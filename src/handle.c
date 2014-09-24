@@ -140,6 +140,12 @@ static uv_check_t* luv_check_check(lua_State* L, int index) {
   return handle;
 }
 
+static uv_idle_t* luv_check_idle(lua_State* L, int index) {
+  uv_idle_t* handle = luaL_checkudata(L, index, "uv_handle");
+  luaL_argcheck(L, handle->type == UV_IDLE, index, "uv_prepare_t required");
+  return handle;
+}
+
 // static uv_process_t* luv_check_process(lua_State* L, int index) {
 //   uv_process_t* handle = luaL_checkudata(L, index, "uv_handle");
 //   luaL_argcheck(L, handle->type == UV_PROCESS, index, "uv_process_t required");
@@ -164,7 +170,14 @@ static int luv_is_closing(lua_State* L) {
 
 static void close_cb(uv_handle_t* handle) {
   lua_State* L = handle->data;
-  int ret = lua_resume(L, NULL, 0);
+  int ret;
+
+  // Once closed handles will never callback
+  find_udata(L, handle);
+  handle_unref(L, -1);
+  lua_pop(L, 1);
+
+  ret = lua_resume(L, NULL, 0);
   if (ret && ret != LUA_YIELD) {
     on_panic(L);
   }

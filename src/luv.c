@@ -65,6 +65,7 @@
 #include "timer.c"
 #include "prepare.c"
 #include "check.c"
+#include "idle.c"
 
 // #include "misc.c"
 // #include "dns.c"
@@ -116,6 +117,11 @@ static const luaL_Reg luv_functions[] = {
   {"new_check", new_check},
   {"check_start", luv_check_start},
   {"check_stop", luv_check_stop},
+
+  // idle.c
+  {"new_idle", new_idle},
+  {"idle_start", luv_idle_start},
+  {"idle_stop", luv_idle_stop},
 
   // {"new_tcp", new_tcp},
   // {"new_timer", new_timer},

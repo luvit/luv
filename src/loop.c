@@ -111,14 +111,13 @@ static int luv_update_time(lua_State* L) {
 
 static void walk_cb(uv_handle_t* handle, void* arg) {
   lua_State* L = arg;
-  lua_pushvalue(L, 2);   // Copy the lua callback
   find_udata(L, handle); // Look up the userdata for this handle
-  luv_ccall(L, 1);       // call the callback
+  lua_rawseti(L, -2, lua_rawlen(L, -2) + 1);
 }
 
 static int luv_walk(lua_State* L) {
   uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
-  luaL_checktype(L, 2, LUA_TFUNCTION);
+  lua_newtable(L);
   uv_walk(loop, walk_cb, L);
-  return 0;
+  return 1;
 }
