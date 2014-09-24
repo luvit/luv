@@ -142,7 +142,13 @@ static uv_check_t* luv_check_check(lua_State* L, int index) {
 
 static uv_idle_t* luv_check_idle(lua_State* L, int index) {
   uv_idle_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->type == UV_IDLE, index, "uv_prepare_t required");
+  luaL_argcheck(L, handle->type == UV_IDLE, index, "uv_idle_t required");
+  return handle;
+}
+
+static uv_async_t* luv_check_async(lua_State* L, int index) {
+  uv_async_t* handle = luaL_checkudata(L, index, "uv_handle");
+  luaL_argcheck(L, handle->type == UV_ASYNC, index, "uv_async_t required");
   return handle;
 }
 

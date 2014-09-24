@@ -65,6 +65,15 @@ local function testIdle(loop, callback)
   uv.idle_start(idle)
 end
 
+local function testAsync(loop)
+  local async = uv.new_async(loop)
+  function async:onasync()
+    print("onasync")
+    assert(self == async)
+  end
+  uv.async_send(async)
+end
+
 -- Sanity check for uv_timer_t
 local function testTimer(loop, callback)
   local timer = uv.new_timer(loop)
@@ -86,6 +95,7 @@ local function testTimer(loop, callback)
   uv.timer_start(timer, 200, 100)
 end
 
+
 coroutine.wrap(function ()
   local loop = uv.new_loop()
   collectgarbage()
@@ -97,6 +107,9 @@ coroutine.wrap(function ()
   collectgarbage()
   logHandles(loop)
   testIdle(loop)
+  collectgarbage()
+  logHandles(loop)
+  testAsync(loop)
   collectgarbage()
   logHandles(loop)
   testTimer(loop, function()

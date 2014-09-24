@@ -28,6 +28,7 @@ SOURCE_FILES=\
 	src/prepare.c \
 	src/check.c \
 	src/idle.c \
+	src/async.c \
 	src/tty.c \
 	src/util.c
 

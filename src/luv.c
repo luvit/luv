@@ -66,6 +66,7 @@
 #include "prepare.c"
 #include "check.c"
 #include "idle.c"
+#include "async.c"
 
 // #include "misc.c"
 // #include "dns.c"
@@ -122,6 +123,10 @@ static const luaL_Reg luv_functions[] = {
   {"new_idle", new_idle},
   {"idle_start", luv_idle_start},
   {"idle_stop", luv_idle_stop},
+
+  // async.c
+  {"new_async", new_async},
+  {"async_send", luv_async_send},
 
   // {"new_tcp", new_tcp},
   // {"new_timer", new_timer},
