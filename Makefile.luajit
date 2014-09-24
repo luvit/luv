@@ -30,6 +30,7 @@ SOURCE_FILES=\
 	src/idle.c \
 	src/async.c \
 	src/poll.c \
+	src/signal.c \
 	src/tty.c \
 	src/util.c
 

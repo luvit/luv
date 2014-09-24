@@ -85,7 +85,7 @@ local function testPoll(loop)
 end
 
 -- Sanity check for uv_timer_t
-local function testTimer(loop, callback)
+local function testTimer(loop)
   local timer = uv.new_timer(loop)
   function timer:ontimeout()
     print("ontimeout 1")
@@ -99,12 +99,21 @@ local function testTimer(loop, callback)
       assert(self == timer)
       assert(uv.timer_get_repeat(timer) == 200)
       uv.timer_stop(self)
-      if callback then callback() end
     end
   end
   uv.timer_start(timer, 200, 100)
 end
 
+local function testSignal(loop, callback)
+  local signal = uv.new_signal(loop)
+  function signal:onsignal(name)
+    p("onsignal", name)
+    assert(self == signal)
+    uv.signal_stop(signal)
+    if callback then callback() end
+  end
+  uv.signal_start(signal, "SIGINT")
+end
 
 coroutine.wrap(function ()
   local loop = uv.new_loop()
@@ -125,7 +134,10 @@ coroutine.wrap(function ()
   testPoll(loop)
   collectgarbage()
   logHandles(loop)
-  testTimer(loop, function()
+  testTimer(loop)
+  collectgarbage()
+  logHandles(loop)
+  testSignal(loop, function()
     closeLoop(loop)
     collectgarbage()
     logHandles(loop)

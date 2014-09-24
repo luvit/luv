@@ -68,6 +68,7 @@
 #include "idle.c"
 #include "async.c"
 #include "poll.c"
+#include "signal.c"
 
 // #include "misc.c"
 // #include "dns.c"
@@ -133,6 +134,11 @@ static const luaL_Reg luv_functions[] = {
   {"new_poll", new_poll},
   {"poll_start", luv_poll_start},
   {"poll_stop", luv_poll_stop},
+
+  // signal.c
+  {"new_signal", new_signal},
+  {"signal_start", luv_signal_start},
+  {"signal_stop", luv_signal_stop},
 
   // {"new_tcp", new_tcp},
   // {"new_timer", new_timer},
