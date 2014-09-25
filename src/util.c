@@ -42,12 +42,12 @@ enum luv_mask {
  * reqCount.  When this happens ref will contain a luaL_ref to the userdata.
  */
 typedef struct {
-  uv_handle_t* handle; /* The actual uv handle. memory managed by luv */
   int refCount;        /* a count of all pending request to know strength */
   lua_State* L;        /* L and ref together form a reference to the userdata */
   int threadref;       /* hold reference to coroutine if created in one */
   int ref;             /* ref is null when refCount is 0 meaning we're weak */
   int mask;
+  uv_handle_t handle[0]; /* The actual uv handle. memory managed by luv */
 } luv_handle_t;
 
 typedef struct {
@@ -67,7 +67,7 @@ static lua_State* luv_main_thread;
 static luv_handle_t* luv_handle_create(lua_State* L, size_t size, int mask) {
 
   /* Create the userdata and set it's metatable */
-  luv_handle_t* lhandle = (luv_handle_t*)lua_newuserdata(L, sizeof(luv_handle_t));
+  luv_handle_t* lhandle = (luv_handle_t*)lua_newuserdata(L, sizeof(luv_handle_t)+size);
   luaL_getmetatable(L, "luv_handle");
   lua_setmetatable(L, -2);
 
@@ -76,7 +76,6 @@ static luv_handle_t* luv_handle_create(lua_State* L, size_t size, int mask) {
   lua_setuservalue(L, -2);
 
   /* Initialize and return the lhandle */
-  lhandle->handle = (uv_handle_t*)malloc(size);
   lhandle->handle->data = lhandle; /* Point back to lhandle from handle */
   lhandle->refCount = 0;
   lhandle->ref = LUA_NOREF;
