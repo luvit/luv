@@ -40,6 +40,7 @@ static int luv_close(lua_State* L) {
     return 0;
   }
   uv_close(handle, on_close);
+  luv_handle_ref(L, handle->data, 1);
 #ifdef LUV_STACK_CHECK
   assert(lua_gettop(L) == top);
 #endif
