@@ -18,7 +18,7 @@
 #define LUV_H
 #include <lua.h>
 #include <lauxlib.h>
-#include "../libuv/include/uv.h"
+#include "uv.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -73,6 +73,7 @@ static void setup_udata(lua_State* L, uv_handle_t* handle, const char* type);
 static void find_udata(lua_State* L, void* handle);
 
 // From handle.c
+static uv_stream_t* luv_check_stream(lua_State* L, int index);
 static uv_timer_t* luv_check_timer(lua_State* L, int index);
 static uv_prepare_t* luv_check_prepare(lua_State* L, int index);
 static uv_check_t* luv_check_check(lua_State* L, int index);

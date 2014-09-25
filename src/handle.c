@@ -88,15 +88,15 @@ static uv_handle_t* luv_check_handle(lua_State* L, int index) {
   return luaL_checkudata(L, index, "uv_handle");
 }
 
-// static uv_stream_t* luv_check_stream(lua_State* L, int index) {
-//   uv_stream_t* handle = luaL_checkudata(L, index, "uv_handle");
-//   luaL_argcheck(L,
-//     handle->type == UV_TCP ||
-//     handle->type == UV_TTY ||
-//     handle->type == UV_NAMED_PIPE ||
-//     handle->type == UV_UDP, index, "uv_stream_t subclass required");
-//   return handle;
-// }
+static uv_stream_t* luv_check_stream(lua_State* L, int index) {
+  uv_stream_t* handle = luaL_checkudata(L, index, "uv_handle");
+  luaL_argcheck(L,
+    handle->type == UV_TCP ||
+    handle->type == UV_TTY ||
+    handle->type == UV_NAMED_PIPE ||
+    handle->type == UV_UDP, index, "uv_stream_t subclass required");
+  return handle;
+}
 
 // static uv_tcp_t* luv_check_tcp(lua_State* L, int index) {
 //   uv_tcp_t* handle = luaL_checkudata(L, index, "uv_handle");

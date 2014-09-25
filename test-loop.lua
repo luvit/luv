@@ -1,8 +1,6 @@
 local p = require('lib/utils').prettyPrint
 local uv = require('luv')
 
-p(uv)
-
 -- Helper to log all handles in a loop
 local function logHandles(loop, verbose)
   local handles = uv.walk(loop)
@@ -119,55 +117,71 @@ local function testSignal(loop, callback)
   p("Press Control+C to test signal handler")
 end
 
-local function testProcess(loop)
-  local process = uv.spawn(loop)
+local function testProcess(loop, callback)
+  -- local process = assert(uv.spawn(loop, "sleep", {
+  --   args = {1},
+  -- }))
+  -- local process = assert(uv.spawn(loop, "id", {
+  --   uid = 1000,
+  --   gid = 1000,
+  --   stdio = {nil,2,2}
+  -- }))
+  -- local process = assert(uv.spawn(loop, "pwd", {
+  --   -- cwd = "/home/tim",
+  --   stdio = {nil,2,2}
+  -- }))
+  local process = assert(uv.spawn(loop, "env", {
+    args = {"env", "MERGED=true"},
+    env = {"NAME=tim", "AGE=32"},
+    stdio = {nil,2,2}
+  }))
   function process:onexit(exit_status, term_signal)
     p("onexit", exit_status, term_signal)
     assert(self == process)
+    if callback then callback() end
   end
   uv.disable_stdio_inheritance()
 end
+
+local tests = {
+  testPrepare,
+  testCheck,
+  testIdle,
+  testAsync,
+  testPoll,
+  testTimer,
+  testProcess,
+  testSignal,
+}
+
 
 coroutine.wrap(function ()
   local loop = uv.new_loop()
   collectgarbage()
   logHandles(loop)
-  testPrepare(loop)
-  collectgarbage()
-  logHandles(loop)
-  testCheck(loop)
-  collectgarbage()
-  logHandles(loop)
-  testIdle(loop)
-  collectgarbage()
-  logHandles(loop)
-  testAsync(loop)
-  collectgarbage()
-  logHandles(loop)
-  testPoll(loop)
-  collectgarbage()
-  logHandles(loop)
-  testTimer(loop)
-  collectgarbage()
-  logHandles(loop)
-  testProcess(loop)
-  collectgarbage()
-  logHandles(loop)
-  testSignal(loop, function()
+
+  local function onDone()
     closeLoop(loop)
     collectgarbage()
+    logHandles(loop, true)
+  end
+
+  for i=1,#tests-1 do
+    tests[i](loop)
+    collectgarbage()
     logHandles(loop)
-  end)
-  collectgarbage()
-  logHandles(loop)
-  print("blocking")
+  end
+
+  tests[#tests](loop, onDone)
   collectgarbage()
   logHandles(loop, true)
+
+  print("blocking")
   uv.run(loop)
+  print("done blocking")
+
   collectgarbage()
-  print("done")
-  collectgarbage()
-  logHandles(loop)
+  logHandles(loop, true)
+
   uv.loop_close(loop)
-  collectgarbage()
 end)()
