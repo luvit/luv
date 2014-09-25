@@ -1,4 +1,4 @@
-CFLAGS+=-Ilibuv/include -g -I/usr/local/include \
+CFLAGS+=-Ilibuv/include -I/usr/local/include \
 	-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 \
 	-Werror -Wall -Wextra -Wstrict-prototypes -Wold-style-definition -Wmissing-prototypes -Wmissing-declarations -Wdeclaration-after-statement
 

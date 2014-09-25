@@ -15,181 +15,180 @@
  *
  */
 
+// static int luv_guess_handle(lua_State* L) {
+//   uv_file file = luaL_checkint(L, 1);
+//   switch (uv_guess_handle(file)) {
+// #define XX(uc, lc) case UV_##uc: lua_pushstring(L, #uc); break;
+//   UV_HANDLE_TYPE_MAP(XX)
+// #undef XX
+//     case UV_FILE: lua_pushstring(L, "FILE"); break;
+//     default: lua_pushstring(L, "UNKNOWN"); break;
+//   }
+//   return 1;
+// }
 
-static int luv_guess_handle(lua_State* L) {
-  uv_file file = luaL_checkint(L, 1);
-  switch (uv_guess_handle(file)) {
-#define XX(uc, lc) case UV_##uc: lua_pushstring(L, #uc); break;
-  UV_HANDLE_TYPE_MAP(XX)
-#undef XX
-    case UV_FILE: lua_pushstring(L, "FILE"); break;
-    default: lua_pushstring(L, "UNKNOWN"); break;
-  }
-  return 1;
-}
+// static int luv_update_time(lua_State* L) {
+//   uv_update_time(uv_default_loop());
+//   return 0;
+// }
 
-static int luv_update_time(lua_State* L) {
-  uv_update_time(uv_default_loop());
-  return 0;
-}
+// static int luv_now(lua_State* L) {
+//   lua_pushnumber(L, uv_now(uv_default_loop()));
+//   return 1;
+// }
 
-static int luv_now(lua_State* L) {
-  lua_pushnumber(L, uv_now(uv_default_loop()));
-  return 1;
-}
+// static int luv_loadavg(lua_State* L) {
+//   double avg[3];
+//   uv_loadavg(avg);
+//   lua_pushinteger(L, avg[0]);
+//   lua_pushinteger(L, avg[1]);
+//   lua_pushinteger(L, avg[2]);
+//   return 3;
+// }
 
-static int luv_loadavg(lua_State* L) {
-  double avg[3];
-  uv_loadavg(avg);
-  lua_pushinteger(L, avg[0]);
-  lua_pushinteger(L, avg[1]);
-  lua_pushinteger(L, avg[2]);
-  return 3;
-}
+// static int luv_execpath(lua_State* L) {
+//   size_t size = 2*PATH_MAX;
+//   char exec_path[2*PATH_MAX];
+//   if (uv_exepath(exec_path, &size)) {
+//     uv_err_t err = uv_last_error(uv_default_loop());
+//     return luaL_error(L, "uv_exepath: %s", uv_strerror(err));
+//   }
+//   lua_pushlstring(L, exec_path, size);
+//   return 1;
+// }
 
-static int luv_execpath(lua_State* L) {
-  size_t size = 2*PATH_MAX;
-  char exec_path[2*PATH_MAX];
-  if (uv_exepath(exec_path, &size)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
-    return luaL_error(L, "uv_exepath: %s", uv_strerror(err));
-  }
-  lua_pushlstring(L, exec_path, size);
-  return 1;
-}
+// static int luv_cwd(lua_State* L) {
+//   size_t size = 2*PATH_MAX;
+//   char path[2*PATH_MAX];
+//   uv_err_t err = uv_cwd(path, size);
+//   if (err.code) {
+//     return luaL_error(L, "uv_cwd: %s", uv_strerror(err));
+//   }
+//   lua_pushstring(L, path);
+//   return 1;
+// }
 
-static int luv_cwd(lua_State* L) {
-  size_t size = 2*PATH_MAX;
-  char path[2*PATH_MAX];
-  uv_err_t err = uv_cwd(path, size);
-  if (err.code) {
-    return luaL_error(L, "uv_cwd: %s", uv_strerror(err));
-  }
-  lua_pushstring(L, path);
-  return 1;
-}
+// static int luv_chdir(lua_State* L) {
+//   uv_err_t err = uv_chdir(luaL_checkstring(L, 1));
+//   if (err.code) {
+//     return luaL_error(L, "uv_chdir: %s", uv_strerror(err));
+//   }
+//   return 0;
+// }
 
-static int luv_chdir(lua_State* L) {
-  uv_err_t err = uv_chdir(luaL_checkstring(L, 1));
-  if (err.code) {
-    return luaL_error(L, "uv_chdir: %s", uv_strerror(err));
-  }
-  return 0;
-}
+// static int luv_get_process_title(lua_State* L) {
+//   char title[MAX_TITLE_LENGTH];
+//   uv_err_t err = uv_get_process_title(title, MAX_TITLE_LENGTH);
+//   if (err.code) {
+//     return luaL_error(L, "uv_get_process_title: %s", uv_strerror(err));
+//   }
+//   lua_pushstring(L, title);
+//   return 1;
+// }
 
-static int luv_get_process_title(lua_State* L) {
-  char title[MAX_TITLE_LENGTH];
-  uv_err_t err = uv_get_process_title(title, MAX_TITLE_LENGTH);
-  if (err.code) {
-    return luaL_error(L, "uv_get_process_title: %s", uv_strerror(err));
-  }
-  lua_pushstring(L, title);
-  return 1;
-}
+// static int luv_set_process_title(lua_State* L) {
+//   const char* title = luaL_checkstring(L, 1);
+//   uv_err_t err = uv_set_process_title(title);
+//   if (err.code) {
+//     return luaL_error(L, "uv_set_process_title: %s", uv_strerror(err));
+//   }
+//   return 0;
+// }
 
-static int luv_set_process_title(lua_State* L) {
-  const char* title = luaL_checkstring(L, 1);
-  uv_err_t err = uv_set_process_title(title);
-  if (err.code) {
-    return luaL_error(L, "uv_set_process_title: %s", uv_strerror(err));
-  }
-  return 0;
-}
+// static int luv_hrtime(lua_State* L) {
+//   double now = (double) uv_hrtime() / 1000000.0;
+//   lua_pushnumber(L, now);
+//   return 1;
+// }
 
-static int luv_hrtime(lua_State* L) {
-  double now = (double) uv_hrtime() / 1000000.0;
-  lua_pushnumber(L, now);
-  return 1;
-}
+// static int luv_get_free_memory(lua_State* L) {
+//   lua_pushnumber(L, uv_get_free_memory());
+//   return 1;
+// }
 
-static int luv_get_free_memory(lua_State* L) {
-  lua_pushnumber(L, uv_get_free_memory());
-  return 1;
-}
+// static int luv_get_total_memory(lua_State* L) {
+//   lua_pushnumber(L, uv_get_total_memory());
+//   return 1;
+// }
 
-static int luv_get_total_memory(lua_State* L) {
-  lua_pushnumber(L, uv_get_total_memory());
-  return 1;
-}
+// static int luv_uptime(lua_State* L) {
+//   double uptime;
+//   uv_uptime(&uptime);
+//   lua_pushnumber(L, uptime);
+//   return 1;
+// }
 
-static int luv_uptime(lua_State* L) {
-  double uptime;
-  uv_uptime(&uptime);
-  lua_pushnumber(L, uptime);
-  return 1;
-}
+// static int luv_cpu_info(lua_State* L) {
+//   uv_cpu_info_t* cpu_infos;
+//   int count, i;
+//   uv_cpu_info(&cpu_infos, &count);
+//   lua_newtable(L);
 
-static int luv_cpu_info(lua_State* L) {
-  uv_cpu_info_t* cpu_infos;
-  int count, i;
-  uv_cpu_info(&cpu_infos, &count);
-  lua_newtable(L);
+//   for (i = 0; i < count; i++) {
+//     lua_newtable(L);
+//     lua_pushstring(L, (cpu_infos[i]).model);
+//     lua_setfield(L, -2, "model");
+//     lua_pushnumber(L, (cpu_infos[i]).speed);
+//     lua_setfield(L, -2, "speed");
+//     lua_newtable(L);
+//     lua_pushnumber(L, (cpu_infos[i]).cpu_times.user);
+//     lua_setfield(L, -2, "user");
+//     lua_pushnumber(L, (cpu_infos[i]).cpu_times.nice);
+//     lua_setfield(L, -2, "nice");
+//     lua_pushnumber(L, (cpu_infos[i]).cpu_times.sys);
+//     lua_setfield(L, -2, "sys");
+//     lua_pushnumber(L, (cpu_infos[i]).cpu_times.idle);
+//     lua_setfield(L, -2, "idle");
+//     lua_pushnumber(L, (cpu_infos[i]).cpu_times.irq);
+//     lua_setfield(L, -2, "irq");
+//     lua_setfield(L, -2, "times");
+//     lua_rawseti(L, -2, i + 1);
+//   }
 
-  for (i = 0; i < count; i++) {
-    lua_newtable(L);
-    lua_pushstring(L, (cpu_infos[i]).model);
-    lua_setfield(L, -2, "model");
-    lua_pushnumber(L, (cpu_infos[i]).speed);
-    lua_setfield(L, -2, "speed");
-    lua_newtable(L);
-    lua_pushnumber(L, (cpu_infos[i]).cpu_times.user);
-    lua_setfield(L, -2, "user");
-    lua_pushnumber(L, (cpu_infos[i]).cpu_times.nice);
-    lua_setfield(L, -2, "nice");
-    lua_pushnumber(L, (cpu_infos[i]).cpu_times.sys);
-    lua_setfield(L, -2, "sys");
-    lua_pushnumber(L, (cpu_infos[i]).cpu_times.idle);
-    lua_setfield(L, -2, "idle");
-    lua_pushnumber(L, (cpu_infos[i]).cpu_times.irq);
-    lua_setfield(L, -2, "irq");
-    lua_setfield(L, -2, "times");
-    lua_rawseti(L, -2, i + 1);
-  }
+//   uv_free_cpu_info(cpu_infos, count);
+//   return 1;
+// }
 
-  uv_free_cpu_info(cpu_infos, count);
-  return 1;
-}
+// static int luv_interface_addresses(lua_State* L) {
+//   uv_interface_address_t* interfaces;
+//   int count, i;
+//   char ip[INET6_ADDRSTRLEN];
 
-static int luv_interface_addresses(lua_State* L) {
-  uv_interface_address_t* interfaces;
-  int count, i;
-  char ip[INET6_ADDRSTRLEN];
+//   uv_interface_addresses(&interfaces, &count);
 
-  uv_interface_addresses(&interfaces, &count);
+//   lua_newtable(L);
 
-  lua_newtable(L);
+//   for (i = 0; i < count; i++) {
+//     const char* family;
 
-  for (i = 0; i < count; i++) {
-    const char* family;
+//     lua_getfield(L, -1, interfaces[i].name);
+//     if (!lua_istable(L, -1)) {
+//       lua_pop(L, 1);
+//       lua_newtable(L);
+//       lua_pushvalue(L, -1);
+//       lua_setfield(L, -3, interfaces[i].name);
+//     }
+//     lua_newtable(L);
+//     lua_pushboolean(L, interfaces[i].is_internal);
+//     lua_setfield(L, -2, "internal");
 
-    lua_getfield(L, -1, interfaces[i].name);
-    if (!lua_istable(L, -1)) {
-      lua_pop(L, 1);
-      lua_newtable(L);
-      lua_pushvalue(L, -1);
-      lua_setfield(L, -3, interfaces[i].name);
-    }
-    lua_newtable(L);
-    lua_pushboolean(L, interfaces[i].is_internal);
-    lua_setfield(L, -2, "internal");
-
-    if (interfaces[i].address.address4.sin_family == AF_INET) {
-      uv_ip4_name(&interfaces[i].address.address4,ip, sizeof(ip));
-      family = "IPv4";
-    } else if (interfaces[i].address.address4.sin_family == AF_INET6) {
-      uv_ip6_name(&interfaces[i].address.address6, ip, sizeof(ip));
-      family = "IPv6";
-    } else {
-      strncpy(ip, "<unknown sa family>", INET6_ADDRSTRLEN);
-      family = "<unknown>";
-    }
-    lua_pushstring(L, ip);
-    lua_setfield(L, -2, "address");
-    lua_pushstring(L, family);
-    lua_setfield(L, -2, "family");
-    lua_rawseti(L, -2, lua_rawlen (L, -2) + 1);
-    lua_pop(L, 1);
-  }
-  uv_free_interface_addresses(interfaces, count);
-  return 1;
-}
+//     if (interfaces[i].address.address4.sin_family == AF_INET) {
+//       uv_ip4_name(&interfaces[i].address.address4,ip, sizeof(ip));
+//       family = "IPv4";
+//     } else if (interfaces[i].address.address4.sin_family == AF_INET6) {
+//       uv_ip6_name(&interfaces[i].address.address6, ip, sizeof(ip));
+//       family = "IPv6";
+//     } else {
+//       strncpy(ip, "<unknown sa family>", INET6_ADDRSTRLEN);
+//       family = "<unknown>";
+//     }
+//     lua_pushstring(L, ip);
+//     lua_setfield(L, -2, "address");
+//     lua_pushstring(L, family);
+//     lua_setfield(L, -2, "family");
+//     lua_rawseti(L, -2, lua_rawlen (L, -2) + 1);
+//     lua_pop(L, 1);
+//   }
+//   uv_free_interface_addresses(interfaces, count);
+//   return 1;
+// }

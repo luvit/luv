@@ -14,6 +14,7 @@
  *  limitations under the License.
  *
  */
+#include "luv.h"
 
 static void async_cb(uv_async_t* handle) {
   lua_State* L = (lua_State*)handle->data;

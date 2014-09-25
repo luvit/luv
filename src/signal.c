@@ -14,6 +14,7 @@
  *  limitations under the License.
  *
  */
+#include "luv.h"
 
 static const char* signal_to_string(int signal) {
 #ifdef SIGINT

@@ -14,6 +14,7 @@
  *  limitations under the License.
  *
  */
+#include "luv.h"
 
 static int new_check(lua_State* L) {
   uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
@@ -46,4 +47,3 @@ static int luv_check_stop(lua_State* L) {
   lua_pushinteger(L, ret);
   return 1;
 }
-

@@ -14,7 +14,7 @@
  *  limitations under the License.
  *
  */
-
+#include "luv.h"
 
 // Metamethod to allow storing anything in the userdata's environment
 static int luv_newindex(lua_State* L) {

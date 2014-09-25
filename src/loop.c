@@ -14,6 +14,7 @@
  *  limitations under the License.
  *
  */
+#include "luv.h"
 
 static int luv_loop_tostring(lua_State* L) {
   uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");

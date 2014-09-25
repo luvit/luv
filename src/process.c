@@ -8,12 +8,13 @@
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
  *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  distributed under the License is distributed on an "AS IS" BAySIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
  */
+#include "luv.h"
 
 static int luv_disable_stdio_inheritance(__attribute__((unused)) lua_State* L) {
   uv_disable_stdio_inheritance();
@@ -31,6 +32,9 @@ static void exit_cb(uv_process_t* handle, int64_t exit_status, int term_signal) 
 static int luv_spawn(lua_State* L) {
   uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
   uv_process_t* handle = lua_newuserdata(L, sizeof(*handle));
+  if (loop) {
+    printf("huh?");
+  }
   uv_process_options_t options;
   int ret;
 

@@ -15,15 +15,15 @@
  *
  */
 
-static int new_tcp(lua_State* L) {
-  uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
-  uv_tcp_t handle = lua_newuserdata(L, sizeof(handle));
-  luaL_getmetatable(L, "uv_handle");
-  lua_setmetatable(L, -2);
-  int ret = uv_tcp_init(loop, handle);
-  if (ret < 0) return luv_error(L, ret);
-  return 1;
-}
+// static int new_tcp(lua_State* L) {
+//   uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
+//   uv_tcp_t handle = lua_newuserdata(L, sizeof(handle));
+//   luaL_getmetatable(L, "uv_handle");
+//   lua_setmetatable(L, -2);
+//   int ret = uv_tcp_init(loop, handle);
+//   if (ret < 0) return luv_error(L, ret);
+//   return 1;
+// }
 
 // static void luv_after_connect(uv_connect_t* req, int status) {
 //   lua_State* L = luv_prepare_callback(req->data);
