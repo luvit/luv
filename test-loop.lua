@@ -143,10 +143,15 @@ local function testProcess(loop, callback)
   uv.disable_stdio_inheritance()
 end
 
-local function testStream(loop)
+local function testTcp(loop)
+  local server = uv.new_tcp(loop)
   local sreq = uv.shutdown_req()
   local wreq = uv.write_req()
-  p(sreq, wreq)
+  p(server, sreq, wreq)
+  uv.tcp_nodelay(server, true)
+  uv.tcp_keepalive(server, true, 100);
+  uv.tcp_simultaneous_accepts(server, false)
+  uv.tcp_bind(server, "::1", 7000)
 end
 
 local tests = {
@@ -157,10 +162,9 @@ local tests = {
   testPoll,
   testTimer,
   testProcess,
-  testStream,
+  testTcp,
   testSignal,
 }
-
 
 coroutine.wrap(function ()
   local loop = uv.new_loop()

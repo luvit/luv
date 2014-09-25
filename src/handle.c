@@ -98,12 +98,12 @@ static uv_stream_t* luv_check_stream(lua_State* L, int index) {
   return handle;
 }
 
-// static uv_tcp_t* luv_check_tcp(lua_State* L, int index) {
-//   uv_tcp_t* handle = luaL_checkudata(L, index, "uv_handle");
-//   luaL_argcheck(L, handle->type == UV_TCP, index, "uv_tcp_t required");
-//   return handle;
-// }
-//
+static uv_tcp_t* luv_check_tcp(lua_State* L, int index) {
+  uv_tcp_t* handle = luaL_checkudata(L, index, "uv_handle");
+  luaL_argcheck(L, handle->type == UV_TCP, index, "uv_tcp_t required");
+  return handle;
+}
+
 // static uv_tty_t* luv_check_tty(lua_State* L, int index) {
 //   uv_tty_t* handle = luaL_checkudata(L, index, "uv_handle");
 //   luaL_argcheck(L, handle->type == UV_TTY, index, "uv_tty_t required");

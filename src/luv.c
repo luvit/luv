@@ -29,11 +29,11 @@
 #include "signal.c"
 #include "process.c"
 #include "stream.c"
+#include "tcp.c"
 
 // #include "misc.c"
 // #include "dns.c"
 // #include "stream.c"
-// #include "tcp.c"
 // #include "tty.c"
 // #include "pipe.c"
 // #include "fs.c"
@@ -106,7 +106,6 @@ static const luaL_Reg luv_functions[] = {
   {"disable_stdio_inheritance", luv_disable_stdio_inheritance},
   {"spawn", luv_spawn},
 
-
   // stream.c
   {"shutdown_req", shutdown_req},
   {"shutdown", luv_shutdown},
@@ -121,6 +120,14 @@ static const luaL_Reg luv_functions[] = {
   {"is_readable", luv_is_readable},
   {"is_writable", luv_is_writable},
   {"stream_set_blocking", luv_stream_set_blocking},
+
+  // tcp.c
+  {"new_tcp", new_tcp},
+  {"tcp_open", luv_tcp_open},
+  {"tcp_nodelay", luv_tcp_nodelay},
+  {"tcp_keepalive", luv_tcp_keepalive},
+  {"tcp_simultaneous_accepts", luv_tcp_simultaneous_accepts},
+  {"tcp_bind", luv_tcp_bind},
 
   {NULL, NULL}
 };

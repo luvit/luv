@@ -82,6 +82,7 @@ static uv_write_t* luv_check_write(lua_State* L, int index);
 
 // From handle.c
 static uv_stream_t* luv_check_stream(lua_State* L, int index);
+static uv_tcp_t* luv_check_tcp(lua_State* L, int index);
 static uv_timer_t* luv_check_timer(lua_State* L, int index);
 static uv_prepare_t* luv_check_prepare(lua_State* L, int index);
 static uv_check_t* luv_check_check(lua_State* L, int index);

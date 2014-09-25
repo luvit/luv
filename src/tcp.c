@@ -14,16 +14,81 @@
  *  limitations under the License.
  *
  */
+#include "luv.h"
 
-// static int new_tcp(lua_State* L) {
-//   uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
-//   uv_tcp_t handle = lua_newuserdata(L, sizeof(handle));
-//   luaL_getmetatable(L, "uv_handle");
-//   lua_setmetatable(L, -2);
-//   int ret = uv_tcp_init(loop, handle);
-//   if (ret < 0) return luv_error(L, ret);
-//   return 1;
-// }
+static int new_tcp(lua_State* L) {
+  uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
+  uv_tcp_t* handle = lua_newuserdata(L, sizeof(*handle));
+  int ret;
+  setup_udata(L, handle, "uv_handle");
+  ret = uv_tcp_init(loop, handle);
+  if (ret < 0) {
+    lua_pop(L, 1);
+    return luv_error(L, ret);
+  }
+  return 1;
+}
+
+static int luv_tcp_open(lua_State* L) {
+  uv_tcp_t* handle = luv_check_tcp(L, 1);
+  uv_os_sock_t sock = luaL_checkinteger(L, 2);
+  int ret = uv_tcp_open(handle, sock);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}
+
+static int luv_tcp_nodelay(lua_State* L) {
+  uv_tcp_t* handle = luv_check_tcp(L, 1);
+  int ret, enable;
+  luaL_checktype(L, 2, LUA_TBOOLEAN);
+  enable = lua_toboolean(L, 2);
+  ret = uv_tcp_nodelay(handle, enable);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}
+
+static int luv_tcp_keepalive(lua_State* L) {
+  uv_tcp_t* handle = luv_check_tcp(L, 1);
+  int ret, enable;
+  unsigned int delay;
+  luaL_checktype(L, 2, LUA_TBOOLEAN);
+  enable = lua_toboolean(L, 2);
+  delay = luaL_checkinteger(L, 3);
+  ret = uv_tcp_keepalive(handle, enable, delay);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}
+
+static int luv_tcp_simultaneous_accepts(lua_State* L) {
+  uv_tcp_t* handle = luv_check_tcp(L, 1);
+  int ret, enable;
+  luaL_checktype(L, 2, LUA_TBOOLEAN);
+  enable = lua_toboolean(L, 2);
+  ret = uv_tcp_simultaneous_accepts(handle, enable);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}
+
+static int luv_tcp_bind(lua_State* L) {
+  uv_tcp_t* handle = luv_check_tcp(L, 1);
+  const char* host = luaL_checkstring(L, 2);
+  int port = luaL_checkinteger(L, 3);
+  unsigned int flags = 0;
+  struct sockaddr_in6 addr;
+  int ret;
+  if (uv_ip4_addr(host, port, (struct sockaddr_in*)&addr) &&
+      uv_ip6_addr(host, port, &addr)) {
+    return luaL_argerror(L, 2, "Invalid IP address or port");
+  }
+  ret = uv_tcp_bind(handle, (struct sockaddr*)&addr, flags);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}
 
 // static void luv_after_connect(uv_connect_t* req, int status) {
 //   lua_State* L = luv_prepare_callback(req->data);
