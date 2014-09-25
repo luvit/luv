@@ -21,7 +21,13 @@ static void luv_after_connect(uv_connect_t* req, int status) {
   int top = lua_gettop(L) - 1;
 #endif
   if (lua_isfunction(L, -1)) {
-     luv_call(L, 0, 0);
+    if (status==UV_OK)
+      lua_pushnil(L);
+    else {
+      uv_err_t err = uv_last_error(uv_default_loop());
+      lua_pushstring(L, uv_strerror(err));
+    }
+    luv_call(L, 1, 0);
   } else {
     lua_pop(L, 1);
   }
