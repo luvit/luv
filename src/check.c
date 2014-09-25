@@ -20,7 +20,7 @@ static int new_check(lua_State* L) {
   uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
   uv_check_t* handle = lua_newuserdata(L, sizeof(*handle));
   int ret;
-  setup_udata(L, (uv_handle_t*)handle, "uv_handle");
+  setup_udata(L, handle, "uv_handle");
   ret = uv_check_init(loop, handle);
   if (ret < 0) return luv_error(L, ret);
   return 1;
@@ -34,7 +34,9 @@ static void check_cb(uv_check_t* handle) {
 
 static int luv_check_start(lua_State* L) {
   uv_check_t* handle = luv_check_check(L, 1);
-  int ret = uv_check_start(handle, check_cb);
+  int ret;
+  handle->data = L;
+  ret = uv_check_start(handle, check_cb);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;

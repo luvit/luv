@@ -18,6 +18,7 @@
 #include "luv.h"
 #include "util.c"
 #include "loop.c"
+#include "req.c"
 #include "handle.c"
 #include "timer.c"
 #include "prepare.c"
@@ -27,6 +28,7 @@
 #include "poll.c"
 #include "signal.c"
 #include "process.c"
+#include "stream.c"
 
 // #include "misc.c"
 // #include "dns.c"
@@ -48,6 +50,9 @@ static const luaL_Reg luv_functions[] = {
   {"now", luv_now},
   {"update_time", luv_update_time},
   {"walk", luv_walk},
+
+  // req.c
+  {"cancel", luv_cancel},
 
   // handle.c
   {"is_active", luv_is_active},
@@ -101,12 +106,29 @@ static const luaL_Reg luv_functions[] = {
   {"disable_stdio_inheritance", luv_disable_stdio_inheritance},
   {"spawn", luv_spawn},
 
+
+  // stream.c
+  {"shutdown_req", shutdown_req},
+  {"shutdown", luv_shutdown},
+  {"listen", luv_listen},
+  {"accept", luv_accept},
+  {"read_start", luv_read_start},
+  {"read_stop", luv_read_stop},
+  {"write_req", write_req},
+  {"write", luv_write},
+  {"write2", luv_write2},
+  {"try_write", luv_try_write},
+  {"is_readable", luv_is_readable},
+  {"is_writable", luv_is_writable},
+  {"stream_set_blocking", luv_stream_set_blocking},
+
   {NULL, NULL}
 };
 
 LUALIB_API int luaopen_luv (lua_State *L) {
   util_init(L);
   loop_init(L);
+  req_init(L);
   handle_init(L);
   luaL_newlib(L, luv_functions);
   return 1;

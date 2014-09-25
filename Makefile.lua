@@ -13,25 +13,26 @@ else
 endif
 
 SOURCE_FILES=\
-	src/luv.c \
-	src/loop.c \
-	src/dns.c \
-	src/fs.c \
-	src/handle.c \
-	src/luv.h \
-	src/misc.c \
-	src/pipe.c \
-	src/stream.c \
-	src/tcp.c \
-	src/timer.c \
-	src/prepare.c \
-	src/check.c \
-	src/idle.c \
-	src/async.c \
-	src/poll.c \
-	src/signal.c \
-	src/process.c \
-	src/tty.c \
+	src/async.c\
+	src/check.c\
+	src/dns.c\
+	src/fs.c\
+	src/handle.c\
+	src/idle.c\
+	src/loop.c\
+	src/luv.c\
+	src/luv.h\
+	src/misc.c\
+	src/pipe.c\
+	src/poll.c\
+	src/prepare.c\
+	src/process.c\
+	src/req.c\
+	src/signal.c\
+	src/stream.c\
+	src/tcp.c\
+	src/timer.c\
+	src/tty.c\
 	src/util.c
 
 all: luv.so
@@ -46,7 +47,7 @@ luv.o: ${SOURCE_FILES}
 	$(CC) -c $< ${CFLAGS} -o $@
 
 luv.so: luv.o libuv/out/Release/libuv.a
-	$(CC) $^ ${LDFLAGS} -o $@
+	$(CC) src/luv.c ${LDFLAGS} -o $@
 
 clean:
 	rm -f luv.so *.o

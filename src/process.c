@@ -172,7 +172,8 @@ static int luv_spawn(lua_State* L) {
   }
   lua_pop(L, 1);
 
-  setup_udata(L, (uv_handle_t*)handle, "uv_handle");
+  setup_udata(L, handle, "uv_handle");
+  handle->data = L;
   ret = uv_spawn(loop, handle, &options);
   free(options.args);
   free(options.stdio);

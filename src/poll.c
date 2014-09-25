@@ -61,6 +61,7 @@ static int luv_poll_start(lua_State* L) {
     case 1: events = UV_WRITABLE; break;
     case 2: events = UV_READABLE | UV_WRITABLE; break;
   }
+  handle->data = L;
   ret = uv_poll_start(handle, events, poll_cb);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);

@@ -16,7 +16,7 @@
  */
 #include "luv.h"
 
-static int luv_loop_tostring(lua_State* L) {
+static int loop_tostring(lua_State* L) {
   uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
   lua_pushfstring(L, "uv_loop_t: %p", loop);
   return 1;
@@ -24,7 +24,7 @@ static int luv_loop_tostring(lua_State* L) {
 
 static void loop_init(lua_State* L) {
   luaL_newmetatable (L, "uv_loop");
-  lua_pushcfunction(L, luv_loop_tostring);
+  lua_pushcfunction(L, loop_tostring);
   lua_setfield(L, -2, "__tostring");
   lua_pop(L, 1);
 }
@@ -37,11 +37,9 @@ static int new_loop(lua_State* L) {
   // Initialize and report any errors
   int ret = uv_loop_init(loop);
   if (ret < 0) return luv_error(L, ret);
+  setup_udata(L, loop, "uv_loop");
 
-  // Tag as "uv_loop" userdata
-  luaL_getmetatable(L, "uv_loop");
-  lua_setmetatable(L, -2);
-
+  // Return the new userdata for the uv_loop_t
   return 1;
 }
 
@@ -54,6 +52,7 @@ static int luv_loop_close(lua_State* L) {
   uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
   int ret = uv_loop_close(loop);
   if (ret < 0) return luv_error(L, ret);
+  cleanup_udata(L, loop);
   lua_pushinteger(L, ret);
   return 1;
 }

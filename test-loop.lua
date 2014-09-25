@@ -143,6 +143,12 @@ local function testProcess(loop, callback)
   uv.disable_stdio_inheritance()
 end
 
+local function testStream(loop)
+  local sreq = uv.shutdown_req()
+  local wreq = uv.write_req()
+  p(sreq, wreq)
+end
+
 local tests = {
   testPrepare,
   testCheck,
@@ -151,6 +157,7 @@ local tests = {
   testPoll,
   testTimer,
   testProcess,
+  testStream,
   testSignal,
 }
 

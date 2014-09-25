@@ -20,7 +20,8 @@ static int new_timer(lua_State* L) {
   uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
   uv_timer_t* handle = lua_newuserdata(L, sizeof(*handle));
   int ret;
-  setup_udata(L, (uv_handle_t*)handle, "uv_handle");
+  setup_udata(L, handle, "uv_handle");
+  handle->data = L;
   ret = uv_timer_init(loop, handle);
   if (ret < 0) return luv_error(L, ret);
   return 1;

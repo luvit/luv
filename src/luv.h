@@ -68,9 +68,17 @@ static void util_init(lua_State* L);
 static int luv_error(lua_State* L, int ret);
 static void luv_ccall(lua_State* L, int nargs);
 static void luv_emit_event(lua_State* L, const char* name, int nargs);
-static void handle_unref(lua_State* L, int index);
-static void setup_udata(lua_State* L, uv_handle_t* handle, const char* type);
-static void find_udata(lua_State* L, void* handle);
+
+static void resume_plain(lua_State* L, int nargs);
+static void resume_with_status(lua_State* L, int status, int nargs);
+
+static void setup_udata(lua_State* L, void* udata, const char* type);
+static void find_udata(lua_State* L, void* udata);
+static void cleanup_udata(lua_State* L, void* udata);
+
+// From req.c
+static uv_shutdown_t* luv_check_shutdown(lua_State* L, int index);
+static uv_write_t* luv_check_write(lua_State* L, int index);
 
 // From handle.c
 static uv_stream_t* luv_check_stream(lua_State* L, int index);

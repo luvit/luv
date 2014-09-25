@@ -17,7 +17,7 @@
 #include "luv.h"
 
 // Metamethod to allow storing anything in the userdata's environment
-static int luv_newindex(lua_State* L) {
+static int handle_newindex(lua_State* L) {
   lua_getuservalue(L, 1);
   lua_pushvalue(L, 2);
   lua_pushvalue(L, 3);
@@ -28,7 +28,7 @@ static int luv_newindex(lua_State* L) {
 
 // Metamethod to allow reading things out of the environment.
 // Special read-only "type".
-static int luv_index(lua_State* L) {
+static int handle_index(lua_State* L) {
   /* Get handle type if requested */
   const char* key = lua_tostring(L, 2);
   if (strcmp(key, "type") == 0) {
@@ -50,20 +50,20 @@ static int luv_index(lua_State* L) {
 }
 
 // Show the libuv type instead of generic "userdata"
-static int luv_tostring(lua_State* L) {
+static int handle_tostring(lua_State* L) {
   uv_handle_t* handle = luaL_checkudata(L, 1, "uv_handle");
   switch (handle->type) {
 #define XX(uc, lc) case UV_##uc: lua_pushfstring(L, "uv_"#lc"_t: %p", handle); break;
   UV_HANDLE_TYPE_MAP(XX)
 #undef XX
-    default: lua_pushfstring(L, "userdata: %p", handle); break;
+    default: lua_pushfstring(L, "uv_handle_t: %p", handle); break;
   }
   return 1;
 }
 
 
 // Reuse the builtin pairs on the uservalue table.
-static int luv_pairs(lua_State* L) {
+static int handle_pairs(lua_State* L) {
   lua_getglobal(L, "pairs");
   lua_getuservalue(L, 1);
   lua_call(L, 1, 3);
@@ -73,13 +73,13 @@ static int luv_pairs(lua_State* L) {
 
 static void handle_init(lua_State* L) {
   luaL_newmetatable (L, "uv_handle");
-  lua_pushcfunction(L, luv_newindex);
+  lua_pushcfunction(L, handle_newindex);
   lua_setfield(L, -2, "__newindex");
-  lua_pushcfunction(L, luv_index);
+  lua_pushcfunction(L, handle_index);
   lua_setfield(L, -2, "__index");
-  lua_pushcfunction(L, luv_pairs);
+  lua_pushcfunction(L, handle_pairs);
   lua_setfield(L, -2, "__pairs");
-  lua_pushcfunction(L, luv_tostring);
+  lua_pushcfunction(L, handle_tostring);
   lua_setfield(L, -2, "__tostring");
   lua_pop(L, 1);
 }
@@ -191,9 +191,7 @@ static void close_cb(uv_handle_t* handle) {
   int ret;
 
   // Once closed handles will never callback
-  find_udata(L, handle);
-  handle_unref(L, -1);
-  lua_pop(L, 1);
+  cleanup_udata(L, handle);
 
   ret = lua_resume(L, NULL, 0);
   if (ret && ret != LUA_YIELD) {
@@ -203,10 +201,9 @@ static void close_cb(uv_handle_t* handle) {
 
 static int luv_close(lua_State* L) {
   uv_handle_t* handle = luv_check_handle(L, 1);
-  uv_close(handle, close_cb);
-
-  // Wait for close to finish
   handle->data = L;
+  uv_close(handle, close_cb);
+  // Wait for close to finish
   return lua_yield(L, 0);
 }
 

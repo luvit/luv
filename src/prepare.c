@@ -20,7 +20,7 @@ static int new_prepare(lua_State* L) {
   uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
   uv_prepare_t* handle = lua_newuserdata(L, sizeof(*handle));
   int ret;
-  setup_udata(L, (uv_handle_t*)handle, "uv_handle");
+  setup_udata(L, handle, "uv_handle");
   ret = uv_prepare_init(loop, handle);
   if (ret < 0) return luv_error(L, ret);
   return 1;
@@ -34,7 +34,9 @@ static void prepare_cb(uv_prepare_t* handle) {
 
 static int luv_prepare_start(lua_State* L) {
   uv_prepare_t* handle = luv_check_prepare(L, 1);
-  int ret = uv_prepare_start(handle, prepare_cb);
+  int ret;
+  handle->data = L;
+  ret = uv_prepare_start(handle, prepare_cb);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;
