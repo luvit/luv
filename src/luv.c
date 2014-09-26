@@ -137,6 +137,55 @@ static const luaL_Reg luv_functions[] = {
 };
 
 LUALIB_API int luaopen_luv (lua_State *L) {
+
+  // Suppress warnings about unused functions
+  // This is our TODO list of sorts
+  __attribute__((unused)) void* dummy;
+  dummy = luv_check_fs;
+  dummy = luv_check_fs_event;
+  dummy = luv_check_fs_poll;
+  dummy = luv_check_getaddrinfo;
+  dummy = luv_check_getnameinfo;
+  dummy = luv_check_pipe;
+  dummy = luv_check_process;
+  dummy = luv_check_tty;
+  dummy = luv_check_udp;
+  dummy = luv_check_udp_send;
+  dummy = luv_check_work;
+
+  dummy = luv_create_fs;
+  dummy = luv_create_fs_event;
+  dummy = luv_create_fs_poll;
+  dummy = luv_create_getaddrinfo;
+  dummy = luv_create_getnameinfo;
+  dummy = luv_create_pipe;
+  dummy = luv_create_tty;
+  dummy = luv_create_udp;
+  dummy = luv_create_udp_send;
+  dummy = luv_create_work;
+
+  dummy = luv_find_connect;
+  dummy = luv_find_fs;
+  dummy = luv_find_fs_event;
+  dummy = luv_find_fs_poll;
+  dummy = luv_find_getaddrinfo;
+  dummy = luv_find_getnameinfo;
+  dummy = luv_find_loop;
+  dummy = luv_find_pipe;
+  dummy = luv_find_shutdown;
+  dummy = luv_find_tcp;
+  dummy = luv_find_tty;
+  dummy = luv_find_udp;
+  dummy = luv_find_udp_send;
+  dummy = luv_find_work;
+  dummy = luv_find_write;
+
+  dummy = luv_unref_fs;
+  dummy = luv_unref_getaddrinfo;
+  dummy = luv_unref_getnameinfo;
+  dummy = luv_unref_udp_send;
+  dummy = luv_unref_work;
+
   util_init(L);
   loop_init(L);
   req_init(L);

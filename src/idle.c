@@ -17,18 +17,16 @@
 #include "luv.h"
 
 static int new_idle(lua_State* L) {
-  uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
-  uv_idle_t* handle = lua_newuserdata(L, sizeof(*handle));
-  int ret;
-  setup_udata(L, handle, "uv_handle");
-  ret = uv_idle_init(loop, handle);
+  uv_loop_t* loop = luv_check_loop(L, 1);
+  uv_idle_t* handle = luv_create_idle(L);
+  int ret = uv_idle_init(loop, handle);
   if (ret < 0) return luv_error(L, ret);
   return 1;
 }
 
 static void idle_cb(uv_idle_t* handle) {
   lua_State* L = (lua_State*)handle->data;
-  find_udata(L, handle);
+  luv_find_idle(L, handle);
   luv_emit_event(L, "onidle", 1);
 }
 

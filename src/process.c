@@ -23,15 +23,15 @@ static int luv_disable_stdio_inheritance(__attribute__((unused)) lua_State* L) {
 
 static void exit_cb(uv_process_t* handle, int64_t exit_status, int term_signal) {
   lua_State* L = (lua_State*)handle->data;
-  find_udata(L, handle);
+  luv_find_process(L, handle);
   lua_pushinteger(L, exit_status);
   lua_pushinteger(L, term_signal);
   luv_emit_event(L, "onexit", 3);
 }
 
 static int luv_spawn(lua_State* L) {
-  uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
-  uv_process_t* handle = lua_newuserdata(L, sizeof(*handle));
+  uv_loop_t* loop = luv_check_loop(L, 1);
+  uv_process_t* handle = luv_create_process(L);
   uv_process_options_t options;
   size_t i, len = 0;
   int ret;
@@ -172,12 +172,12 @@ static int luv_spawn(lua_State* L) {
   }
   lua_pop(L, 1);
 
-  setup_udata(L, handle, "uv_handle");
   handle->data = L;
   ret = uv_spawn(loop, handle, &options);
   free(options.args);
   free(options.stdio);
   free(options.env);
   if (ret < 0) return luv_error(L, ret);
-  return 1;
+  lua_pushinteger(L, handle->pid);
+  return 2;
 }

@@ -17,11 +17,9 @@
 #include "luv.h"
 
 static int new_tcp(lua_State* L) {
-  uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
-  uv_tcp_t* handle = lua_newuserdata(L, sizeof(*handle));
-  int ret;
-  setup_udata(L, handle, "uv_handle");
-  ret = uv_tcp_init(loop, handle);
+  uv_loop_t* loop = luv_check_loop(L, 1);
+  uv_tcp_t* handle = luv_create_tcp(L);
+  int ret = uv_tcp_init(loop, handle);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
@@ -134,14 +132,13 @@ static int luv_tcp_getpeername(lua_State* L) {
 
 static void connect_cb(uv_connect_t* req, int status) {
   lua_State* L = req->data;
-  cleanup_udata(L, req);
-  resume_with_status(L, status, 0);
+  luv_unref_connect(L, req);
+  luv_resume_with_status(L, status, 0);
 }
 
 static int connect_req(lua_State* L) {
-  uv_connect_t* req = lua_newuserdata(L, sizeof(*req));
+  uv_connect_t* req = luv_create_connect(L);
   req->type = UV_CONNECT;
-  setup_udata(L, req, "uv_req");
   return 1;
 }
 
@@ -158,9 +155,5 @@ static int luv_tcp_connect(lua_State* L) {
   }
   req->data = L;
   ret = uv_tcp_connect(req, handle, (struct sockaddr*)&addr, connect_cb);
-  if (ret < 0) {
-    lua_pop(L, 1);
-    return luv_error(L, ret);
-  }
-  return lua_yield(L, 0);
+  return luv_wait(L, ret);
 }

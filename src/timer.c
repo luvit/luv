@@ -17,18 +17,16 @@
 #include "luv.h"
 
 static int new_timer(lua_State* L) {
-  uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
-  uv_timer_t* handle = lua_newuserdata(L, sizeof(*handle));
-  int ret;
-  setup_udata(L, handle, "uv_handle");
-  ret = uv_timer_init(loop, handle);
+  uv_loop_t* loop = luv_check_loop(L, 1);
+  uv_timer_t* handle = luv_create_timer(L);
+  int ret = uv_timer_init(loop, handle);
   if (ret < 0) return luv_error(L, ret);
   return 1;
 }
 
 static void timer_cb(uv_timer_t* handle) {
   lua_State* L = (lua_State*)handle->data;
-  find_udata(L, handle);
+  luv_find_timer(L, handle);
   luv_emit_event(L, "ontimeout", 1);
 }
 

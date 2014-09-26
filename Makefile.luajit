@@ -1,6 +1,9 @@
 CFLAGS+= -Ilibuv/include -I/usr/local/include/luajit-2.0 -I/usr/include/luajit-2.0\
 	-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64\
-	-Werror -Wall -Wextra -Wstrict-prototypes -Wold-style-definition -Wmissing-prototypes -Wmissing-declarations -Wdeclaration-after-statement
+	-Werror -Wall -Wextra -Wstrict-prototypes\
+	-Wold-style-definition -Wmissing-prototypes\
+	-Wmissing-declarations -Wdeclaration-after-statement\
+	-Wunused-function
 
 uname_S=$(shell uname -s)
 ifeq (Darwin, $(uname_S))

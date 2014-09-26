@@ -1,17 +1,15 @@
 local p = require('lib/utils').prettyPrint
-
 local uv = require('luv')
 
+local loop = uv.new_loop()
+
 local function set_timeout(timeout, callback)
-  local timer = uv.new_timer()
+  local timer = uv.new_timer(loop)
   function timer:ontimeout()
     p("ontimeout", self)
-    uv.timer_stop(timer)
-    uv.close(timer)
+    uv.timer_stop(self)
+    uv.close(self)
     callback(self)
-  end
-  function timer:onclose()
-    p("ontimerclose", self)
   end
   uv.timer_start(timer, timeout, 0)
   return timer
@@ -23,7 +21,7 @@ local function clear_timeout(timer)
 end
 
 local function set_interval(interval, callback)
-  local timer = uv.new_timer()
+  local timer = uv.new_timer(loop)
   function timer:ontimeout()
     p("interval", self)
     callback(self)
@@ -46,7 +44,7 @@ set_timeout(1000, function()
 end)
 
 
-local handle = uv.new_timer()
+local handle = uv.new_timer(loop)
 local delay = 1024
 function handle:ontimeout()
   p("tick", delay)
@@ -65,7 +63,9 @@ uv.timer_start(handle, delay, 0)
 
 repeat
   print("\ntick.")
-until uv.run('once') == 0
+until uv.run(loop, 'once') == 0
 
 print("done")
+
+uv.loop_close(loop)
 

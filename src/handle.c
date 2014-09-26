@@ -51,8 +51,8 @@ static int handle_index(lua_State* L) {
 
 // Show the libuv type instead of generic "userdata"
 static int handle_tostring(lua_State* L) {
-  uv_handle_t* handle = luaL_checkudata(L, 1, "uv_handle");
-  switch (handle->type) {
+  luv_handle_t* handle = luaL_checkudata(L, 1, "uv_handle");
+  switch (handle->data.type) {
 #define XX(uc, lc) case UV_##uc: lua_pushfstring(L, "uv_"#lc"_t: %p", handle); break;
   UV_HANDLE_TYPE_MAP(XX)
 #undef XX
@@ -84,91 +84,6 @@ static void handle_init(lua_State* L) {
   lua_pop(L, 1);
 }
 
-static uv_handle_t* luv_check_handle(lua_State* L, int index) {
-  return luaL_checkudata(L, index, "uv_handle");
-}
-
-static uv_stream_t* luv_check_stream(lua_State* L, int index) {
-  uv_stream_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L,
-    handle->type == UV_TCP ||
-    handle->type == UV_TTY ||
-    handle->type == UV_NAMED_PIPE ||
-    handle->type == UV_UDP, index, "uv_stream_t subclass required");
-  return handle;
-}
-
-static uv_tcp_t* luv_check_tcp(lua_State* L, int index) {
-  uv_tcp_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->type == UV_TCP, index, "uv_tcp_t required");
-  return handle;
-}
-
-// static uv_tty_t* luv_check_tty(lua_State* L, int index) {
-//   uv_tty_t* handle = luaL_checkudata(L, index, "uv_handle");
-//   luaL_argcheck(L, handle->type == UV_TTY, index, "uv_tty_t required");
-//   return handle;
-// }
-//
-// static uv_pipe_t* luv_check_pipe(lua_State* L, int index) {
-//   uv_pipe_t* handle = luaL_checkudata(L, index, "uv_handle");
-//   luaL_argcheck(L, handle->type == UV_NAMED_PIPE, index, "uv_pipe_t required");
-//   return handle;
-// }
-//
-// static uv_udp_t* luv_check_udp(lua_State* L, int index) {
-//   uv_udp_t* handle = luaL_checkudata(L, index, "uv_handle");
-//   luaL_argcheck(L, handle->type == UV_UDP, index, "uv_udp_t required");
-//   return handle;
-// }
-
-static uv_timer_t* luv_check_timer(lua_State* L, int index) {
-  uv_timer_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->type == UV_TIMER, index, "uv_timer_t required");
-  return handle;
-}
-
-static uv_prepare_t* luv_check_prepare(lua_State* L, int index) {
-  uv_prepare_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->type == UV_PREPARE, index, "uv_prepare_t required");
-  return handle;
-}
-
-static uv_check_t* luv_check_check(lua_State* L, int index) {
-  uv_check_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->type == UV_CHECK, index, "uv_check_t required");
-  return handle;
-}
-
-static uv_idle_t* luv_check_idle(lua_State* L, int index) {
-  uv_idle_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->type == UV_IDLE, index, "uv_idle_t required");
-  return handle;
-}
-
-static uv_async_t* luv_check_async(lua_State* L, int index) {
-  uv_async_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->type == UV_ASYNC, index, "uv_async_t required");
-  return handle;
-}
-
-static uv_poll_t* luv_check_poll(lua_State* L, int index) {
-  uv_poll_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->type == UV_POLL, index, "uv_poll_t required");
-  return handle;
-}
-
-static uv_signal_t* luv_check_signal(lua_State* L, int index) {
-  uv_signal_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->type == UV_SIGNAL, index, "uv_signal_t required");
-  return handle;
-}
-
-// static uv_process_t* luv_check_process(lua_State* L, int index) {
-//   uv_process_t* handle = luaL_checkudata(L, index, "uv_handle");
-//   luaL_argcheck(L, handle->type == UV_PROCESS, index, "uv_process_t required");
-//   return handle;
-// }
 
 static int luv_is_active(lua_State* L) {
   uv_handle_t* handle = luv_check_handle(L, 1);
@@ -188,23 +103,15 @@ static int luv_is_closing(lua_State* L) {
 
 static void close_cb(uv_handle_t* handle) {
   lua_State* L = handle->data;
-  int ret;
-
-  // Once closed handles will never callback
-  cleanup_udata(L, handle);
-
-  ret = lua_resume(L, NULL, 0);
-  if (ret && ret != LUA_YIELD) {
-    on_panic(L);
-  }
+  luv_unref_handle(L, handle);
+  luv_resume(L, 0);
 }
 
 static int luv_close(lua_State* L) {
   uv_handle_t* handle = luv_check_handle(L, 1);
   handle->data = L;
   uv_close(handle, close_cb);
-  // Wait for close to finish
-  return lua_yield(L, 0);
+  return luv_wait(L, 0);
 }
 
 static int luv_ref(lua_State* L) {

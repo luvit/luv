@@ -17,12 +17,10 @@
 #include "luv.h"
 
 static int new_poll(lua_State* L) {
-  uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
-  uv_poll_t* handle = lua_newuserdata(L, sizeof(*handle));
+  uv_loop_t* loop = luv_check_loop(L, 1);
+  uv_poll_t* handle = luv_create_poll(L);
   int fd = luaL_checkinteger(L, 2);
-  int ret;
-  setup_udata(L, (uv_handle_t*)handle, "uv_handle");
-  ret = uv_poll_init(loop, handle, fd);
+  int ret = uv_poll_init(loop, handle, fd);
   if (ret < 0) return luv_error(L, ret);
   return 1;
 }
@@ -35,7 +33,7 @@ static const char *const pollevents[] = {
 static void poll_cb(uv_poll_t* handle, int status, int events) {
   lua_State* L = (lua_State*)handle->data;
   const char* evtstr;
-  find_udata(L, handle);
+  luv_find_poll(L, handle);
   if (status < 0) {
     fprintf(stderr, "%s: %s\n", uv_err_name(status), uv_strerror(status));
     lua_pushstring(L, uv_err_name(status));

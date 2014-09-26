@@ -49,18 +49,16 @@ static int string_to_signal(const char* string) {
 }
 
 static int new_signal(lua_State* L) {
-  uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
-  uv_signal_t* handle = lua_newuserdata(L, sizeof(*handle));
-  int ret;
-  setup_udata(L, handle, "uv_handle");
-  ret = uv_signal_init(loop, handle);
+  uv_loop_t* loop = luv_check_loop(L, 1);
+  uv_signal_t* handle = luv_create_signal(L);
+  int ret = uv_signal_init(loop, handle);
   if (ret < 0) return luv_error(L, ret);
   return 1;
 }
 
 static void signal_cb(uv_signal_t* handle, int signum) {
   lua_State* L = (lua_State*)handle->data;
-  find_udata(L, handle);
+  luv_find_signal(L, handle);
   lua_pushstring(L, signal_to_string(signum));
   luv_emit_event(L, "onsignal", 2);
 }

@@ -31,15 +31,9 @@ static void loop_init(lua_State* L) {
 
 // uv.new_loop() -> loop
 static int new_loop(lua_State* L) {
-  // Allocate the structure in the lua vm
-  uv_loop_t* loop = lua_newuserdata(L, sizeof(*loop));
-
-  // Initialize and report any errors
+  uv_loop_t* loop = luv_create_loop(L);
   int ret = uv_loop_init(loop);
   if (ret < 0) return luv_error(L, ret);
-  setup_udata(L, loop, "uv_loop");
-
-  // Return the new userdata for the uv_loop_t
   return 1;
 }
 
@@ -52,7 +46,7 @@ static int luv_loop_close(lua_State* L) {
   uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
   int ret = uv_loop_close(loop);
   if (ret < 0) return luv_error(L, ret);
-  cleanup_udata(L, loop);
+  luv_unref_loop(L, loop);
   lua_pushinteger(L, ret);
   return 1;
 }
@@ -111,7 +105,7 @@ static int luv_update_time(lua_State* L) {
 
 static void walk_cb(uv_handle_t* handle, void* arg) {
   lua_State* L = arg;
-  find_udata(L, handle); // Look up the userdata for this handle
+  luv_find_handle(L, handle); // Look up the userdata for this handle
   lua_rawseti(L, -2, lua_rawlen(L, -2) + 1);
 }
 

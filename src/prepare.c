@@ -17,18 +17,16 @@
 #include "luv.h"
 
 static int new_prepare(lua_State* L) {
-  uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
-  uv_prepare_t* handle = lua_newuserdata(L, sizeof(*handle));
-  int ret;
-  setup_udata(L, handle, "uv_handle");
-  ret = uv_prepare_init(loop, handle);
+  uv_loop_t* loop = luv_check_loop(L, 1);
+  uv_prepare_t* handle = luv_create_prepare(L);
+  int ret = uv_prepare_init(loop, handle);
   if (ret < 0) return luv_error(L, ret);
   return 1;
 }
 
 static void prepare_cb(uv_prepare_t* handle) {
   lua_State* L = (lua_State*)handle->data;
-  find_udata(L, handle);
+  luv_find_prepare(L, handle);
   luv_emit_event(L, "onprepare", 1);
 }
 

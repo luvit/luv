@@ -18,15 +18,14 @@
 
 static void async_cb(uv_async_t* handle) {
   lua_State* L = (lua_State*)handle->data;
-  find_udata(L, handle);
+  luv_find_async(L, handle);
   luv_emit_event(L, "onasync", 1);
 }
 
 static int new_async(lua_State* L) {
-  uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
-  uv_async_t* handle = lua_newuserdata(L, sizeof(*handle));
+  uv_loop_t* loop = luv_check_loop(L, 1);
+  uv_async_t* handle = luv_create_async(L);
   int ret;
-  setup_udata(L, handle, "uv_handle");
   handle->data = L;
   ret = uv_async_init(loop, handle, async_cb);
   if (ret < 0) return luv_error(L, ret);

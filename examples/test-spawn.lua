@@ -2,7 +2,11 @@ local p = require('lib/utils').prettyPrint
 
 local uv = require('luv')
 
-local handle, pid = uv.spawn("sleep", {"100"}, {})
+local loop = assert(uv.new_loop())
+
+local handle, pid = uv.spawn(loop, "sleep", {
+  args = {"100"}
+})
 
 p{handle=handle, pid=pid}
 function handle:onexit(code, signal)
@@ -10,12 +14,11 @@ function handle:onexit(code, signal)
   uv.close(handle)
 end
 
-uv.process_kill(handle, "SIGTERM")
---uv.kill(pid, "SIGHUP")
+uv.kill(pid, "SIGTERM")
 
 repeat
   print("\ntick.")
-until uv.run('once') == 0
+until uv.run(loop, 'once') == 0
 
 print("done")
 
