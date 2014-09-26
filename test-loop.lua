@@ -167,6 +167,14 @@ local function testTcp(loop)
       peername=uv.tcp_getpeername(server),
       sockname=uv.tcp_getsockname(server),
     })
+    function client:onread(err, data)
+      p("onread", {err=err,data=data})
+      if data then
+        local req = uv.write_req()
+        uv.write(req, client, data)
+      end
+    end
+    uv.read_start(client)
   end
 
   local req = uv.connect_req()
