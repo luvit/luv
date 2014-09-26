@@ -151,8 +151,8 @@ local function testTcp(loop)
   uv.tcp_keepalive(server, true, 100);
   uv.tcp_simultaneous_accepts(server, false)
   -- uv.tcp_bind(server, "::1", 7000)
-   uv.tcp_bind(server, "127.0.0.1", 7000)
---   uv.tcp_bind(server, "::", 0)
+   -- uv.tcp_bind(server, "127.0.0.1", 7000)
+  uv.tcp_bind(server, "::", 0)
   -- uv.tcp_bind(server, "0.0.0.0", 7000)
   uv.listen(server, 128)
   local address = uv.tcp_getsockname(server);
@@ -180,13 +180,24 @@ local function testTcp(loop)
     collectgarbage()
     logHandles(loop, true)
   end
+  collectgarbage()
 
   local socket = uv.new_tcp(loop)
+  function socket:onread(err, data)
+    p("socket onread", {err=err,data=data})
+    if not err and not data then
+      uv.close(socket)
+    end
+    collectgarbage()
+  end
+  uv.read_start(socket)
   uv.tcp_connect(uv.connect_req(), socket, address.ip, address.port)
   p(socket, {
     peername=uv.tcp_getpeername(socket),
     sockname=uv.tcp_getsockname(socket),
   })
+  uv.write(uv.write_req(), socket, "Greetings\r\n")
+  uv.shutdown(uv.shutdown_req(), socket)
 
   collectgarbage()
   logHandles(loop, true)
@@ -204,8 +215,9 @@ local tests = {
   testSignal,
 }
 
+local loop = uv.new_loop()
+
 coroutine.wrap(function ()
-  local loop = uv.new_loop()
   collectgarbage()
   logHandles(loop)
 
@@ -224,7 +236,10 @@ coroutine.wrap(function ()
   tests[#tests](loop, onDone)
   collectgarbage()
   logHandles(loop, true)
+end)()
+collectgarbage()
 
+coroutine.wrap(function ()
   print("blocking")
   uv.run(loop)
   print("done blocking")
@@ -234,3 +249,5 @@ coroutine.wrap(function ()
 
   uv.loop_close(loop)
 end)()
+
+
