@@ -32,7 +32,7 @@ static int handle_index(lua_State* L) {
   /* Get handle type if requested */
   const char* key = lua_tostring(L, 2);
   if (strcmp(key, "type") == 0) {
-    uv_handle_t* handle = luaL_checkudata(L, 1, "uv_handle");
+    uv_handle_t* handle = luv_check_handle(L, 1);
     switch (handle->type) {
 #define XX(uc, lc) case UV_##uc: lua_pushstring(L, #uc); break;
     UV_HANDLE_TYPE_MAP(XX)
@@ -51,8 +51,8 @@ static int handle_index(lua_State* L) {
 
 // Show the libuv type instead of generic "userdata"
 static int handle_tostring(lua_State* L) {
-  luv_handle_t* handle = luaL_checkudata(L, 1, "uv_handle");
-  switch (handle->data.type) {
+  uv_handle_t* handle = luv_check_handle(L, 1);
+  switch (handle->type) {
 #define XX(uc, lc) case UV_##uc: lua_pushfstring(L, "uv_"#lc"_t: %p", handle); break;
   UV_HANDLE_TYPE_MAP(XX)
 #undef XX
@@ -102,8 +102,7 @@ static int luv_is_closing(lua_State* L) {
 }
 
 static void close_cb(uv_handle_t* handle) {
-  lua_State* L = handle->data;
-  luv_unref_handle(L, handle);
+  lua_State* L = luv_unref_handle(handle);
   luv_resume(L, 0);
 }
 
@@ -174,43 +173,3 @@ static int luv_fileno(lua_State* L) {
   lua_pushinteger(L, fd);
   return 1;
 }
-
-// static int new_tcp(lua_State* L) {
-//   uv_tcp_t* handle = luv_create_tcp(L);
-//   if (uv_tcp_init(uv_default_loop(), handle)) {
-//     uv_err_t err = uv_last_error(uv_default_loop());
-//     return luaL_error(L, "new_tcp: %s", uv_strerror(err));
-//   }
-//   return 1;
-// }
-//
-// static int new_udp(lua_State* L) {
-//   uv_udp_t* handle = luv_create_udp(L);
-//   if (uv_udp_init(uv_default_loop(), handle)) {
-//     uv_err_t err = uv_last_error(uv_default_loop());
-//     return luaL_error(L, "new_udp: %s", uv_strerror(err));
-//   }
-//   return 1;
-// }
-//
-// static int new_timer(lua_State* L) {
-//   uv_timer_t* handle = luv_create_timer(L);
-//   if (uv_timer_init(uv_default_loop(), handle)) {
-//     uv_err_t err = uv_last_error(uv_default_loop());
-//     return luaL_error(L, "new_timer: %s", uv_strerror(err));
-//   }
-//   return 1;
-// }
-//
-// static int new_tty(lua_State* L) {
-//   uv_tty_t* handle = luv_create_tty(L);
-//   uv_file fd = luaL_checkint(L, 1);
-//   int readable;
-//   luaL_checktype(L, 2, LUA_TBOOLEAN);
-//   readable = lua_toboolean(L, 2);
-//   if (uv_tty_init(uv_default_loop(), handle, fd, readable)) {
-//     uv_err_t err = uv_last_error(uv_default_loop());
-//     return luaL_error(L, "new_tty: %s", uv_strerror(err));
-//   }
-//   return 1;
-// }

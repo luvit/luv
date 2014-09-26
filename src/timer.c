@@ -25,8 +25,7 @@ static int new_timer(lua_State* L) {
 }
 
 static void timer_cb(uv_timer_t* handle) {
-  lua_State* L = (lua_State*)handle->data;
-  luv_find_timer(L, handle);
+  lua_State* L = luv_find_handle((uv_handle_t*)handle);
   luv_emit_event(L, "ontimeout", 1);
 }
 

@@ -17,7 +17,7 @@
 #include "luv.h"
 
 static int loop_tostring(lua_State* L) {
-  uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
+  uv_loop_t* loop = luv_check_loop(L, 1);
   lua_pushfstring(L, "uv_loop_t: %p", loop);
   return 1;
 }
@@ -43,17 +43,17 @@ static const char *const runmodes[] = {
 };
 
 static int luv_loop_close(lua_State* L) {
-  uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
+  uv_loop_t* loop = luv_check_loop(L, 1);
   int ret = uv_loop_close(loop);
   if (ret < 0) return luv_error(L, ret);
-  luv_unref_loop(L, loop);
+  luv_unref_loop(loop);
   lua_pushinteger(L, ret);
   return 1;
 }
 
 // uv.run(loop, mode)
 static int luv_run(lua_State* L) {
-  uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
+  uv_loop_t* loop = luv_check_loop(L, 1);
   int mode = luaL_checkoption(L, 2, "default", runmodes);
   int ret = uv_run(loop, mode);
   if (ret < 0) return luv_error(L, ret);
@@ -62,7 +62,7 @@ static int luv_run(lua_State* L) {
 }
 
 static int luv_loop_alive(lua_State* L) {
-  const uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
+  const uv_loop_t* loop = luv_check_loop(L, 1);
   int ret = uv_loop_alive(loop);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
@@ -70,13 +70,13 @@ static int luv_loop_alive(lua_State* L) {
 }
 
 static int luv_stop(lua_State* L) {
-  uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
+  uv_loop_t* loop = luv_check_loop(L, 1);
   uv_stop(loop);
   return 0;
 }
 
 static int luv_backend_fd(lua_State* L) {
-  const uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
+  const uv_loop_t* loop = luv_check_loop(L, 1);
   int ret = uv_backend_fd(loop);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
@@ -84,33 +84,33 @@ static int luv_backend_fd(lua_State* L) {
 }
 
 static int luv_backend_timeout(lua_State* L) {
-  const uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
+  const uv_loop_t* loop = luv_check_loop(L, 1);
   int ret = uv_backend_timeout(loop);
   lua_pushinteger(L, ret);
   return 1;
 }
 
 static int luv_now(lua_State* L) {
-  const uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
+  const uv_loop_t* loop = luv_check_loop(L, 1);
   uint64_t now = uv_now(loop);
   lua_pushinteger(L, now);
   return 1;
 }
 
 static int luv_update_time(lua_State* L) {
-  uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
+  uv_loop_t* loop = luv_check_loop(L, 1);
   uv_update_time(loop);
   return 0;
 }
 
 static void walk_cb(uv_handle_t* handle, void* arg) {
   lua_State* L = arg;
-  luv_find_handle(L, handle); // Look up the userdata for this handle
+  luv_find_handle(handle); // Look up the userdata for this handle
   lua_rawseti(L, -2, lua_rawlen(L, -2) + 1);
 }
 
 static int luv_walk(lua_State* L) {
-  uv_loop_t* loop = luaL_checkudata(L, 1, "uv_loop");
+  uv_loop_t* loop = luv_check_loop(L, 1);
   lua_newtable(L);
   uv_walk(loop, walk_cb, L);
   return 1;
