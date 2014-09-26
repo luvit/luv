@@ -151,7 +151,11 @@ local function testTcp(loop)
   uv.tcp_nodelay(server, true)
   uv.tcp_keepalive(server, true, 100);
   uv.tcp_simultaneous_accepts(server, false)
-  uv.tcp_bind(server, "::1", 7000)
+  -- uv.tcp_bind(server, "::1", 7000)
+  -- uv.tcp_bind(server, "127.0.0.1", 7000)
+  uv.tcp_bind(server, "::", 7000)
+  -- uv.tcp_bind(server, "0.0.0.0", 7000)
+  uv.listen(server, 128)
 end
 
 local tests = {

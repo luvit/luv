@@ -78,10 +78,10 @@ static int luv_tcp_bind(lua_State* L) {
   const char* host = luaL_checkstring(L, 2);
   int port = luaL_checkinteger(L, 3);
   unsigned int flags = 0;
-  struct sockaddr_in6 addr;
+  struct sockaddr_storage addr;
   int ret;
   if (uv_ip4_addr(host, port, (struct sockaddr_in*)&addr) &&
-      uv_ip6_addr(host, port, &addr)) {
+      uv_ip6_addr(host, port, (struct sockaddr_in6*)&addr)) {
     return luaL_argerror(L, 2, "Invalid IP address or port");
   }
   ret = uv_tcp_bind(handle, (struct sockaddr*)&addr, flags);
