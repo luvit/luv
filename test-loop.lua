@@ -1,6 +1,8 @@
 local p = require('lib/utils').prettyPrint
 local uv = require('luv')
 
+-- local function collectgarbage() end
+
 -- Helper to log all handles in a loop
 local function logHandles(loop, verbose)
   local handles = uv.walk(loop)
@@ -145,17 +147,16 @@ end
 
 local function testTcp(loop)
   local server = uv.new_tcp(loop)
-  local sreq = uv.shutdown_req()
-  local wreq = uv.write_req()
-  p(server, sreq, wreq)
   uv.tcp_nodelay(server, true)
   uv.tcp_keepalive(server, true, 100);
   uv.tcp_simultaneous_accepts(server, false)
   -- uv.tcp_bind(server, "::1", 7000)
-  -- uv.tcp_bind(server, "127.0.0.1", 7000)
-  uv.tcp_bind(server, "::", 7000)
+   uv.tcp_bind(server, "127.0.0.1", 7000)
+--   uv.tcp_bind(server, "::", 0)
   -- uv.tcp_bind(server, "0.0.0.0", 7000)
   uv.listen(server, 128)
+  local address = uv.tcp_getsockname(server);
+  p(server, { listening=address })
   function server:onconnection()
     local client = uv.new_tcp(loop)
     uv.accept(server, client)
@@ -163,37 +164,42 @@ local function testTcp(loop)
       peername=uv.tcp_getpeername(client),
       sockname=uv.tcp_getsockname(client),
     })
-    p(server, {
-      peername=uv.tcp_getpeername(server),
-      sockname=uv.tcp_getsockname(server),
-    })
+    uv.write(uv.write_req(), client, "Welcome\r\n")
     function client:onread(err, data)
       p("onread", {err=err,data=data})
       if data then
-        local req = uv.write_req()
-        uv.write(req, client, data)
+        uv.write(uv.write_req(), client, data)
+        uv.read_stop(client)
+        uv.shutdown(uv.shutdown_req(), client)
+        uv.close(client)
       end
+      collectgarbage()
+      logHandles(loop, true)
     end
     uv.read_start(client)
+    collectgarbage()
+    logHandles(loop, true)
   end
 
-  local req = uv.connect_req()
   local socket = uv.new_tcp(loop)
-  -- assert(uv.tcp_connect(req, socket, "::1", 7000))
+  uv.tcp_connect(uv.connect_req(), socket, address.ip, address.port)
   p(socket, {
     peername=uv.tcp_getpeername(socket),
     sockname=uv.tcp_getsockname(socket),
   })
+
+  collectgarbage()
+  logHandles(loop, true)
 end
 
 local tests = {
-  testPrepare,
-  testCheck,
-  testIdle,
-  testAsync,
-  testPoll,
-  testTimer,
-  testProcess,
+  -- testPrepare,
+  -- testCheck,
+  -- testIdle,
+  -- testAsync,
+  -- testPoll,
+  -- testTimer,
+  -- testProcess,
   testTcp,
   testSignal,
 }

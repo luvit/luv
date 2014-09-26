@@ -109,7 +109,7 @@ static void parse_sockaddr(lua_State* L, struct sockaddr_storage* address, int a
   lua_pushinteger(L, port);
   lua_setfield(L, -2, "port");
   lua_pushstring(L, ip);
-  lua_setfield(L, -2, "address");
+  lua_setfield(L, -2, "ip");
 }
 
 static int luv_tcp_getsockname(lua_State* L) {
@@ -154,7 +154,7 @@ static int luv_tcp_connect(lua_State* L) {
   int ret;
   if (uv_ip4_addr(host, port, (struct sockaddr_in*)&addr) &&
       uv_ip6_addr(host, port, (struct sockaddr_in6*)&addr)) {
-    return luaL_argerror(L, 2, "Invalid IP address or port");
+    return luaL_argerror(L, 3, "Invalid IP address or port");
   }
   req->data = L;
   ret = uv_tcp_connect(req, handle, (struct sockaddr*)&addr, connect_cb);
