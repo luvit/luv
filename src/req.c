@@ -54,3 +54,9 @@ static uv_write_t* luv_check_write(lua_State* L, int index) {
   luaL_argcheck(L, handle->type == UV_WRITE, index, "uv_write_t required");
   return handle;
 }
+
+static uv_connect_t* luv_check_connect(lua_State* L, int index) {
+  uv_connect_t* handle = luaL_checkudata(L, index, "uv_req");
+  luaL_argcheck(L, handle->type == UV_CONNECT, index, "uv_connect_t required");
+  return handle;
+}

@@ -79,6 +79,7 @@ static void cleanup_udata(lua_State* L, void* udata);
 // From req.c
 static uv_shutdown_t* luv_check_shutdown(lua_State* L, int index);
 static uv_write_t* luv_check_write(lua_State* L, int index);
+static uv_connect_t* luv_check_connect(lua_State* L, int index);
 
 // From handle.c
 static uv_stream_t* luv_check_stream(lua_State* L, int index);

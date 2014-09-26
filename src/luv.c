@@ -128,6 +128,10 @@ static const luaL_Reg luv_functions[] = {
   {"tcp_keepalive", luv_tcp_keepalive},
   {"tcp_simultaneous_accepts", luv_tcp_simultaneous_accepts},
   {"tcp_bind", luv_tcp_bind},
+  {"tcp_getpeername", luv_tcp_getpeername},
+  {"tcp_getsockname", luv_tcp_getsockname},
+  {"connect_req", connect_req},
+  {"tcp_connect", luv_tcp_connect},
 
   {NULL, NULL}
 };

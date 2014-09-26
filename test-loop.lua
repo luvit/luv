@@ -156,6 +156,26 @@ local function testTcp(loop)
   uv.tcp_bind(server, "::", 7000)
   -- uv.tcp_bind(server, "0.0.0.0", 7000)
   uv.listen(server, 128)
+  function server:onconnection()
+    local client = uv.new_tcp(loop)
+    uv.accept(server, client)
+    p(client, {
+      peername=uv.tcp_getpeername(client),
+      sockname=uv.tcp_getsockname(client),
+    })
+    p(server, {
+      peername=uv.tcp_getpeername(server),
+      sockname=uv.tcp_getsockname(server),
+    })
+  end
+
+  local req = uv.connect_req()
+  local socket = uv.new_tcp(loop)
+  -- assert(uv.tcp_connect(req, socket, "::1", 7000))
+  p(socket, {
+    peername=uv.tcp_getpeername(socket),
+    sockname=uv.tcp_getsockname(socket),
+  })
 end
 
 local tests = {
