@@ -32,7 +32,9 @@ static void loop_init(lua_State* L) {
 // uv.new_loop() -> loop
 static int new_loop(lua_State* L) {
   uv_loop_t* loop = luv_create_loop(L);
+  luv_ref_t* ref = loop->data; // Remember loop->data
   int ret = uv_loop_init(loop);
+  loop->data = ref; // Put it back https://github.com/joyent/libuv/issues/1503
   if (ret < 0) return luv_error(L, ret);
   return 1;
 }
@@ -45,8 +47,8 @@ static const char *const runmodes[] = {
 static int luv_loop_close(lua_State* L) {
   uv_loop_t* loop = luv_check_loop(L, 1);
   int ret = uv_loop_close(loop);
+  // luv_unref_loop(loop); Disabled to workaround https://github.com/joyent/libuv/issues/1503
   if (ret < 0) return luv_error(L, ret);
-  luv_unref_loop(loop);
   lua_pushinteger(L, ret);
   return 1;
 }
@@ -105,7 +107,10 @@ static int luv_update_time(lua_State* L) {
 
 static void walk_cb(uv_handle_t* handle, void* arg) {
   lua_State* L = arg;
-  luv_find_handle(handle); // Look up the userdata for this handle
+  // Sanity check because of https://github.com/joyent/libuv/issues/1503
+  // Most invalid values are large and refs are small, 0x1000000 is arbitrary.
+  assert(handle->data && ((luv_ref_t*)handle->data)->ref < 0x1000000);
+  luv_find(handle->data); // Look up the userdata for this handle
   lua_rawseti(L, -2, lua_rawlen(L, -2) + 1);
 }
 

@@ -24,6 +24,8 @@ SOURCE_FILES=\
 	src/tcp.c\
 	src/timer.c\
 	src/tty.c\
+	src/userdata.c\
+	src/userdata.h\
 	src/util.c
 
 luv.luvit: ${SOURCE_FILES} src/luv.h

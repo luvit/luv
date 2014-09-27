@@ -51,12 +51,11 @@ static int luv_error(lua_State* L, int ret) {
   return 2;
 }
 
-static void luv_ccall(lua_State* L, int nargs) {
+static void luv_ccall(lua_State* L, luv_ref_t* ref, int nargs) {
   int top = lua_gettop(L);
   int ret;
   lua_State* T = lua_newthread(L);
-
-  printf("lua_newthread(L=%p) -> T=%p\n", L, T);
+  if (ref) ref->L = T;
   lua_insert(L, -2 - nargs); // Push coroutine above function and userdata
   lua_xmove(L, T, nargs + 1);
   ret = lua_resume(T, L, nargs);
@@ -67,8 +66,7 @@ static void luv_ccall(lua_State* L, int nargs) {
   assert(lua_gettop(L) == top - nargs - 1);
 }
 
-static void luv_emit_event(lua_State* L, const char* name, int nargs) {
-  printf("emit L=%p name=%s\n", L, name);
+static void luv_emit_event(lua_State* L, luv_ref_t* ref, const char* name, int nargs) {
   lua_getuservalue(L, -nargs);
   lua_getfield(L, -1, name);
   if (lua_type(L, -1) != LUA_TFUNCTION) {
@@ -77,11 +75,13 @@ static void luv_emit_event(lua_State* L, const char* name, int nargs) {
   }
   lua_remove(L, -2); // Remove uservalue
   lua_insert(L, -1 - nargs); // Push function above userdata
-  luv_ccall(L, nargs);
+  luv_ccall(L, ref, nargs);
 }
 
-static int luv_wait(lua_State* L, int status) {
+static int luv_wait(lua_State* L, luv_ref_t* ref, int status) {
   if (status < 0) return luv_error(L, status);
+
+  if (ref) ref->L = L;
 
   // Store the current thread in active_threads
   lua_getfield(L, LUA_REGISTRYINDEX, "active_threads");
@@ -90,7 +90,6 @@ static int luv_wait(lua_State* L, int status) {
   lua_rawset(L, -3);
   lua_pop(L, 1);
 
-  printf("Pausing L=%p\n", L);
   return lua_yield(L, 0);
 }
 
@@ -104,7 +103,6 @@ static void luv_resume(lua_State* L, int nargs) {
   lua_rawset(L, -3);
   lua_pop(L, 1);
 
-  printf("Resuming L=%p\n", L);
   ret = lua_resume(L, NULL, nargs);
   if (ret && ret != LUA_YIELD) {
     on_panic(L);

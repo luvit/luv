@@ -65,10 +65,10 @@ static void luv_stack_dump(lua_State* L, const char* name);
 #include "userdata.h"
 
 static int luv_error(lua_State* L, int ret);
-static void luv_ccall(lua_State* L, int nargs);
-static void luv_emit_event(lua_State* L, const char* name, int nargs);
+static void luv_ccall(lua_State* L, luv_ref_t* ref, int nargs);
+static void luv_emit_event(lua_State* L, luv_ref_t* ref, const char* name, int nargs);
 
-static int luv_wait(lua_State* L, int status);
+static int luv_wait(lua_State* L, luv_ref_t* ref, int status);
 static void luv_resume(lua_State* L, int nargs);
 static void luv_resume_with_status(lua_State* L, int status, int nargs);
 

@@ -74,10 +74,9 @@ static uv_getaddrinfo_t* luv_check_getaddrinfo(lua_State* L, int index);
 static uv_getnameinfo_t* luv_check_getnameinfo(lua_State* L, int index);
 
 
-// luv_find_*(uv_*_t* ptr) -> lua_State* L
-// Given a pointer push the userdata on the stack and return lua_State
-static lua_State* luv_find_req(uv_req_t* req);
-static lua_State* luv_find_handle(uv_handle_t* handle);
+// luv_find(uv_ref_t* data) -> lua_State* L
+// Given a data pointer push the userdata on the stack and return lua_State
+static lua_State* luv_find(luv_ref_t* data);
 
 // luv_unref_*(uv_*_t* ptr) -> lua_State* L
 // Given a pointer unref it's userdata return lua_State

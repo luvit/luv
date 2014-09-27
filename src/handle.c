@@ -108,9 +108,8 @@ static void close_cb(uv_handle_t* handle) {
 
 static int luv_close(lua_State* L) {
   uv_handle_t* handle = luv_check_handle(L, 1);
-  handle->data = L;
   uv_close(handle, close_cb);
-  return luv_wait(L, 0);
+  return luv_wait(L, handle->data, 0);
 }
 
 static int luv_ref(lua_State* L) {
