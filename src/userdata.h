@@ -63,7 +63,8 @@ static uv_tty_t* luv_check_tty(lua_State* L, int index);
 static uv_udp_t* luv_check_udp(lua_State* L, int index);
 static uv_signal_t* luv_check_signal(lua_State* L, int index);
 
-// Concrete req types
+// All req types
+static uv_req_t* luv_check_req(lua_State* L, int index);
 static uv_connect_t* luv_check_connect(lua_State* L, int index);
 static uv_write_t* luv_check_write(lua_State* L, int index);
 static uv_shutdown_t* luv_check_shutdown(lua_State* L, int index);

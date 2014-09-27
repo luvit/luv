@@ -17,7 +17,7 @@
 #include "luv.h"
 
 static int req_tostring(lua_State* L) {
-  uv_req_t* req = luaL_checkudata(L, 1, "uv_req");
+  uv_req_t* req = luv_check_req(L, 1);
   switch (req->type) {
 #define XX(uc, lc) case UV_##uc: lua_pushfstring(L, "uv_"#lc"_t: %p", req); break;
   UV_REQ_TYPE_MAP(XX)
@@ -36,7 +36,7 @@ static void req_init(lua_State* L) {
 
 // Metamethod to allow storing anything in the userdata's environment
 static int luv_cancel(lua_State* L) {
-  uv_req_t* req = luaL_checkudata(L, 1, "uv_req");
+  uv_req_t* req = luv_check_req(L, 1);
   int ret = uv_cancel(req);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);

@@ -19,7 +19,7 @@
 #include "util.c"
 #include "userdata.c"
 #include "loop.c"
-// #include "req.c"
+#include "req.c"
 #include "handle.c"
 #include "timer.c"
 // #include "prepare.c"
@@ -53,7 +53,7 @@ static const luaL_Reg luv_functions[] = {
   {"walk", luv_walk},
 
   // req.c
-  // {"cancel", luv_cancel},
+  {"cancel", luv_cancel},
 
   // handle.c
   {"is_active", luv_is_active},

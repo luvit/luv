@@ -242,6 +242,9 @@ static uv_signal_t* luv_check_signal(lua_State* L, int index) {
   luaL_argcheck(L, handle->type == UV_SIGNAL, index, "uv_signal_t required");
   return handle;
 }
+static uv_req_t* luv_check_req(lua_State* L, int index) {
+  return luaL_checkudata(L, index, "uv_req");
+}
 static uv_connect_t* luv_check_connect(lua_State* L, int index) {
   uv_connect_t* req = luaL_checkudata(L, index, "uv_req");
   luaL_argcheck(L, req->type == UV_CONNECT, index, "uv_connect_t required");
