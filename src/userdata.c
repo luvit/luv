@@ -40,6 +40,7 @@ static luv_ref_t* setup_udata(lua_State* L, const char* type) {
 static uv_loop_t* luv_create_loop(lua_State* L) {
   uv_loop_t* loop = lua_newuserdata(L, sizeof(*loop));
   // Tag the userdata with the given type.
+  // Don't store ref in registry because of https://github.com/joyent/libuv/issues/1503
   luaL_getmetatable(L, "uv_loop");
   lua_setmetatable(L, -2);
   return loop;
