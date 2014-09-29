@@ -34,11 +34,16 @@ static void luv_stack_dump(lua_State* L, const char* name) {
   int i, l;
   printf("\nAPI STACK DUMP %p %d: %s\n", L, lua_status(L), name);
   for (i = 1, l = lua_gettop(L); i <= l; i++) {
-    lua_getglobal(L, "tostring");
-    lua_pushvalue(L, i);
-    lua_call(L, 1, 1);
-    printf("  %d %s\n", i, lua_tostring(L, -1));
-    lua_pop(L, 1);
+    int type = lua_type(L, i);
+    switch (type) {
+      case LUA_TSTRING:
+        printf("  %d %s \"%s\"\n", i, lua_typename(L, type), lua_tostring(L, i));
+        break;
+      default:
+        printf("  %d %s\n", i, lua_typename(L, type));
+        break;
+    }
+
   }
   assert(l == lua_gettop(L));
 }
