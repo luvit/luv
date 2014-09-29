@@ -207,13 +207,13 @@ local function testTcp(loop)
 end
 
 local tests = {
-  -- testPrepare,
-  -- testCheck,
-  -- testIdle,
-  -- testAsync,
-  -- testPoll,
-  -- testTimer,
-  -- testProcess,
+  testPrepare,
+  testCheck,
+  testIdle,
+  testAsync,
+  testPoll,
+  testTimer,
+  testProcess,
   testTcp,
   testSignal,
 }

@@ -137,8 +137,7 @@ static void connect_cb(uv_connect_t* req, int status) {
 }
 
 static int connect_req(lua_State* L) {
-  uv_connect_t* req = luv_create_connect(L);
-  printf("req=%p\n", req);
+  luv_create_connect(L);
   return 1;
 }
 

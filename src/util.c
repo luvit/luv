@@ -43,7 +43,6 @@ static void luv_stack_dump(lua_State* L, const char* name) {
         printf("  %d %s\n", i, lua_typename(L, type));
         break;
     }
-
   }
   assert(l == lua_gettop(L));
 }
@@ -58,9 +57,9 @@ static int luv_error(lua_State* L, int ret) {
 
 static void luv_ref_state(luv_ref_t* data, lua_State* L) {
   lua_pushthread(L);
+  data->L = L;
   luv_unref_state(data);
   data->lref = luaL_ref(L, LUA_REGISTRYINDEX);
-  data->L = L;
 }
 
 static void luv_unref_state(luv_ref_t* data) {
@@ -99,7 +98,8 @@ static void luv_emit_event(lua_State* L, luv_ref_t* ref, const char* name, int n
 static int luv_wait(lua_State* L, luv_ref_t* data, int status) {
   if (status < 0) return luv_error(L, status);
 
-  if (data) luv_ref_state(data, L);
+  assert(data);
+  luv_ref_state(data, L);
 
   // Store the current thread in active_threads
   lua_getfield(L, LUA_REGISTRYINDEX, "active_threads");

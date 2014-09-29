@@ -32,12 +32,16 @@
 #include "stream.c"
 #include "tcp.c"
 
-// #include "misc.c"
-// #include "dns.c"
-// #include "stream.c"
-// #include "tty.c"
 // #include "pipe.c"
+// #include "tty.c"
+// #include "udp.c"
+// #include "fs_event.c"
+// #include "fs_poll.c"
 // #include "fs.c"
+// #include "work.c"
+// #include "dns.c"
+// #include "thread.c"
+// #include "misc.c"
 
 static const luaL_Reg luv_functions[] = {
   // loop.c

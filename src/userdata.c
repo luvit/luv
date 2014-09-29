@@ -295,8 +295,7 @@ static uv_getnameinfo_t* luv_check_getnameinfo(lua_State* L, int index) {
 
 
 static lua_State* luv_find(luv_ref_t* data) {
-  if (!data) return NULL;
-  assert(data->ref < 0x1000); // probably invalid data
+  assert(data && data->ref < 0x1000000);
   lua_rawgeti(data->L, LUA_REGISTRYINDEX, data->ref);
   return data->L;
 }
