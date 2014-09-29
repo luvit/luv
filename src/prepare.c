@@ -25,15 +25,14 @@ static int new_prepare(lua_State* L) {
 }
 
 static void prepare_cb(uv_prepare_t* handle) {
-  lua_State* L = (lua_State*)handle->data;
-  luv_find_prepare(L, handle);
-  luv_emit_event(L, "onprepare", 1);
+  lua_State* L = luv_find(handle->data);
+  luv_emit_event(L, handle->data, "onprepare", 1);
 }
 
 static int luv_prepare_start(lua_State* L) {
   uv_prepare_t* handle = luv_check_prepare(L, 1);
   int ret;
-  handle->data = L;
+  luv_ref_state(handle->data, L);
   ret = uv_prepare_start(handle, prepare_cb);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);

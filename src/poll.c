@@ -31,9 +31,9 @@ static const char *const pollevents[] = {
 };
 
 static void poll_cb(uv_poll_t* handle, int status, int events) {
-  lua_State* L = (lua_State*)handle->data;
+  lua_State* L = luv_find(handle->data);
   const char* evtstr;
-  luv_find_poll(L, handle);
+
   if (status < 0) {
     fprintf(stderr, "%s: %s\n", uv_err_name(status), uv_strerror(status));
     lua_pushstring(L, uv_err_name(status));
@@ -48,7 +48,7 @@ static void poll_cb(uv_poll_t* handle, int status, int events) {
     default: evtstr = ""; break;
   }
   lua_pushstring(L, evtstr);
-  luv_emit_event(L, "onpoll", 3);
+  luv_emit_event(L, handle->data, "onpoll", 3);
 }
 
 static int luv_poll_start(lua_State* L) {
@@ -59,7 +59,7 @@ static int luv_poll_start(lua_State* L) {
     case 1: events = UV_WRITABLE; break;
     case 2: events = UV_READABLE | UV_WRITABLE; break;
   }
-  handle->data = L;
+  luv_ref_state(handle->data, L);
   ret = uv_poll_start(handle, events, poll_cb);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);

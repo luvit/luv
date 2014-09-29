@@ -57,10 +57,9 @@ static int new_signal(lua_State* L) {
 }
 
 static void signal_cb(uv_signal_t* handle, int signum) {
-  lua_State* L = (lua_State*)handle->data;
-  luv_find_signal(L, handle);
+  lua_State* L = luv_find(handle->data);
   lua_pushstring(L, signal_to_string(signum));
-  luv_emit_event(L, "onsignal", 2);
+  luv_emit_event(L, handle->data, "onsignal", 2);
 }
 
 static int luv_signal_start(lua_State* L) {
@@ -68,7 +67,6 @@ static int luv_signal_start(lua_State* L) {
   int signum, ret;
   signum = string_to_signal(luaL_checkstring(L, 2));
   luaL_argcheck(L, signum, 2, "Invalid Signal name");
-  handle->data = L;
   ret = uv_signal_start(handle, signal_cb, signum);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);

@@ -4,6 +4,7 @@
 
 typedef struct {
   lua_State* L;
+  int lref;
   int ref;
 } luv_ref_t;
 
@@ -73,7 +74,6 @@ static uv_fs_t* luv_check_fs(lua_State* L, int index);
 static uv_work_t* luv_check_work(lua_State* L, int index);
 static uv_getaddrinfo_t* luv_check_getaddrinfo(lua_State* L, int index);
 static uv_getnameinfo_t* luv_check_getnameinfo(lua_State* L, int index);
-
 
 // luv_find(uv_ref_t* data) -> lua_State* L
 // Given a data pointer push the userdata on the stack and return lua_State

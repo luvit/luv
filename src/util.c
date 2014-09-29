@@ -32,7 +32,7 @@ static int on_panic(lua_State* L) {
 
 static void luv_stack_dump(lua_State* L, const char* name) {
   int i, l;
-  printf("\nAPI STACK DUMP %p: %s\n", L, name);
+  printf("\nAPI STACK DUMP %p %d: %s\n", L, lua_status(L), name);
   for (i = 1, l = lua_gettop(L); i <= l; i++) {
     lua_getglobal(L, "tostring");
     lua_pushvalue(L, i);
@@ -49,6 +49,19 @@ static int luv_error(lua_State* L, int ret) {
   fprintf(stderr, "%s: %s\n", uv_err_name(ret), uv_strerror(ret));
   lua_pushstring(L, uv_err_name(ret));
   return 2;
+}
+
+static void luv_ref_state(luv_ref_t* data, lua_State* L) {
+  lua_pushthread(L);
+  luv_unref_state(data);
+  data->lref = luaL_ref(L, LUA_REGISTRYINDEX);
+  data->L = L;
+}
+
+static void luv_unref_state(luv_ref_t* data) {
+  if (data->lref == LUA_NOREF) return;
+  luaL_unref(data->L, LUA_REGISTRYINDEX, data->lref);
+  data->lref = LUA_NOREF;
 }
 
 static void luv_ccall(lua_State* L, luv_ref_t* ref, int nargs) {
@@ -78,10 +91,10 @@ static void luv_emit_event(lua_State* L, luv_ref_t* ref, const char* name, int n
   luv_ccall(L, ref, nargs);
 }
 
-static int luv_wait(lua_State* L, luv_ref_t* ref, int status) {
+static int luv_wait(lua_State* L, luv_ref_t* data, int status) {
   if (status < 0) return luv_error(L, status);
 
-  if (ref) ref->L = L;
+  if (data) luv_ref_state(data, L);
 
   // Store the current thread in active_threads
   lua_getfield(L, LUA_REGISTRYINDEX, "active_threads");

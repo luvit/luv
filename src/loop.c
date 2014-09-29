@@ -32,9 +32,12 @@ static void loop_init(lua_State* L) {
 // uv.new_loop() -> loop
 static int new_loop(lua_State* L) {
   uv_loop_t* loop = luv_create_loop(L);
-  luv_ref_t* ref = loop->data; // Remember loop->data
-  int ret = uv_loop_init(loop);
-  loop->data = ref; // Put it back https://github.com/joyent/libuv/issues/1503
+  luv_ref_t* data = loop->data; // Remember loop->data
+  int ret;
+  printf("{L=%p,ref=%d,lref=%d}\n", data->L, data->ref, data->lref);
+  ret = uv_loop_init(loop);
+  loop->data = data; // Put it back https://github.com/joyent/libuv/issues/1503
+  printf("data2 %p\n", loop->data);
   if (ret < 0) return luv_error(L, ret);
   return 1;
 }
@@ -46,8 +49,9 @@ static const char *const runmodes[] = {
 
 static int luv_loop_close(lua_State* L) {
   uv_loop_t* loop = luv_check_loop(L, 1);
-  int ret = uv_loop_close(loop);
-  // luv_unref_loop(loop); Disabled to workaround https://github.com/joyent/libuv/issues/1503
+  int ret;
+  luv_unref_loop(loop);
+  ret = uv_loop_close(loop);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;
@@ -109,14 +113,19 @@ static void walk_cb(uv_handle_t* handle, void* arg) {
   lua_State* L = arg;
   // Sanity check because of https://github.com/joyent/libuv/issues/1503
   // Most invalid values are large and refs are small, 0x1000000 is arbitrary.
-  assert(handle->data && ((luv_ref_t*)handle->data)->ref < 0x1000000);
+  luv_ref_t* data = handle->data;
+  assert(data && data->ref < 0x1000000);
   luv_find(handle->data); // Look up the userdata for this handle
   lua_rawseti(L, -2, lua_rawlen(L, -2) + 1);
 }
 
 static int luv_walk(lua_State* L) {
   uv_loop_t* loop = luv_check_loop(L, 1);
+  luv_ref_t* data = loop->data;
   lua_newtable(L);
+  printf("luv_walk1 {L=%p,ref=%d,lref=%d}\n", data->L, data->ref, data->lref);
+  luv_ref_state(loop->data, L);
+  printf("luv_walk2 {L=%p,ref=%d,lref=%d}\n", data->L, data->ref, data->lref);
   uv_walk(loop, walk_cb, L);
   return 1;
 }

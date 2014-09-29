@@ -22,11 +22,10 @@ static int luv_disable_stdio_inheritance(__attribute__((unused)) lua_State* L) {
 }
 
 static void exit_cb(uv_process_t* handle, int64_t exit_status, int term_signal) {
-  lua_State* L = (lua_State*)handle->data;
-  luv_find_process(L, handle);
+  lua_State* L = luv_find(handle->data);
   lua_pushinteger(L, exit_status);
   lua_pushinteger(L, term_signal);
-  luv_emit_event(L, "onexit", 3);
+  luv_emit_event(L, handle->data, "onexit", 3);
 }
 
 static int luv_spawn(lua_State* L) {
@@ -35,6 +34,8 @@ static int luv_spawn(lua_State* L) {
   uv_process_options_t options;
   size_t i, len = 0;
   int ret;
+
+  luv_ref_state(handle->data, L);
 
   memset(&options, 0, sizeof(options));
   options.exit_cb = exit_cb;
@@ -172,7 +173,6 @@ static int luv_spawn(lua_State* L) {
   }
   lua_pop(L, 1);
 
-  handle->data = L;
   ret = uv_spawn(loop, handle, &options);
   free(options.args);
   free(options.stdio);

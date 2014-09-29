@@ -105,6 +105,7 @@ local function testTimer(loop)
     end
   end
   uv.timer_start(timer, 200, 100)
+  p(coroutine.running())
 end
 
 local function testSignal(loop, callback)
@@ -191,7 +192,9 @@ local function testTcp(loop)
     collectgarbage()
   end
   uv.read_start(socket)
-  uv.tcp_connect(uv.connect_req(), socket, address.ip, address.port)
+  local connect_req = uv.connect_req()
+  p("connect_req", connect_req)
+  uv.tcp_connect(connect_req, socket, address.ip, address.port)
   p(socket, {
     peername=uv.tcp_getpeername(socket),
     sockname=uv.tcp_getsockname(socket),
@@ -239,14 +242,13 @@ coroutine.wrap(function ()
 end)()
 collectgarbage()
 
+print("blocking")
+uv.run(loop)
+print("done blocking")
+collectgarbage()
+
 coroutine.wrap(function ()
-  print("blocking")
-  uv.run(loop)
-  print("done blocking")
-
-  collectgarbage()
   logHandles(loop, true)
-
   uv.loop_close(loop)
 end)()
 

@@ -25,15 +25,14 @@ static int new_idle(lua_State* L) {
 }
 
 static void idle_cb(uv_idle_t* handle) {
-  lua_State* L = (lua_State*)handle->data;
-  luv_find_idle(L, handle);
-  luv_emit_event(L, "onidle", 1);
+  lua_State* L = luv_find(handle->data);
+  luv_emit_event(L, handle->data, "onidle", 1);
 }
 
 static int luv_idle_start(lua_State* L) {
   uv_idle_t* handle = luv_check_idle(L, 1);
   int ret;
-  handle->data = L;
+  luv_ref_state(handle->data, L);
   ret = uv_idle_start(handle, idle_cb);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);

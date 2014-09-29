@@ -131,14 +131,14 @@ static int luv_tcp_getpeername(lua_State* L) {
 }
 
 static void connect_cb(uv_connect_t* req, int status) {
-  lua_State* L = req->data;
-  luv_unref_connect(L, req);
+  lua_State* L = luv_find(req->data);
+  lua_pop(L, 1);
   luv_resume_with_status(L, status, 0);
 }
 
 static int connect_req(lua_State* L) {
   uv_connect_t* req = luv_create_connect(L);
-  req->type = UV_CONNECT;
+  printf("req=%p\n", req);
   return 1;
 }
 
@@ -153,7 +153,6 @@ static int luv_tcp_connect(lua_State* L) {
       uv_ip6_addr(host, port, (struct sockaddr_in6*)&addr)) {
     return luaL_argerror(L, 3, "Invalid IP address or port");
   }
-  req->data = L;
   ret = uv_tcp_connect(req, handle, (struct sockaddr*)&addr, connect_cb);
-  return luv_wait(L, ret);
+  return luv_wait(L, req->data, ret);
 }

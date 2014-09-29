@@ -65,6 +65,11 @@ static void luv_stack_dump(lua_State* L, const char* name);
 #include "userdata.h"
 
 static int luv_error(lua_State* L, int ret);
+
+// Utilities for hanging on to lua states while waiting for events.
+static void luv_ref_state(luv_ref_t* data, lua_State* L);
+static void luv_unref_state(luv_ref_t* data);
+
 static void luv_ccall(lua_State* L, luv_ref_t* ref, int nargs);
 static void luv_emit_event(lua_State* L, luv_ref_t* ref, const char* name, int nargs);
 

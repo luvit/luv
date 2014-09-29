@@ -23,8 +23,9 @@ static luv_ref_t* setup_udata(lua_State* L, const char* type) {
   // Record the lua_State and ref the userdata.
   luv_ref_t* data = malloc(sizeof(*data));
   lua_pushvalue(L, -1);
-  data->ref = luaL_ref(L, LUA_REGISTRYINDEX);
   data->L = L;
+  data->lref = LUA_NOREF;
+  data->ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
   // Tag the userdata with the given type.
   luaL_getmetatable(L, type);
@@ -39,10 +40,7 @@ static luv_ref_t* setup_udata(lua_State* L, const char* type) {
 
 static uv_loop_t* luv_create_loop(lua_State* L) {
   uv_loop_t* loop = lua_newuserdata(L, sizeof(*loop));
-  // Tag the userdata with the given type.
-  // Don't store ref in registry because of https://github.com/joyent/libuv/issues/1503
-  luaL_getmetatable(L, "uv_loop");
-  lua_setmetatable(L, -2);
+  loop->data = setup_udata(L, "uv_loop");
   return loop;
 }
 static uv_timer_t* luv_create_timer(lua_State* L) {
@@ -115,44 +113,53 @@ static uv_signal_t* luv_create_signal(lua_State* L) {
   signal->data = setup_udata(L, "uv_handle");
   return signal;
 }
+
 static uv_connect_t* luv_create_connect(lua_State* L) {
   uv_connect_t* connect = lua_newuserdata(L, sizeof(*connect));
   connect->data = setup_udata(L, "uv_req");
+  connect->type = UV_CONNECT;
   return connect;
 }
 static uv_write_t* luv_create_write(lua_State* L) {
   uv_write_t* write = lua_newuserdata(L, sizeof(*write));
   write->data = setup_udata(L, "uv_req");
+  write->type = UV_WRITE;
   return write;
 }
 static uv_shutdown_t* luv_create_shutdown(lua_State* L) {
   uv_shutdown_t* shutdown = lua_newuserdata(L, sizeof(*shutdown));
   shutdown->data = setup_udata(L, "uv_req");
+  shutdown->type = UV_SHUTDOWN;
   return shutdown;
 }
 static uv_udp_send_t* luv_create_udp_send(lua_State* L) {
   uv_udp_send_t* udp_send = lua_newuserdata(L, sizeof(*udp_send));
   udp_send->data = setup_udata(L, "uv_req");
+  udp_send->type = UV_UDP_SEND;
   return udp_send;
 }
 static uv_fs_t* luv_create_fs(lua_State* L) {
   uv_fs_t* fs = lua_newuserdata(L, sizeof(*fs));
   fs->data = setup_udata(L, "uv_req");
+  fs->type = UV_FS;
   return fs;
 }
 static uv_work_t* luv_create_work(lua_State* L) {
   uv_work_t* work = lua_newuserdata(L, sizeof(*work));
   work->data = setup_udata(L, "uv_req");
+  work->type = UV_WORK;
   return work;
 }
 static uv_getaddrinfo_t* luv_create_getaddrinfo(lua_State* L) {
   uv_getaddrinfo_t* getaddrinfo = lua_newuserdata(L, sizeof(*getaddrinfo));
   getaddrinfo->data = setup_udata(L, "uv_req");
+  getaddrinfo->type = UV_GETADDRINFO;
   return getaddrinfo;
 }
 static uv_getnameinfo_t* luv_create_getnameinfo(lua_State* L) {
   uv_getnameinfo_t* getnameinfo = lua_newuserdata(L, sizeof(*getnameinfo));
   getnameinfo->data = setup_udata(L, "uv_req");
+  getnameinfo->type = UV_GETNAMEINFO;
   return getnameinfo;
 }
 
@@ -299,10 +306,16 @@ static lua_State* luv_unref_data(luv_ref_t* data) {
   if (!data) return NULL;
   L = data->L;
   luaL_unref(L, LUA_REGISTRYINDEX, data->ref);
+  luv_unref_state(data);
   free(data);
   return L;
 }
 
+static lua_State* luv_unref_loop(uv_loop_t* loop) {
+  lua_State* L = luv_unref_data(loop->data);
+  loop->data = NULL;
+  return L;
+}
 static lua_State* luv_unref_req(uv_req_t* req) {
   lua_State* L = luv_unref_data(req->data);
   req->data = NULL;

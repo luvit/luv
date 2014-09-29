@@ -34,7 +34,7 @@ static int luv_timer_start(lua_State* L) {
   uint64_t timeout = luaL_checkinteger(L, 2);
   uint64_t repeat = luaL_checkinteger(L, 3);
   int ret;
-  ((luv_ref_t*)handle->data)->L = L;
+  luv_ref_state(handle->data, L);
   ret = uv_timer_start(handle, timer_cb, timeout, repeat);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
