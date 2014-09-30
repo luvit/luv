@@ -31,8 +31,8 @@
 #include "process.c"
 #include "stream.c"
 #include "tcp.c"
+#include "pipe.c"
 
-// #include "pipe.c"
 // #include "tty.c"
 // #include "udp.c"
 // #include "fs_event.c"
@@ -127,6 +127,7 @@ static const luaL_Reg luv_functions[] = {
   {"is_readable", luv_is_readable},
   {"is_writable", luv_is_writable},
   {"stream_set_blocking", luv_stream_set_blocking},
+  {"connect_req", connect_req},
 
   // tcp.c
   {"new_tcp", new_tcp},
@@ -137,9 +138,18 @@ static const luaL_Reg luv_functions[] = {
   {"tcp_bind", luv_tcp_bind},
   {"tcp_getpeername", luv_tcp_getpeername},
   {"tcp_getsockname", luv_tcp_getsockname},
-  {"connect_req", connect_req},
   {"tcp_connect", luv_tcp_connect},
 
+  // pipe.c
+  {"new_pipe", new_pipe},
+  {"pipe_open", luv_pipe_open},
+  {"pipe_bind", luv_pipe_bind},
+  {"pipe_connect", luv_pipe_connect},
+  {"pipe_getsockname", luv_pipe_getsockname},
+  {"pipe_pending_instances", luv_pipe_pending_instances},
+  {"pipe_pending_count", luv_pipe_pending_count},
+  {"pipe_open", luv_pipe_open},
+  {"pipe_pending_type", luv_pipe_pending_type},
   {NULL, NULL}
 };
 

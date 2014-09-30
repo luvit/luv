@@ -130,17 +130,6 @@ static int luv_tcp_getpeername(lua_State* L) {
   return 1;
 }
 
-static void connect_cb(uv_connect_t* req, int status) {
-  lua_State* L = luv_find(req->data);
-  lua_pop(L, 1);
-  luv_resume_with_status(L, status, 0);
-}
-
-static int connect_req(lua_State* L) {
-  luv_create_connect(L);
-  return 1;
-}
-
 static int luv_tcp_connect(lua_State* L) {
   uv_connect_t* req = luv_check_connect(L, 1);
   uv_tcp_t* handle = luv_check_tcp(L, 2);

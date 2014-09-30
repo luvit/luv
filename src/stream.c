@@ -174,3 +174,14 @@ static int luv_stream_set_blocking(lua_State* L) {
   lua_pushinteger(L, ret);
   return 1;
 }
+
+static void connect_cb(uv_connect_t* req, int status) {
+  lua_State* L = luv_find(req->data);
+  lua_pop(L, 1);
+  luv_resume_with_status(L, status, 0);
+}
+
+static int connect_req(lua_State* L) {
+  luv_create_connect(L);
+  return 1;
+}

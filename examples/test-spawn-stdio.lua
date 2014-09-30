@@ -1,11 +1,12 @@
 local p = require('lib/utils').prettyPrint
 local uv = require('luv')
+local loop = assert(uv.new_loop())
 
-local stdout = uv.new_pipe()
-local stderr = uv.new_pipe()
-local stdin = uv.new_pipe()
+local stdout = uv.new_pipe(loop, false)
+local stderr = uv.new_pipe(loop, false)
+local stdin = uv.new_pipe(loop, false)
 
-local handle, pid = uv.spawn("cat", {}, {
+local handle, pid = uv.spawn(loop, "cat", {}, {
   stdio = {stdin, stdout, stderr}
 })
 
@@ -22,28 +23,29 @@ function handle:onclose()
   p("handle close")
 end
 
-function stdout:ondata(chunk)
-  p("stdout data", chunk)
+function stdout:onread(err, chunk)
+  if err then error(err) end
+  if (chunk) then
+    p("stdout data", chunk)
+  else
+    p("stdout end")
+  end
 end
 
-function stdout:onend()
- p("stdout end")
+function stderr:onread(err, chunk)
+  if err then error(err) end
+  if (chunk) then
+    p("stderr data", chunk)
+  else
+    p("stderr end")
+  end
 end
-
-function stderr:ondata(chunk)
-  p("stderr data", chunk)
-end
-
-function stderr:onend()
-  p("stderr end")
-end
-
 
 uv.read_start(stdout)
 uv.read_start(stderr)
-uv.write(stdin, "Hello World")
-uv.shutdown(stdin, function ()
+uv.write(uv.write_req(), stdin, "Hello World")
+uv.shutdown(uv.shutdown_req(), stdin, function ()
   uv.close(stdin)
 end)
 
-uv.run("default")
+uv.run(loop)

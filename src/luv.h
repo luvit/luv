@@ -77,4 +77,8 @@ static int luv_wait(lua_State* L, luv_ref_t* ref, int status);
 static void luv_resume(lua_State* L, int nargs);
 static void luv_resume_with_status(lua_State* L, int status, int nargs);
 
+// From stream.c
+static void connect_cb(uv_connect_t* req, int status);
+static int connect_req(lua_State* L);
+
 #endif
