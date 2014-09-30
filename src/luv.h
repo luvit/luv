@@ -78,7 +78,11 @@ static void luv_resume(lua_State* L, int nargs);
 static void luv_resume_with_status(lua_State* L, int status, int nargs);
 
 // From stream.c
+static void alloc_cb(__attribute__((unused)) uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);
 static void connect_cb(uv_connect_t* req, int status);
 static int connect_req(lua_State* L);
+
+// from tcp.c
+static void parse_sockaddr(lua_State* L, struct sockaddr_storage* address, int addrlen);
 
 #endif
