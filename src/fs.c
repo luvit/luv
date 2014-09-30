@@ -15,51 +15,6 @@
  *
  */
 
-// static void luv_push_stats_table(lua_State* L, uv_statbuf_t* s) {
-//   lua_newtable(L);
-//   lua_pushinteger(L, s->st_dev);
-//   lua_setfield(L, -2, "dev");
-//   lua_pushinteger(L, s->st_ino);
-//   lua_setfield(L, -2, "ino");
-//   lua_pushinteger(L, s->st_mode);
-//   lua_setfield(L, -2, "mode");
-//   lua_pushinteger(L, s->st_nlink);
-//   lua_setfield(L, -2, "nlink");
-//   lua_pushinteger(L, s->st_uid);
-//   lua_setfield(L, -2, "uid");
-//   lua_pushinteger(L, s->st_gid);
-//   lua_setfield(L, -2, "gid");
-//   lua_pushinteger(L, s->st_rdev);
-//   lua_setfield(L, -2, "rdev");
-//   lua_pushinteger(L, s->st_size);
-//   lua_setfield(L, -2, "size");
-//   lua_pushinteger(L, s->st_atime);
-//   lua_setfield(L, -2, "atime");
-//   lua_pushinteger(L, s->st_mtime);
-//   lua_setfield(L, -2, "mtime");
-//   lua_pushinteger(L, s->st_ctime);
-//   lua_setfield(L, -2, "ctime");
-//   lua_pushboolean(L, S_ISREG(s->st_mode));
-//   lua_setfield(L, -2, "is_file");
-//   lua_pushboolean(L, S_ISDIR(s->st_mode));
-//   lua_setfield(L, -2, "is_directory");
-//   lua_pushboolean(L, S_ISCHR(s->st_mode));
-//   lua_setfield(L, -2, "is_character_device");
-//   lua_pushboolean(L, S_ISBLK(s->st_mode));
-//   lua_setfield(L, -2, "is_block_device");
-//   lua_pushboolean(L, S_ISFIFO(s->st_mode));
-//   lua_setfield(L, -2, "is_fifo");
-//   lua_pushboolean(L, S_ISLNK(s->st_mode));
-//   lua_setfield(L, -2, "is_symbolic_link");
-//   lua_pushboolean(L, S_ISSOCK(s->st_mode));
-//   lua_setfield(L, -2, "is_socket");
-// #ifdef __POSIX__
-//   lua_pushinteger(L, s->st_blksize);
-//   lua_setfield(L, -2, "blksize");
-//   lua_pushinteger(L, s->st_blocks);
-//   lua_setfield(L, -2, "blocks");
-// #endif
-// }
 
 // static int luv_string_to_flags(lua_State* L, const char* string) {
 //   if (strcmp(string, "r") == 0) return O_RDONLY;

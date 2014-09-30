@@ -35,8 +35,8 @@
 #include "tty.c"
 #include "udp.c"
 #include "fs_event.c"
+#include "fs_poll.c"
 
-// #include "fs_poll.c"
 // #include "fs.c"
 // #include "work.c"
 // #include "dns.c"
@@ -179,6 +179,12 @@ static const luaL_Reg luv_functions[] = {
   {"fs_event_start", luv_fs_event_start},
   {"fs_event_stop", luv_fs_event_stop},
   {"fs_event_getpath", luv_fs_event_getpath},
+
+  // fs_poll.c
+  {"new_fs_poll", new_fs_poll},
+  {"fs_poll_start", luv_fs_poll_start},
+  {"fs_poll_stop", luv_fs_poll_stop},
+  {"fs_poll_getpath", luv_fs_poll_getpath},
 
   {NULL, NULL}
 };
