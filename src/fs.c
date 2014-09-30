@@ -90,6 +90,9 @@ static int luv_string_to_flags(lua_State* L, const char* string) {
 /* Processes a result and pushes the data onto the stack
    returns the number of items pushed */
 static int push_fs_result(lua_State* L, uv_fs_t* req) {
+  if (req->result < 0) {
+    return luv_error(L, req->result);
+  }
 
   switch (req->fs_type) {
     case UV_FS_CLOSE:
@@ -142,7 +145,6 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
   }
 
 }
-
 
 static void fs_cb(uv_fs_t* req) {
   lua_State* L = luv_find(req->data);
