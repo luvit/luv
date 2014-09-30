@@ -85,7 +85,7 @@ static int connect_req(lua_State* L);
 // from tcp.c
 static void parse_sockaddr(lua_State* L, struct sockaddr_storage* address, int addrlen);
 
-// from fs_poll.c
+// from fs.c
 static void luv_push_stats_table(lua_State* L, const uv_stat_t* s);
 
 #endif

@@ -36,8 +36,8 @@
 #include "udp.c"
 #include "fs_event.c"
 #include "fs_poll.c"
+#include "fs.c"
 
-// #include "fs.c"
 // #include "work.c"
 // #include "dns.c"
 // #include "thread.c"
@@ -185,6 +185,36 @@ static const luaL_Reg luv_functions[] = {
   {"fs_poll_start", luv_fs_poll_start},
   {"fs_poll_stop", luv_fs_poll_stop},
   {"fs_poll_getpath", luv_fs_poll_getpath},
+
+  // fs.c
+  {"fs_req", fs_req},
+  {"fs_close", luv_fs_close},
+  {"fs_open", luv_fs_open},
+  {"fs_read", luv_fs_read},
+  {"fs_unlink", luv_fs_unlink},
+  {"fs_write", luv_fs_write},
+  {"fs_mkdir", luv_fs_mkdir},
+  {"fs_mkdtemp", luv_fs_mkdtemp},
+  {"fs_rmdir", luv_fs_rmdir},
+  {"fs_scandir", luv_fs_scandir},
+  {"fs_scandir_next", luv_fs_scandir_next},
+  {"fs_stat", luv_fs_stat},
+  {"fs_fstat", luv_fs_fstat},
+  {"fs_lstat", luv_fs_lstat},
+  {"fs_rename", luv_fs_rename},
+  {"fs_fsync", luv_fs_fsync},
+  {"fs_fdatasync", luv_fs_fdatasync},
+  {"fs_ftruncate", luv_fs_ftruncate},
+  {"fs_sendfile", luv_fs_sendfile},
+  {"fs_chmod", luv_fs_chmod},
+  {"fs_fchmod", luv_fs_fchmod},
+  {"fs_utime", luv_fs_utime},
+  {"fs_futime", luv_fs_futime},
+  {"fs_link", luv_fs_link},
+  {"fs_symlink", luv_fs_symlink},
+  {"fs_readlink", luv_fs_readlink},
+  {"fs_chown", luv_fs_chown},
+  {"fs_fchown", luv_fs_fchown},
 
   {NULL, NULL}
 };
