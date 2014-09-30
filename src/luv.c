@@ -34,8 +34,8 @@
 #include "pipe.c"
 #include "tty.c"
 #include "udp.c"
+#include "fs_event.c"
 
-// #include "fs_event.c"
 // #include "fs_poll.c"
 // #include "fs.c"
 // #include "work.c"
@@ -173,6 +173,12 @@ static const luaL_Reg luv_functions[] = {
   {"udp_try_send", luv_udp_try_send},
   {"udp_recv_start", luv_udp_recv_start},
   {"udp_recv_stop", luv_udp_recv_stop},
+
+  // fs_event.c
+  {"new_fs_event", new_fs_event},
+  {"fs_event_start", luv_fs_event_start},
+  {"fs_event_stop", luv_fs_event_stop},
+  {"fs_event_getpath", luv_fs_event_getpath},
 
   {NULL, NULL}
 };
