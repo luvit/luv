@@ -14,42 +14,46 @@
  *  limitations under the License.
  *
  */
+#include "luv.h"
 
-// static int luv_tty_set_mode(lua_State* L) {
-// #ifdef LUV_STACK_CHECK
-//   int top = lua_gettop(L);
-// #endif
-//   uv_tty_t* handle = luv_get_tty(L, 1);
-//   int mode = luaL_checkint(L, 2);
-//   if (uv_tty_set_mode(handle, mode)) {
-//     uv_err_t err = uv_last_error(uv_default_loop());
-//     return luaL_error(L, "tty_set_mode: %s", uv_strerror(err));
-//   }
-// #ifdef LUV_STACK_CHECK
-//   assert(lua_gettop(L) == top);
-// #endif
-//   return 0;
-// }
+static int new_tty(lua_State* L) {
+  uv_loop_t* loop = luv_check_loop(L, 1);
+  int readable, ret;
+  uv_tty_t* handle;
+  uv_file fd = luaL_checkinteger(L, 2);
+  luaL_checktype(L, 3, LUA_TBOOLEAN);
+  readable = lua_toboolean(L, 3);
+  handle = luv_create_tty(L);
+  ret = uv_tty_init(loop, handle, fd, readable);
+  if (ret < 0) {
+    lua_pop(L, 1);
+    return luv_error(L, ret);
+  }
+  return 1;
+}
 
-// static int luv_tty_reset_mode(lua_State* L) {
-//   uv_tty_reset_mode();
-//   return 0;
-// }
+static int luv_tty_set_mode(lua_State* L) {
+  uv_tty_t* handle = luv_check_tty(L, 1);
+  int mode = luaL_checkinteger(L, 2);
+  int ret = uv_tty_set_mode(handle, mode);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}
 
-// static int luv_tty_get_winsize(lua_State* L) {
-// #ifdef LUV_STACK_CHECK
-//   int top = lua_gettop(L);
-// #endif
-//   uv_tty_t* handle = luv_get_tty(L, 1);
-//   int width, height;
-//   if(uv_tty_get_winsize(handle, &width, &height)) {
-//     uv_err_t err = uv_last_error(uv_default_loop());
-//     return luaL_error(L, "tty_get_winsize: %s", uv_strerror(err));
-//   }
-//   lua_pushinteger(L, width);
-//   lua_pushinteger(L, height);
-// #ifdef LUV_STACK_CHECK
-//   assert(lua_gettop(L) == top + 2);
-// #endif
-//   return 2;
-// }
+static int luv_tty_reset_mode(__attribute__((unused)) lua_State* L) {
+  int ret = uv_tty_reset_mode();
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}
+
+static int luv_tty_get_winsize(lua_State* L) {
+  uv_tty_t* handle = luv_check_tty(L, 1);
+  int width, height;
+  int ret = uv_tty_get_winsize(handle, &width, &height);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, width);
+  lua_pushinteger(L, height);
+  return 2;
+}

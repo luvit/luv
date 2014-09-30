@@ -32,8 +32,8 @@
 #include "stream.c"
 #include "tcp.c"
 #include "pipe.c"
+#include "tty.c"
 
-// #include "tty.c"
 // #include "udp.c"
 // #include "fs_event.c"
 // #include "fs_poll.c"
@@ -150,6 +150,13 @@ static const luaL_Reg luv_functions[] = {
   {"pipe_pending_count", luv_pipe_pending_count},
   {"pipe_open", luv_pipe_open},
   {"pipe_pending_type", luv_pipe_pending_type},
+
+  // tty.c
+  {"new_tty", new_tty},
+  {"tty_set_mode", luv_tty_set_mode},
+  {"tty_reset_mode", luv_tty_reset_mode},
+  {"tty_get_winsize", luv_tty_get_winsize},
+
   {NULL, NULL}
 };
 
