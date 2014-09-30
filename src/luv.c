@@ -110,6 +110,8 @@ static const luaL_Reg luv_functions[] = {
   // process.c
   {"disable_stdio_inheritance", luv_disable_stdio_inheritance},
   {"spawn", luv_spawn},
+  {"process_kill", luv_process_kill},
+  {"kill", luv_kill},
 
   // stream.c
   {"shutdown_req", shutdown_req},

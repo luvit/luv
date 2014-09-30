@@ -181,3 +181,141 @@ static int luv_spawn(lua_State* L) {
   lua_pushinteger(L, handle->pid);
   return 2;
 }
+
+static int luv_parse_signal(lua_State* L, int slot) {
+  if (lua_isnumber(L, slot)) {
+    return lua_tonumber(L, slot);
+  }
+  if (lua_isstring(L, slot)) {
+const char* string = lua_tostring(L, slot);
+#ifdef SIGHUP
+    if (strcmp(string, "SIGHUP") == 0) return SIGHUP;
+#endif
+#ifdef SIGINT
+    if (strcmp(string, "SIGINT") == 0) return SIGINT;
+#endif
+#ifdef SIGQUIT
+    if (strcmp(string, "SIGQUIT") == 0) return SIGQUIT;
+#endif
+#ifdef SIGILL
+    if (strcmp(string, "SIGILL") == 0) return SIGILL;
+#endif
+#ifdef SIGTRAP
+    if (strcmp(string, "SIGTRAP") == 0) return SIGTRAP;
+#endif
+#ifdef SIGABRT
+    if (strcmp(string, "SIGABRT") == 0) return SIGABRT;
+#endif
+#ifdef SIGIOT
+    if (strcmp(string, "SIGIOT") == 0) return SIGIOT;
+#endif
+#ifdef SIGBUS
+    if (strcmp(string, "SIGBUS") == 0) return SIGBUS;
+#endif
+#ifdef SIGFPE
+    if (strcmp(string, "SIGFPE") == 0) return SIGFPE;
+#endif
+#ifdef SIGKILL
+    if (strcmp(string, "SIGKILL") == 0) return SIGKILL;
+#endif
+#ifdef SIGUSR1
+    if (strcmp(string, "SIGUSR1") == 0) return SIGUSR1;
+#endif
+#ifdef SIGSEGV
+    if (strcmp(string, "SIGSEGV") == 0) return SIGSEGV;
+#endif
+#ifdef SIGUSR2
+    if (strcmp(string, "SIGUSR2") == 0) return SIGUSR2;
+#endif
+#ifdef SIGPIPE
+    if (strcmp(string, "SIGPIPE") == 0) return SIGPIPE;
+#endif
+#ifdef SIGALRM
+    if (strcmp(string, "SIGALRM") == 0) return SIGALRM;
+#endif
+#ifdef SIGTERM
+    if (strcmp(string, "SIGTERM") == 0) return SIGTERM;
+#endif
+#ifdef SIGCHLD
+    if (strcmp(string, "SIGCHLD") == 0) return SIGCHLD;
+#endif
+#ifdef SIGSTKFLT
+    if (strcmp(string, "SIGSTKFLT") == 0) return SIGSTKFLT;
+#endif
+#ifdef SIGCONT
+    if (strcmp(string, "SIGCONT") == 0) return SIGCONT;
+#endif
+#ifdef SIGSTOP
+    if (strcmp(string, "SIGSTOP") == 0) return SIGSTOP;
+#endif
+#ifdef SIGTSTP
+    if (strcmp(string, "SIGTSTP") == 0) return SIGTSTP;
+#endif
+#ifdef SIGBREAK
+    if (strcmp(string, "SIGBREAK") == 0) return SIGBREAK;
+#endif
+#ifdef SIGTTIN
+    if (strcmp(string, "SIGTTIN") == 0) return SIGTTIN;
+#endif
+#ifdef SIGTTOU
+    if (strcmp(string, "SIGTTOU") == 0) return SIGTTOU;
+#endif
+#ifdef SIGURG
+    if (strcmp(string, "SIGURG") == 0) return SIGURG;
+#endif
+#ifdef SIGXCPU
+    if (strcmp(string, "SIGXCPU") == 0) return SIGXCPU;
+#endif
+#ifdef SIGXFSZ
+    if (strcmp(string, "SIGXFSZ") == 0) return SIGXFSZ;
+#endif
+#ifdef SIGVTALRM
+    if (strcmp(string, "SIGVTALRM") == 0) return SIGVTALRM;
+#endif
+#ifdef SIGPROF
+    if (strcmp(string, "SIGPROF") == 0) return SIGPROF;
+#endif
+#ifdef SIGWINCH
+    if (strcmp(string, "SIGWINCH") == 0) return SIGWINCH;
+#endif
+#ifdef SIGIO
+    if (strcmp(string, "SIGIO") == 0) return SIGIO;
+#endif
+#ifdef SIGPOLL
+# if SIGPOLL != SIGIO
+    if (strcmp(string, "SIGPOLL") == 0) return SIGPOLL;
+# endif
+#endif
+#ifdef SIGLOST
+    if (strcmp(string, "SIGLOST") == 0) return SIGLOST;
+#endif
+#ifdef SIGPWR
+# if SIGPWR != SIGLOST
+    if (strcmp(string, "SIGPWR") == 0) return SIGPWR;
+# endif
+#endif
+#ifdef SIGSYS
+    if (strcmp(string, "SIGSYS") == 0) return SIGSYS;
+#endif
+    return luaL_error(L, "Unknown signal '%s'", string);
+  }
+  return SIGTERM;
+}
+
+static int luv_process_kill(lua_State* L) {
+  uv_process_t* handle = luv_check_process(L, 1);
+  int signum = luv_parse_signal(L, 2);
+  int ret = uv_process_kill(handle, signum);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}
+
+static int luv_kill(lua_State* L) {
+  int pid = luaL_checkinteger(L, 1);
+  int signum = luv_parse_signal(L, 2);
+  int ret = uv_kill(pid, signum);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}

@@ -57,8 +57,8 @@ static int luv_error(lua_State* L, int ret) {
 
 static void luv_ref_state(luv_ref_t* data, lua_State* L) {
   lua_pushthread(L);
+  luaL_unref(L, LUA_REGISTRYINDEX, data->lref);
   data->L = L;
-  luv_unref_state(data);
   data->lref = luaL_ref(L, LUA_REGISTRYINDEX);
 }
 
