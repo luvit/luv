@@ -85,18 +85,18 @@ static int luv_spawn(lua_State* L) {
         options.stdio[i].data.fd = lua_tointeger(L, -1);
       }
       // userdata is assumed to be a uv_stream_t instance
-      // else if (lua_type(L, -1) == LUA_TUSERDATA) {
-      //   int fd;
-      //   uv_stream_t* stream = luv_check_stream(L, -1);
-      //   int err = uv_fileno((uv_handle_t*)stream, &fd);
-      //   if (err == UV_EINVAL || err == UV_EBADF) {
-      //     options.stdio[i].flags = UV_CREATE_PIPE | UV_READABLE_PIPE | UV_WRITABLE_PIPE;
-      //   }
-      //   else {
-      //     options.stdio[i].flags = UV_INHERIT_STREAM;
-      //   }
-      //   options.stdio[i].data.stream = stream;
-      // }
+      else if (lua_type(L, -1) == LUA_TUSERDATA) {
+        int fd;
+        uv_stream_t* stream = luv_check_stream(L, -1);
+        int err = uv_fileno((uv_handle_t*)stream, &fd);
+        if (err == UV_EINVAL || err == UV_EBADF) {
+          options.stdio[i].flags = UV_CREATE_PIPE | UV_READABLE_PIPE | UV_WRITABLE_PIPE;
+        }
+        else {
+          options.stdio[i].flags = UV_INHERIT_STREAM;
+        }
+        options.stdio[i].data.stream = stream;
+      }
       else if (lua_type(L, -1) == LUA_TNIL) {
         options.stdio[i].flags = UV_IGNORE;
       }

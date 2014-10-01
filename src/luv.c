@@ -32,8 +32,8 @@
 #include "process.c"
 #include "stream.c"
 #include "tcp.c"
-// #include "pipe.c"
-// #include "tty.c"
+#include "pipe.c"
+#include "tty.c"
 // #include "udp.c"
 // #include "fs_event.c"
 // #include "fs_poll.c"
@@ -137,22 +137,22 @@ static const luaL_Reg luv_functions[] = {
   {"tcp_getsockname", luv_tcp_getsockname},
   {"tcp_connect", luv_tcp_connect},
 
-  // // pipe.c
-  // {"new_pipe", luv_new_pipe},
-  // {"pipe_open", luv_pipe_open},
-  // {"pipe_bind", luv_pipe_bind},
-  // {"pipe_connect", luv_pipe_connect},
-  // {"pipe_getsockname", luv_pipe_getsockname},
-  // {"pipe_pending_instances", luv_pipe_pending_instances},
-  // {"pipe_pending_count", luv_pipe_pending_count},
-  // {"pipe_open", luv_pipe_open},
-  // {"pipe_pending_type", luv_pipe_pending_type},
+  // pipe.c
+  {"new_pipe", luv_new_pipe},
+  {"pipe_open", luv_pipe_open},
+  {"pipe_bind", luv_pipe_bind},
+  {"pipe_connect", luv_pipe_connect},
+  {"pipe_getsockname", luv_pipe_getsockname},
+  {"pipe_pending_instances", luv_pipe_pending_instances},
+  {"pipe_pending_count", luv_pipe_pending_count},
+  {"pipe_open", luv_pipe_open},
+  {"pipe_pending_type", luv_pipe_pending_type},
 
-  // // tty.c
-  // {"new_tty", luv_new_tty},
-  // {"tty_set_mode", luv_tty_set_mode},
-  // {"tty_reset_mode", luv_tty_reset_mode},
-  // {"tty_get_winsize", luv_tty_get_winsize},
+  // tty.c
+  {"new_tty", luv_new_tty},
+  {"tty_set_mode", luv_tty_set_mode},
+  {"tty_reset_mode", luv_tty_reset_mode},
+  {"tty_get_winsize", luv_tty_get_winsize},
 
   // // udp.c
   // {"new_udp", luv_new_udp},

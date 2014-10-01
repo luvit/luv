@@ -16,19 +16,26 @@
  */
 #include "luv.h"
 
-static int new_tty(lua_State* L) {
-  uv_loop_t* loop = luv_check_loop(L, 1);
+static uv_tty_t* luv_check_tty(lua_State* L, int index) {
+  uv_tty_t* handle = luaL_checkudata(L, index, "uv_handle");
+  luaL_argcheck(L, handle->type = UV_TTY, index, "Expected uv_tty_t");
+  return handle;
+}
+
+
+static int luv_new_tty(lua_State* L) {
   int readable, ret;
   uv_tty_t* handle;
   uv_file fd = luaL_checkinteger(L, 2);
   luaL_checktype(L, 3, LUA_TBOOLEAN);
   readable = lua_toboolean(L, 3);
-  handle = luv_create_tty(L);
-  ret = uv_tty_init(loop, handle, fd, readable);
+  handle = lua_newuserdata(L, sizeof(*handle));
+  ret = uv_tty_init(uv_default_loop(), handle, fd, readable);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
+  handle->data = luv_setup_handle(L);
   return 1;
 }
 
@@ -41,7 +48,7 @@ static int luv_tty_set_mode(lua_State* L) {
   return 1;
 }
 
-static int luv_tty_reset_mode(__attribute__((unused)) lua_State* L) {
+static int luv_tty_reset_mode(lua_State* L) {
   int ret = uv_tty_reset_mode();
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);

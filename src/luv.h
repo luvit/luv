@@ -65,4 +65,7 @@ static lua_State* R = NULL;
 #include "lhandle.h"
 #include "lreq.h"
 
+// From stream.c
+static uv_stream_t* luv_check_stream(lua_State* L, int index);
+
 #endif
