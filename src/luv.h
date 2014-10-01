@@ -68,4 +68,7 @@ static lua_State* R = NULL;
 // From stream.c
 static uv_stream_t* luv_check_stream(lua_State* L, int index);
 
+// From fs.c
+static void luv_push_stats_table(lua_State* L, const uv_stat_t* s);
+
 #endif

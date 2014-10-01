@@ -56,7 +56,6 @@ static void luv_fulfill_req(lua_State* L, luv_req_t* data, int nargs) {
     }
     lua_call(L, nargs, 0);
   }
-  luv_cleanup_req(L, data);
 }
 
 static void luv_cleanup_req(lua_State* L, luv_req_t* data) {

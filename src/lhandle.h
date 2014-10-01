@@ -34,6 +34,8 @@ typedef enum {
   LUV_CONNECTION,
   LUV_READ,
   LUV_RECV,
+  LUV_FS_EVENT,
+  LUV_FS_POLL,
 } luv_callback_id;
 
 // Linked list node

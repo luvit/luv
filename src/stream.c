@@ -30,6 +30,7 @@ static void luv_shutdown_cb(uv_shutdown_t* req, int status) {
   luv_find_handle(R, req->handle->data);
   luv_status(R, status);
   luv_fulfill_req(R, req->data, 2);
+  luv_cleanup_req(R, req->data);
   req->data = NULL;
 }
 
@@ -122,6 +123,7 @@ static void luv_write_cb(uv_write_t* req, int status) {
   luv_find_handle(R, req->handle->data);
   luv_status(R, status);
   luv_fulfill_req(R, req->data, 2);
+  luv_cleanup_req(R, req->data);
   req->data = NULL;
 }
 
@@ -132,10 +134,8 @@ static int luv_write(lua_State* L) {
   int ret, ref;
   buf.base = (char*) luaL_checklstring(L, 2, &buf.len);
   ref = luv_check_continuation(L, 3);
-
   req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
-
   ret = uv_write(req, handle, &buf, 1, luv_write_cb);
   if (ret < 0) {
     lua_pop(L, 1);
@@ -144,17 +144,24 @@ static int luv_write(lua_State* L) {
   return 1;
 }
 
-// static int luv_write2(lua_State* L) {
-//   uv_write_t* req = luv_check_write(L, 1);
-//   uv_stream_t* handle = luv_check_stream(L, 2);
-//   uv_buf_t buf;
-//   int ret;
-//   uv_stream_t* send_handle;
-//   buf.base = (char*) luaL_checklstring(L, 3, &buf.len);
-//   send_handle = luv_check_stream(L, 4);
-//   ret = uv_write2(req, handle, &buf, 1, send_handle, luv_write_cb);
-//   return luv_wait(L, req->data, ret);
-// }
+static int luv_write2(lua_State* L) {
+  uv_stream_t* handle = luv_check_stream(L, 2);
+  uv_write_t* req;
+  uv_buf_t buf;
+  int ret, ref;
+  uv_stream_t* send_handle;
+  buf.base = (char*) luaL_checklstring(L, 3, &buf.len);
+  send_handle = luv_check_stream(L, 4);
+  ref = luv_check_continuation(L, 5);
+  req = lua_newuserdata(L, sizeof(*req));
+  req->data = luv_setup_req(L, ref);
+  ret = uv_write2(req, handle, &buf, 1, send_handle, luv_write_cb);
+  if (ret < 0) {
+    lua_pop(L, 1);
+    return luv_error(L, ret);
+  }
+  return 1;
+}
 
 static int luv_try_write(lua_State* L) {
   uv_stream_t* handle = luv_check_stream(L, 1);

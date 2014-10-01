@@ -151,6 +151,7 @@ static void luv_udp_send_cb(uv_udp_send_t* req, int status) {
   luv_find_handle(R, req->handle->data);
   luv_status(R, status);
   luv_fulfill_req(R, req->data, 2);
+  luv_cleanup_req(R, req->data);
   req->data = NULL;
 }
 

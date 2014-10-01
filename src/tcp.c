@@ -147,6 +147,7 @@ static void luv_connect_cb(uv_connect_t* req, int status) {
   luv_find_handle(R, req->handle->data);
   luv_status(R, status);
   luv_fulfill_req(R, req->data, 2);
+  luv_cleanup_req(R, req->data);
   req->data = NULL;
 }
 
