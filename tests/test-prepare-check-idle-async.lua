@@ -44,4 +44,13 @@ require('lib/tap')(function (test)
     end))
   end)
 
+  test("simple async", function (print, p, expect, uv)
+    local async
+    async = uv.new_async(expect(function (self)
+      assert(self == async)
+      uv.close(async)
+    end))
+    uv.async_send(async)
+  end)
+
 end)

@@ -38,8 +38,8 @@ static int luv_new_async(lua_State* L) {
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
-  luv_check_callback(L, handle->data, LUV_ASYNC, 1);
   handle->data = luv_setup_handle(L);
+  luv_check_callback(L, handle->data, LUV_ASYNC, 1);
   return 1;
 }
 

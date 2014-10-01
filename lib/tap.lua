@@ -2,7 +2,13 @@ local uv = require('luv')
 local dump = require('lib/utils').dump
 
 local function protect(...)
-  local text = table.concat({...}, "\t")
+  local n = select('#', ...)
+  local arguments = {...}
+  for i = 1, n do
+    arguments[i] = tostring(arguments[i])
+  end
+
+  local text = table.concat(arguments, "\t")
   text = "  " .. string.gsub(text, "\n", "\n  ")
   print(text)
 end

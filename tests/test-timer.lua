@@ -63,13 +63,13 @@ require('lib/tap')(function (test)
       if r == 0 then
         uv.timer_set_repeat(timer, 8)
         uv.timer_again(timer)
-      elseif r == 1 then
+      elseif r == 2 then
         uv.timer_stop(timer)
         uv.close(timer)
       else
         uv.timer_set_repeat(timer, r / 2)
       end
-    end, 5), 10, 0)
+    end, 4), 10, 0)
   end)
 
 end)
