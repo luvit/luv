@@ -24,6 +24,9 @@
 typedef enum {
   LUV_CLOSED,
   LUV_TIMEOUT,
+  LUV_PREPARE,
+  LUV_IDLE,
+  LUV_CHECK,
 } luv_callback_id;
 
 // Linked list node

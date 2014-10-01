@@ -16,23 +16,33 @@
  */
 #include "luv.h"
 
-static int new_prepare(lua_State* L) {
-  uv_loop_t* loop = luv_check_loop(L, 1);
-  uv_prepare_t* handle = luv_create_prepare(L);
-  int ret = uv_prepare_init(loop, handle);
-  if (ret < 0) return luv_error(L, ret);
+static uv_prepare_t* luv_check_prepare(lua_State* L, int index) {
+  uv_prepare_t* handle = luaL_checkudata(L, index, "uv_handle");
+  luaL_argcheck(L, handle->type = UV_PREPARE, index, "Expected uv_prepare_t");
+  return handle;
+}
+
+static int luv_new_prepare(lua_State* L) {
+  uv_prepare_t* handle = lua_newuserdata(L, sizeof(*handle));
+  int ret = uv_prepare_init(uv_default_loop(), handle);
+  if (ret < 0) {
+    lua_pop(L, 1);
+    return luv_error(L, ret);
+  }
+  handle->data = luv_setup_handle(L);
   return 1;
 }
 
 static void prepare_cb(uv_prepare_t* handle) {
-  lua_State* L = luv_find(handle->data);
-  luv_emit_event(L, handle->data, "onprepare", 1);
+  luv_handle_t* data = handle->data;
+  luv_find_handle(R, data);
+  luv_call_callback(R, data, LUV_PREPARE, 1);
 }
 
 static int luv_prepare_start(lua_State* L) {
   uv_prepare_t* handle = luv_check_prepare(L, 1);
   int ret;
-  luv_ref_state(handle->data, L);
+  luv_check_callback(L, handle->data, LUV_PREPARE, 2);
   ret = uv_prepare_start(handle, prepare_cb);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);

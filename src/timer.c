@@ -25,7 +25,10 @@ static uv_timer_t* luv_check_timer(lua_State* L, int index) {
 static int luv_new_timer(lua_State* L) {
   uv_timer_t* handle = lua_newuserdata(L, sizeof(*handle));
   int ret = uv_timer_init(uv_default_loop(), handle);
-  if (ret < 0) return luv_error(L, ret);
+  if (ret < 0) {
+    lua_pop(L, 1);
+    return luv_error(L, ret);
+  }
   handle->data = luv_setup_handle(L);
   return 1;
 }

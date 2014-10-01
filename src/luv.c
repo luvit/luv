@@ -23,9 +23,9 @@
 #include "req.c"
 #include "handle.c"
 #include "timer.c"
-// #include "prepare.c"
-// #include "check.c"
-// #include "idle.c"
+#include "prepare.c"
+#include "check.c"
+#include "idle.c"
 // #include "async.c"
 // #include "poll.c"
 // #include "signal.c"
@@ -79,19 +79,19 @@ static const luaL_Reg luv_functions[] = {
   {"timer_get_repeat", luv_timer_get_repeat},
 
   // prepare.c
-  // {"new_prepare", new_prepare},
-  // {"prepare_start", luv_prepare_start},
-  // {"prepare_stop", luv_prepare_stop},
+  {"new_prepare", luv_new_prepare},
+  {"prepare_start", luv_prepare_start},
+  {"prepare_stop", luv_prepare_stop},
 
-  // // check.c
-  // {"new_check", new_check},
-  // {"check_start", luv_check_start},
-  // {"check_stop", luv_check_stop},
+  // check.c
+  {"new_check", luv_new_check},
+  {"check_start", luv_check_start},
+  {"check_stop", luv_check_stop},
 
-  // // idle.c
-  // {"new_idle", new_idle},
-  // {"idle_start", luv_idle_start},
-  // {"idle_stop", luv_idle_stop},
+  // idle.c
+  {"new_idle", luv_new_idle},
+  {"idle_start", luv_idle_start},
+  {"idle_stop", luv_idle_stop},
 
   // // async.c
   // {"new_async", new_async},
