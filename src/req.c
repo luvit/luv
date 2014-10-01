@@ -31,7 +31,7 @@ static int luv_req_tostring(lua_State* L) {
   return 1;
 }
 
-static void req_init(lua_State* L) {
+static void luv_req_init(lua_State* L) {
   luaL_newmetatable (L, "uv_req");
   lua_pushcfunction(L, luv_req_tostring);
   lua_setfield(L, -2, "__tostring");

@@ -16,7 +16,7 @@
  */
 #include "luv.h"
 
-static int new_pipe(lua_State* L) {
+static int luv_new_pipe(lua_State* L) {
   uv_loop_t* loop = luv_check_loop(L, 1);
   int ipc, ret;
   uv_pipe_t* handle;
@@ -53,7 +53,7 @@ static int luv_pipe_connect(lua_State* L) {
   uv_connect_t* req = luv_check_connect(L, 1);
   uv_pipe_t* handle = luv_check_pipe(L, 2);
   const char* name = luaL_checkstring(L, 3);
-  uv_pipe_connect(req, handle, name, connect_cb);
+  uv_pipe_connect(req, handle, name, luv_connect_cb);
   return luv_wait(L, req->data, 0);
 }
 

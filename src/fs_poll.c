@@ -17,7 +17,7 @@
 
 #include "luv.h"
 
-static int new_fs_poll(lua_State* L) {
+static int luv_new_fs_poll(lua_State* L) {
   uv_loop_t* loop = luv_check_loop(L, 1);
   uv_fs_poll_t* handle = luv_create_fs_poll(L);
   int ret = uv_fs_poll_init(loop, handle);
@@ -28,7 +28,7 @@ static int new_fs_poll(lua_State* L) {
   return 1;
 }
 
-static void fs_poll_cb(uv_fs_poll_t* handle, int status, const uv_stat_t* prev, const uv_stat_t* curr) {
+static void luv_fs_poll_cb(uv_fs_poll_t* handle, int status, const uv_stat_t* prev, const uv_stat_t* curr) {
   // self
   lua_State* L = luv_find(handle->data);
 
@@ -66,7 +66,7 @@ static int luv_fs_poll_start(lua_State* L) {
   unsigned int interval = luaL_checkinteger(L, 3);
   int ret;
   luv_ref_state(handle->data, L);
-  ret = uv_fs_poll_start(handle, fs_poll_cb, path, interval);
+  ret = uv_fs_poll_start(handle, luv_fs_poll_cb, path, interval);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;

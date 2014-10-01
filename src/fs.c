@@ -146,7 +146,7 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
 
 }
 
-static void fs_cb(uv_fs_t* req) {
+static void luv_fs_cb(uv_fs_t* req) {
   lua_State* L = luv_find(req->data);
   int nargs = push_fs_result(L, req);
   if (req->fs_type != UV_FS_SCANDIR) {
@@ -164,7 +164,7 @@ static int fs_req(lua_State* L) {
   int ret, is_main;                                         \
   is_main = lua_pushthread(L) == 1;                         \
   lua_pop(L, 1);                                            \
-  ret = uv_fs_##func(__VA_ARGS__, is_main ? NULL : fs_cb);  \
+  ret = uv_fs_##func(__VA_ARGS__, is_main ? NULL : luv_fs_cb);  \
   if (ret < 0) {                                            \
     uv_fs_req_cleanup(req);                                 \
     return luv_error(L, ret);                               \

@@ -16,18 +16,30 @@
  */
 #include "luv.h"
 
-static void async_cb(uv_async_t* handle) {
-  lua_State* L = luv_find(handle->data);
-  luv_emit_event(L, handle->data, "onasync", 1);
+static uv_async_t* luv_check_async(lua_State* L, int index) {
+  uv_async_t* handle = luaL_checkudata(L, index, "uv_handle");
+  luaL_argcheck(L, handle->type = UV_ASYNC, index, "Expected uv_async_t");
+  return handle;
 }
 
-static int new_async(lua_State* L) {
-  uv_loop_t* loop = luv_check_loop(L, 1);
-  uv_async_t* handle = luv_create_async(L);
+static void luv_async_cb(uv_async_t* handle) {
+  luv_handle_t* data = handle->data;
+  luv_find_handle(R, data);
+  luv_call_callback(R, data, LUV_ASYNC, 1);
+}
+
+static int luv_new_async(lua_State* L) {
+  uv_async_t* handle;
   int ret;
-  luv_ref_state(handle->data, L);
-  ret = uv_async_init(loop, handle, async_cb);
-  if (ret < 0) return luv_error(L, ret);
+  luaL_checktype(L, 1, LUA_TFUNCTION);
+  handle = lua_newuserdata(L, sizeof(*handle));
+  ret = uv_async_init(uv_default_loop(), handle, luv_async_cb);
+  if (ret < 0) {
+    lua_pop(L, 1);
+    return luv_error(L, ret);
+  }
+  luv_check_callback(L, handle->data, LUV_ASYNC, 1);
+  handle->data = luv_setup_handle(L);
   return 1;
 }
 

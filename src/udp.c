@@ -16,7 +16,7 @@
  */
 #include "luv.h"
 
-static int new_udp(lua_State* L) {
+static int luv_new_udp(lua_State* L) {
   uv_loop_t* loop = luv_check_loop(L, 1);
   uv_udp_t* handle = luv_create_udp(L);
   int ret = uv_udp_init(loop, handle);
@@ -141,15 +141,10 @@ static int luv_udp_set_ttl(lua_State* L) {
   return 1;
 }
 
-static void udp_send_cb(uv_udp_send_t* req, int status) {
+static void luv_udp_send_cb(uv_udp_send_t* req, int status) {
   lua_State* L = luv_find(req->data);
   lua_pop(L, 1);
   luv_resume_with_status(L, status, 0);
-}
-
-static int udp_send_req(lua_State* L) {
-  luv_create_udp_send(L);
-  return 1;
 }
 
 static int luv_udp_send(lua_State* L) {
@@ -166,7 +161,7 @@ static int luv_udp_send(lua_State* L) {
       uv_ip6_addr(host, port, (struct sockaddr_in6*)&addr)) {
     return luaL_argerror(L, 4, "Invalid IP address or port");
   }
-  ret = uv_udp_send(req, handle, &buf, 1, (struct sockaddr*)&addr, udp_send_cb);
+  ret = uv_udp_send(req, handle, &buf, 1, (struct sockaddr*)&addr, luv_udp_send_cb);
   return luv_wait(L, req->data, ret);
 }
 
@@ -189,7 +184,7 @@ static int luv_udp_try_send(lua_State* L) {
   return 1;
 }
 
-static void udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags) {
+static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags) {
   // self
   lua_State* L = luv_find(handle->data);
 
@@ -238,7 +233,7 @@ static int luv_udp_recv_start(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   int ret;
   luv_ref_state(handle->data, L);
-  ret = uv_udp_recv_start(handle, alloc_cb, udp_recv_cb);
+  ret = uv_udp_recv_start(handle, luv_alloc_cb, luv_udp_recv_cb);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;

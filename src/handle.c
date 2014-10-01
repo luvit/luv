@@ -32,7 +32,7 @@ static int luv_handle_tostring(lua_State* L) {
   return 1;
 }
 
-static void handle_init(lua_State* L) {
+static void luv_handle_init(lua_State* L) {
   luaL_newmetatable (L, "uv_handle");
   lua_pushcfunction(L, luv_handle_tostring);
   lua_setfield(L, -2, "__tostring");

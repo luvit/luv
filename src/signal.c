@@ -16,7 +16,7 @@
  */
 #include "luv.h"
 
-static const char* signal_to_string(int signal) {
+static const char* luv_signal_to_string(int signal) {
 #ifdef SIGINT
   if (signal == SIGINT) return "SIGINT";
 #endif
@@ -32,7 +32,7 @@ static const char* signal_to_string(int signal) {
   return "";
 }
 
-static int string_to_signal(const char* string) {
+static int luv_string_to_signal(const char* string) {
 #ifdef SIGINT
   if (strcmp(string, "SIGINT") == 0) return SIGINT;
 #endif
@@ -48,26 +48,37 @@ static int string_to_signal(const char* string) {
   return 0;
 }
 
-static int new_signal(lua_State* L) {
-  uv_loop_t* loop = luv_check_loop(L, 1);
-  uv_signal_t* handle = luv_create_signal(L);
-  int ret = uv_signal_init(loop, handle);
-  if (ret < 0) return luv_error(L, ret);
+static uv_signal_t* luv_check_signal(lua_State* L, int index) {
+  uv_signal_t* handle = luaL_checkudata(L, index, "uv_handle");
+  luaL_argcheck(L, handle->type = UV_SIGNAL, index, "Expected uv_signal_t");
+  return handle;
+}
+
+static int luv_new_signal(lua_State* L) {
+  uv_signal_t* handle = lua_newuserdata(L, sizeof(*handle));
+  int ret = uv_signal_init(uv_default_loop(), handle);
+  if (ret < 0) {
+    lua_pop(L, 1);
+    return luv_error(L, ret);
+  }
+  handle->data = luv_setup_handle(L);
   return 1;
 }
 
 static void signal_cb(uv_signal_t* handle, int signum) {
-  lua_State* L = luv_find(handle->data);
-  lua_pushstring(L, signal_to_string(signum));
-  luv_emit_event(L, handle->data, "onsignal", 2);
+  luv_handle_t* data = handle->data;
+  luv_find_handle(R, data);
+  lua_pushstring(R, luv_signal_to_string(signum));
+  luv_call_callback(R, data, LUV_SIGNAL, 2);
 }
 
 static int luv_signal_start(lua_State* L) {
   uv_signal_t* handle = luv_check_signal(L, 1);
   int signum, ret;
-  signum = string_to_signal(luaL_checkstring(L, 2));
-  luaL_argcheck(L, signum, 2, "Invalid Signal name");
-  ret = uv_signal_start(handle, signal_cb, signum);
+  luv_check_callback(L, handle->data, LUV_SIGNAL, 2);
+  signum = luv_string_to_signal(luaL_checkstring(L, 3));
+  luaL_argcheck(L, signum, 3, "Invalid Signal name");
+  ret = uv_signal_start(handle, luv_signal_cb, signum);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;

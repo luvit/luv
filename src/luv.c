@@ -26,9 +26,9 @@
 #include "prepare.c"
 #include "check.c"
 #include "idle.c"
-// #include "async.c"
-// #include "poll.c"
-// #include "signal.c"
+#include "async.c"
+#include "poll.c"
+#include "signal.c"
 // #include "process.c"
 // #include "stream.c"
 // #include "tcp.c"
@@ -93,19 +93,19 @@ static const luaL_Reg luv_functions[] = {
   {"idle_start", luv_idle_start},
   {"idle_stop", luv_idle_stop},
 
-  // // async.c
-  // {"new_async", new_async},
-  // {"async_send", luv_async_send},
+  // async.c
+  {"new_async", luv_new_async},
+  {"async_send", luv_async_send},
 
-  // // poll.c
-  // {"new_poll", new_poll},
-  // {"poll_start", luv_poll_start},
-  // {"poll_stop", luv_poll_stop},
+  // poll.c
+  {"new_poll", luv_new_poll},
+  {"poll_start", luv_poll_start},
+  {"poll_stop", luv_poll_stop},
 
-  // // signal.c
-  // {"new_signal", new_signal},
-  // {"signal_start", luv_signal_start},
-  // {"signal_stop", luv_signal_stop},
+  // signal.c
+  {"new_signal", luv_new_signal},
+  {"signal_start", luv_signal_start},
+  {"signal_stop", luv_signal_stop},
 
   // // process.c
   // {"disable_stdio_inheritance", luv_disable_stdio_inheritance},
@@ -114,23 +114,20 @@ static const luaL_Reg luv_functions[] = {
   // {"kill", luv_kill},
 
   // // stream.c
-  // {"shutdown_req", shutdown_req},
   // {"shutdown", luv_shutdown},
   // {"listen", luv_listen},
   // {"accept", luv_accept},
   // {"read_start", luv_read_start},
   // {"read_stop", luv_read_stop},
-  // {"write_req", write_req},
   // {"write", luv_write},
   // {"write2", luv_write2},
   // {"try_write", luv_try_write},
   // {"is_readable", luv_is_readable},
   // {"is_writable", luv_is_writable},
   // {"stream_set_blocking", luv_stream_set_blocking},
-  // {"connect_req", connect_req},
 
   // // tcp.c
-  // {"new_tcp", new_tcp},
+  // {"new_tcp", luv_new_tcp},
   // {"tcp_open", luv_tcp_open},
   // {"tcp_nodelay", luv_tcp_nodelay},
   // {"tcp_keepalive", luv_tcp_keepalive},
@@ -141,7 +138,7 @@ static const luaL_Reg luv_functions[] = {
   // {"tcp_connect", luv_tcp_connect},
 
   // // pipe.c
-  // {"new_pipe", new_pipe},
+  // {"new_pipe", luv_new_pipe},
   // {"pipe_open", luv_pipe_open},
   // {"pipe_bind", luv_pipe_bind},
   // {"pipe_connect", luv_pipe_connect},
@@ -152,13 +149,13 @@ static const luaL_Reg luv_functions[] = {
   // {"pipe_pending_type", luv_pipe_pending_type},
 
   // // tty.c
-  // {"new_tty", new_tty},
+  // {"new_tty", luv_new_tty},
   // {"tty_set_mode", luv_tty_set_mode},
   // {"tty_reset_mode", luv_tty_reset_mode},
   // {"tty_get_winsize", luv_tty_get_winsize},
 
   // // udp.c
-  // {"new_udp", new_udp},
+  // {"new_udp", luv_new_udp},
   // {"udp_open", luv_udp_open},
   // {"udp_bind", luv_udp_bind},
   // {"udp_bindgetsockname", luv_udp_getsockname},
@@ -168,26 +165,24 @@ static const luaL_Reg luv_functions[] = {
   // {"udp_set_multicast_interface", luv_udp_set_multicast_interface},
   // {"udp_set_broadcast", luv_udp_set_broadcast},
   // {"udp_set_ttl", luv_udp_set_ttl},
-  // {"udp_send_req", udp_send_req},
   // {"udp_send", luv_udp_send},
   // {"udp_try_send", luv_udp_try_send},
   // {"udp_recv_start", luv_udp_recv_start},
   // {"udp_recv_stop", luv_udp_recv_stop},
 
   // // fs_event.c
-  // {"new_fs_event", new_fs_event},
+  // {"new_fs_event", luv_new_fs_event},
   // {"fs_event_start", luv_fs_event_start},
   // {"fs_event_stop", luv_fs_event_stop},
   // {"fs_event_getpath", luv_fs_event_getpath},
 
   // // fs_poll.c
-  // {"new_fs_poll", new_fs_poll},
+  // {"new_fs_poll", luv_new_fs_poll},
   // {"fs_poll_start", luv_fs_poll_start},
   // {"fs_poll_stop", luv_fs_poll_stop},
   // {"fs_poll_getpath", luv_fs_poll_getpath},
 
   // // fs.c
-  // {"fs_req", fs_req},
   // {"fs_close", luv_fs_close},
   // {"fs_open", luv_fs_open},
   // {"fs_read", luv_fs_read},
@@ -220,9 +215,8 @@ static const luaL_Reg luv_functions[] = {
 };
 
 LUALIB_API int luaopen_luv (lua_State *L) {
-  // loop_init(L);
-  req_init(L);
-  handle_init(L);
+  luv_req_init(L);
+  luv_handle_init(L);
   luaL_newlib(L, luv_functions);
   return 1;
 }

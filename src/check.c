@@ -33,7 +33,7 @@ static int luv_new_check(lua_State* L) {
   return 1;
 }
 
-static void check_cb(uv_check_t* handle) {
+static void luv_check_cb(uv_check_t* handle) {
   luv_handle_t* data = handle->data;
   luv_find_handle(R, data);
   luv_call_callback(R, data, LUV_CHECK, 1);
@@ -43,7 +43,7 @@ static int luv_check_start(lua_State* L) {
   uv_check_t* handle = luv_check_check(L, 1);
   int ret;
   luv_check_callback(L, handle->data, LUV_CHECK, 2);
-  ret = uv_check_start(handle, check_cb);
+  ret = uv_check_start(handle, luv_check_cb);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;

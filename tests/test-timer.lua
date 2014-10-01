@@ -53,6 +53,8 @@ require('lib/tap')(function (test)
     end, 4), 10, 10)
   end)
 
+  -- This advanced test uses the rest of the uv_timer_t functions
+  -- to create an interval that shrinks over time.
   test("shrinking interval", function (print, p, expect, uv)
     local timer = uv.new_timer()
     uv.timer_start(timer, expect(function ()

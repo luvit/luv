@@ -27,6 +27,9 @@ typedef enum {
   LUV_PREPARE,
   LUV_IDLE,
   LUV_CHECK,
+  LUV_ASYNC,
+  LUV_POLL,
+  LUV_SIGNAL,
 } luv_callback_id;
 
 // Linked list node

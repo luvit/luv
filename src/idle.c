@@ -33,7 +33,7 @@ static int luv_new_idle(lua_State* L) {
   return 1;
 }
 
-static void idle_cb(uv_idle_t* handle) {
+static void luv_idle_cb(uv_idle_t* handle) {
   luv_handle_t* data = handle->data;
   luv_find_handle(R, data);
   luv_call_callback(R, data, LUV_IDLE, 1);
@@ -43,7 +43,7 @@ static int luv_idle_start(lua_State* L) {
   uv_idle_t* handle = luv_check_idle(L, 1);
   int ret;
   luv_check_callback(L, handle->data, LUV_IDLE, 2);
-  ret = uv_idle_start(handle, idle_cb);
+  ret = uv_idle_start(handle, luv_idle_cb);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;

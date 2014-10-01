@@ -17,7 +17,7 @@
 
 #include "luv.h"
 
-static int new_fs_event(lua_State* L) {
+static int luv_new_fs_event(lua_State* L) {
   uv_loop_t* loop = luv_check_loop(L, 1);
   uv_fs_event_t* handle = luv_create_fs_event(L);
   int ret = uv_fs_event_init(loop, handle);
@@ -28,7 +28,7 @@ static int new_fs_event(lua_State* L) {
   return 1;
 }
 
-static void fs_event_cb(uv_fs_event_t* handle, const char* filename, int events, int status) {
+static void luv_fs_event_cb(uv_fs_event_t* handle, const char* filename, int events, int status) {
   // self
   lua_State* L = luv_find(handle->data);
 
@@ -77,7 +77,7 @@ static int luv_fs_event_start(lua_State* L) {
   if (lua_toboolean(L, -1)) flags |= UV_FS_EVENT_RECURSIVE;
   lua_pop(L, 1);
   luv_ref_state(handle->data, L);
-  ret = uv_fs_event_start(handle, fs_event_cb, path, flags);
+  ret = uv_fs_event_start(handle, luv_fs_event_cb, path, flags);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;

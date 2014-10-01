@@ -33,7 +33,7 @@ static int luv_new_timer(lua_State* L) {
   return 1;
 }
 
-static void timer_cb(uv_timer_t* handle) {
+static void luv_timer_cb(uv_timer_t* handle) {
   luv_handle_t* data = handle->data;
   luv_find_handle(R, data);
   luv_call_callback(R, data, LUV_TIMEOUT, 1);
@@ -47,7 +47,7 @@ static int luv_timer_start(lua_State* L) {
   luv_check_callback(L, handle->data, LUV_TIMEOUT, 2);
   timeout = luaL_checkinteger(L, 3);
   repeat = luaL_checkinteger(L, 4);
-  ret = uv_timer_start(handle, timer_cb, timeout, repeat);
+  ret = uv_timer_start(handle, luv_timer_cb, timeout, repeat);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;

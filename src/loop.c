@@ -16,11 +16,6 @@
  */
 #include "luv.h"
 
-// These are the same order as uv_run_mode which also starts at 0
-static const char *const runmodes[] = {
-  "default", "once", "nowait", NULL
-};
-
 static int luv_loop_close(lua_State* L) {
   int ret = uv_loop_close(uv_default_loop());
   if (ret < 0) return luv_error(L, ret);
@@ -28,8 +23,13 @@ static int luv_loop_close(lua_State* L) {
   return 1;
 }
 
+// These are the same order as uv_run_mode which also starts at 0
+static const char *const luv_runmodes[] = {
+  "default", "once", "nowait", NULL
+};
+
 static int luv_run(lua_State* L) {
-  int mode = luaL_checkoption(L, 1, "default", runmodes);
+  int mode = luaL_checkoption(L, 1, "default", luv_runmodes);
   int ret;
   // Record the lua state so callbacks can start here.
   R = L;
@@ -75,7 +75,7 @@ static int luv_update_time(lua_State* L) {
   return 0;
 }
 
-static void walk_cb(uv_handle_t* handle, void* arg) {
+static void luv_walk_cb(uv_handle_t* handle, void* arg) {
   lua_State* L = arg;
   luv_handle_t* data = handle->data;
 
@@ -90,6 +90,6 @@ static void walk_cb(uv_handle_t* handle, void* arg) {
 
 static int luv_walk(lua_State* L) {
   luaL_checktype(L, 1, LUA_TFUNCTION);
-  uv_walk(uv_default_loop(), walk_cb, L);
+  uv_walk(uv_default_loop(), luv_walk_cb, L);
   return 0;
 }
