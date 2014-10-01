@@ -16,14 +16,20 @@
  */
 #include "luv.h"
 
-static int new_tcp(lua_State* L) {
-  uv_loop_t* loop = luv_check_loop(L, 1);
-  uv_tcp_t* handle = luv_create_tcp(L);
-  int ret = uv_tcp_init(loop, handle);
+static uv_tcp_t* luv_check_tcp(lua_State* L, int index) {
+  uv_tcp_t* handle = luaL_checkudata(L, index, "uv_handle");
+  luaL_argcheck(L, handle->type = UV_TCP, index, "Expected uv_tcp_t");
+  return handle;
+}
+
+static int luv_new_tcp(lua_State* L) {
+  uv_tcp_t* handle = lua_newuserdata(L, sizeof(*handle));
+  int ret = uv_tcp_init(uv_default_loop(), handle);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
+  handle->data = luv_setup_handle(L);
   return 1;
 }
 
@@ -107,7 +113,8 @@ static void parse_sockaddr(lua_State* L, struct sockaddr_storage* address, int a
     port = ntohs(addrin6->sin6_port);
   }
 
-  lua_pushinteger(L, address->ss_family);
+  lua_pushstring(L, address->ss_family == AF_INET ? "ipv4" :
+                    address->ss_family == AF_INET6 ? "ipv6": "unknown");
   lua_setfield(L, -2, "family");
   lua_pushinteger(L, port);
   lua_setfield(L, -2, "port");
@@ -135,17 +142,32 @@ static int luv_tcp_getpeername(lua_State* L) {
   return 1;
 }
 
+
+static void luv_connect_cb(uv_connect_t* req, int status) {
+  luv_find_handle(R, req->handle->data);
+  luv_status(R, status);
+  luv_fulfill_req(R, req->data, 2);
+}
+
 static int luv_tcp_connect(lua_State* L) {
-  uv_connect_t* req = luv_check_connect(L, 1);
-  uv_tcp_t* handle = luv_check_tcp(L, 2);
-  const char* host = luaL_checkstring(L, 3);
-  int port = luaL_checkinteger(L, 4);
+  uv_tcp_t* handle = luv_check_tcp(L, 1);
+  const char* host = luaL_checkstring(L, 2);
+  int port = luaL_checkinteger(L, 3);
   struct sockaddr_storage addr;
-  int ret;
+  uv_connect_t* req;
+  int ret, ref;
   if (uv_ip4_addr(host, port, (struct sockaddr_in*)&addr) &&
       uv_ip6_addr(host, port, (struct sockaddr_in6*)&addr)) {
     return luaL_argerror(L, 3, "Invalid IP address or port");
   }
-  ret = uv_tcp_connect(req, handle, (struct sockaddr*)&addr, connect_cb);
-  return luv_wait(L, req->data, ret);
+  ref = luv_check_continuation(L, 4);
+
+  req = lua_newuserdata(L, sizeof(*req));
+  req->data = luv_setup_req(L, ref);
+  ret = uv_tcp_connect(req, handle, (struct sockaddr*)&addr, luv_connect_cb);
+  if (ret < 0) {
+    lua_pop(L, 1);
+    return luv_error(L, ret);
+  }
+  return 1;
 }

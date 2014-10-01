@@ -16,13 +16,20 @@
  */
 #include "lreq.h"
 
+
+static int luv_check_continuation(lua_State* L, int index) {
+  if (lua_isnoneornil(L, index)) return LUA_NOREF;
+  luaL_checktype(L, index, LUA_TFUNCTION);
+  lua_pushvalue(L, index);
+  return luaL_ref(L, LUA_REGISTRYINDEX);
+}
+
 // Store a lua callback in a luv_req for the continuation.
 // The uv_req_t is assumed to be at the top of the stack
-static luv_req_t* luv_setup_req(lua_State* L, int fn_index) {
+static luv_req_t* luv_setup_req(lua_State* L, int callback_ref) {
   luv_req_t* data;
 
   luaL_checktype(L, -1, LUA_TUSERDATA);
-  luaL_checktype(L, fn_index, LUA_TFUNCTION);
 
   luaL_getmetatable(L, "uv_req");
   lua_setmetatable(L, -2);
@@ -30,9 +37,30 @@ static luv_req_t* luv_setup_req(lua_State* L, int fn_index) {
   lua_pushvalue(L, -1);
   data = malloc(sizeof(*data));
   data->req_ref = luaL_ref(L, LUA_REGISTRYINDEX);
-
-  lua_pushvalue(L, fn_index);
-  data->callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+  data->callback_ref = callback_ref;
 
   return data;
+}
+
+
+static void luv_fulfill_req(lua_State* L, luv_req_t* data, int nargs) {
+  if (data->callback_ref == LUA_NOREF) {
+    lua_pop(L, nargs);
+  }
+  else {
+    // Get the callback
+    lua_rawgeti(L, LUA_REGISTRYINDEX, data->callback_ref);
+    // And insert it before the args if there are any.
+    if (nargs) {
+      lua_insert(L, -1 - nargs);
+    }
+    lua_call(L, nargs, 0);
+  }
+  luv_cleanup_req(L, data);
+}
+
+static void luv_cleanup_req(lua_State* L, luv_req_t* data) {
+  luaL_unref(L, LUA_REGISTRYINDEX, data->req_ref);
+  luaL_unref(L, LUA_REGISTRYINDEX, data->callback_ref);
+  free(data);
 }

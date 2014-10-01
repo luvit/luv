@@ -33,11 +33,21 @@ static void luv_stack_dump(lua_State* L, const char* name) {
   assert(l == lua_gettop(L));
 }
 
-static int luv_error(lua_State* L, int ret) {
+static int luv_error(lua_State* L, int status) {
   lua_pushnil(L);
   // For now log errors to stderr in case they aren't asserted or checked for.
-  luv_stack_dump(L, uv_strerror(ret));
-  lua_pushstring(L, uv_err_name(ret));
+  luv_stack_dump(L, uv_strerror(status));
+  lua_pushstring(L, uv_err_name(status));
   return 2;
 }
 
+static void luv_status(lua_State* L, int status) {
+  if (status < 0) {
+    // For now log errors to stderr in case they aren't asserted or checked for.
+    luv_stack_dump(L, uv_strerror(status));
+    lua_pushstring(L, uv_err_name(status));
+  }
+  else {
+    lua_pushnil(L);
+  }
+}

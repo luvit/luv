@@ -63,6 +63,6 @@ static lua_State* R = NULL;
 
 #include "util.h"
 #include "lhandle.h"
-// #include "lreq.h"
+#include "lreq.h"
 
 #endif

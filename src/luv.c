@@ -18,7 +18,7 @@
 #include "luv.h"
 #include "util.c"
 #include "lhandle.c"
-// #include "lreq.c"
+#include "lreq.c"
 #include "loop.c"
 #include "req.c"
 #include "handle.c"
@@ -30,8 +30,8 @@
 #include "poll.c"
 #include "signal.c"
 #include "process.c"
-// #include "stream.c"
-// #include "tcp.c"
+#include "stream.c"
+#include "tcp.c"
 // #include "pipe.c"
 // #include "tty.c"
 // #include "udp.c"
@@ -113,9 +113,9 @@ static const luaL_Reg luv_functions[] = {
   {"process_kill", luv_process_kill},
   {"kill", luv_kill},
 
-  // // stream.c
-  // {"shutdown", luv_shutdown},
-  // {"listen", luv_listen},
+  // stream.c
+  {"shutdown", luv_shutdown},
+  {"listen", luv_listen},
   // {"accept", luv_accept},
   // {"read_start", luv_read_start},
   // {"read_stop", luv_read_stop},
@@ -127,15 +127,15 @@ static const luaL_Reg luv_functions[] = {
   // {"stream_set_blocking", luv_stream_set_blocking},
 
   // // tcp.c
-  // {"new_tcp", luv_new_tcp},
-  // {"tcp_open", luv_tcp_open},
-  // {"tcp_nodelay", luv_tcp_nodelay},
-  // {"tcp_keepalive", luv_tcp_keepalive},
-  // {"tcp_simultaneous_accepts", luv_tcp_simultaneous_accepts},
-  // {"tcp_bind", luv_tcp_bind},
-  // {"tcp_getpeername", luv_tcp_getpeername},
-  // {"tcp_getsockname", luv_tcp_getsockname},
-  // {"tcp_connect", luv_tcp_connect},
+  {"new_tcp", luv_new_tcp},
+  {"tcp_open", luv_tcp_open},
+  {"tcp_nodelay", luv_tcp_nodelay},
+  {"tcp_keepalive", luv_tcp_keepalive},
+  {"tcp_simultaneous_accepts", luv_tcp_simultaneous_accepts},
+  {"tcp_bind", luv_tcp_bind},
+  {"tcp_getpeername", luv_tcp_getpeername},
+  {"tcp_getsockname", luv_tcp_getsockname},
+  {"tcp_connect", luv_tcp_connect},
 
   // // pipe.c
   // {"new_pipe", luv_new_pipe},

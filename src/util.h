@@ -21,5 +21,6 @@
 
 static void luv_stack_dump(lua_State* L, const char* name);
 static int luv_error(lua_State* L, int ret);
+static void luv_status(lua_State* L, int status);
 
 #endif
