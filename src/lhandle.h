@@ -30,6 +30,7 @@ typedef enum {
   LUV_ASYNC,
   LUV_POLL,
   LUV_SIGNAL,
+  LUV_EXIT,
 } luv_callback_id;
 
 // Linked list node

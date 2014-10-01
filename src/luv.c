@@ -29,7 +29,7 @@
 #include "async.c"
 #include "poll.c"
 #include "signal.c"
-// #include "process.c"
+#include "process.c"
 // #include "stream.c"
 // #include "tcp.c"
 // #include "pipe.c"
@@ -107,11 +107,11 @@ static const luaL_Reg luv_functions[] = {
   {"signal_start", luv_signal_start},
   {"signal_stop", luv_signal_stop},
 
-  // // process.c
-  // {"disable_stdio_inheritance", luv_disable_stdio_inheritance},
-  // {"spawn", luv_spawn},
-  // {"process_kill", luv_process_kill},
-  // {"kill", luv_kill},
+  // process.c
+  {"disable_stdio_inheritance", luv_disable_stdio_inheritance},
+  {"spawn", luv_spawn},
+  {"process_kill", luv_process_kill},
+  {"kill", luv_kill},
 
   // // stream.c
   // {"shutdown", luv_shutdown},
