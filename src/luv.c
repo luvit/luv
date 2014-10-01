@@ -116,15 +116,15 @@ static const luaL_Reg luv_functions[] = {
   // stream.c
   {"shutdown", luv_shutdown},
   {"listen", luv_listen},
-  // {"accept", luv_accept},
-  // {"read_start", luv_read_start},
-  // {"read_stop", luv_read_stop},
-  // {"write", luv_write},
+  {"accept", luv_accept},
+  {"read_start", luv_read_start},
+  {"read_stop", luv_read_stop},
+  {"write", luv_write},
   // {"write2", luv_write2},
-  // {"try_write", luv_try_write},
-  // {"is_readable", luv_is_readable},
-  // {"is_writable", luv_is_writable},
-  // {"stream_set_blocking", luv_stream_set_blocking},
+  {"try_write", luv_try_write},
+  {"is_readable", luv_is_readable},
+  {"is_writable", luv_is_writable},
+  {"stream_set_blocking", luv_stream_set_blocking},
 
   // // tcp.c
   {"new_tcp", luv_new_tcp},

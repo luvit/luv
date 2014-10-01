@@ -43,6 +43,8 @@ static int luv_cancel(lua_State* L) {
   uv_req_t* req = luv_check_req(L, 1);
   int ret = uv_cancel(req);
   if (ret < 0) return luv_error(L, ret);
+  luv_cleanup_req(L, req->data);
+  req->data = NULL;
   lua_pushinteger(L, ret);
   return 1;
 }

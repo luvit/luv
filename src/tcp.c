@@ -147,6 +147,7 @@ static void luv_connect_cb(uv_connect_t* req, int status) {
   luv_find_handle(R, req->handle->data);
   luv_status(R, status);
   luv_fulfill_req(R, req->data, 2);
+  req->data = NULL;
 }
 
 static int luv_tcp_connect(lua_State* L) {
