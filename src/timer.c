@@ -16,25 +16,33 @@
  */
 #include "luv.h"
 
-static int new_timer(lua_State* L) {
-  uv_loop_t* loop = luv_check_loop(L, 1);
-  uv_timer_t* handle = luv_create_timer(L);
-  int ret = uv_timer_init(loop, handle);
+static uv_timer_t* luv_check_timer(lua_State* L, int index) {
+  uv_timer_t* handle = luaL_checkudata(L, index, "uv_handle");
+  luaL_argcheck(L, handle->type = UV_TIMER, index, "Expected uv_timer_t");
+  return handle;
+}
+
+static int luv_new_timer(lua_State* L) {
+  uv_timer_t* handle = lua_newuserdata(L, sizeof(*handle));
+  int ret = uv_timer_init(uv_default_loop(), handle);
   if (ret < 0) return luv_error(L, ret);
+  handle->data = luv_setup_handle(L);
   return 1;
 }
 
 static void timer_cb(uv_timer_t* handle) {
-  lua_State* L = luv_find(handle->data);
-  luv_emit_event(L, handle->data, "ontimeout", 1);
+  luv_handle_t* data = handle->data;
+  luv_call_callback(R, data, LUV_TIMEOUT, 0);
 }
 
 static int luv_timer_start(lua_State* L) {
   uv_timer_t* handle = luv_check_timer(L, 1);
-  uint64_t timeout = luaL_checkinteger(L, 2);
-  uint64_t repeat = luaL_checkinteger(L, 3);
+  uint64_t timeout;
+  uint64_t repeat;
   int ret;
-  luv_ref_state(handle->data, L);
+  luv_check_callback(L, handle->data, LUV_TIMEOUT, 2);
+  timeout = luaL_checkinteger(L, 3);
+  repeat = luaL_checkinteger(L, 4);
   ret = uv_timer_start(handle, timer_cb, timeout, repeat);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);

@@ -16,113 +16,77 @@
  */
 #include "luv.h"
 
-static int loop_tostring(lua_State* L) {
-  uv_loop_t* loop = luv_check_loop(L, 1);
-  lua_pushfstring(L, "uv_loop_t: %p", loop);
-  return 1;
-}
-
-static void loop_init(lua_State* L) {
-  luaL_newmetatable (L, "uv_loop");
-  lua_pushcfunction(L, loop_tostring);
-  lua_setfield(L, -2, "__tostring");
-  lua_pop(L, 1);
-}
-
-// uv.new_loop() -> loop
-static int new_loop(lua_State* L) {
-  uv_loop_t* loop = luv_create_loop(L);
-  luv_ref_t* data = loop->data; // Remember loop->data
-  int ret;
-  ret = uv_loop_init(loop);
-  loop->data = data; // Put it back https://github.com/joyent/libuv/issues/1503
-  if (ret < 0) return luv_error(L, ret);
-  return 1;
-}
-
 // These are the same order as uv_run_mode which also starts at 0
 static const char *const runmodes[] = {
   "default", "once", "nowait", NULL
 };
 
 static int luv_loop_close(lua_State* L) {
-  uv_loop_t* loop = luv_check_loop(L, 1);
-  int ret;
-  luv_unref_loop(loop);
-  ret = uv_loop_close(loop);
+  int ret = uv_loop_close(uv_default_loop());
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;
 }
 
-// uv.run(loop, mode)
 static int luv_run(lua_State* L) {
-  uv_loop_t* loop = luv_check_loop(L, 1);
   int mode = luaL_checkoption(L, 2, "default", runmodes);
-  int ret = uv_run(loop, mode);
+  int ret;
+  // Record the lua state so callbacks can start here.
+  R = L;
+  ret = uv_run(uv_default_loop(), mode);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;
 }
 
 static int luv_loop_alive(lua_State* L) {
-  const uv_loop_t* loop = luv_check_loop(L, 1);
-  int ret = uv_loop_alive(loop);
+  int ret = uv_loop_alive(uv_default_loop());
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;
 }
 
 static int luv_stop(lua_State* L) {
-  uv_loop_t* loop = luv_check_loop(L, 1);
-  uv_stop(loop);
+  uv_stop(uv_default_loop());
   return 0;
 }
 
 static int luv_backend_fd(lua_State* L) {
-  const uv_loop_t* loop = luv_check_loop(L, 1);
-  int ret = uv_backend_fd(loop);
+  int ret = uv_backend_fd(uv_default_loop());
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;
 }
 
 static int luv_backend_timeout(lua_State* L) {
-  const uv_loop_t* loop = luv_check_loop(L, 1);
-  int ret = uv_backend_timeout(loop);
+  int ret = uv_backend_timeout(uv_default_loop());
   lua_pushinteger(L, ret);
   return 1;
 }
 
 static int luv_now(lua_State* L) {
-  const uv_loop_t* loop = luv_check_loop(L, 1);
-  uint64_t now = uv_now(loop);
+  uint64_t now = uv_now(uv_default_loop());
   lua_pushinteger(L, now);
   return 1;
 }
 
 static int luv_update_time(lua_State* L) {
-  uv_loop_t* loop = luv_check_loop(L, 1);
-  uv_update_time(loop);
+  uv_update_time(uv_default_loop());
   return 0;
 }
 
 static void walk_cb(uv_handle_t* handle, void* arg) {
   lua_State* L = arg;
-  int top = lua_gettop(L);
-  luv_ref_t* data = handle->data;
-  // Sanity check because of https://github.com/joyent/libuv/issues/1503
+  luv_handle_t* data = handle->data;
+  // Sanity check
   // Most invalid values are large and refs are small, 0x1000000 is arbitrary.
   assert(data && data->ref < 0x1000000);
-  printf("L=%p data=%p {L=%p, lref=%d, ref=%d}\n", L, data, data->L, data->lref, data->ref);
-  lua_rawgeti(L, LUA_REGISTRYINDEX, data->ref);
+  luv_find_handle(L, data);
   lua_rawseti(L, -2, lua_rawlen(L, -2) + 1);
-  assert(top == lua_gettop(L));
 }
 
 static int luv_walk(lua_State* L) {
-  uv_loop_t* loop = luv_check_loop(L, 1);
   lua_newtable(L);
-  uv_walk(loop, walk_cb, L);
+  uv_walk(uv_default_loop(), walk_cb, L);
   return 1;
 }

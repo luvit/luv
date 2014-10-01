@@ -16,7 +16,11 @@
  */
 #include "luv.h"
 
-static int req_tostring(lua_State* L) {
+static uv_req_t* luv_check_req(lua_State* L, int index) {
+  return luaL_checkudata(L, index, "uv_req");
+}
+
+static int luv_req_tostring(lua_State* L) {
   uv_req_t* req = luv_check_req(L, 1);
   switch (req->type) {
 #define XX(uc, lc) case UV_##uc: lua_pushfstring(L, "uv_"#lc"_t: %p", req); break;
@@ -29,7 +33,7 @@ static int req_tostring(lua_State* L) {
 
 static void req_init(lua_State* L) {
   luaL_newmetatable (L, "uv_req");
-  lua_pushcfunction(L, req_tostring);
+  lua_pushcfunction(L, luv_req_tostring);
   lua_setfield(L, -2, "__tostring");
   lua_pop(L, 1);
 }

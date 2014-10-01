@@ -17,9 +17,15 @@ SOURCE_FILES=\
 	src/check.c\
 	src/dns.c\
 	src/fs.c\
+	src/fs_event.c\
+	src/fs_poll.c\
 	src/handle.c\
 	src/idle.c\
+	src/lhandle.c\
+	src/lhandle.h\
 	src/loop.c\
+	src/lreq.c\
+	src/lreq.h\
 	src/luv.c\
 	src/luv.h\
 	src/misc.c\
@@ -34,9 +40,8 @@ SOURCE_FILES=\
 	src/timer.c\
 	src/tty.c\
 	src/udp.c\
-	src/userdata.c\
-	src/userdata.h\
-	src/util.c
+	src/util.c\
+	src/util.h
 
 all: luv.so
 
