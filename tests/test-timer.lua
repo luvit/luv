@@ -20,7 +20,7 @@ require('lib/tap')(function (test)
   -- This is like the previous test, but using repeat.
   test("simple interval", function (print, p, expect, uv)
     local timer = uv.new_timer()
-    local count = 5
+    local count = 3
     local function onclose(self)
       assert(self == timer)
       p("closed", timer)
@@ -38,7 +38,7 @@ require('lib/tap')(function (test)
 
   -- Test two concurrent timers
   -- There is a small race condition, but there are 5ms of wiggle room.
-  -- 45ms is halfway between 4x10ms and 5x10ms
+  -- 25ms is halfway between 2x10ms and 3x10ms
   test("timeout with interval", function (print, p, expect, uv)
     local a = uv.new_timer()
     local b = uv.new_timer()
@@ -47,10 +47,10 @@ require('lib/tap')(function (test)
       uv.timer_stop(b)
       uv.close(a)
       uv.close(b)
-    end), 45, 0)
+    end), 25, 0)
     uv.timer_start(b, expect(function ()
       p("interval", b)
-    end, 4), 10, 10)
+    end, 2), 10, 10)
   end)
 
   -- This advanced test uses the rest of the uv_timer_t functions
@@ -61,7 +61,7 @@ require('lib/tap')(function (test)
       local r = uv.timer_get_repeat(timer)
       p("interval", timer, r)
       if r == 0 then
-        uv.timer_set_repeat(timer, 128)
+        uv.timer_set_repeat(timer, 8)
         uv.timer_again(timer)
       elseif r == 1 then
         uv.timer_stop(timer)
@@ -69,7 +69,7 @@ require('lib/tap')(function (test)
       else
         uv.timer_set_repeat(timer, r / 2)
       end
-    end, 9), 10, 0)
+    end, 5), 10, 0)
   end)
 
 end)
