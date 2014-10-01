@@ -96,7 +96,12 @@ static void luv_call_callback(lua_State* L, luv_handle_t* data, luv_callback_id 
     lua_pop(L, nargs);
   }
   else {
+    // Get the callback
     lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
+    // And insert it before the args if there are any.
+    if (nargs) {
+      lua_insert(L, -1 - nargs);
+    }
     lua_call(L, nargs, 0);
   }
 }

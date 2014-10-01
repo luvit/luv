@@ -29,7 +29,7 @@ static int luv_loop_close(lua_State* L) {
 }
 
 static int luv_run(lua_State* L) {
-  int mode = luaL_checkoption(L, 2, "default", runmodes);
+  int mode = luaL_checkoption(L, 1, "default", runmodes);
   int ret;
   // Record the lua state so callbacks can start here.
   R = L;
@@ -78,15 +78,18 @@ static int luv_update_time(lua_State* L) {
 static void walk_cb(uv_handle_t* handle, void* arg) {
   lua_State* L = arg;
   luv_handle_t* data = handle->data;
+
   // Sanity check
   // Most invalid values are large and refs are small, 0x1000000 is arbitrary.
   assert(data && data->ref < 0x1000000);
-  luv_find_handle(L, data);
-  lua_rawseti(L, -2, lua_rawlen(L, -2) + 1);
+
+  lua_pushvalue(L, 1);      // Copy the function
+  luv_find_handle(L, data); // Get the userdata
+  lua_call(L, 1, 0);        // Call the function
 }
 
 static int luv_walk(lua_State* L) {
-  lua_newtable(L);
+  luaL_checktype(L, 1, LUA_TFUNCTION);
   uv_walk(uv_default_loop(), walk_cb, L);
-  return 1;
+  return 0;
 }

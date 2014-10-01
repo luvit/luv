@@ -22,7 +22,7 @@
 // These are the different kinds of callbacks a handle can
 // have in it's luv_callback_t linked list.
 typedef enum {
-  LUV_CLOSE,
+  LUV_CLOSED,
   LUV_TIMEOUT,
 } luv_callback_id;
 

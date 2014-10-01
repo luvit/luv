@@ -58,7 +58,8 @@ static int luv_is_closing(lua_State* L) {
 static void luv_close_cb(uv_handle_t* handle) {
   luv_handle_t* data = handle->data;
   if (!data) return;
-  luv_call_callback(R, data, LUV_CLOSE, 0);
+  luv_find_handle(R, data);
+  luv_call_callback(R, data, LUV_CLOSED, 1);
   luv_cleanup_handle(R, data);
   handle->data = NULL;
 }
@@ -69,7 +70,7 @@ static int luv_close(lua_State* L) {
     luaL_error(L, "handle %p is already closing", handle);
   }
   if (!lua_isnoneornil(L, 2)) {
-    luv_check_callback(L, handle->data, LUV_CLOSE, 2);
+    luv_check_callback(L, handle->data, LUV_CLOSED, 2);
   }
   uv_close(handle, luv_close_cb);
   return 0;

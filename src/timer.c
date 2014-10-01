@@ -32,7 +32,8 @@ static int luv_new_timer(lua_State* L) {
 
 static void timer_cb(uv_timer_t* handle) {
   luv_handle_t* data = handle->data;
-  luv_call_callback(R, data, LUV_TIMEOUT, 0);
+  luv_find_handle(R, data);
+  luv_call_callback(R, data, LUV_TIMEOUT, 1);
 }
 
 static int luv_timer_start(lua_State* L) {
