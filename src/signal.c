@@ -65,7 +65,7 @@ static int luv_new_signal(lua_State* L) {
   return 1;
 }
 
-static void signal_cb(uv_signal_t* handle, int signum) {
+static void luv_signal_cb(uv_signal_t* handle, int signum) {
   luv_handle_t* data = handle->data;
   luv_find_handle(R, data);
   lua_pushstring(R, luv_signal_to_string(signum));
