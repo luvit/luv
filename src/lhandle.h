@@ -33,6 +33,7 @@ typedef enum {
   LUV_EXIT,
   LUV_CONNECTION,
   LUV_READ,
+  LUV_RECV,
 } luv_callback_id;
 
 // Linked list node
