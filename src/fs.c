@@ -215,9 +215,11 @@ static void luv_fs_cb(uv_fs_t* req) {
   }                                                       \
   if (sync) {                                             \
     int nargs = push_fs_result(L, req);                   \
-    luv_cleanup_req(L, req->data);                        \
-    req->data = NULL;                                     \
-    uv_fs_req_cleanup(req);                               \
+    if (req->fs_type != UV_FS_SCANDIR) {                  \
+      luv_cleanup_req(L, req->data);                      \
+      req->data = NULL;                                   \
+      uv_fs_req_cleanup(req);                             \
+    }                                                     \
     return nargs;                                         \
   }                                                       \
   lua_rawgeti(L, LUA_REGISTRYINDEX, data->req_ref);       \
