@@ -154,7 +154,6 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
     case UV_FS_STAT:
     case UV_FS_LSTAT:
     case UV_FS_FSTAT:
-      printf("%p %p\n", &req->statbuf, req->ptr);
       luv_push_stats_table(L, &req->statbuf);
       return 1;
 
@@ -180,7 +179,6 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
 }
 
 static void luv_fs_cb(uv_fs_t* req) {
-
   int nargs = push_fs_result(R, req);
   if (nargs == 2 && lua_isnil(R, -nargs)) {
     // If it was an error, convert to (err, value) format.
