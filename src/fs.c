@@ -32,6 +32,7 @@ static void luv_push_timespec_table(lua_State* L, const uv_timespec_t* t) {
 }
 
 static void luv_push_stats_table(lua_State* L, const uv_stat_t* s) {
+  const char* type;
   lua_createtable(L, 0, 23);
   lua_pushinteger(L, s->st_dev);
   lua_setfield(L, -2, "dev");
@@ -65,18 +66,34 @@ static void luv_push_stats_table(lua_State* L, const uv_stat_t* s) {
   lua_setfield(L, -2, "ctim");
   luv_push_timespec_table(L, &s->st_birthtim);
   lua_setfield(L, -2, "birthtim");
-  lua_pushboolean(L, S_ISREG(s->st_mode));
-  lua_setfield(L, -2, "is_file");
-  lua_pushboolean(L, S_ISDIR(s->st_mode));
-  lua_setfield(L, -2, "is_directory");
-  lua_pushboolean(L, S_ISCHR(s->st_mode));
-  lua_setfield(L, -2, "is_character_device");
-  lua_pushboolean(L, S_ISBLK(s->st_mode));
-  lua_setfield(L, -2, "is_block_device");
-  lua_pushboolean(L, S_ISFIFO(s->st_mode));
-  lua_setfield(L, -2, "is_fifo");
-  lua_pushboolean(L, S_ISLNK(s->st_mode));
-  lua_setfield(L, -2, "is_symbolic_link");
+  if (S_ISREG(s->st_mode)) {
+    type = "file";
+  }
+  else if (S_ISDIR(s->st_mode)) {
+    type = "dir";
+  }
+  else if (S_ISLNK(s->st_mode)) {
+    type = "link";
+  }
+  else if (S_ISFIFO(s->st_mode)) {
+    type = "fifo";
+  }
+#ifdef S_ISSOCK
+  else if (S_ISSOCK(s->st_mode)) {
+    type = "socket";
+  }
+#endif
+  else if (S_ISCHR(s->st_mode)) {
+    type = "char";
+  }
+  else if (S_ISBLK(s->st_mode)) {
+    type = "block";
+  }
+  else {
+    type = "unknown";
+  }
+  lua_pushstring(L, type);
+  lua_setfield(L, -2, "type");
 #ifdef S_ISSOCK
   lua_pushboolean(L, S_ISSOCK(s->st_mode));
   lua_setfield(L, -2, "is_socket");
@@ -96,8 +113,16 @@ static int luv_string_to_flags(lua_State* L, const char* string) {
 /* Processes a result and pushes the data onto the stack
    returns the number of items pushed */
 static int push_fs_result(lua_State* L, uv_fs_t* req) {
+  luv_req_t* data = req->data;
+
   if (req->result < 0) {
-    return luv_error(L, req->result);
+    lua_pushnil(L);
+    if (req->path) {
+      lua_pushfstring(L, "%s: %s %s\n", uv_err_name(req->result), uv_strerror(req->result), req->path);
+    }
+    else {
+      lua_pushfstring(L, "%s: %s\n", uv_err_name(req->result), uv_strerror(req->result));
+    }
   }
 
   switch (req->fs_type) {
@@ -129,6 +154,7 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
     case UV_FS_STAT:
     case UV_FS_LSTAT:
     case UV_FS_FSTAT:
+      printf("%p %p\n", &req->statbuf, req->ptr);
       luv_push_stats_table(L, &req->statbuf);
       return 1;
 
@@ -137,12 +163,12 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
       return 1;
 
     case UV_FS_READ:
-      lua_pushlstring(L, req->ptr, req->result);
+      lua_pushlstring(L, data->data, req->result);
       return 1;
 
     case UV_FS_SCANDIR:
       // Expose the userdata for the request.
-      lua_rawgeti(L, LUA_REGISTRYINDEX, ((luv_req_t*)req->data)->req_ref);
+      lua_rawgeti(L, LUA_REGISTRYINDEX, data->req_ref);
       return 1;
 
     default:
@@ -156,6 +182,17 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
 static void luv_fs_cb(uv_fs_t* req) {
 
   int nargs = push_fs_result(R, req);
+  if (nargs == 2 && lua_isnil(R, -nargs)) {
+    // If it was an error, convert to (err, value) format.
+    lua_remove(R, -nargs);
+    nargs--;
+  }
+  else {
+    // Otherwise insert a nil in front to convert to (err, value) format.
+    lua_pushnil(R);
+    lua_insert(R, -nargs - 1);
+    nargs++;
+  }
   luv_fulfill_req(R, req->data, nargs);
   if (req->fs_type != UV_FS_SCANDIR) {
     luv_cleanup_req(R, req->data);
@@ -167,7 +204,7 @@ static void luv_fs_cb(uv_fs_t* req) {
 #define FS_CALL(func, req, ...) {                         \
   int ret, sync;                                          \
   luv_req_t* data = req->data;                            \
-  sync = data->callback_ref != LUA_NOREF;                 \
+  sync = data->callback_ref == LUA_NOREF;                 \
   ret = uv_fs_##func(uv_default_loop(), req, __VA_ARGS__, \
                      sync ? NULL : luv_fs_cb);            \
   if (ret < 0) {                                          \
@@ -213,7 +250,8 @@ static int luv_fs_read(lua_State* L) {
   int ref = luv_check_continuation(L, 4);
   uv_fs_t* req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
-  req->ptr = buf.base;
+  // TODO: find out why we can't just use req->ptr for the base
+  ((luv_req_t*)req->data)->data = buf.base;
   FS_CALL(read, req, file, &buf, 1, offset);
 }
 
@@ -313,7 +351,7 @@ static int luv_fs_stat(lua_State* L) {
 }
 
 static int luv_fs_fstat(lua_State* L) {
-  uv_file file = luaL_checkinteger(L, 2);
+  uv_file file = luaL_checkinteger(L, 1);
   int ref = luv_check_continuation(L, 2);
   uv_fs_t* req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);

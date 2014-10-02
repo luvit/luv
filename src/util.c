@@ -16,35 +16,39 @@
  */
 #include "luv.h"
 
-static void luv_stack_dump(lua_State* L, const char* name) {
-  int i, l;
-  fprintf(stderr, "\nAPI STACK DUMP %p %d: %s\n", L, lua_status(L), name);
-  for (i = 1, l = lua_gettop(L); i <= l; i++) {
-    int type = lua_type(L, i);
-    switch (type) {
-      case LUA_TSTRING:
-        fprintf(stderr, "  %d %s \"%s\"\n", i, lua_typename(L, type), lua_tostring(L, i));
-        break;
-      default:
-        fprintf(stderr, "  %d %s\n", i, lua_typename(L, type));
-        break;
-    }
-  }
-  assert(l == lua_gettop(L));
-}
+// static void luv_stack_dump(lua_State* L, const char* name) {
+//   int i, l;
+//   fprintf(stderr, "\nAPI STACK DUMP %p %d: %s\n", L, lua_status(L), name);
+//   for (i = 1, l = lua_gettop(L); i <= l; i++) {
+//     int type = lua_type(L, i);
+//     switch (type) {
+//       case LUA_TSTRING:
+//         fprintf(stderr, "  %d %s \"%s\"\n", i, lua_typename(L, type), lua_tostring(L, i));
+//         break;
+//       case LUA_TNUMBER:
+//         fprintf(stderr, "  %d %s %ld\n", i, lua_typename(L, type), lua_tointeger(L, i));
+//         break;
+//       default:
+//         fprintf(stderr, "  %d %s\n", i, lua_typename(L, type));
+//         break;
+//     }
+//   }
+//   assert(l == lua_gettop(L));
+// }
 
 static int luv_error(lua_State* L, int status) {
   lua_pushnil(L);
   // For now log errors to stderr in case they aren't asserted or checked for.
-  luv_stack_dump(L, uv_strerror(status));
+  fprintf(stderr, "%s: %s\n", uv_err_name(status), uv_strerror(status));
+  lua_pushstring(L, uv_strerror(status));
   lua_pushstring(L, uv_err_name(status));
-  return 2;
+  return 3;
 }
 
 static void luv_status(lua_State* L, int status) {
   if (status < 0) {
     // For now log errors to stderr in case they aren't asserted or checked for.
-    luv_stack_dump(L, uv_strerror(status));
+    fprintf(stderr, "%s: %s\n", uv_err_name(status), uv_strerror(status));
     lua_pushstring(L, uv_err_name(status));
   }
   else {

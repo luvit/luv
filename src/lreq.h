@@ -22,6 +22,7 @@
 typedef struct {
   int req_ref; // ref for uv_req_t's userdata
   int callback_ref; // ref for callback
+  void* data; // extra data
 } luv_req_t;
 
 // Used in the top of a setup function to check the arg
