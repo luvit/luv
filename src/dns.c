@@ -68,7 +68,7 @@ static void luv_getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinf
         lua_setfield(R, -2, "protocol");
         lua_pushstring(R, curr->ai_canonname);
         lua_setfield(R, -2, "canonname");
-        lua_rawseti(R, -2, i++);
+        lua_rawseti(R, -2, ++i);
       }
     }
   }
