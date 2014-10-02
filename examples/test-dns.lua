@@ -30,8 +30,9 @@ local function next()
     addrconfig = true,
     canonname = true,
     numericserv = true,
-    socktype = "STREAM"
-  }, function (data)
+    socktype = "stream"
+  }, function (err, data)
+    assert(not err, err)
     p(data)
     i = i + 1
     if i <= #domains then
