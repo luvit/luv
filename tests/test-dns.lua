@@ -1,8 +1,7 @@
 require('lib/tap')(function (test)
 
   test("Get all local http addresses", function (print, p, expect, uv)
-    assert(uv.getaddrinfo(nil, "http", {
-    }, expect(function (err, res)
+    assert(uv.getaddrinfo(nil, "http", nil, expect(function (err, res)
       p(res, #res)
       assert(not err, err)
       assert(res[1].port == 80)

@@ -41,7 +41,7 @@
 // #include "work.c"
 #include "dns.c"
 // #include "thread.c"
-// #include "misc.c"
+#include "misc.c"
 
 static const luaL_Reg luv_functions[] = {
   // loop.c
@@ -213,6 +213,25 @@ static const luaL_Reg luv_functions[] = {
   // dns.c
   {"getaddrinfo", luv_getaddrinfo},
   {"getnameinfo", luv_getnameinfo},
+
+  // misc.c
+  {"guess_handle", luv_guess_handle},
+  {"version", luv_version},
+  {"version_string", luv_version_string},
+  {"get_process_title", luv_get_process_title},
+  {"set_process_title", luv_set_process_title},
+  {"resident_set_memory", luv_resident_set_memory},
+  {"uptime", luv_uptime},
+  {"getrusage", luv_getrusage},
+  {"cpu_info", luv_cpu_info},
+  {"interface_addresses", luv_interface_addresses},
+  {"loadavg", luv_loadavg},
+  {"execpath", luv_execpath},
+  {"cwd", luv_cwd},
+  {"chdir", luv_chdir},
+  {"get_total_memory", luv_get_total_memory},
+  {"hrtime", luv_hrtime},
+
 
   {NULL, NULL}
 };
