@@ -42,7 +42,7 @@ static int luv_version_string(lua_State* L) {
 static int luv_get_process_title(lua_State* L) {
   char title[MAX_TITLE_LENGTH];
   int ret = uv_get_process_title(title, MAX_TITLE_LENGTH);
-  if (ret < 1) return luv_error(L, ret);
+  if (ret < 0) return luv_error(L, ret);
   lua_pushstring(L, title);
   return 1;
 }
@@ -50,7 +50,7 @@ static int luv_get_process_title(lua_State* L) {
 static int luv_set_process_title(lua_State* L) {
   const char* title = luaL_checkstring(L, 1);
   int ret = uv_set_process_title(title);
-  if (ret < 1) return luv_error(L, ret);
+  if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;
 }
@@ -58,7 +58,7 @@ static int luv_set_process_title(lua_State* L) {
 static int luv_resident_set_memory(lua_State* L) {
   size_t rss;
   int ret = uv_resident_set_memory(&rss);
-  if (ret < 1) return luv_error(L, ret);
+  if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, rss);
   return 1;
 }
@@ -66,7 +66,7 @@ static int luv_resident_set_memory(lua_State* L) {
 static int luv_uptime(lua_State* L) {
   double uptime;
   int ret = uv_uptime(&uptime);
-  if (ret < 1) return luv_error(L, ret);
+  if (ret < 0) return luv_error(L, ret);
   lua_pushnumber(L, uptime);
   return 1;
 }
@@ -82,7 +82,7 @@ static void luv_push_timeval_table(lua_State* L, const uv_timeval_t* t) {
 static int luv_getrusage(lua_State* L) {
   uv_rusage_t rusage;
   int ret = uv_getrusage(&rusage);
-  if (ret < 1) return luv_error(L, ret);
+  if (ret < 0) return luv_error(L, ret);
   lua_createtable(L, 0, 16);
   // user CPU time used
   luv_push_timeval_table(L, &rusage.ru_utime);
@@ -139,25 +139,25 @@ static int luv_cpu_info(lua_State* L) {
   uv_cpu_info_t* cpu_infos;
   int count, i;
   int ret = uv_cpu_info(&cpu_infos, &count);
-  if (ret < 1) return luv_error(L, ret);
+  if (ret < 0) return luv_error(L, ret);
   lua_newtable(L);
 
   for (i = 0; i < count; i++) {
     lua_newtable(L);
-    lua_pushstring(L, (cpu_infos[i]).model);
+    lua_pushstring(L, cpu_infos[i].model);
     lua_setfield(L, -2, "model");
-    lua_pushnumber(L, (cpu_infos[i]).speed);
+    lua_pushnumber(L, cpu_infos[i].speed);
     lua_setfield(L, -2, "speed");
     lua_newtable(L);
-    lua_pushnumber(L, (cpu_infos[i]).cpu_times.user);
+    lua_pushnumber(L, cpu_infos[i].cpu_times.user);
     lua_setfield(L, -2, "user");
-    lua_pushnumber(L, (cpu_infos[i]).cpu_times.nice);
+    lua_pushnumber(L, cpu_infos[i].cpu_times.nice);
     lua_setfield(L, -2, "nice");
-    lua_pushnumber(L, (cpu_infos[i]).cpu_times.sys);
+    lua_pushnumber(L, cpu_infos[i].cpu_times.sys);
     lua_setfield(L, -2, "sys");
-    lua_pushnumber(L, (cpu_infos[i]).cpu_times.idle);
+    lua_pushnumber(L, cpu_infos[i].cpu_times.idle);
     lua_setfield(L, -2, "idle");
-    lua_pushnumber(L, (cpu_infos[i]).cpu_times.irq);
+    lua_pushnumber(L, cpu_infos[i].cpu_times.irq);
     lua_setfield(L, -2, "irq");
     lua_setfield(L, -2, "times");
     lua_rawseti(L, -2, i + 1);

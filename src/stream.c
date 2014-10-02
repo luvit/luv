@@ -145,14 +145,14 @@ static int luv_write(lua_State* L) {
 }
 
 static int luv_write2(lua_State* L) {
-  uv_stream_t* handle = luv_check_stream(L, 2);
+  uv_stream_t* handle = luv_check_stream(L, 1);
   uv_write_t* req;
   uv_buf_t buf;
   int ret, ref;
   uv_stream_t* send_handle;
-  buf.base = (char*) luaL_checklstring(L, 3, &buf.len);
-  send_handle = luv_check_stream(L, 4);
-  ref = luv_check_continuation(L, 5);
+  buf.base = (char*) luaL_checklstring(L, 2, &buf.len);
+  send_handle = luv_check_stream(L, 3);
+  ref = luv_check_continuation(L, 4);
   req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
   ret = uv_write2(req, handle, &buf, 1, send_handle, luv_write_cb);

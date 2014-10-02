@@ -180,14 +180,9 @@ static int luv_spawn(lua_State* L) {
   handle = lua_newuserdata(L, sizeof(*handle));
   handle->data = luv_setup_handle(L);
 
-  lua_getfield(L, 2, "exit_cb");
-  if (lua_type(L, -1) == LUA_TFUNCTION) {
-    luv_check_callback(L, handle->data, LUV_EXIT, -1);
+  if (!lua_isnoneornil(L, 3)) {
+    luv_check_callback(L, handle->data, LUV_EXIT, 3);
   }
-  else if (lua_type(L, -1) != LUA_TNIL) {
-    luaL_argerror(L, 2, "exit_cb option must be function");
-  }
-  lua_pop(L, 1);
 
   ret = uv_spawn(uv_default_loop(), handle, &options);
 
