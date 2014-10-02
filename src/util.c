@@ -16,25 +16,25 @@
  */
 #include "luv.h"
 
-// static void luv_stack_dump(lua_State* L, const char* name) {
-//   int i, l;
-//   fprintf(stderr, "\nAPI STACK DUMP %p %d: %s\n", L, lua_status(L), name);
-//   for (i = 1, l = lua_gettop(L); i <= l; i++) {
-//     int type = lua_type(L, i);
-//     switch (type) {
-//       case LUA_TSTRING:
-//         fprintf(stderr, "  %d %s \"%s\"\n", i, lua_typename(L, type), lua_tostring(L, i));
-//         break;
-//       case LUA_TNUMBER:
-//         fprintf(stderr, "  %d %s %ld\n", i, lua_typename(L, type), lua_tointeger(L, i));
-//         break;
-//       default:
-//         fprintf(stderr, "  %d %s\n", i, lua_typename(L, type));
-//         break;
-//     }
-//   }
-//   assert(l == lua_gettop(L));
-// }
+void luv_stack_dump(lua_State* L, const char* name) {
+  int i, l;
+  fprintf(stderr, "\nAPI STACK DUMP %p %d: %s\n", L, lua_status(L), name);
+  for (i = 1, l = lua_gettop(L); i <= l; i++) {
+    int type = lua_type(L, i);
+    switch (type) {
+      case LUA_TSTRING:
+        fprintf(stderr, "  %d %s \"%s\"\n", i, lua_typename(L, type), lua_tostring(L, i));
+        break;
+      case LUA_TNUMBER:
+        fprintf(stderr, "  %d %s %ld\n", i, lua_typename(L, type), lua_tointeger(L, i));
+        break;
+      default:
+        fprintf(stderr, "  %d %s\n", i, lua_typename(L, type));
+        break;
+    }
+  }
+  assert(l == lua_gettop(L));
+}
 
 static int luv_error(lua_State* L, int status) {
   lua_pushnil(L);

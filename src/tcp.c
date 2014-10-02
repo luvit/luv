@@ -113,8 +113,7 @@ static void parse_sockaddr(lua_State* L, struct sockaddr_storage* address, int a
     port = ntohs(addrin6->sin6_port);
   }
 
-  lua_pushstring(L, address->ss_family == AF_INET ? "ipv4" :
-                    address->ss_family == AF_INET6 ? "ipv6": "unknown");
+  lua_pushstring(L, luv_family_to_string(address->ss_family));
   lua_setfield(L, -2, "family");
   lua_pushinteger(L, port);
   lua_setfield(L, -2, "port");

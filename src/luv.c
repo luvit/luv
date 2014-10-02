@@ -38,9 +38,8 @@
 #include "fs_event.c"
 #include "fs_poll.c"
 #include "fs.c"
-
 // #include "work.c"
-// #include "dns.c"
+#include "dns.c"
 // #include "thread.c"
 // #include "misc.c"
 
@@ -211,10 +210,15 @@ static const luaL_Reg luv_functions[] = {
   {"fs_chown", luv_fs_chown},
   {"fs_fchown", luv_fs_fchown},
 
+  // dns.c
+  {"getaddrinfo", luv_getaddrinfo},
+  // {"getnameinfo", luv_getnameinfo},
+
   {NULL, NULL}
 };
 
 LUALIB_API int luaopen_luv (lua_State *L) {
+
   luv_req_init(L);
   luv_handle_init(L);
   luaL_newlib(L, luv_functions);

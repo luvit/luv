@@ -71,4 +71,8 @@ static uv_stream_t* luv_check_stream(lua_State* L, int index);
 // From fs.c
 static void luv_push_stats_table(lua_State* L, const uv_stat_t* s);
 
+// From dns.c
+static const char* luv_family_to_string(int family);
+static int luv_string_to_family(const char* protocol);
+
 #endif
