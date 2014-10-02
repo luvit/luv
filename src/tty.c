@@ -22,13 +22,12 @@ static uv_tty_t* luv_check_tty(lua_State* L, int index) {
   return handle;
 }
 
-
 static int luv_new_tty(lua_State* L) {
   int readable, ret;
   uv_tty_t* handle;
-  uv_file fd = luaL_checkinteger(L, 2);
-  luaL_checktype(L, 3, LUA_TBOOLEAN);
-  readable = lua_toboolean(L, 3);
+  uv_file fd = luaL_checkinteger(L, 1);
+  luaL_checktype(L, 2, LUA_TBOOLEAN);
+  readable = lua_toboolean(L, 2);
   handle = lua_newuserdata(L, sizeof(*handle));
   ret = uv_tty_init(uv_default_loop(), handle, fd, readable);
   if (ret < 0) {

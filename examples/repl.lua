@@ -1,14 +1,13 @@
 uv = require('luv')
 local utils = require('lib/utils')
-local loop = assert(uv.new_loop())
 
 local stdin
--- if uv.guess_handle(0) ~= "TTY" or
---    uv.guess_handle(1) ~= "TTY" then
---   error "stdio must be a tty"
--- end
-local stdin = uv.new_tty(loop, 0, true)
-local stdout = uv.new_tty(loop, 1, false)
+if uv.guess_handle(0) ~= "tty" or
+   uv.guess_handle(1) ~= "tty" then
+  error "stdio must be a tty"
+end
+local stdin = uv.new_tty(0, true)
+local stdout = uv.new_tty(1, false)
 
 local debug = require('debug')
 local c = utils.color
@@ -68,10 +67,10 @@ local function evaluateLine(line)
 end
 
 local function displayPrompt(prompt)
-  uv.write(uv.write_req(), stdout, prompt .. ' ')
+  uv.write(stdout, prompt .. ' ')
 end
 
-function stdin:onread(err, line)
+local function onread(self, err, line)
   if err then error(err) end
   if line then
     local prompt = evaluateLine(line)
@@ -83,9 +82,9 @@ end
 
 coroutine.wrap(function()
   displayPrompt '>'
-  uv.read_start(stdin)
+  uv.read_start(stdin, onread)
 end)()
 
-uv.run(loop)
+uv.run()
 
 print("")

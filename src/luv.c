@@ -232,7 +232,6 @@ static const luaL_Reg luv_functions[] = {
   {"get_total_memory", luv_get_total_memory},
   {"hrtime", luv_hrtime},
 
-
   {NULL, NULL}
 };
 
