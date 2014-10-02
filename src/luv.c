@@ -212,7 +212,7 @@ static const luaL_Reg luv_functions[] = {
 
   // dns.c
   {"getaddrinfo", luv_getaddrinfo},
-  // {"getnameinfo", luv_getnameinfo},
+  {"getnameinfo", luv_getnameinfo},
 
   {NULL, NULL}
 };

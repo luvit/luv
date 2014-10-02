@@ -66,8 +66,10 @@ static void luv_getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinf
         }
         lua_pushstring(R, luv_family_to_string(curr->ai_protocol));
         lua_setfield(R, -2, "protocol");
-        lua_pushstring(R, curr->ai_canonname);
-        lua_setfield(R, -2, "canonname");
+        if (curr->ai_canonname) {
+          lua_pushstring(R, curr->ai_canonname);
+          lua_setfield(R, -2, "canonname");
+        }
         lua_rawseti(R, -2, ++i);
       }
     }
@@ -92,6 +94,7 @@ static int luv_getaddrinfo(lua_State* L) {
   else service = luaL_checkstring(L, 2);
   if (!lua_isnil(L, 3)) luaL_checktype(L, 3, LUA_TTABLE);
   else hints = NULL;
+  luaL_checktype(L, 4, LUA_TFUNCTION);
   ref = luv_check_continuation(L, 4);
   if (hints) {
     // Initialize the hints
@@ -100,16 +103,7 @@ static int luv_getaddrinfo(lua_State* L) {
     // Process the `family` hint.
     lua_getfield(L, 3, "family");
     if (lua_isstring(L, -1)) {
-      const char* family = lua_tostring(L, -1);
-      if (strcmp(family, "inet") == 0) {
-        hints->ai_family = AF_INET;
-      }
-      else if (strcmp(family, "inet6") == 0) {
-        hints->ai_family = AF_INET6;
-      }
-      else {
-        luaL_argerror(L, 3, "family hint must be 'inet' or 'inet6' if set");
-      }
+      hints->ai_family = luv_string_to_family(lua_tostring(L, -1));
     }
     else if (lua_isnil(L, -1)) {
       hints->ai_family = AF_UNSPEC;
@@ -201,63 +195,88 @@ static int luv_getaddrinfo(lua_State* L) {
   return 1;
 }
 
-// static void luv_getnameinfo_cb(uv_getnameinfo_t* req, int status, const char* hostname, const char* service) {
-//   printf("luv_getnameinfo_cb(req=%p, status=%d, hostname=%s, service=%s)\n", req, status, hostname, service);
-// }
+static void luv_getnameinfo_cb(uv_getnameinfo_t* req, int status, const char* hostname, const char* service) {
+  int nargs;
 
-// static int luv_getnameinfo(lua_State* L) {
-//   uv_getnameinfo_t* req;
-//   struct sockaddr addr_s;
-//   struct sockaddr* addr = &addr_s;
-//   int flags;
-//   int ret, ref;
+  if (status < 0) {
+    luv_status(R, status);
+    nargs = 1;
+  }
+  else {
+    lua_pushnil(R);
+    lua_pushstring(R, hostname);
+    lua_pushstring(R, service);
+    nargs = 3;
+  }
 
+  luv_fulfill_req(R, req->data, nargs);
+  luv_cleanup_req(R, req->data);
+  req->data = NULL;
+}
 
+static int luv_getnameinfo(lua_State* L) {
+  uv_getnameinfo_t* req;
+  struct sockaddr_storage addr;
+  const char* ip = NULL;
+  int flags = 0;
+  int ret, ref, port = 0;
 
+  luaL_checktype(L, 1, LUA_TTABLE);
+  memset(&addr, 0, sizeof(addr));
 
-//   ret = uv_getnameinfo(uv_default_loop(), req, luv_getnameinfo_cb, addr, flags);
-//   if (ret < 0) {
-//     lua_pop(L, 1);
-//     return luv_error(L, ret);
-//   }
-//   return 1;
-// }
+  lua_getfield(L, 1, "ip");
+  if (lua_isstring(L, -1)) {
+    ip = lua_tostring(L, -1);
+  }
+  else if (!lua_isnil(L, -1)) {
+    luaL_argerror(L, 1, "ip property must be string if set");
+  }
+  lua_pop(L, 1);
 
-// static int luv_getaddrinfo(lua_State* L) {
-//   const char* node;
-//   const char* service;
-//   uv_getaddrinfo_t* req;
-//   luv_callback_t* callback;
-//   struct addrinfo hints_s;
-//   struct addrinfo* hints = &hints_s;
+  lua_getfield(L, 1, "port");
+  if (lua_isnumber(L, -1)) {
+    port = lua_tointeger(L, -1);
+  }
+  else if (!lua_isnil(L, -1)) {
+    luaL_argerror(L, 1, "port property must be integer if set");
+  }
+  lua_pop(L, 1);
 
-//   if (!lua_isnil(L, 1)) node = luaL_checkstring(L, 1);
-//   else node = NULL;
-//   if (!lua_isnil(L, 2)) service = luaL_checkstring(L, 2);
-//   else service = NULL;
-//   if (!lua_isnil(L, 3)) luaL_checktype(L, 3, LUA_TTABLE);
-//   else hints = NULL;
-//   luaL_checktype(L, 4, LUA_TFUNCTION);
+  if (ip || port) {
+    if (!ip) ip = "0.0.0.0";
+    if (!uv_ip4_addr(ip, port, (struct sockaddr_in*)&addr)) {
+      addr.ss_family = AF_INET;
+    }
+    else if (!uv_ip6_addr(ip, port, (struct sockaddr_in6*)&addr)) {
+      addr.ss_family = AF_INET6;
+    }
+    else {
+      return luaL_argerror(L, 1, "Invalid ip address or port");
+    }
+  }
 
+  lua_getfield(L, 1, "family");
+  if (lua_isstring(L, -1)) {
+    addr.ss_family = luv_string_to_family(lua_tostring(L, -1));
+  }
+  else if (!lua_isnil(L, -1)) {
+    luaL_argerror(L, 1, "family must be string if set");
+  }
+  lua_pop(L, 1);
 
-//   /* Store the callback */
-//   callback = malloc(sizeof(*callback));
-//   callback->L = L;
-//   lua_pushvalue(L, 4);
-//   callback->ref = luaL_ref(L, LUA_REGISTRYINDEX);
+  luaL_checktype(L, 2, LUA_TFUNCTION);
+  ref = luv_check_continuation(L, 2);
 
-//   /* Create the request */
-//   req = malloc(sizeof(*req));
-//   req->data = (void*)callback;
+  req = lua_newuserdata(L, sizeof(*req));
+  req->data = luv_setup_req(L, ref);
 
-//   /* Make the call */
-//   if (uv_getaddrinfo(uv_default_loop(), req, on_addrinfo, node, service, hints)) {
-//     uv_err_t err = uv_last_error(uv_default_loop());
-//     return luaL_error(L, "getaddrinfo: %s", uv_strerror(err));
-//   }
-
-//   return 0;
-// }
+  ret = uv_getnameinfo(uv_default_loop(), req, luv_getnameinfo_cb, (struct sockaddr*)&addr, flags);
+  if (ret < 0) {
+    lua_pop(L, 1);
+    return luv_error(L, ret);
+  }
+  return 1;
+}
 
 static int luv_string_to_family(const char* protocol) {
   if (!protocol) return AF_UNSPEC;
