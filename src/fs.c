@@ -141,7 +141,8 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
       return 1;
 
     case UV_FS_SCANDIR:
-      luv_find(req->data);
+      // Expose the userdata for the request.
+      lua_rawgeti(L, LUA_REGISTRYINDEX, ((luv_req_t*)req->data)->req_ref);
       return 1;
 
     default:
@@ -163,26 +164,27 @@ static void luv_fs_cb(uv_fs_t* req) {
   }
 }
 
-static int fs_req(lua_State* L) {
-  luv_create_fs(L);
-  return 1;
-}
-
-#define FS_CALL(func, index, ...) {                         \
-  int ret, is_main;                                         \
-  is_main = lua_pushthread(L) == 1;                         \
-  lua_pop(L, 1);                                            \
-  ret = uv_fs_##func(__VA_ARGS__, is_main ? NULL : luv_fs_cb);  \
-  if (ret < 0) {                                            \
-    uv_fs_req_cleanup(req);                                 \
-    return luv_error(L, ret);                               \
-  }                                                         \
-  if (is_main) {                                            \
-    int nargs = push_fs_result(L, req);                     \
-    uv_fs_req_cleanup(req);                                 \
-    return nargs;                                           \
-  }                                                         \
-  return luv_wait(L, req->data, 0);                         \
+#define FS_CALL(func, req, ...) {                         \
+  int ret, sync;                                          \
+  luv_req_t* data = req->data;                            \
+  sync = data->callback_ref != LUA_NOREF;                 \
+  ret = uv_fs_##func(uv_default_loop(), req, __VA_ARGS__, \
+                     sync ? NULL : luv_fs_cb);            \
+  if (ret < 0) {                                          \
+    luv_cleanup_req(L, req->data);                        \
+    req->data = NULL;                                     \
+    uv_fs_req_cleanup(req);                               \
+    return luv_error(L, ret);                             \
+  }                                                       \
+  if (sync) {                                             \
+    int nargs = push_fs_result(L, req);                   \
+    luv_cleanup_req(L, req->data);                        \
+    req->data = NULL;                                     \
+    uv_fs_req_cleanup(req);                               \
+    return nargs;                                         \
+  }                                                       \
+  lua_rawgeti(L, LUA_REGISTRYINDEX, data->req_ref);       \
+  return 1;                                               \
 }
 
 static int luv_fs_close(lua_State* L) {
