@@ -58,11 +58,18 @@ local function run()
         error("Found " .. -expected .. " unexpected call" .. (expected == -1 and "" or "s"))
       end
       collectgarbage()
+      local unclosed = 0
       uv.walk(function (handle)
-        error("Unclosed handle " .. tostring(handle))
+        unclosed = unclosed + 1
+        print("UNCLOSED", handle)
       end)
+      if unclosed > 0 then
+        error(unclosed .. " unclosed handle" .. (unclosed == 1 and "" or "s"))
+      end
       collectgarbage()
     end, debug.traceback)
+    uv.walk(uv.close)
+
     if pass then
       print("ok " .. i .. " " .. test.name)
       passed = passed + 1

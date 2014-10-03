@@ -151,6 +151,7 @@ return require('lib/tap')(function (test)
       local pipe = uv.new_pipe(true)
       local input = uv.new_pipe(false)
       local child, pid = assert(uv.spawn(execpath, {
+        cwd = uv.cwd(),
         stdio = {input,1,2,pipe},
         env= {"PIPE_FD=3"}
       }, expect(function (self, status, signal)
@@ -173,18 +174,18 @@ return require('lib/tap')(function (test)
       assert(uv.shutdown(pipe))
     end
 
-    local function onexit(self, status, signal)
+    local onexit = expect(function (self, status, signal)
       p("Client exited", {self=self,status=status,signal=signal})
       assert(status == 0)
       assert(signal == 0)
       uv.close(self)
-    end
-
+    end, left)
 
     local function spawnClient()
       local input = uv.new_pipe(false)
       local child, pid = assert(uv.spawn(execpath, {
         stdio = {input,1,2},
+        cwd = uv.cwd(),
         env= {
           "HOST=" .. address.ip,
           "PORT=" .. address.port,
