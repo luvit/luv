@@ -14,18 +14,47 @@ return require('lib/tap')(function (test)
     uv.fs_open('README.md', 'r', tonumber('644', 8), expect(function (err, fd)
       assert(not err, err)
       p{fd=fd}
-      uv.fs_stat(fd, expect(function (err, stat)
+      uv.fs_fstat(fd, expect(function (err, stat)
         assert(not err, err)
         p{stat=stat}
         uv.fs_read(fd, stat.size, 0, expect(function (err, chunk)
           assert(not err, err)
           p{chunk=#chunk}
           assert(#chunk == stat.size)
-          uv.fs_close(fd, ecpect(function (err)
+          uv.fs_close(fd, expect(function (err)
             assert(not err, err)
           end))
         end))
       end))
     end))
   end)
+
+  test("fs.stat sync", function (print, p, expect, uv)
+    local stat = assert(uv.fs_stat("README.md"))
+    assert(stat.size)
+  end)
+
+  test("fs.stat async", function (print, p, expect, uv)
+    assert(uv.fs_stat("README.md", expect(function (err, stat)
+      assert(not err, err)
+      assert(stat.size)
+    end)))
+  end)
+
+  test("fs.stat sync error", function (print, p, expect, uv)
+    local stat, err, code = uv.fs_stat("BAD_FILE!")
+    assert(not stat)
+    assert(err)
+    assert(code == "ENOENT")
+  end)
+
+  test("fs.stat async error", function (print, p, expect, uv)
+    assert(uv.fs_stat("BAD_FILE@", expect(function (err, stat)
+      p{err=err,stat=stat}
+      assert(err)
+      assert(not stat)
+    end)))
+  end)
+
+
 end)

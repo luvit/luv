@@ -118,11 +118,12 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
   if (req->result < 0) {
     lua_pushnil(L);
     if (req->path) {
-      lua_pushfstring(L, "%s: %s %s\n", uv_err_name(req->result), uv_strerror(req->result), req->path);
+      lua_pushfstring(L, "%s: %s %s", uv_err_name(req->result), uv_strerror(req->result), req->path);
     }
     else {
-      lua_pushfstring(L, "%s: %s\n", uv_err_name(req->result), uv_strerror(req->result));
+      lua_pushfstring(L, "%s: %s", uv_err_name(req->result), uv_strerror(req->result));
     }
+    return 2;
   }
 
   switch (req->fs_type) {
