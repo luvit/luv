@@ -19,7 +19,7 @@ require('lib/tap')(function (test)
         p{stat=stat}
         uv.fs_read(fd, stat.size, 0, expect(function (err, chunk)
           assert(not err, err)
-          p{chunk=chunk}
+          p{chunk=#chunk}
           assert(#chunk == stat.size)
           uv.fs_close(fd, ecpect(function (err)
             assert(not err, err)

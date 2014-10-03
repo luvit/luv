@@ -14,7 +14,7 @@ require('lib/tap')(function (test)
       p("timeout", timer)
       uv.close(timer, expect(onclose))
     end
-    uv.timer_start(timer, expect(ontimeout), 10, 0)
+    uv.timer_start(timer, 10, 0, expect(ontimeout))
   end)
 
   -- This is like the previous test, but using repeat.
@@ -33,7 +33,7 @@ require('lib/tap')(function (test)
         uv.close(timer, expect(onclose))
       end
     end
-    uv.timer_start(timer, expect(oninterval, count), 10, 10)
+    uv.timer_start(timer, 10, 10, expect(oninterval, count))
   end)
 
   -- Test two concurrent timers
@@ -42,22 +42,22 @@ require('lib/tap')(function (test)
   test("timeout with interval", function (print, p, expect, uv)
     local a = uv.new_timer()
     local b = uv.new_timer()
-    uv.timer_start(a, expect(function ()
+    uv.timer_start(a, 25, 0, expect(function ()
       p("timeout", a)
       uv.timer_stop(b)
       uv.close(a)
       uv.close(b)
-    end), 25, 0)
-    uv.timer_start(b, expect(function ()
+    end))
+    uv.timer_start(b, 10, 10, expect(function ()
       p("interval", b)
-    end, 2), 10, 10)
+    end, 2))
   end)
 
   -- This advanced test uses the rest of the uv_timer_t functions
   -- to create an interval that shrinks over time.
   test("shrinking interval", function (print, p, expect, uv)
     local timer = uv.new_timer()
-    uv.timer_start(timer, expect(function ()
+    uv.timer_start(timer, 10, 0, expect(function ()
       local r = uv.timer_get_repeat(timer)
       p("interval", timer, r)
       if r == 0 then
@@ -69,7 +69,7 @@ require('lib/tap')(function (test)
       else
         uv.timer_set_repeat(timer, r / 2)
       end
-    end, 4), 10, 0)
+    end, 4))
   end)
 
 end)

@@ -44,7 +44,7 @@ require('lib/tap')(function (test)
     assert(uv.getaddrinfo("luvit.io", nil, nil, expect(function (err, res)
       assert(not err, err)
       p(res, #res)
-      assert(#res == 6)
+      assert(#res >= 4)
     end)))
   end)
 

@@ -5,7 +5,6 @@ local uv = require('luv')
 
 -- Helper to log all handles in a loop
 local function logHandles(loop, verbose)
-  local handles = uv.walk(loop)
   if not verbose then
     p(loop, uv.walk(loop))
     return

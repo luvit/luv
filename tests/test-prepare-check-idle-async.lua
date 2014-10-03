@@ -25,11 +25,11 @@ require('lib/tap')(function (test)
 
     -- Trigger with a timer
     local timer = uv.new_timer()
-    uv.timer_start(timer, expect(function()
+    uv.timer_start(timer, 10, 0, expect(function()
       p("timeout", timer)
       uv.timer_stop(timer)
       uv.close(timer)
-    end), 10, 0)
+    end))
   end)
 
   test("simple idle", function (print, p, expect, uv)

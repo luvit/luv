@@ -1,2 +1,2 @@
 #!/bin/sh
-find tests -name "*.lua" | xargs -l luajit
+find tests -name "*.lua" | xargs -n1 luajit
