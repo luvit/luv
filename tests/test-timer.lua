@@ -1,4 +1,4 @@
-require('lib/tap')(function (test)
+return require('lib/tap')(function (test)
 
   -- This tests using timers for a simple timeout.
   -- It also tests the handle close callback and

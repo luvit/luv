@@ -1,4 +1,4 @@
-require('lib/tap')(function (test)
+return require('lib/tap')(function (test)
 
   test("Get all local http addresses", function (print, p, expect, uv)
     assert(uv.getaddrinfo(nil, "http", nil, expect(function (err, res)

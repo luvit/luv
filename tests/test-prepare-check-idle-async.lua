@@ -1,4 +1,4 @@
-require('lib/tap')(function (test)
+return require('lib/tap')(function (test)
 
   test("simple prepare", function (print, p, expect, uv)
     local prepare = uv.new_prepare()

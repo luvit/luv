@@ -1,23 +1,24 @@
-local child_code = [[
-local uv = require('luv')
-local signal = uv.new_signal()
-uv.ref(signal)
-uv.signal_start(signal, "sigint", function (self)
-  assert(self == signal)
-  print("# SIGINT caught")
-  uv.unref(signal)
-end)
-print("# blocking")
-uv.run()
-print("# done")
-]]
+return require('lib/tap')(function (test)
 
-require('lib/tap')(function (test)
+  local child_code = [[
+    local uv = require('luv')
+    local signal = uv.new_signal()
+    uv.ref(signal)
+    uv.signal_start(signal, "sigint", function (self)
+      assert(self == signal)
+      print("# SIGINT caught")
+      uv.unref(signal)
+    end)
+    print("# blocking")
+    uv.run()
+    print("# done")
+  ]]
+
   test("Catch SIGINT", function (print, p, expect, uv)
     local child, pid
     child, pid = uv.spawn(uv.execpath(), {
       args = {"-e", child_code},
-      stdio = {nil,2}
+      stdio = {nil,1}
     }, expect(function (self, code, signal)
       p("exit", {pid=pid,code=code,signal=signal})
       assert(self == child)

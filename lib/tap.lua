@@ -24,17 +24,11 @@ local function pprotect(...)
   protect(table.concat(arguments, "\t"))
 end
 
-local function tap(suite)
 
+local tests = {};
+
+local function run()
   local passed = 0
-
-  local tests = {}
-  suite(function (name, fn)
-    tests[#tests + 1] = {
-      name = name,
-      fn = fn
-    }
-  end)
 
   if #tests < 1 then
     error("No tests specified!")
@@ -78,7 +72,36 @@ local function tap(suite)
     end
   end
 
-  return passed, #tests - passed, #tests
+
+  local failed = #tests - passed
+  if failed == 0 then
+    print("# All tests passed")
+  else
+    print("#" .. failed .. " failed test" .. (failed == 1 and "" or "s"))
+  end
+  os.exit(-failed)
+end
+
+local single = true
+
+local function tap(suite)
+  print(single, suite)
+
+  if type(suite) == "function" then
+    -- Pass in suite directly for single mode
+    suite(function (name, fn)
+      tests[#tests + 1] = {
+        name = name,
+        fn = fn
+      }
+    end)
+  else
+    -- Or pass in false to collect several runs of tests
+    -- And then pass in true in a later call to flush tests queue.
+    single = suite
+  end
+
+  if single then run() end
 
 end
 

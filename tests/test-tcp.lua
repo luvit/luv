@@ -1,4 +1,4 @@
-require('lib/tap')(function (test)
+return require('lib/tap')(function (test)
   test("basic tcp server and client", function (print, p, expect, uv)
     local server = uv.new_tcp()
     uv.tcp_bind(server, "::", 0)

@@ -1,4 +1,4 @@
-require('lib/tap')(function (test)
+return require('lib/tap')(function (test)
 
   test("test disable_stdio_inheritance", function (print, p, expect, uv)
     uv.disable_stdio_inheritance()

@@ -1,4 +1,4 @@
-require('lib/tap')(function (test)
+return require('lib/tap')(function (test)
 
   test("read a file sync", function (print, p, expect, uv)
     local fd = assert(uv.fs_open('README.md', 'r', tonumber('644', 8)))

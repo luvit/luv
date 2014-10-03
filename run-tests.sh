@@ -1,2 +1,4 @@
 #!/bin/sh
-find tests -name "*.lua" | xargs -n1 luajit
+# npm install -g faucet
+luajit tests/run.lua | faucet
+
