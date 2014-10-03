@@ -39,15 +39,20 @@ local function create_server(host, port, on_connection)
   uv.tcp_bind(server, host, port)
 
   uv.listen(server, 128, function(self)
+    -- self is the same as server
+    assert(self == server)
+
+    -- Accept the client
     local client = uv.new_tcp()
     uv.accept(server, client)
+
     on_connection(client)
   end)
 
   return server
 end
 
-local server = create_server("0.0.0.0", 0, function (client)
+create_server("0.0.0.0", 0, function (client)
 
   uv.read_start(client, function (self, err, chunk)
 
