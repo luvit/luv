@@ -125,7 +125,7 @@ static const luaL_Reg luv_functions[] = {
   {"is_writable", luv_is_writable},
   {"stream_set_blocking", luv_stream_set_blocking},
 
-  // // tcp.c
+  // tcp.c
   {"new_tcp", luv_new_tcp},
   {"tcp_open", luv_tcp_open},
   {"tcp_nodelay", luv_tcp_nodelay},
