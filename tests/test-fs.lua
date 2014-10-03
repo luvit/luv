@@ -43,6 +43,7 @@ return require('lib/tap')(function (test)
 
   test("fs.stat sync error", function (print, p, expect, uv)
     local stat, err, code = uv.fs_stat("BAD_FILE!")
+    p{err=err,code=code,stat=stat}
     assert(not stat)
     assert(err)
     assert(code == "ENOENT")

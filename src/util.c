@@ -43,7 +43,7 @@ static int luv_error(lua_State* L, int status) {
   lua_pushnil(L);
   // For now log errors to stderr in case they aren't asserted or checked for.
   fprintf(stderr, "%s: %s\n", uv_err_name(status), uv_strerror(status));
-  lua_pushstring(L, uv_strerror(status));
+  lua_pushfstring(L, "%s: %s", uv_err_name(status), uv_strerror(status));
   lua_pushstring(L, uv_err_name(status));
   return 3;
 }

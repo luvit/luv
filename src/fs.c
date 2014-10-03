@@ -118,7 +118,7 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
   if (req->result < 0) {
     lua_pushnil(L);
     if (req->path) {
-      lua_pushfstring(L, "%s: %s %s", uv_err_name(req->result), uv_strerror(req->result), req->path);
+      lua_pushfstring(L, "%s: %s: %s", uv_err_name(req->result), uv_strerror(req->result), req->path);
     }
     else {
       lua_pushfstring(L, "%s: %s", uv_err_name(req->result), uv_strerror(req->result));
@@ -209,10 +209,18 @@ static void luv_fs_cb(uv_fs_t* req) {
   ret = uv_fs_##func(luv_loop(L), req, __VA_ARGS__,       \
                      sync ? NULL : luv_fs_cb);            \
   if (ret < 0) {                                          \
+    lua_pushnil(L);                                       \
+    if (req->path) {                                      \
+      lua_pushfstring(L, "%s: %s: %s", uv_err_name(req->result), uv_strerror(req->result), req->path); \
+    }                                                     \
+    else {                                                \
+      lua_pushfstring(L, "%s: %s", uv_err_name(req->result), uv_strerror(req->result)); \
+    }                                                     \
+    lua_pushstring(L, uv_err_name(req->result));          \
     luv_cleanup_req(L, req->data);                        \
     req->data = NULL;                                     \
     uv_fs_req_cleanup(req);                               \
-    return luv_error(L, ret);                             \
+    return 3;                                             \
   }                                                       \
   if (sync) {                                             \
     int nargs = push_fs_result(L, req);                   \
