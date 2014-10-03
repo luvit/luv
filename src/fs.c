@@ -101,12 +101,12 @@ static void luv_push_stats_table(lua_State* L, const uv_stat_t* s) {
 }
 
 static int luv_string_to_flags(lua_State* L, const char* string) {
-  if (strcasecmp(string, "r") == 0) return O_RDONLY;
-  if (strcasecmp(string, "r+") == 0) return O_RDWR;
-  if (strcasecmp(string, "w") == 0) return O_CREAT | O_TRUNC | O_WRONLY;
-  if (strcasecmp(string, "w+") == 0) return O_CREAT | O_TRUNC | O_RDWR;
-  if (strcasecmp(string, "a") == 0) return O_APPEND | O_CREAT | O_WRONLY;
-  if (strcasecmp(string, "a+") == 0) return O_APPEND | O_CREAT | O_RDWR;
+  if (strcmp(string, "r") == 0) return O_RDONLY;
+  if (strcmp(string, "r+") == 0) return O_RDWR;
+  if (strcmp(string, "w") == 0) return O_CREAT | O_TRUNC | O_WRONLY;
+  if (strcmp(string, "w+") == 0) return O_CREAT | O_TRUNC | O_RDWR;
+  if (strcmp(string, "a") == 0) return O_APPEND | O_CREAT | O_WRONLY;
+  if (strcmp(string, "a+") == 0) return O_APPEND | O_CREAT | O_RDWR;
   return luaL_error(L, "Unknown file open flag '%s'", string);
 }
 
@@ -179,21 +179,23 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
 }
 
 static void luv_fs_cb(uv_fs_t* req) {
-  int nargs = push_fs_result(R, req);
-  if (nargs == 2 && lua_isnil(R, -nargs)) {
+  lua_State* L = luv_state(req->loop);
+
+  int nargs = push_fs_result(L, req);
+  if (nargs == 2 && lua_isnil(L, -nargs)) {
     // If it was an error, convert to (err, value) format.
-    lua_remove(R, -nargs);
+    lua_remove(L, -nargs);
     nargs--;
   }
   else {
     // Otherwise insert a nil in front to convert to (err, value) format.
-    lua_pushnil(R);
-    lua_insert(R, -nargs - 1);
+    lua_pushnil(L);
+    lua_insert(L, -nargs - 1);
     nargs++;
   }
-  luv_fulfill_req(R, req->data, nargs);
+  luv_fulfill_req(L, req->data, nargs);
   if (req->fs_type != UV_FS_SCANDIR) {
-    luv_cleanup_req(R, req->data);
+    luv_cleanup_req(L, req->data);
     req->data = NULL;
     uv_fs_req_cleanup(req);
   }
@@ -203,7 +205,7 @@ static void luv_fs_cb(uv_fs_t* req) {
   int ret, sync;                                          \
   luv_req_t* data = req->data;                            \
   sync = data->callback_ref == LUA_NOREF;                 \
-  ret = uv_fs_##func(uv_default_loop(), req, __VA_ARGS__, \
+  ret = uv_fs_##func(luv_loop(L), req, __VA_ARGS__,       \
                      sync ? NULL : luv_fs_cb);            \
   if (ret < 0) {                                          \
     luv_cleanup_req(L, req->data);                        \

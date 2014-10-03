@@ -24,7 +24,7 @@ static uv_tcp_t* luv_check_tcp(lua_State* L, int index) {
 
 static int luv_new_tcp(lua_State* L) {
   uv_tcp_t* handle = lua_newuserdata(L, sizeof(*handle));
-  int ret = uv_tcp_init(uv_default_loop(), handle);
+  int ret = uv_tcp_init(luv_loop(L), handle);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
@@ -143,10 +143,11 @@ static int luv_tcp_getpeername(lua_State* L) {
 
 
 static void luv_connect_cb(uv_connect_t* req, int status) {
-  luv_find_handle(R, req->handle->data);
-  luv_status(R, status);
-  luv_fulfill_req(R, req->data, 2);
-  luv_cleanup_req(R, req->data);
+  lua_State* L = luv_state(req->handle->loop);
+  luv_find_handle(L, req->handle->data);
+  luv_status(L, status);
+  luv_fulfill_req(L, req->data, 2);
+  luv_cleanup_req(L, req->data);
   req->data = NULL;
 }
 

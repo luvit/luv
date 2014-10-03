@@ -56,7 +56,7 @@ static uv_signal_t* luv_check_signal(lua_State* L, int index) {
 
 static int luv_new_signal(lua_State* L) {
   uv_signal_t* handle = lua_newuserdata(L, sizeof(*handle));
-  int ret = uv_signal_init(uv_default_loop(), handle);
+  int ret = uv_signal_init(luv_loop(L), handle);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
@@ -66,10 +66,11 @@ static int luv_new_signal(lua_State* L) {
 }
 
 static void luv_signal_cb(uv_signal_t* handle, int signum) {
+  lua_State* L = luv_state(handle->loop);
   luv_handle_t* data = handle->data;
-  luv_find_handle(R, data);
-  lua_pushstring(R, luv_signal_to_string(signum));
-  luv_call_callback(R, data, LUV_SIGNAL, 2);
+  luv_find_handle(L, data);
+  lua_pushstring(L, luv_signal_to_string(signum));
+  luv_call_callback(L, data, LUV_SIGNAL, 2);
 }
 
 static int luv_signal_start(lua_State* L) {

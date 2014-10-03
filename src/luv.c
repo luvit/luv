@@ -235,7 +235,37 @@ static const luaL_Reg luv_functions[] = {
   {NULL, NULL}
 };
 
+static lua_State* luv_state(uv_loop_t* loop) {
+  return loop->data;
+}
+
+// TODO: find out if storing this somehow in an upvalue is faster
+static uv_loop_t* luv_loop(lua_State* L) {
+  uv_loop_t* loop;
+  lua_pushstring(L, "uv_loop");
+  lua_rawget(L, LUA_REGISTRYINDEX);
+  loop = lua_touserdata(L, -1);
+  lua_pop(L, 1);
+  return loop;
+}
+
 LUALIB_API int luaopen_luv (lua_State *L) {
+
+  uv_loop_t* loop;
+  int ret;
+
+  loop = lua_newuserdata(L, sizeof(*loop));
+  ret = uv_loop_init(loop);
+  if (ret < 0) {
+    return luaL_error(L, "%s: %s\n", uv_err_name(ret), uv_strerror(ret));
+  }
+  // Tell the state how to find the loop.
+  lua_pushstring(L, "uv_loop");
+  lua_insert(L, -2);
+  lua_rawset(L, LUA_REGISTRYINDEX);
+
+  // Tell the loop how to find the state.
+  loop->data = L;
 
   luv_req_init(L);
   luv_handle_init(L);

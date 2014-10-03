@@ -25,7 +25,7 @@ static uv_fs_event_t* luv_check_fs_event(lua_State* L, int index) {
 
 static int luv_new_fs_event(lua_State* L) {
   uv_fs_event_t* handle = lua_newuserdata(L, sizeof(*handle));
-  int ret = uv_fs_event_init(uv_default_loop(), handle);
+  int ret = uv_fs_event_init(luv_loop(L), handle);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
@@ -35,31 +35,32 @@ static int luv_new_fs_event(lua_State* L) {
 }
 
 static void luv_fs_event_cb(uv_fs_event_t* handle, const char* filename, int events, int status) {
+  lua_State* L = luv_state(handle->loop);
   // self
-  luv_find_handle(R, handle->data);
+  luv_find_handle(L, handle->data);
 
   // err
-  luv_status(R, status);
+  luv_status(L, status);
 
   // filename
-  lua_pushstring(R, filename);
+  lua_pushstring(L, filename);
 
   // events
-  lua_newtable(R);
+  lua_newtable(L);
   if (events & UV_FS_EVENT_WATCH_ENTRY) {
-    lua_pushboolean(R, 1);
-    lua_setfield(R, -2, "watch_entry");
+    lua_pushboolean(L, 1);
+    lua_setfield(L, -2, "watch_entry");
   }
   if (events & UV_FS_EVENT_STAT) {
-    lua_pushboolean(R, 1);
-    lua_setfield(R, -2, "stat");
+    lua_pushboolean(L, 1);
+    lua_setfield(L, -2, "stat");
   }
   if (events & UV_FS_EVENT_RECURSIVE) {
-    lua_pushboolean(R, 1);
-    lua_setfield(R, -2, "recursive");
+    lua_pushboolean(L, 1);
+    lua_setfield(L, -2, "recursive");
   }
 
-  luv_call_callback(R, handle->data, LUV_FS_EVENT, 4);
+  luv_call_callback(L, handle->data, LUV_FS_EVENT, 4);
 }
 
 static int luv_fs_event_start(lua_State* L) {

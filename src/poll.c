@@ -25,7 +25,7 @@ static uv_poll_t* luv_check_poll(lua_State* L, int index) {
 static int luv_new_poll(lua_State* L) {
   int fd = luaL_checkinteger(L, 1);
   uv_poll_t* handle = lua_newuserdata(L, sizeof(*handle));
-  int ret = uv_poll_init(uv_default_loop(), handle, fd);
+  int ret = uv_poll_init(luv_loop(L), handle, fd);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
@@ -40,17 +40,18 @@ static const char *const luv_pollevents[] = {
 };
 
 static void luv_poll_cb(uv_poll_t* handle, int status, int events) {
+  lua_State* L = luv_state(handle->loop);
   luv_handle_t* data = handle->data;
   const char* evtstr;
 
-  luv_find_handle(R, data);
+  luv_find_handle(L, data);
 
   if (status < 0) {
     fprintf(stderr, "%s: %s\n", uv_err_name(status), uv_strerror(status));
-    lua_pushstring(R, uv_err_name(status));
+    lua_pushstring(L, uv_err_name(status));
   }
   else {
-    lua_pushnil(R);
+    lua_pushnil(L);
   }
 
   switch (events) {
@@ -59,9 +60,9 @@ static void luv_poll_cb(uv_poll_t* handle, int status, int events) {
     case UV_READABLE|UV_WRITABLE: evtstr = "rw"; break;
     default: evtstr = ""; break;
   }
-  lua_pushstring(R, evtstr);
+  lua_pushstring(L, evtstr);
 
-  luv_call_callback(R, data, LUV_POLL, 3);
+  luv_call_callback(L, data, LUV_POLL, 3);
 }
 
 static int luv_poll_start(lua_State* L) {

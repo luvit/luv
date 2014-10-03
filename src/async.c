@@ -23,9 +23,10 @@ static uv_async_t* luv_check_async(lua_State* L, int index) {
 }
 
 static void luv_async_cb(uv_async_t* handle) {
+  lua_State* L = luv_state(handle->loop);
   luv_handle_t* data = handle->data;
-  luv_find_handle(R, data);
-  luv_call_callback(R, data, LUV_ASYNC, 1);
+  luv_find_handle(L, data);
+  luv_call_callback(L, data, LUV_ASYNC, 1);
 }
 
 static int luv_new_async(lua_State* L) {
@@ -33,7 +34,7 @@ static int luv_new_async(lua_State* L) {
   int ret;
   luaL_checktype(L, 1, LUA_TFUNCTION);
   handle = lua_newuserdata(L, sizeof(*handle));
-  ret = uv_async_init(uv_default_loop(), handle, luv_async_cb);
+  ret = uv_async_init(luv_loop(L), handle, luv_async_cb);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);

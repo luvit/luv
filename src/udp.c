@@ -24,7 +24,7 @@ static uv_udp_t* luv_check_udp(lua_State* L, int index) {
 
 static int luv_new_udp(lua_State* L) {
   uv_udp_t* handle = lua_newuserdata(L, sizeof(*handle));
-  int ret = uv_udp_init(uv_default_loop(), handle);
+  int ret = uv_udp_init(luv_loop(L), handle);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
@@ -148,10 +148,11 @@ static int luv_udp_set_ttl(lua_State* L) {
 }
 
 static void luv_udp_send_cb(uv_udp_send_t* req, int status) {
-  luv_find_handle(R, req->handle->data);
-  luv_status(R, status);
-  luv_fulfill_req(R, req->data, 2);
-  luv_cleanup_req(R, req->data);
+  lua_State* L = luv_state(req->handle->loop);
+  luv_find_handle(L, req->handle->data);
+  luv_status(L, status);
+  luv_fulfill_req(L, req->data, 2);
+  luv_cleanup_req(L, req->data);
   req->data = NULL;
 }
 
@@ -201,47 +202,49 @@ static int luv_udp_try_send(lua_State* L) {
 }
 
 static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags) {
+  lua_State* L = luv_state(handle->loop);
+
   // self
-  luv_find_handle(R, handle->data);
+  luv_find_handle(L, handle->data);
 
   // err
   if (nread < 0) {
-    luv_status(R, nread);
+    luv_status(L, nread);
   }
   else {
-    lua_pushnil(R);
+    lua_pushnil(L);
   }
 
   // data
   if (nread == 0) {
     if (addr) {
-      lua_pushstring(R, "");
+      lua_pushstring(L, "");
     }
     else {
-      lua_pushnil(R);
+      lua_pushnil(L);
     }
   }
   else if (nread > 0) {
-    lua_pushlstring(R, buf->base, nread);
+    lua_pushlstring(L, buf->base, nread);
   }
   if (buf) free(buf->base);
 
   // address
   if (addr) {
-    parse_sockaddr(R, (struct sockaddr_storage*)addr, sizeof *addr);
+    parse_sockaddr(L, (struct sockaddr_storage*)addr, sizeof *addr);
   }
   else {
-    lua_pushnil(R);
+    lua_pushnil(L);
   }
 
   // flags
-  lua_newtable(R);
+  lua_newtable(L);
   if (flags & UV_UDP_PARTIAL) {
-    lua_pushboolean(R, 1);
-    lua_setfield(R, -2, "partial");
+    lua_pushboolean(L, 1);
+    lua_setfield(L, -2, "partial");
   }
 
-  luv_call_callback(R, handle->data, LUV_RECV, 5);
+  luv_call_callback(L, handle->data, LUV_RECV, 5);
 }
 
 static int luv_udp_recv_start(lua_State* L) {

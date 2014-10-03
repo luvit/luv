@@ -28,7 +28,7 @@ static int luv_new_pipe(lua_State* L) {
   luaL_checktype(L, 1, LUA_TBOOLEAN);
   ipc = lua_toboolean(L, 1);
   handle = lua_newuserdata(L, sizeof(*handle));
-  ret = uv_pipe_init(uv_default_loop(), handle, ipc);
+  ret = uv_pipe_init(luv_loop(L), handle, ipc);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);

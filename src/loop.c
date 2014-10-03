@@ -17,7 +17,7 @@
 #include "luv.h"
 
 static int luv_loop_close(lua_State* L) {
-  int ret = uv_loop_close(uv_default_loop());
+  int ret = uv_loop_close(luv_loop(L));
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;
@@ -30,48 +30,45 @@ static const char *const luv_runmodes[] = {
 
 static int luv_run(lua_State* L) {
   int mode = luaL_checkoption(L, 1, "default", luv_runmodes);
-  int ret;
-  // Record the lua state so callbacks can start here.
-  R = L;
-  ret = uv_run(uv_default_loop(), mode);
+  int ret = uv_run(luv_loop(L), mode);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;
 }
 
 static int luv_loop_alive(lua_State* L) {
-  int ret = uv_loop_alive(uv_default_loop());
+  int ret = uv_loop_alive(luv_loop(L));
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;
 }
 
 static int luv_stop(lua_State* L) {
-  uv_stop(uv_default_loop());
+  uv_stop(luv_loop(L));
   return 0;
 }
 
 static int luv_backend_fd(lua_State* L) {
-  int ret = uv_backend_fd(uv_default_loop());
+  int ret = uv_backend_fd(luv_loop(L));
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;
 }
 
 static int luv_backend_timeout(lua_State* L) {
-  int ret = uv_backend_timeout(uv_default_loop());
+  int ret = uv_backend_timeout(luv_loop(L));
   lua_pushinteger(L, ret);
   return 1;
 }
 
 static int luv_now(lua_State* L) {
-  uint64_t now = uv_now(uv_default_loop());
+  uint64_t now = uv_now(luv_loop(L));
   lua_pushinteger(L, now);
   return 1;
 }
 
 static int luv_update_time(lua_State* L) {
-  uv_update_time(uv_default_loop());
+  uv_update_time(luv_loop(L));
   return 0;
 }
 
@@ -90,6 +87,6 @@ static void luv_walk_cb(uv_handle_t* handle, void* arg) {
 
 static int luv_walk(lua_State* L) {
   luaL_checktype(L, 1, LUA_TFUNCTION);
-  uv_walk(uv_default_loop(), luv_walk_cb, L);
+  uv_walk(luv_loop(L), luv_walk_cb, L);
   return 0;
 }

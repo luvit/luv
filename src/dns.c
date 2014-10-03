@@ -22,60 +22,61 @@
 
 
 static void luv_getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res) {
+  lua_State* L = luv_state(req->loop);
   struct addrinfo* curr = res;
   char ip[INET6_ADDRSTRLEN];
   const char *addr;
   int port, nargs, i = 0;
 
   if (status < 0) {
-    luv_status(R, status);
+    luv_status(L, status);
     nargs = 1;
   }
   else {
-    lua_pushnil(R);
-    lua_newtable(R);
+    lua_pushnil(L);
+    lua_newtable(L);
     nargs = 2;
     for (curr = res; curr; curr = curr->ai_next) {
       if (curr->ai_family == AF_INET || curr->ai_family == AF_INET6) {
-        lua_newtable(R);
+        lua_newtable(L);
         if (curr->ai_family == AF_INET) {
           addr = (char*) &((struct sockaddr_in*) curr->ai_addr)->sin_addr;
           port = ((struct sockaddr_in*) curr->ai_addr)->sin_port;
-          lua_pushstring(R, "inet");
-          lua_setfield(R, -2, "family");
+          lua_pushstring(L, "inet");
+          lua_setfield(L, -2, "family");
         } else {
           addr = (char*) &((struct sockaddr_in6*) curr->ai_addr)->sin6_addr;
           port = ((struct sockaddr_in6*) curr->ai_addr)->sin6_port;
-          lua_pushstring(R, "inet6");
-          lua_setfield(R, -2, "family");
+          lua_pushstring(L, "inet6");
+          lua_setfield(L, -2, "family");
         }
         uv_inet_ntop(curr->ai_family, addr, ip, INET6_ADDRSTRLEN);
-        lua_pushstring(R, ip);
-        lua_setfield(R, -2, "addr");
+        lua_pushstring(L, ip);
+        lua_setfield(L, -2, "addr");
         if (ntohs(port)) {
-          lua_pushinteger(R, ntohs(port));
-          lua_setfield(R, -2, "port");
+          lua_pushinteger(L, ntohs(port));
+          lua_setfield(L, -2, "port");
         }
         if (curr->ai_socktype == SOCK_STREAM) {
-          lua_pushstring(R, "stream");
-          lua_setfield(R, -2, "socktype");
+          lua_pushstring(L, "stream");
+          lua_setfield(L, -2, "socktype");
         }
         else if (curr->ai_socktype == SOCK_DGRAM) {
-          lua_pushstring(R, "dgram");
-          lua_setfield(R, -2, "socktype");
+          lua_pushstring(L, "dgram");
+          lua_setfield(L, -2, "socktype");
         }
-        lua_pushstring(R, luv_family_to_string(curr->ai_protocol));
-        lua_setfield(R, -2, "protocol");
+        lua_pushstring(L, luv_family_to_string(curr->ai_protocol));
+        lua_setfield(L, -2, "protocol");
         if (curr->ai_canonname) {
-          lua_pushstring(R, curr->ai_canonname);
-          lua_setfield(R, -2, "canonname");
+          lua_pushstring(L, curr->ai_canonname);
+          lua_setfield(L, -2, "canonname");
         }
-        lua_rawseti(R, -2, ++i);
+        lua_rawseti(L, -2, ++i);
       }
     }
   }
-  luv_fulfill_req(R, req->data, nargs);
-  luv_cleanup_req(R, req->data);
+  luv_fulfill_req(L, req->data, nargs);
+  luv_cleanup_req(L, req->data);
   req->data = NULL;
   if (res) uv_freeaddrinfo(res);
 }
@@ -187,7 +188,7 @@ static int luv_getaddrinfo(lua_State* L) {
   req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
 
-  ret = uv_getaddrinfo(uv_default_loop(), req, luv_getaddrinfo_cb, node, service, hints);
+  ret = uv_getaddrinfo(luv_loop(L), req, luv_getaddrinfo_cb, node, service, hints);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
@@ -196,21 +197,23 @@ static int luv_getaddrinfo(lua_State* L) {
 }
 
 static void luv_getnameinfo_cb(uv_getnameinfo_t* req, int status, const char* hostname, const char* service) {
+  lua_State* L = luv_state(req->loop);
+
   int nargs;
 
   if (status < 0) {
-    luv_status(R, status);
+    luv_status(L, status);
     nargs = 1;
   }
   else {
-    lua_pushnil(R);
-    lua_pushstring(R, hostname);
-    lua_pushstring(R, service);
+    lua_pushnil(L);
+    lua_pushstring(L, hostname);
+    lua_pushstring(L, service);
     nargs = 3;
   }
 
-  luv_fulfill_req(R, req->data, nargs);
-  luv_cleanup_req(R, req->data);
+  luv_fulfill_req(L, req->data, nargs);
+  luv_cleanup_req(L, req->data);
   req->data = NULL;
 }
 
@@ -270,7 +273,7 @@ static int luv_getnameinfo(lua_State* L) {
   req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
 
-  ret = uv_getnameinfo(uv_default_loop(), req, luv_getnameinfo_cb, (struct sockaddr*)&addr, flags);
+  ret = uv_getnameinfo(luv_loop(L), req, luv_getnameinfo_cb, (struct sockaddr*)&addr, flags);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
