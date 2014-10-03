@@ -57,7 +57,7 @@ return require('lib/tap')(function (test)
       assert(uv.write(client, "BYE!\n"));
       assert(uv.shutdown(client, function ()
         uv.close(client)
-        uv.close(server)
+        uv.unref(server)
         done = true
         answer = 42
       end))
@@ -138,6 +138,7 @@ return require('lib/tap')(function (test)
     local execpath = assert(uv.execpath())
     local cpu_count = # assert(uv.cpu_info())
     local left = cpu_count
+    local children = {}
 
     local server = uv.new_tcp()
     assert(uv.tcp_bind(server, "::1", 0))
@@ -192,7 +193,7 @@ return require('lib/tap')(function (test)
         }
       }, onexit))
       p("Spawned client", pid)
-      uv.write(input, client_code)
+      assert(uv.write(input, client_code))
       assert(uv.shutdown(input))
       uv.close(input)
     end
@@ -204,16 +205,13 @@ return require('lib/tap')(function (test)
 
     -- Spawn the clients after a short delay
     local timer = uv.new_timer()
-    uv.timer_start(timer, 500, 0, expect(function (self)
+    uv.timer_start(timer, 1000, 0, expect(function (self)
       assert(self == timer)
       for i = 1, cpu_count do
         spawnClient()
       end
       uv.close(timer)
     end))
-
-
-
 
   end)
 end)

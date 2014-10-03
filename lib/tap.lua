@@ -37,6 +37,7 @@ local function run()
   print("1.." .. #tests)
   for i = 1, #tests do
     local test = tests[i]
+    local cwd = uv.cwd()
     local pass, err = xpcall(function ()
       local expected = 0
       local function expect(fn, count)
@@ -66,9 +67,17 @@ local function run()
       if unclosed > 0 then
         error(unclosed .. " unclosed handle" .. (unclosed == 1 and "" or "s"))
       end
+      if uv.cwd() ~= cwd then
+        error("Test moved cwd from " .. cwd .. " to " .. uv.cwd())
+      end
       collectgarbage()
     end, debug.traceback)
+
+    -- Flush out any more opened handles
+    uv.run()
     uv.walk(uv.close)
+    uv.run()
+    uv.chdir(cwd)
 
     if pass then
       print("ok " .. i .. " " .. test.name)
