@@ -83,6 +83,7 @@ local function run()
 end
 
 local single = true
+local prefix
 
 local function tap(suite)
   print(single, suite)
@@ -90,11 +91,18 @@ local function tap(suite)
   if type(suite) == "function" then
     -- Pass in suite directly for single mode
     suite(function (name, fn)
+      if prefix then
+        name = prefix .. ' - ' .. name
+      end
       tests[#tests + 1] = {
         name = name,
         fn = fn
       }
     end)
+    prefix = nil
+  elseif type(suite) == "string" then
+    prefix = suite
+    single = false
   else
     -- Or pass in false to collect several runs of tests
     -- And then pass in true in a later call to flush tests queue.

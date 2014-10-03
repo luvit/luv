@@ -1,24 +1,24 @@
-return require('lib/tap')(function (test)
+local child_code = string.dump(function ()
+  local uv = require('luv')
+  local signal = uv.new_signal()
+  uv.ref(signal)
+  uv.signal_start(signal, "sigint", function (self)
+    assert(self == signal)
+    print("# SIGINT caught")
+    uv.unref(signal)
+  end)
+  print("# blocking")
+  uv.run()
+  print("# done")
+end)
 
-  local child_code = [[
-    local uv = require('luv')
-    local signal = uv.new_signal()
-    uv.ref(signal)
-    uv.signal_start(signal, "sigint", function (self)
-      assert(self == signal)
-      print("# SIGINT caught")
-      uv.unref(signal)
-    end)
-    print("# blocking")
-    uv.run()
-    print("# done")
-  ]]
+return require('lib/tap')(function (test)
 
   test("Catch SIGINT", function (print, p, expect, uv)
     local child, pid
+    local input = uv.new_pipe(false)
     child, pid = uv.spawn(uv.execpath(), {
-      args = {"-e", child_code},
-      stdio = {nil,1}
+      stdio = {input,1,2}
     }, expect(function (self, code, signal)
       p("exit", {pid=pid,code=code,signal=signal})
       assert(self == child)
@@ -26,6 +26,10 @@ return require('lib/tap')(function (test)
       assert(signal == 0)
       uv.close(child)
     end))
+    uv.write(input, child_code)
+    uv.shutdown(input, function ()
+      uv.close(input)
+    end)
     uv.timer_start(uv.new_timer(), 200, 0, function (timer)
       print("Sending child SIGINT")
       uv.process_kill(child, "sigint")
