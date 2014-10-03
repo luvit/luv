@@ -15,7 +15,7 @@ return require('lib/tap')(function (test)
   test("Catch SIGINT", function (print, p, expect, uv)
     local child, pid
     local input = uv.new_pipe(false)
-    child, pid = uv.spawn(uv.execpath(), {
+    child, pid = uv.spawn(uv.exepath(), {
       -- cwd = uv.cwd(),
       stdio = {input,1,2}
     }, expect(function (self, code, signal)

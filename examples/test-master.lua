@@ -52,7 +52,7 @@ end)
 local p = require('lib/utils').prettyPrint
 local uv = require('luv')
 
-local execpath = assert(uv.execpath())
+local exepath = assert(uv.exepath())
 local cpu_count = # assert(uv.cpu_info())
 
 local server = uv.new_tcp()
@@ -67,7 +67,7 @@ end
 local function spawnChild()
   local pipe = uv.new_pipe(true)
   local input = uv.new_pipe(false)
-  local child, pid = assert(uv.spawn(execpath, {
+  local child, pid = assert(uv.spawn(exepath, {
     stdio = {input,1,2,pipe},
     env= {"PIPE_FD=3"}
   }, onexit))

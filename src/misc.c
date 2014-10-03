@@ -220,12 +220,12 @@ static int luv_loadavg(lua_State* L) {
   return 3;
 }
 
-static int luv_execpath(lua_State* L) {
+static int luv_exepath(lua_State* L) {
   size_t size = 2*PATH_MAX;
-  char exec_path[2*PATH_MAX];
-  int ret = uv_exepath(exec_path, &size);
+  char exe_path[2*PATH_MAX];
+  int ret = uv_exepath(exe_path, &size);
   if (ret < 0) return luv_error(L, ret);
-  lua_pushlstring(L, exec_path, size);
+  lua_pushlstring(L, exe_path, size);
   return 1;
 }
 

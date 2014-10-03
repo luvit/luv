@@ -52,8 +52,8 @@ return require('lib/tap')(function (test)
     assert(#avg == 3)
   end)
 
-  test("uv.execpath", function (print, p, expect, uv)
-    local path = assert(uv.execpath())
+  test("uv.exepath", function (print, p, expect, uv)
+    local path = assert(uv.exepath())
     p(path)
   end)
 

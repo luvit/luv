@@ -226,7 +226,7 @@ static const luaL_Reg luv_functions[] = {
   {"cpu_info", luv_cpu_info},
   {"interface_addresses", luv_interface_addresses},
   {"loadavg", luv_loadavg},
-  {"execpath", luv_execpath},
+  {"exepath", luv_exepath},
   {"cwd", luv_cwd},
   {"chdir", luv_chdir},
   {"get_total_memory", luv_get_total_memory},

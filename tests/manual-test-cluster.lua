@@ -135,7 +135,7 @@ return require('lib/tap')(function (test)
 
   test("tcp cluster", function (print, p, expect, uv)
 
-    local execpath = assert(uv.execpath())
+    local exepath = assert(uv.exepath())
     local cpu_count = # assert(uv.cpu_info())
     local left = cpu_count
     local children = {}
@@ -151,7 +151,7 @@ return require('lib/tap')(function (test)
     local function spawnWorker()
       local pipe = uv.new_pipe(true)
       local input = uv.new_pipe(false)
-      local child, pid = assert(uv.spawn(execpath, {
+      local child, pid = assert(uv.spawn(exepath, {
         cwd = uv.cwd(),
         stdio = {input,1,2,pipe},
         env= {"PIPE_FD=3"}
@@ -184,7 +184,7 @@ return require('lib/tap')(function (test)
 
     local function spawnClient()
       local input = uv.new_pipe(false)
-      local child, pid = assert(uv.spawn(execpath, {
+      local child, pid = assert(uv.spawn(exepath, {
         stdio = {input,1,2},
         cwd = uv.cwd(),
         env= {
