@@ -86,7 +86,6 @@ local single = true
 local prefix
 
 local function tap(suite)
-  print(single, suite)
 
   if type(suite) == "function" then
     -- Pass in suite directly for single mode
