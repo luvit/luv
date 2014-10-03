@@ -36,7 +36,6 @@ Here is an example of an TCP echo server
 local function create_server(host, port, on_connection)
 
   local server = uv.new_tcp()
-  p(1, server)
   uv.tcp_bind(server, host, port)
 
   uv.listen(server, 128, function(self)
@@ -49,9 +48,8 @@ local function create_server(host, port, on_connection)
 end
 
 local server = create_server("0.0.0.0", 0, function (client)
-  p("new client", client, uv.tcp_getsockname(client), uv.tcp_getpeername(client))
+
   uv.read_start(client, function (self, err, chunk)
-    p("onread", {self=self, err=err,chunk=chunk})
 
     -- Crash on errors
     assert(not err, err)
