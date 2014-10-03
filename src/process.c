@@ -201,113 +201,113 @@ static int luv_parse_signal(lua_State* L, int slot) {
   if (lua_isstring(L, slot)) {
 const char* string = lua_tostring(L, slot);
 #ifdef SIGHUP
-    if (strcmp(string, "sighup") == 0) return SIGHUP;
+    if (strcasecmp(string, "sighup") == 0) return SIGHUP;
 #endif
 #ifdef SIGINT
-    if (strcmp(string, "sigint") == 0) return SIGINT;
+    if (strcasecmp(string, "sigint") == 0) return SIGINT;
 #endif
 #ifdef SIGQUIT
-    if (strcmp(string, "sigquit") == 0) return SIGQUIT;
+    if (strcasecmp(string, "sigquit") == 0) return SIGQUIT;
 #endif
 #ifdef SIGILL
-    if (strcmp(string, "sigill") == 0) return SIGILL;
+    if (strcasecmp(string, "sigill") == 0) return SIGILL;
 #endif
 #ifdef SIGTRAP
-    if (strcmp(string, "sigtrap") == 0) return SIGTRAP;
+    if (strcasecmp(string, "sigtrap") == 0) return SIGTRAP;
 #endif
 #ifdef SIGABRT
-    if (strcmp(string, "sigabrt") == 0) return SIGABRT;
+    if (strcasecmp(string, "sigabrt") == 0) return SIGABRT;
 #endif
 #ifdef SIGIOT
-    if (strcmp(string, "sigiot") == 0) return SIGIOT;
+    if (strcasecmp(string, "sigiot") == 0) return SIGIOT;
 #endif
 #ifdef SIGBUS
-    if (strcmp(string, "sigbus") == 0) return SIGBUS;
+    if (strcasecmp(string, "sigbus") == 0) return SIGBUS;
 #endif
 #ifdef SIGFPE
-    if (strcmp(string, "sigfpe") == 0) return SIGFPE;
+    if (strcasecmp(string, "sigfpe") == 0) return SIGFPE;
 #endif
 #ifdef SIGKILL
-    if (strcmp(string, "sigkill") == 0) return SIGKILL;
+    if (strcasecmp(string, "sigkill") == 0) return SIGKILL;
 #endif
 #ifdef SIGUSR1
-    if (strcmp(string, "sigusr1") == 0) return SIGUSR1;
+    if (strcasecmp(string, "sigusr1") == 0) return SIGUSR1;
 #endif
 #ifdef SIGSEGV
-    if (strcmp(string, "sigsegv") == 0) return SIGSEGV;
+    if (strcasecmp(string, "sigsegv") == 0) return SIGSEGV;
 #endif
 #ifdef SIGUSR2
-    if (strcmp(string, "sigusr2") == 0) return SIGUSR2;
+    if (strcasecmp(string, "sigusr2") == 0) return SIGUSR2;
 #endif
 #ifdef SIGPIPE
-    if (strcmp(string, "sigpipe") == 0) return SIGPIPE;
+    if (strcasecmp(string, "sigpipe") == 0) return SIGPIPE;
 #endif
 #ifdef SIGALRM
-    if (strcmp(string, "sigalrm") == 0) return SIGALRM;
+    if (strcasecmp(string, "sigalrm") == 0) return SIGALRM;
 #endif
 #ifdef SIGTERM
-    if (strcmp(string, "sigterm") == 0) return SIGTERM;
+    if (strcasecmp(string, "sigterm") == 0) return SIGTERM;
 #endif
 #ifdef SIGCHLD
-    if (strcmp(string, "sigchld") == 0) return SIGCHLD;
+    if (strcasecmp(string, "sigchld") == 0) return SIGCHLD;
 #endif
 #ifdef SIGSTKFLT
-    if (strcmp(string, "sigstkflt") == 0) return SIGSTKFLT;
+    if (strcasecmp(string, "sigstkflt") == 0) return SIGSTKFLT;
 #endif
 #ifdef SIGCONT
-    if (strcmp(string, "sigcont") == 0) return SIGCONT;
+    if (strcasecmp(string, "sigcont") == 0) return SIGCONT;
 #endif
 #ifdef SIGSTOP
-    if (strcmp(string, "sigstop") == 0) return SIGSTOP;
+    if (strcasecmp(string, "sigstop") == 0) return SIGSTOP;
 #endif
 #ifdef SIGTSTP
-    if (strcmp(string, "sigtstp") == 0) return SIGTSTP;
+    if (strcasecmp(string, "sigtstp") == 0) return SIGTSTP;
 #endif
 #ifdef SIGBREAK
-    if (strcmp(string, "sigbreak") == 0) return SIGBREAK;
+    if (strcasecmp(string, "sigbreak") == 0) return SIGBREAK;
 #endif
 #ifdef SIGTTIN
-    if (strcmp(string, "sigttin") == 0) return SIGTTIN;
+    if (strcasecmp(string, "sigttin") == 0) return SIGTTIN;
 #endif
 #ifdef SIGTTOU
-    if (strcmp(string, "sigttou") == 0) return SIGTTOU;
+    if (strcasecmp(string, "sigttou") == 0) return SIGTTOU;
 #endif
 #ifdef SIGURG
-    if (strcmp(string, "sigurg") == 0) return SIGURG;
+    if (strcasecmp(string, "sigurg") == 0) return SIGURG;
 #endif
 #ifdef SIGXCPU
-    if (strcmp(string, "sigxcpu") == 0) return SIGXCPU;
+    if (strcasecmp(string, "sigxcpu") == 0) return SIGXCPU;
 #endif
 #ifdef SIGXFSZ
-    if (strcmp(string, "sigxfsz") == 0) return SIGXFSZ;
+    if (strcasecmp(string, "sigxfsz") == 0) return SIGXFSZ;
 #endif
 #ifdef SIGVTALRM
-    if (strcmp(string, "sigvtalrm") == 0) return SIGVTALRM;
+    if (strcasecmp(string, "sigvtalrm") == 0) return SIGVTALRM;
 #endif
 #ifdef SIGPROF
-    if (strcmp(string, "sigprof") == 0) return SIGPROF;
+    if (strcasecmp(string, "sigprof") == 0) return SIGPROF;
 #endif
 #ifdef SIGWINCH
-    if (strcmp(string, "sigwinch") == 0) return SIGWINCH;
+    if (strcasecmp(string, "sigwinch") == 0) return SIGWINCH;
 #endif
 #ifdef SIGIO
-    if (strcmp(string, "sigio") == 0) return SIGIO;
+    if (strcasecmp(string, "sigio") == 0) return SIGIO;
 #endif
 #ifdef SIGPOLL
 # if SIGPOLL != SIGIO
-    if (strcmp(string, "sigpoll") == 0) return SIGPOLL;
+    if (strcasecmp(string, "sigpoll") == 0) return SIGPOLL;
 # endif
 #endif
 #ifdef SIGLOST
-    if (strcmp(string, "siglost") == 0) return SIGLOST;
+    if (strcasecmp(string, "siglost") == 0) return SIGLOST;
 #endif
 #ifdef SIGPWR
 # if SIGPWR != SIGLOST
-    if (strcmp(string, "sigpwr") == 0) return SIGPWR;
+    if (strcasecmp(string, "sigpwr") == 0) return SIGPWR;
 # endif
 #endif
 #ifdef SIGSYS
-    if (strcmp(string, "sigsys") == 0) return SIGSYS;
+    if (strcasecmp(string, "sigsys") == 0) return SIGSYS;
 #endif
     return luaL_error(L, "Unknown signal '%s'", string);
   }

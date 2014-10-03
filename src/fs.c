@@ -101,12 +101,12 @@ static void luv_push_stats_table(lua_State* L, const uv_stat_t* s) {
 }
 
 static int luv_string_to_flags(lua_State* L, const char* string) {
-  if (strcmp(string, "r") == 0) return O_RDONLY;
-  if (strcmp(string, "r+") == 0) return O_RDWR;
-  if (strcmp(string, "w") == 0) return O_CREAT | O_TRUNC | O_WRONLY;
-  if (strcmp(string, "w+") == 0) return O_CREAT | O_TRUNC | O_RDWR;
-  if (strcmp(string, "a") == 0) return O_APPEND | O_CREAT | O_WRONLY;
-  if (strcmp(string, "a+") == 0) return O_APPEND | O_CREAT | O_RDWR;
+  if (strcasecmp(string, "r") == 0) return O_RDONLY;
+  if (strcasecmp(string, "r+") == 0) return O_RDWR;
+  if (strcasecmp(string, "w") == 0) return O_CREAT | O_TRUNC | O_WRONLY;
+  if (strcasecmp(string, "w+") == 0) return O_CREAT | O_TRUNC | O_RDWR;
+  if (strcasecmp(string, "a") == 0) return O_APPEND | O_CREAT | O_WRONLY;
+  if (strcasecmp(string, "a+") == 0) return O_APPEND | O_CREAT | O_RDWR;
   return luaL_error(L, "Unknown file open flag '%s'", string);
 }
 

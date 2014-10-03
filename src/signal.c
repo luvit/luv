@@ -34,16 +34,16 @@ static const char* luv_signal_to_string(int signal) {
 
 static int luv_string_to_signal(const char* string) {
 #ifdef SIGINT
-  if (strcmp(string, "sigint") == 0) return SIGINT;
+  if (strcasecmp(string, "sigint") == 0) return SIGINT;
 #endif
 #ifdef SIGBREAK
-  if (strcmp(string, "sigbreak") == 0) return SIGBREAK;
+  if (strcasecmp(string, "sigbreak") == 0) return SIGBREAK;
 #endif
 #ifdef SIGHUP
-  if (strcmp(string, "sighup") == 0) return SIGHUP;
+  if (strcasecmp(string, "sighup") == 0) return SIGHUP;
 #endif
 #ifdef SIGWINCH
-  if (strcmp(string, "sigwinch") == 0) return SIGWINCH;
+  if (strcasecmp(string, "sigwinch") == 0) return SIGWINCH;
 #endif
   return 0;
 }

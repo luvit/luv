@@ -117,10 +117,10 @@ static int luv_getaddrinfo(lua_State* L) {
     lua_getfield(L, 3, "socktype");
     if (lua_isstring(L, -1)) {
       const char* socktype = lua_tostring(L, -1);
-      if (strcmp(socktype, "stream") == 0) {
+      if (strcasecmp(socktype, "stream") == 0) {
         hints->ai_socktype = SOCK_STREAM;
       }
-      else if (strcmp(socktype, "dgram") == 0) {
+      else if (strcasecmp(socktype, "dgram") == 0) {
         hints->ai_socktype = SOCK_DGRAM;
       }
       else {
@@ -281,34 +281,34 @@ static int luv_getnameinfo(lua_State* L) {
 static int luv_string_to_family(const char* protocol) {
   if (!protocol) return AF_UNSPEC;
 #ifdef AF_UNIX
-  if (strcmp(protocol, "unix") == 0) return AF_UNIX;
+  if (strcasecmp(protocol, "unix") == 0) return AF_UNIX;
 #endif
 #ifdef AF_INET
-  if (strcmp(protocol, "inet") == 0) return AF_INET;
+  if (strcasecmp(protocol, "inet") == 0) return AF_INET;
 #endif
 #ifdef AF_INET6
-  if (strcmp(protocol, "inet6") == 0) return AF_INET6;
+  if (strcasecmp(protocol, "inet6") == 0) return AF_INET6;
 #endif
 #ifdef AF_IPX
-  if (strcmp(protocol, "ipx") == 0) return AF_IPX;
+  if (strcasecmp(protocol, "ipx") == 0) return AF_IPX;
 #endif
 #ifdef AF_NETLINK
-  if (strcmp(protocol, "netlink") == 0) return AF_NETLINK;
+  if (strcasecmp(protocol, "netlink") == 0) return AF_NETLINK;
 #endif
 #ifdef AF_X25
-  if (strcmp(protocol, "x25") == 0) return AF_X25;
+  if (strcasecmp(protocol, "x25") == 0) return AF_X25;
 #endif
 #ifdef AF_AX25
-  if (strcmp(protocol, "ax25") == 0) return AF_AX25;
+  if (strcasecmp(protocol, "ax25") == 0) return AF_AX25;
 #endif
 #ifdef AF_ATMPVC
-  if (strcmp(protocol, "atmpvc") == 0) return AF_ATMPVC;
+  if (strcasecmp(protocol, "atmpvc") == 0) return AF_ATMPVC;
 #endif
 #ifdef AF_APPLETALK
-  if (strcmp(protocol, "appletalk") == 0) return AF_APPLETALK;
+  if (strcasecmp(protocol, "appletalk") == 0) return AF_APPLETALK;
 #endif
 #ifdef AF_PACKET
-  if (strcmp(protocol, "packet") == 0) return AF_PACKET;
+  if (strcasecmp(protocol, "packet") == 0) return AF_PACKET;
 #endif
   return 0;
 }
