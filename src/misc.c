@@ -177,7 +177,6 @@ static int luv_interface_addresses(lua_State* L) {
   lua_newtable(L);
 
   for (i = 0; i < count; i++) {
-    const char* family;
 
     lua_getfield(L, -1, interfaces[i].name);
     if (!lua_istable(L, -1)) {
@@ -192,17 +191,14 @@ static int luv_interface_addresses(lua_State* L) {
 
     if (interfaces[i].address.address4.sin_family == AF_INET) {
       uv_ip4_name(&interfaces[i].address.address4,ip, sizeof(ip));
-      family = "inet";
     } else if (interfaces[i].address.address4.sin_family == AF_INET6) {
       uv_ip6_name(&interfaces[i].address.address6, ip, sizeof(ip));
-      family = "inet6";
     } else {
       strncpy(ip, "<unknown sa family>", INET6_ADDRSTRLEN);
-      family = "<unknown>";
     }
     lua_pushstring(L, ip);
     lua_setfield(L, -2, "ip");
-    lua_pushstring(L, family);
+    lua_pushstring(L, luv_protocol_to_string(interfaces[i].address.address4.sin_family));
     lua_setfield(L, -2, "family");
     lua_rawseti(L, -2, lua_rawlen (L, -2) + 1);
     lua_pop(L, 1);
