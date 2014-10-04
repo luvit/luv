@@ -82,7 +82,9 @@ static void parse_sockaddr(lua_State* L, struct sockaddr_storage* address, int a
 static void luv_push_stats_table(lua_State* L, const uv_stat_t* s);
 
 // From dns.c
-static const char* luv_family_to_string(int family);
-static int luv_string_to_family(const char* protocol);
+static int luv_string_to_socktype(const char* string);
+static const char* luv_socktype_to_string(int socktype);
+static int luv_string_to_protocol(const char* protocol);
+static const char* luv_protocol_to_string(int family);
 
 #endif

@@ -31,7 +31,7 @@ local child_code = string.dump(function ()
     if uv.pipe_pending_count(self) > 0 then
       local pending_type = uv.pipe_pending_type(self)
       p("pending_type", pending_type)
-      assert(pending_type == "tcp")
+      assert(pending_type == "TCP")
       assert(uv.accept(pipe, server))
       assert(uv.listen(server, 128, onconnection))
       p("Received server handle from parent process", server)
@@ -39,8 +39,6 @@ local child_code = string.dump(function ()
       p("ondata", data)
     else
       p("onend", data)
-    end
-    if pending then
     end
   end
   uv.read_start(pipe, onread)

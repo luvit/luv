@@ -30,7 +30,7 @@ local function next()
     addrconfig = true,
     canonname = true,
     numericserv = true,
-    socktype = "stream"
+    socktype = "STREAM"
   }, function (err, data)
     assert(not err, err)
     p(data)

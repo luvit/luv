@@ -70,7 +70,7 @@ return require('lib/tap')(function (test)
       if uv.pipe_pending_count(self) > 0 then
         local pending_type = uv.pipe_pending_type(self)
         p("pending_type", pending_type)
-        assert(pending_type == "tcp")
+        assert(pending_type == "TCP")
         assert(uv.accept(pipe, server))
         assert(uv.listen(server, 0, onconnection))
         p("Received server handle from parent process", server)
@@ -78,8 +78,6 @@ return require('lib/tap')(function (test)
         p("ondata", data)
       else
         p("onend", data)
-      end
-      if pending then
       end
     end
     uv.read_start(pipe, onread)

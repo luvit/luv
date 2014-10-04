@@ -94,10 +94,10 @@ static int luv_pipe_pending_type(lua_State* L) {
   const char* type_name;
   switch (type) {
 #define XX(uc, lc) \
-    case UV_##uc: type_name = #lc; break;
+    case UV_##uc: type_name = #uc; break;
   UV_HANDLE_TYPE_MAP(XX)
 #undef XX
-    default: type_name = "unknown"; break;
+    default: return 0;
   }
   lua_pushstring(L, type_name);
   return 1;

@@ -10,8 +10,8 @@ return require('lib/tap')(function (test)
 
   test("Get only ipv4 tcp adresses for luvit.io", function (print, p, expect, uv)
     assert(uv.getaddrinfo("luvit.io", nil, {
-      socktype = "stream",
-      family = "inet",
+      socktype = "STREAM",
+      family = "INET",
     }, expect(function (err, res)
       assert(not err, err)
       p(res, #res)
@@ -21,8 +21,8 @@ return require('lib/tap')(function (test)
 
   test("Get only ipv6 tcp adresses for luvit.io", function (print, p, expect, uv)
     assert(uv.getaddrinfo("luvit.io", nil, {
-      socktype = "stream",
-      family = "inet6",
+      socktype = "STREAM",
+      family = "INET6",
     }, expect(function (err, res)
       assert(not err, err)
       p(res, #res)
@@ -32,7 +32,7 @@ return require('lib/tap')(function (test)
 
   test("Get ipv4 and ipv6 tcp adresses for luvit.io", function (print, p, expect, uv)
     assert(uv.getaddrinfo("luvit.io", nil, {
-      socktype = "stream",
+      socktype = "STREAM",
     }, expect(function (err, res)
       assert(not err, err)
       p(res, #res)
@@ -50,7 +50,7 @@ return require('lib/tap')(function (test)
 
   test("Lookup local ipv4 address", function (print, p, expect, uv)
     assert(uv.getnameinfo({
-      family = "inet",
+      family = "INET",
     }, expect(function (err, hostname, service)
       p{err=err,hostname=hostname,service=service}
       assert(not err, err)
@@ -72,7 +72,7 @@ return require('lib/tap')(function (test)
 
   test("Lookup local ipv6 address", function (print, p, expect, uv)
     assert(uv.getnameinfo({
-      family = "inet6",
+      family = "INET6",
     }, expect(function (err, hostname, service)
       p{err=err,hostname=hostname,service=service}
       assert(not err, err)
@@ -95,7 +95,7 @@ return require('lib/tap')(function (test)
   test("Lookup local port 80 service", function (print, p, expect, uv)
     assert(uv.getnameinfo({
       port = 80,
-      family = "inet6",
+      family = "INET6",
     }, expect(function (err, hostname, service)
       p{err=err,hostname=hostname,service=service}
       assert(not err, err)
