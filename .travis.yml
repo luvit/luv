@@ -5,3 +5,7 @@ before_install:
 
 script:
   - make test
+
+notifications:
+  email: true
+  irc: "irc.freenode.org#luvit"
