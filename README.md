@@ -72,4 +72,4 @@ create_server("0.0.0.0", 0, function (client)
 end)
 ```
 
-More examples can be found in the examples and tests folders.
+More examples can be found in the [examples](examples) and [tests](tests) folders.
