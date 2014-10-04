@@ -1,0 +1,7 @@
+language: c
+
+before_install:
+  - sudo apt-get install luajit libluajit-5.1-dev -y
+
+script:
+  - make test
