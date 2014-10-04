@@ -1,6 +1,8 @@
 luv
 ===
 
+[![Build Status](https://travis-ci.org/luvit/luv.svg?branch=master)](https://travis-ci.org/luvit/luv)
+
 libuv bindings for luajit and lua 5.1/5.2.
 
 This library makes libuv available to lua scripts.  It was made for the [luvit](http://luvit.io/) project but should usable from nearly any lua project.
