@@ -79,3 +79,8 @@ test: luv.so
 test-all: test
 	luajit tests/manual-test-cluster.lua
 
+install-luajit:
+	curl http://luajit.org/download/LuaJIT-2.0.3.tar.gz -O
+	tar -xzf LuaJIT-2.0.3.tar.gz
+	LUAJIT_ENABLE_LUA52COMPAT=1 make -C LuaJIT-2.0.3 -j4
+	sudo make -C LuaJIT-2.0.3 install
