@@ -16,10 +16,11 @@
  */
 
 #include "luv.h"
+#ifndef WIN32
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-
+#endif
 
 static void luv_getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res) {
   lua_State* L = luv_state(req->loop);

@@ -134,6 +134,6 @@ static int luv_fileno(lua_State* L) {
   uv_os_fd_t fd;
   int ret = uv_fileno(handle, &fd);
   if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, fd);
+  lua_pushinteger(L, (LUA_INTEGER)fd);
   return 1;
 }

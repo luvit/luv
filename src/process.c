@@ -87,7 +87,7 @@ static int luv_spawn(lua_State* L) {
       }
       // userdata is assumed to be a uv_stream_t instance
       else if (lua_type(L, -1) == LUA_TUSERDATA) {
-        int fd;
+        uv_os_fd_t fd;
         uv_stream_t* stream = luv_check_stream(L, -1);
         int err = uv_fileno((uv_handle_t*)stream, &fd);
         if (err == UV_EINVAL || err == UV_EBADF) {
