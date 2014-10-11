@@ -1,5 +1,14 @@
 
-local table = require('table')
+local uv = require('luv')
+local stdout, usecolors
+if uv.guess_handle(1) == "TTY" then
+  stdout = uv.new_tty(1, false)
+  usecolors = true
+else
+  stdout = uv.new_pipe(false)
+  uv.pipe_open(1)
+  usecolors = false
+end
 
 local utils = {}
 
@@ -23,12 +32,8 @@ local colors = {
   Bwhite   = "1;37"
 }
 
-if utils._useColors == nil then
-  utils._useColors = true
-end
-
 function utils.color(color_name)
-  if utils._useColors then
+  if usecolors then
     return "\27[" .. (colors[color_name] or "0") .. "m"
   else
     return ""
@@ -54,7 +59,7 @@ function utils.loadColors (n)
   cbracket  = utils.colorize("B", ']')
 end
 
-utils.loadColors ()
+utils.loadColors()
 
 function utils.dump(o, depth)
   local t = type(o)
@@ -131,6 +136,14 @@ function utils.dump(o, depth)
   return tostring(o)
 end
 
+
+
+-- Print replacement that goes through libuv.  This is useful on windows
+-- to use libuv's code to translate ansi escape codes to windows API calls.
+function utils.print(...)
+  uv.write(stdout, table.concat({...}, "\t") .. "\n")
+end
+
 -- A nice global data dumper
 function utils.prettyPrint(...)
   local n = select('#', ...)
@@ -140,19 +153,7 @@ function utils.prettyPrint(...)
     arguments[i] = utils.dump(arguments[i])
   end
 
-  io.stdout:write(table.concat(arguments, "\t") .. "\n")
-end
-
--- prettyprint to stderr
-function utils.debug(...)
-  local n = select('#', ...)
-  local arguments = { ... }
-
-  for i = 1, n do
-    arguments[i] = utils.dump(arguments[i])
-  end
-
-  io.stderr:write(table.concat(arguments, "\t") .. "\n")
+  uv.write(stdout, table.concat(arguments, "\t") .. "\n")
 end
 
 return utils

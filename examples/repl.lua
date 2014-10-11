@@ -1,5 +1,6 @@
 uv = require('luv')
 local utils = require('lib/utils')
+print = require('lib/utils').print
 
 local stdin
 if uv.guess_handle(0) ~= "TTY" or
