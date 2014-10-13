@@ -16,23 +16,22 @@
  */
 #include "lhandle.h"
 
-// Given the ref to the userdata, create and return a new luv_handle struct
-static luv_handle_t* luv_create_handle(int ref) {
-  luv_handle_t* data = malloc(sizeof(*data));
-  data->ref = ref;
-  data->callbacks[0] = LUA_NOREF;
-  data->callbacks[1] = LUA_NOREF;
-  return data;
-}
-
 static luv_handle_t* luv_setup_handle(lua_State* L) {
+  luv_handle_t* data;
   luaL_checktype(L, -1, LUA_TUSERDATA);
+
+  data = malloc(sizeof(*data));
+  if (!data) luaL_error(L, "Can't allocate luv handle");
 
   luaL_getmetatable(L, "uv_handle");
   lua_setmetatable(L, -2);
 
   lua_pushvalue(L, -1);
-  return luv_create_handle(luaL_ref(L, LUA_REGISTRYINDEX));
+
+  data->ref = luaL_ref(L, LUA_REGISTRYINDEX);
+  data->callbacks[0] = LUA_NOREF;
+  data->callbacks[1] = LUA_NOREF;
+  return data;
 }
 
 static void luv_check_callback(lua_State* L, luv_handle_t* data, luv_callback_id id, int index) {

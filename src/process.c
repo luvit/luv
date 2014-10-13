@@ -71,6 +71,10 @@ static int luv_spawn(lua_State* L) {
   }
   // +1 for null terminator at end
   options.args = malloc((len + 1) * sizeof(*options.args));
+  if (!options.args) {
+    luv_clean_options(&options);
+    return luaL_error(L, "Problem allocating args");
+  }
   options.args[0] = (char*)options.file;
   for (i = 1; i < len; ++i) {
     lua_rawgeti(L, -1, i);
@@ -85,6 +89,10 @@ static int luv_spawn(lua_State* L) {
   if (lua_type(L, -1) == LUA_TTABLE) {
     options.stdio_count = len = lua_rawlen(L, -1);
     options.stdio = malloc(len * sizeof(*options.stdio));
+    if (!options.stdio) {
+      luv_clean_options(&options);
+      return luaL_error(L, "Problem allocating stdio");
+    }
     for (i = 0; i < len; ++i) {
       lua_rawgeti(L, -1, i + 1);
       // integers are assumed to be file descripters
@@ -126,6 +134,10 @@ static int luv_spawn(lua_State* L) {
   if (lua_type(L, -1) == LUA_TTABLE) {
     len = lua_rawlen(L, -1);
     options.env = malloc((len + 1) * sizeof(*options.env));
+    if (!options.env) {
+      luv_clean_options(&options);
+      return luaL_error(L, "Problem allocating env");
+    }
     for (i = 0; i < len; ++i) {
       lua_rawgeti(L, -1, i + 1);
       options.env[i] = (char*)lua_tostring(L, -1);

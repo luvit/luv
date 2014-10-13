@@ -257,9 +257,14 @@ static int luv_fs_read(lua_State* L) {
   uv_file file = luaL_checkinteger(L, 1);
   int64_t len = luaL_checkinteger(L, 2);
   int64_t offset = luaL_checkinteger(L, 3);
-  uv_buf_t buf = uv_buf_init(malloc(len), len);
-  int ref = luv_check_continuation(L, 4);
-  uv_fs_t* req = lua_newuserdata(L, sizeof(*req));
+  uv_buf_t buf;
+  int ref;
+  uv_fs_t* req;
+  char* data = malloc(len);
+  if (!data) return luaL_error(L, "Failure to allocate buffer");
+  buf = uv_buf_init(data, len);
+  ref = luv_check_continuation(L, 4);
+  req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
   // TODO: find out why we can't just use req->ptr for the base
   ((luv_req_t*)req->data)->data = buf.base;
