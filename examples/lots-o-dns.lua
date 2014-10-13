@@ -31,7 +31,8 @@ local function next()
     canonname = true,
     numericserv = true,
     socktype = "STREAM"
-  }, function (data)
+  }, function (err, data)
+    assert(not err, err)
     p(data)
     i = i + 1
     if i <= #domains then

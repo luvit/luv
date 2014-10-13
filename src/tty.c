@@ -14,42 +14,52 @@
  *  limitations under the License.
  *
  */
+#include "luv.h"
+
+static uv_tty_t* luv_check_tty(lua_State* L, int index) {
+  uv_tty_t* handle = luaL_checkudata(L, index, "uv_handle");
+  luaL_argcheck(L, handle->type = UV_TTY, index, "Expected uv_tty_t");
+  return handle;
+}
+
+static int luv_new_tty(lua_State* L) {
+  int readable, ret;
+  uv_tty_t* handle;
+  uv_file fd = luaL_checkinteger(L, 1);
+  luaL_checktype(L, 2, LUA_TBOOLEAN);
+  readable = lua_toboolean(L, 2);
+  handle = lua_newuserdata(L, sizeof(*handle));
+  ret = uv_tty_init(luv_loop(L), handle, fd, readable);
+  if (ret < 0) {
+    lua_pop(L, 1);
+    return luv_error(L, ret);
+  }
+  handle->data = luv_setup_handle(L);
+  return 1;
+}
 
 static int luv_tty_set_mode(lua_State* L) {
-#ifdef LUV_STACK_CHECK
-  int top = lua_gettop(L);
-#endif
-  uv_tty_t* handle = luv_get_tty(L, 1);
-  int mode = luaL_checkint(L, 2);
-  if (uv_tty_set_mode(handle, mode)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
-    return luaL_error(L, "tty_set_mode: %s", uv_strerror(err));
-  }
-#ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
-#endif
-  return 0;
+  uv_tty_t* handle = luv_check_tty(L, 1);
+  int mode = luaL_checkinteger(L, 2);
+  int ret = uv_tty_set_mode(handle, mode);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
 }
 
 static int luv_tty_reset_mode(lua_State* L) {
-  uv_tty_reset_mode();
-  return 0;
+  int ret = uv_tty_reset_mode();
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
 }
 
 static int luv_tty_get_winsize(lua_State* L) {
-#ifdef LUV_STACK_CHECK
-  int top = lua_gettop(L);
-#endif
-  uv_tty_t* handle = luv_get_tty(L, 1);
+  uv_tty_t* handle = luv_check_tty(L, 1);
   int width, height;
-  if(uv_tty_get_winsize(handle, &width, &height)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
-    return luaL_error(L, "tty_get_winsize: %s", uv_strerror(err));
-  }
+  int ret = uv_tty_get_winsize(handle, &width, &height);
+  if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, width);
   lua_pushinteger(L, height);
-#ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top + 2);
-#endif
   return 2;
 }

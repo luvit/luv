@@ -15,215 +15,261 @@
  *
  */
 
-#include <string.h>
-#include <stdlib.h>
-#include <assert.h>
-
-#if defined(_WIN32)
-# include <fcntl.h>
-# include <sys/types.h>
-# include <sys/stat.h>
-# define S_ISREG(x)  (((x) & _S_IFMT) == _S_IFREG)
-# define S_ISDIR(x)  (((x) & _S_IFMT) == _S_IFDIR)
-# define S_ISFIFO(x) (((x) & _S_IFMT) == _S_IFIFO)
-# define S_ISCHR(x)  (((x) & _S_IFMT) == _S_IFCHR)
-# define S_ISBLK(x)  0
-# define S_ISLNK(x)  0
-# define S_ISSOCK(x) 0
-#endif
-
-#ifndef PATH_MAX
-#define PATH_MAX (8096)
-#endif
-
-#ifndef MAX_TITLE_LENGTH
-#define MAX_TITLE_LENGTH (8192)
-#endif
-
 #include "luv.h"
-
-#if LUA_VERSION_NUM < 502
-#	define lua_rawlen lua_objlen
-/* lua_...uservalue: Something very different, but it should get the job done */
-#	define lua_getuservalue lua_getfenv
-#	define lua_setuservalue lua_setfenv
-#	define luaL_newlib(L,l) (lua_newtable(L), luaL_register(L,NULL,l))
-#	define luaL_setfuncs(L,l,n) (assert(n==0), luaL_register(L,NULL,l))
-#endif
-
 #include "util.c"
-#include "misc.c"
-#include "dns.c"
+#include "lhandle.c"
+#include "lreq.c"
+#include "loop.c"
+#include "req.c"
 #include "handle.c"
 #include "timer.c"
+#include "prepare.c"
+#include "check.c"
+#include "idle.c"
+#include "async.c"
+#include "poll.c"
+#include "signal.c"
+#include "process.c"
 #include "stream.c"
 #include "tcp.c"
-#include "tty.c"
 #include "pipe.c"
-#include "process.c"
+#include "tty.c"
+#include "udp.c"
+#include "fs_event.c"
+#include "fs_poll.c"
 #include "fs.c"
+// #include "work.c"
+#include "dns.c"
+// #include "thread.c"
+#include "misc.c"
 
 static const luaL_Reg luv_functions[] = {
-  {"new_tcp", new_tcp},
-  {"new_timer", new_timer},
-  {"new_tty", new_tty},
-  {"new_udp", new_udp},
-  {"new_pipe", new_pipe},
+  // loop.c
+  {"loop_close", luv_loop_close},
   {"run", luv_run},
-  {"guess_handle", luv_guess_handle},
-  {"update_time", luv_update_time},
+  {"loop_alive", luv_loop_alive},
+  {"stop", luv_stop},
+  {"backend_fd", luv_backend_fd},
+  {"backend_timeout", luv_backend_timeout},
   {"now", luv_now},
-  {"loadavg", luv_loadavg},
-  {"execpath", luv_execpath},
-  {"cwd", luv_cwd},
-  {"chdir", luv_chdir},
-  {"get_free_memory", luv_get_free_memory},
-  {"get_total_memory", luv_get_total_memory},
-  {"get_process_title", luv_get_process_title},
-  {"set_process_title", luv_set_process_title},
-  {"hrtime", luv_hrtime},
-  {"uptime", luv_uptime},
-  {"cpu_info", luv_cpu_info},
-  {"interface_addresses", luv_interface_addresses},
-
-  {"getaddrinfo", luv_getaddrinfo},
-
-  {"is_active", luv_is_active},
+  {"update_time", luv_update_time},
   {"walk", luv_walk},
+
+  // req.c
+  {"cancel", luv_cancel},
+
+  // handle.c
+  {"is_active", luv_is_active},
+  {"is_closing", luv_is_closing},
   {"close", luv_close},
   {"ref", luv_ref},
   {"unref", luv_unref},
-  {"is_closing", luv_is_closing},
+  {"has_ref", luv_has_ref},
+  {"send_buffer_size", luv_send_buffer_size},
+  {"recv_buffer_size", luv_recv_buffer_size},
+  {"fileno", luv_fileno},
 
+  // timer.c
+  {"new_timer", luv_new_timer},
   {"timer_start", luv_timer_start},
   {"timer_stop", luv_timer_stop},
   {"timer_again", luv_timer_again},
   {"timer_set_repeat", luv_timer_set_repeat},
   {"timer_get_repeat", luv_timer_get_repeat},
 
-  {"write", luv_write},
-  {"write2", luv_write2},
+  // prepare.c
+  {"new_prepare", luv_new_prepare},
+  {"prepare_start", luv_prepare_start},
+  {"prepare_stop", luv_prepare_stop},
+
+  // check.c
+  {"new_check", luv_new_check},
+  {"check_start", luv_check_start},
+  {"check_stop", luv_check_stop},
+
+  // idle.c
+  {"new_idle", luv_new_idle},
+  {"idle_start", luv_idle_start},
+  {"idle_stop", luv_idle_stop},
+
+  // async.c
+  {"new_async", luv_new_async},
+  {"async_send", luv_async_send},
+
+  // poll.c
+  {"new_poll", luv_new_poll},
+  {"poll_start", luv_poll_start},
+  {"poll_stop", luv_poll_stop},
+
+  // signal.c
+  {"new_signal", luv_new_signal},
+  {"signal_start", luv_signal_start},
+  {"signal_stop", luv_signal_stop},
+
+  // process.c
+  {"disable_stdio_inheritance", luv_disable_stdio_inheritance},
+  {"spawn", luv_spawn},
+  {"process_kill", luv_process_kill},
+  {"kill", luv_kill},
+
+  // stream.c
   {"shutdown", luv_shutdown},
-  {"read_start", luv_read_start},
-  {"read2_start", luv_read2_start},
-  {"read_stop", luv_read_stop},
   {"listen", luv_listen},
   {"accept", luv_accept},
+  {"read_start", luv_read_start},
+  {"read_stop", luv_read_stop},
+  {"write", luv_write},
+  {"write2", luv_write2},
+  {"try_write", luv_try_write},
   {"is_readable", luv_is_readable},
   {"is_writable", luv_is_writable},
+  {"stream_set_blocking", luv_stream_set_blocking},
 
-  {"tcp_bind", luv_tcp_bind},
-  {"tcp_getsockname", luv_tcp_getsockname},
-  {"tcp_getpeername", luv_tcp_getpeername},
-  {"tcp_connect", luv_tcp_connect},
+  // tcp.c
+  {"new_tcp", luv_new_tcp},
   {"tcp_open", luv_tcp_open},
   {"tcp_nodelay", luv_tcp_nodelay},
   {"tcp_keepalive", luv_tcp_keepalive},
+  {"tcp_simultaneous_accepts", luv_tcp_simultaneous_accepts},
+  {"tcp_bind", luv_tcp_bind},
+  {"tcp_getpeername", luv_tcp_getpeername},
+  {"tcp_getsockname", luv_tcp_getsockname},
+  {"tcp_connect", luv_tcp_connect},
 
+  // pipe.c
+  {"new_pipe", luv_new_pipe},
+  {"pipe_open", luv_pipe_open},
+  {"pipe_bind", luv_pipe_bind},
+  {"pipe_connect", luv_pipe_connect},
+  {"pipe_getsockname", luv_pipe_getsockname},
+  {"pipe_pending_instances", luv_pipe_pending_instances},
+  {"pipe_pending_count", luv_pipe_pending_count},
+  {"pipe_open", luv_pipe_open},
+  {"pipe_pending_type", luv_pipe_pending_type},
+
+  // tty.c
+  {"new_tty", luv_new_tty},
   {"tty_set_mode", luv_tty_set_mode},
   {"tty_reset_mode", luv_tty_reset_mode},
   {"tty_get_winsize", luv_tty_get_winsize},
 
-  {"pipe_open", luv_pipe_open},
-  {"pipe_bind", luv_pipe_bind},
-  {"pipe_connect", luv_pipe_connect},
+  // udp.c
+  {"new_udp", luv_new_udp},
+  {"udp_open", luv_udp_open},
+  {"udp_bind", luv_udp_bind},
+  {"udp_bindgetsockname", luv_udp_getsockname},
+  {"udp_set_membership", luv_udp_set_membership},
+  {"udp_set_multicast_loop", luv_udp_set_multicast_loop},
+  {"udp_set_multicast_ttl", luv_udp_set_multicast_ttl},
+  {"udp_set_multicast_interface", luv_udp_set_multicast_interface},
+  {"udp_set_broadcast", luv_udp_set_broadcast},
+  {"udp_set_ttl", luv_udp_set_ttl},
+  {"udp_send", luv_udp_send},
+  {"udp_try_send", luv_udp_try_send},
+  {"udp_recv_start", luv_udp_recv_start},
+  {"udp_recv_stop", luv_udp_recv_stop},
 
-  {"spawn", luv_spawn},
-  {"kill", luv_kill},
-  {"process_kill", luv_process_kill},
+  // fs_event.c
+  {"new_fs_event", luv_new_fs_event},
+  {"fs_event_start", luv_fs_event_start},
+  {"fs_event_stop", luv_fs_event_stop},
+  {"fs_event_getpath", luv_fs_event_getpath},
 
-  {"fs_open", luv_fs_open},
+  // fs_poll.c
+  {"new_fs_poll", luv_new_fs_poll},
+  {"fs_poll_start", luv_fs_poll_start},
+  {"fs_poll_stop", luv_fs_poll_stop},
+  {"fs_poll_getpath", luv_fs_poll_getpath},
+
+  // fs.c
   {"fs_close", luv_fs_close},
+  {"fs_open", luv_fs_open},
   {"fs_read", luv_fs_read},
+  {"fs_unlink", luv_fs_unlink},
   {"fs_write", luv_fs_write},
+  {"fs_mkdir", luv_fs_mkdir},
+  {"fs_mkdtemp", luv_fs_mkdtemp},
+  {"fs_rmdir", luv_fs_rmdir},
+  {"fs_scandir", luv_fs_scandir},
+  {"fs_scandir_next", luv_fs_scandir_next},
   {"fs_stat", luv_fs_stat},
   {"fs_fstat", luv_fs_fstat},
   {"fs_lstat", luv_fs_lstat},
-  {"fs_unlink", luv_fs_unlink},
-  {"fs_mkdir", luv_fs_mkdir},
-  {"fs_rmdir", luv_fs_rmdir},
-  {"fs_readdir", luv_fs_readdir},
   {"fs_rename", luv_fs_rename},
   {"fs_fsync", luv_fs_fsync},
   {"fs_fdatasync", luv_fs_fdatasync},
   {"fs_ftruncate", luv_fs_ftruncate},
   {"fs_sendfile", luv_fs_sendfile},
+  {"fs_access", luv_fs_access},
   {"fs_chmod", luv_fs_chmod},
+  {"fs_fchmod", luv_fs_fchmod},
   {"fs_utime", luv_fs_utime},
   {"fs_futime", luv_fs_futime},
   {"fs_link", luv_fs_link},
   {"fs_symlink", luv_fs_symlink},
   {"fs_readlink", luv_fs_readlink},
-  {"fs_fchmod", luv_fs_fchmod},
   {"fs_chown", luv_fs_chown},
   {"fs_fchown", luv_fs_fchown},
+
+  // dns.c
+  {"getaddrinfo", luv_getaddrinfo},
+  {"getnameinfo", luv_getnameinfo},
+
+  // misc.c
+  {"guess_handle", luv_guess_handle},
+  {"version", luv_version},
+  {"version_string", luv_version_string},
+  {"get_process_title", luv_get_process_title},
+  {"set_process_title", luv_set_process_title},
+  {"resident_set_memory", luv_resident_set_memory},
+  {"uptime", luv_uptime},
+  {"getrusage", luv_getrusage},
+  {"cpu_info", luv_cpu_info},
+  {"interface_addresses", luv_interface_addresses},
+  {"loadavg", luv_loadavg},
+  {"exepath", luv_exepath},
+  {"cwd", luv_cwd},
+  {"chdir", luv_chdir},
+  {"get_total_memory", luv_get_total_memory},
+  {"hrtime", luv_hrtime},
 
   {NULL, NULL}
 };
 
-static int luv_newindex(lua_State* L) {
-  lua_getuservalue(L, 1);
-  lua_pushvalue(L, 2);
-  lua_pushvalue(L, 3);
-  lua_rawset(L, -3);
+static lua_State* luv_state(uv_loop_t* loop) {
+  return loop->data;
+}
+
+// TODO: find out if storing this somehow in an upvalue is faster
+static uv_loop_t* luv_loop(lua_State* L) {
+  uv_loop_t* loop;
+  lua_pushstring(L, "uv_loop");
+  lua_rawget(L, LUA_REGISTRYINDEX);
+  loop = lua_touserdata(L, -1);
   lua_pop(L, 1);
-  return 0;
+  return loop;
 }
-
-static int luv_index(lua_State* L) {
-#ifdef LUV_STACK_CHECK
-  int top = lua_gettop(L);
-#endif
-
-  /* Get handle type if requested */
-  const char* key = lua_tostring(L, 2);
-  if (strcmp(key, "type") == 0) {
-    luv_handle_t* lhandle = (luv_handle_t*)luaL_checkudata(L, 1, "luv_handle");
-    switch (lhandle->handle->type) {
-#define XX(uc, lc) case UV_##uc: lua_pushstring(L, #uc); break;
-    UV_HANDLE_TYPE_MAP(XX)
-#undef XX
-      default: lua_pushstring(L, "UNKNOWN"); break;
-    }
-    return 1;
-  }
-
-  lua_getuservalue(L, 1);
-  lua_pushvalue(L, 2);
-  lua_rawget(L, -2);
-  lua_remove(L, -2);
-#ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top + 1);
-#endif
-  return 1;
-}
-
-static int luv_tostring(lua_State* L) {
-  luv_handle_t* lhandle = (luv_handle_t*)luaL_checkudata(L, 1, "luv_handle");
-  switch (lhandle->handle->type) {
-#define XX(uc, lc) case UV_##uc: lua_pushfstring(L, "uv_%s_t: %p", #lc, lhandle->handle); break;
-  UV_HANDLE_TYPE_MAP(XX)
-#undef XX
-    default: lua_pushfstring(L, "userdata: %p", lhandle->handle); break;
-  }
-  return 1;
-}
-
 
 LUALIB_API int luaopen_luv (lua_State *L) {
 
-  luv_main_thread = L;
+  uv_loop_t* loop;
+  int ret;
 
-  luaL_newmetatable(L, "luv_handle");
-  lua_pushcfunction(L, luv_newindex);
-  lua_setfield(L, -2, "__newindex");
-  lua_pushcfunction(L, luv_index);
-  lua_setfield(L, -2, "__index");
-  lua_pushcfunction(L, luv_tostring);
-  lua_setfield(L, -2, "__tostring");
-  lua_pop(L, 1);
+  loop = lua_newuserdata(L, sizeof(*loop));
+  ret = uv_loop_init(loop);
+  if (ret < 0) {
+    return luaL_error(L, "%s: %s\n", uv_err_name(ret), uv_strerror(ret));
+  }
+  // Tell the state how to find the loop.
+  lua_pushstring(L, "uv_loop");
+  lua_insert(L, -2);
+  lua_rawset(L, LUA_REGISTRYINDEX);
 
-  /* Module exports */
+  // Tell the loop how to find the state.
+  loop->data = L;
+
+  luv_req_init(L);
+  luv_handle_init(L);
   luaL_newlib(L, luv_functions);
   return 1;
 }

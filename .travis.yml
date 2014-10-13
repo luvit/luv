@@ -1,0 +1,11 @@
+language: c
+
+before_script:
+  - make install-luajit
+
+script:
+  - make test
+
+notifications:
+  email: true
+  irc: "irc.freenode.org#luvit"

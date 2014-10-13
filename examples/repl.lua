@@ -1,12 +1,14 @@
 uv = require('luv')
 local utils = require('lib/utils')
+print = require('lib/utils').print
+
 local stdin
 if uv.guess_handle(0) ~= "TTY" or
    uv.guess_handle(1) ~= "TTY" then
   error "stdio must be a tty"
 end
 local stdin = uv.new_tty(0, true)
-local stdout = uv.new_tty(1)
+local stdout = uv.new_tty(1, false)
 
 local debug = require('debug')
 local c = utils.color
@@ -69,19 +71,21 @@ local function displayPrompt(prompt)
   uv.write(stdout, prompt .. ' ')
 end
 
-displayPrompt '>'
-
-function stdin:ondata(line)
-  local prompt = evaluateLine(line)
-  displayPrompt(prompt)
+local function onread(self, err, line)
+  if err then error(err) end
+  if line then
+    local prompt = evaluateLine(line)
+    displayPrompt(prompt)
+  else
+    uv.close(stdin)
+  end
 end
 
-function stdin:onend()
-  uv.close(stdin)
-end
+coroutine.wrap(function()
+  displayPrompt '>'
+  uv.read_start(stdin, onread)
+end)()
 
-uv.read_start(stdin)
-
-uv.run("default")
+uv.run()
 
 print("")

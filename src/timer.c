@@ -14,90 +14,72 @@
  *  limitations under the License.
  *
  */
+#include "luv.h"
 
-static void on_timeout(uv_timer_t* handle, int status) {
-  lua_State* L = luv_prepare_event(handle->data);
-#ifdef LUV_STACK_CHECK
-  int top = lua_gettop(L) - 1;
-#endif
-  if (luv_get_callback(L, "ontimeout")) {
-    luv_call(L, 1, 0);
+static uv_timer_t* luv_check_timer(lua_State* L, int index) {
+  uv_timer_t* handle = luaL_checkudata(L, index, "uv_handle");
+  luaL_argcheck(L, handle->type = UV_TIMER, index, "Expected uv_timer_t");
+  return handle;
+}
+
+static int luv_new_timer(lua_State* L) {
+  uv_timer_t* handle = lua_newuserdata(L, sizeof(*handle));
+  int ret = uv_timer_init(luv_loop(L), handle);
+  if (ret < 0) {
+    lua_pop(L, 1);
+    return luv_error(L, ret);
   }
-#ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
-#endif
+  handle->data = luv_setup_handle(L);
+  return 1;
+}
+
+static void luv_timer_cb(uv_timer_t* handle) {
+  lua_State* L = luv_state(handle->loop);
+  luv_handle_t* data = handle->data;
+  luv_find_handle(L, data);
+  luv_call_callback(L, data, LUV_TIMEOUT, 1);
 }
 
 static int luv_timer_start(lua_State* L) {
-#ifdef LUV_STACK_CHECK
-  int top = lua_gettop(L);
-#endif
-  uv_timer_t* handle = luv_get_timer(L, 1);
-  int64_t timeout = luaL_checkinteger(L, 2);
-  int64_t repeat = luaL_checkinteger(L, 3);
-  if (uv_timer_start(handle, on_timeout, timeout, repeat)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
-    return luaL_error(L, "timer_start: %s", uv_strerror(err));
-  }
-  luv_handle_ref(L, handle->data, 1);
-#ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
-#endif
-  return 0;
+  uv_timer_t* handle = luv_check_timer(L, 1);
+  uint64_t timeout;
+  uint64_t repeat;
+  int ret;
+  timeout = luaL_checkinteger(L, 2);
+  repeat = luaL_checkinteger(L, 3);
+  luv_check_callback(L, handle->data, LUV_TIMEOUT, 4);
+  ret = uv_timer_start(handle, luv_timer_cb, timeout, repeat);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
 }
 
 static int luv_timer_stop(lua_State* L) {
-#ifdef LUV_STACK_CHECK
-  int top = lua_gettop(L);
-#endif
-  uv_timer_t* handle = luv_get_timer(L, 1);
-  luv_handle_unref(L, handle->data);
-  if (uv_timer_stop(handle)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
-    return luaL_error(L, "timer_stop: %s", uv_strerror(err));
-  }
-#ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
-#endif
-  return 0;
+  uv_timer_t* handle = luv_check_timer(L, 1);
+  int ret = uv_timer_stop(handle);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
 }
 
 static int luv_timer_again(lua_State* L) {
-#ifdef LUV_STACK_CHECK
-  int top = lua_gettop(L);
-#endif
-  uv_timer_t* handle = luv_get_timer(L, 1);
-  if (uv_timer_again(handle)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
-    return luaL_error(L, "timer_again: %s", uv_strerror(err));
-  }
-#ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
-#endif
-  return 0;
+  uv_timer_t* handle = luv_check_timer(L, 1);
+  int ret = uv_timer_again(handle);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
 }
 
 static int luv_timer_set_repeat(lua_State* L) {
-#ifdef LUV_STACK_CHECK
-  int top = lua_gettop(L);
-#endif
-  uv_timer_t* handle = luv_get_timer(L, 1);
-  int64_t repeat = luaL_checkint(L, 2);
+  uv_timer_t* handle = luv_check_timer(L, 1);
+  uint64_t repeat = luaL_checkinteger(L, 2);
   uv_timer_set_repeat(handle, repeat);
-#ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
-#endif
   return 0;
 }
 
 static int luv_timer_get_repeat(lua_State* L) {
-#ifdef LUV_STACK_CHECK
-  int top = lua_gettop(L);
-#endif
-  uv_timer_t* handle = luv_get_timer(L, 1);
-  lua_pushinteger(L, uv_timer_get_repeat(handle));
-#ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top + 1);
-#endif
+  uv_timer_t* handle = luv_check_timer(L, 1);
+  uint64_t repeat = uv_timer_get_repeat(handle);
+  lua_pushinteger(L, repeat);
   return 1;
 }

@@ -14,60 +14,91 @@
  *  limitations under the License.
  *
  */
+#include "luv.h"
+
+static uv_pipe_t* luv_check_pipe(lua_State* L, int index) {
+  uv_pipe_t* handle = luaL_checkudata(L, index, "uv_handle");
+  luaL_argcheck(L, handle->type = UV_NAMED_PIPE, index, "Expected uv_pipe_t");
+  return handle;
+}
+
+static int luv_new_pipe(lua_State* L) {
+  uv_pipe_t* handle;
+  int ipc, ret;
+  luaL_checktype(L, 1, LUA_TBOOLEAN);
+  ipc = lua_toboolean(L, 1);
+  handle = lua_newuserdata(L, sizeof(*handle));
+  ret = uv_pipe_init(luv_loop(L), handle, ipc);
+  if (ret < 0) {
+    lua_pop(L, 1);
+    return luv_error(L, ret);
+  }
+  handle->data = luv_setup_handle(L);
+  return 1;
+}
 
 static int luv_pipe_open(lua_State* L) {
-#ifdef LUV_STACK_CHECK
-  int top = lua_gettop(L);
-#endif
-  uv_pipe_t* handle = luv_get_pipe(L, 1);
-  uv_file file = luaL_checkint(L, 2);
-  if (uv_pipe_open(handle, file)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
-    return luaL_error(L, "pipe_open: %s", uv_strerror(err));
-  }
-#ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
-#endif
-  return 0;
+  uv_pipe_t* handle = luv_check_pipe(L, 1);
+  uv_file file = luaL_checkinteger(L, 2);
+  int ret = uv_pipe_open(handle, file);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
 }
 
 static int luv_pipe_bind(lua_State* L) {
-#ifdef LUV_STACK_CHECK
-  int top = lua_gettop(L);
-#endif
-  uv_pipe_t* handle = luv_get_pipe(L, 1);
+  uv_pipe_t* handle = luv_check_pipe(L, 1);
   const char* name = luaL_checkstring(L, 2);
-  if (uv_pipe_bind(handle, name)) {
-    uv_err_t err = uv_last_error(uv_default_loop());
-    return luaL_error(L, "pipe_name: %s", uv_strerror(err));
-  }
-#ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
-#endif
-  return 0;
+  int ret = uv_pipe_bind(handle, name);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
 }
 
 static int luv_pipe_connect(lua_State* L) {
-#ifdef LUV_STACK_CHECK
-  int top = lua_gettop(L);
-#endif
-  uv_pipe_t* handle = luv_get_pipe(L, 1);
+  uv_pipe_t* handle = luv_check_pipe(L, 1);
   const char* name = luaL_checkstring(L, 2);
+  int ref = luv_check_continuation(L, 3);
+  uv_connect_t* req = lua_newuserdata(L, sizeof(*req));
+  req->data = luv_setup_req(L, ref);
+  uv_pipe_connect(req, handle, name, luv_connect_cb);
+  return 1;
+}
 
-  uv_connect_t* req = malloc(sizeof(*req));
-  luv_req_t* lreq = malloc(sizeof(*lreq));
-  req->data = (void*)lreq;
-  lreq->lhandle = handle->data;
+static int luv_pipe_getsockname(lua_State* L) {
+  uv_pipe_t* handle = luv_check_pipe(L, 1);
+  size_t len = 2*PATH_MAX;
+  char buf[2*PATH_MAX];
+  int ret = uv_pipe_getsockname(handle, buf, &len);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushlstring(L, buf, len);
+  return 1;
+}
 
-  uv_pipe_connect(req, handle, name, luv_after_connect);
-
-  lreq->data_ref = LUA_NOREF;
-  lua_pushvalue(L, 3);
-  lreq->callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
-
-  luv_handle_ref(L, handle->data, 1);
-#ifdef LUV_STACK_CHECK
-  assert(lua_gettop(L) == top);
-#endif
+static int luv_pipe_pending_instances(lua_State* L) {
+  uv_pipe_t* handle = luv_check_pipe(L, 1);
+  int count = luaL_checkinteger(L, 2);
+  uv_pipe_pending_instances(handle, count);
   return 0;
+}
+
+static int luv_pipe_pending_count(lua_State* L) {
+  uv_pipe_t* handle = luv_check_pipe(L, 1);
+  lua_pushinteger(L, uv_pipe_pending_count(handle));
+  return 1;
+}
+
+static int luv_pipe_pending_type(lua_State* L) {
+  uv_pipe_t* handle = luv_check_pipe(L, 1);
+  uv_handle_type type = uv_pipe_pending_type(handle);
+  const char* type_name;
+  switch (type) {
+#define XX(uc, lc) \
+    case UV_##uc: type_name = #uc; break;
+  UV_HANDLE_TYPE_MAP(XX)
+#undef XX
+    default: return 0;
+  }
+  lua_pushstring(L, type_name);
+  return 1;
 }
