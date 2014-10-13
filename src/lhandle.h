@@ -19,36 +19,28 @@
 
 #include "luv.h"
 
-// These are the different kinds of callbacks a handle can
-// have in it's luv_callback_t linked list.
-typedef enum {
-  LUV_CLOSED,
-  LUV_TIMEOUT,
-  LUV_PREPARE,
-  LUV_IDLE,
-  LUV_CHECK,
-  LUV_ASYNC,
-  LUV_POLL,
-  LUV_SIGNAL,
-  LUV_EXIT,
-  LUV_CONNECTION,
-  LUV_READ,
-  LUV_RECV,
-  LUV_FS_EVENT,
-  LUV_FS_POLL,
-} luv_callback_id;
+// There are two slots for holding callbacks.  One is for the CLOSED event.
+// The other slot is for all others since they never conflict in practice.
+#define luv_callback_id int
+#define LUV_CLOSED 0
+#define LUV_TIMEOUT 1
+#define LUV_PREPARE 1
+#define LUV_IDLE 1
+#define LUV_CHECK 1
+#define LUV_ASYNC 1
+#define LUV_POLL 1
+#define LUV_SIGNAL 1
+#define LUV_EXIT 1
+#define LUV_CONNECTION 1
+#define LUV_READ 1
+#define LUV_RECV 1
+#define LUV_FS_EVENT 1
+#define LUV_FS_POLL 1
 
-// Linked list node
-typedef struct luv_callback_s {
-  luv_callback_id id;
-  int ref;
-  struct luv_callback_s* next;
-} luv_callback_t;
-
-// Ref for userdata and link to list of handlers
+// Ref for userdata and event callbacks
 typedef struct {
   int ref;
-  luv_callback_t* callbacks;
+  int callbacks[2];
 } luv_handle_t;
 
 // Setup the handle at the top of the stack

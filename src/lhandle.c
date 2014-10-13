@@ -20,55 +20,9 @@
 static luv_handle_t* luv_create_handle(int ref) {
   luv_handle_t* data = malloc(sizeof(*data));
   data->ref = ref;
-  data->callbacks = NULL;
+  data->callbacks[0] = LUA_NOREF;
+  data->callbacks[1] = LUA_NOREF;
   return data;
-}
-
-// Sets a handler callback in the linked list.
-// If this ID already exists, replaces it and returns the old ref.
-// If it's new, appends and returns LUA_NOREF
-static int luv_set_callback(luv_handle_t* data, luv_callback_id id, int ref) {
-  luv_callback_t* current = data->callbacks;
-
-  // Special case for first handler
-  if (!current) {
-    current = data->callbacks = malloc(sizeof(*current));
-    current->id = id;
-    current->ref = ref;
-    current->next = NULL;
-    return LUA_NOREF;
-  }
-
-  while (1) {
-    // If the handler already exists, replace the callback.
-    if (current->id == id) {
-      int old = current->ref;
-      current->ref = ref;
-      return old;
-    }
-
-    // If the end is reached, append a new node
-    if (!current->next) {
-      current = current->next = malloc(sizeof(*current->next));
-      current->id = id;
-      current->ref = ref;
-      current->next = NULL;
-      return LUA_NOREF;
-    }
-
-    // Walk the list
-    current = current->next;
-  }
-}
-
-static int luv_find_callback(luv_handle_t* data, luv_callback_id id) {
-  luv_callback_t* current = data->callbacks;
-
-  while (1) {
-    if (!current) return LUA_NOREF;
-    if (current->id == id) return current->ref;
-    current = current->next;
-  }
 }
 
 static luv_handle_t* luv_setup_handle(lua_State* L) {
@@ -78,20 +32,18 @@ static luv_handle_t* luv_setup_handle(lua_State* L) {
   lua_setmetatable(L, -2);
 
   lua_pushvalue(L, -1);
-  return luv_create_handle(
-    luaL_ref(L, LUA_REGISTRYINDEX));
+  return luv_create_handle(luaL_ref(L, LUA_REGISTRYINDEX));
 }
 
 static void luv_check_callback(lua_State* L, luv_handle_t* data, luv_callback_id id, int index) {
   luaL_checktype(L, index, LUA_TFUNCTION);
+  luaL_unref(L, LUA_REGISTRYINDEX, data->callbacks[id]);
   lua_pushvalue(L, index);
-  luaL_unref(L, LUA_REGISTRYINDEX,
-    luv_set_callback(data, id,
-      luaL_ref(L, LUA_REGISTRYINDEX)));
+  data->callbacks[id] = luaL_ref(L, LUA_REGISTRYINDEX);
 }
 
 static void luv_call_callback(lua_State* L, luv_handle_t* data, luv_callback_id id, int nargs) {
-  int ref = luv_find_callback(data, id);
+  int ref = data->callbacks[id];
   if (ref == LUA_NOREF) {
     lua_pop(L, nargs);
   }
@@ -106,14 +58,7 @@ static void luv_call_callback(lua_State* L, luv_handle_t* data, luv_callback_id 
   }
 }
 
-static void luv_free_handlers(lua_State* L, luv_callback_t* data) {
-  if (data->next) luv_free_handlers(L, data->next);
-  luaL_unref(L, LUA_REGISTRYINDEX, data->ref);
-  free(data);
-}
-
 static void luv_cleanup_handle(lua_State* L, luv_handle_t* data) {
-  if (data->callbacks) luv_free_handlers(L, data->callbacks);
   luaL_unref(L, LUA_REGISTRYINDEX, data->ref);
   free(data);
 }
