@@ -424,6 +424,15 @@ static int luv_fs_sendfile(lua_State* L) {
   FS_CALL(sendfile, req, out_fd, in_fd, in_offset, length);
 }
 
+static int luv_fs_access(lua_State* L) {
+  const char* path = luaL_checkstring(L, 1);
+  int flags = luaL_checkinteger(L, 2);
+  int ref = luv_check_continuation(L, 3);
+  uv_fs_t* req = lua_newuserdata(L, sizeof(*req));
+  req->data = luv_setup_req(L, ref);
+  FS_CALL(access, req, path, flags);
+}
+
 static int luv_fs_chmod(lua_State* L) {
   const char* path = luaL_checkstring(L, 1);
   int mode = luaL_checkinteger(L, 2);

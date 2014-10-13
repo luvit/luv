@@ -200,6 +200,7 @@ static const luaL_Reg luv_functions[] = {
   {"fs_fdatasync", luv_fs_fdatasync},
   {"fs_ftruncate", luv_fs_ftruncate},
   {"fs_sendfile", luv_fs_sendfile},
+  {"fs_access", luv_fs_access},
   {"fs_chmod", luv_fs_chmod},
   {"fs_fchmod", luv_fs_fchmod},
   {"fs_utime", luv_fs_utime},
