@@ -1,16 +1,16 @@
 
 local uv = require('luv')
-local stdout, usecolors
+local utils = {}
+local usecolors
+
 if uv.guess_handle(1) == "TTY" then
-  stdout = uv.new_tty(1, false)
+  utils.stdout = uv.new_tty(1, false)
   usecolors = true
 else
-  stdout = uv.new_pipe(false)
+  utils.stdout = uv.new_pipe(false)
   uv.pipe_open(1)
   usecolors = false
 end
-
-local utils = {}
 
 local colors = {
   black   = "0;30",
@@ -46,8 +46,8 @@ end
 
 local backslash, null, newline, carriage, tab, quote, quote2, obracket, cbracket
 
-function utils.loadColors (n)
-  if n ~= nil then utils._useColors = n end
+function utils.loadColors(n)
+  if n ~= nil then usecolors = n end
   backslash = utils.colorize("Bgreen", "\\\\", "green")
   null      = utils.colorize("Bgreen", "\\0", "green")
   newline   = utils.colorize("Bgreen", "\\n", "green")
@@ -141,7 +141,7 @@ end
 -- Print replacement that goes through libuv.  This is useful on windows
 -- to use libuv's code to translate ansi escape codes to windows API calls.
 function utils.print(...)
-  uv.write(stdout, table.concat({...}, "\t") .. "\n")
+  uv.write(utils.stdout, table.concat({...}, "\t") .. "\n")
 end
 
 -- A nice global data dumper
@@ -153,7 +153,7 @@ function utils.prettyPrint(...)
     arguments[i] = utils.dump(arguments[i])
   end
 
-  uv.write(stdout, table.concat(arguments, "\t") .. "\n")
+  uv.write(utils.stdout, table.concat(arguments, "\t") .. "\n")
 end
 
 return utils

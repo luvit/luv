@@ -1,5 +1,6 @@
 local uv = require('luv')
 local dump = require('lib/utils').dump
+local stdout = require('lib/utils').stdout
 
 local function protect(...)
   local n = select('#', ...)
@@ -61,6 +62,7 @@ local function run()
       collectgarbage()
       local unclosed = 0
       uv.walk(function (handle)
+        if handle == stdout then return end
         unclosed = unclosed + 1
         print("UNCLOSED", handle)
       end)
@@ -75,7 +77,10 @@ local function run()
 
     -- Flush out any more opened handles
     uv.run()
-    uv.walk(uv.close)
+    uv.walk(function (handle)
+      if handle == stdout then return end
+      uv.close(handle)
+    end)
     uv.run()
     uv.chdir(cwd)
 
@@ -88,13 +93,17 @@ local function run()
     end
   end
 
-
   local failed = #tests - passed
   if failed == 0 then
     print("# All tests passed")
   else
     print("#" .. failed .. " failed test" .. (failed == 1 and "" or "s"))
   end
+  
+  -- Close all then handles, including stdout
+  uv.walk(uv.close)
+  uv.run()
+  
   os.exit(-failed)
 end
 
