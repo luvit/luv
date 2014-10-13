@@ -36,6 +36,12 @@ static void exit_cb(uv_process_t* handle, int64_t exit_status, int term_signal) 
   luv_call_callback(L, data, LUV_EXIT, 3);
 }
 
+static void luv_clean_options(uv_process_options_t* options) {
+  free(options->args);
+  free(options->stdio);
+  free(options->env);
+}
+
 static int luv_spawn(lua_State* L) {
   uv_process_t* handle;
   uv_process_options_t options;
@@ -57,7 +63,8 @@ static int luv_spawn(lua_State* L) {
     len = 1 + lua_rawlen(L, -1);
   }
   else if (lua_type(L, -1) != LUA_TNIL) {
-    luaL_argerror(L, 3, "args option must be table");
+    luv_clean_options(&options);
+    return luaL_argerror(L, 3, "args option must be table");
   }
   else {
     len = 1;
@@ -102,13 +109,15 @@ static int luv_spawn(lua_State* L) {
         options.stdio[i].flags = UV_IGNORE;
       }
       else {
-        luaL_argerror(L, 2, "stdio table entries must be nil, uv_stream_t, or integer");
+        luv_clean_options(&options);
+        return luaL_argerror(L, 2, "stdio table entries must be nil, uv_stream_t, or integer");
       }
       lua_pop(L, 1);
     }
   }
   else if (lua_type(L, -1) != LUA_TNIL) {
-    luaL_argerror(L, 2, "stdio option must be table");
+    luv_clean_options(&options);
+    return luaL_argerror(L, 2, "stdio option must be table");
   }
   lua_pop(L, 1);
 
@@ -125,7 +134,8 @@ static int luv_spawn(lua_State* L) {
     options.env[len] = NULL;
   }
   else if (lua_type(L, -1) != LUA_TNIL) {
-    luaL_argerror(L, 2, "env option must be table");
+    luv_clean_options(&options);
+    return luaL_argerror(L, 2, "env option must be table");
   }
   lua_pop(L, 1);
 
@@ -135,7 +145,8 @@ static int luv_spawn(lua_State* L) {
     options.cwd = (char*)lua_tostring(L, -1);
   }
   else if (lua_type(L, -1) != LUA_TNIL) {
-    luaL_argerror(L, 2, "cwd option must be string");
+    luv_clean_options(&options);
+    return luaL_argerror(L, 2, "cwd option must be string");
   }
   lua_pop(L, 1);
 
@@ -146,7 +157,8 @@ static int luv_spawn(lua_State* L) {
     options.flags |= UV_PROCESS_SETUID;
   }
   else if (lua_type(L, -1) != LUA_TNIL) {
-    luaL_argerror(L, 2, "uid option must be number");
+    luv_clean_options(&options);
+    return luaL_argerror(L, 2, "uid option must be number");
   }
   lua_pop(L, 1);
 
@@ -157,7 +169,8 @@ static int luv_spawn(lua_State* L) {
     options.flags |= UV_PROCESS_SETGID;
   }
   else if (lua_type(L, -1) != LUA_TNIL) {
-    luaL_argerror(L, 2, "gid option must be number");
+    luv_clean_options(&options);
+    return luaL_argerror(L, 2, "gid option must be number");
   }
   lua_pop(L, 1);
 
@@ -187,9 +200,7 @@ static int luv_spawn(lua_State* L) {
 
   ret = uv_spawn(luv_loop(L), handle, &options);
 
-  free(options.args);
-  free(options.stdio);
-  free(options.env);
+  luv_clean_options(&options);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, handle->pid);
   return 2;
