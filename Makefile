@@ -1,5 +1,4 @@
 
-
 all: luv.so
 
 build/luv.so: build/Makefile
@@ -17,9 +16,6 @@ build/Makefile: build
 clean:
 	rm -rf build luv.so
 
-luajit/src/luajit: build/Makefile
-	$(MAKE) -C build
-
-test: luv.so luajit/src/luajit
+test: luv.so
 	luajit/src/luajit tests/run.lua
 
