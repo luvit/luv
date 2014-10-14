@@ -165,39 +165,39 @@ if(APPLE)
   )
 endif()
 
-add_library(uv OBJECT ${SOURCES})
+add_library(uv STATIC ${SOURCES})
 set_property(TARGET uv PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-# if("${CMAKE_SYSTEM_NAME}" MATCHES "FreeBSD")
-#   target_link_libraries(uv
-#     pthread
-#     kvm
-#   )
-# endif()
+if("${CMAKE_SYSTEM_NAME}" MATCHES "FreeBSD")
+  target_link_libraries(uv
+    pthread
+    kvm
+  )
+endif()
 
-# if("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-#   target_link_libraries(uv
-#     pthread
-#   )
-# endif()
+if("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+  target_link_libraries(uv
+    pthread
+  )
+endif()
 
-# if(WIN32)
-#   target_link_libraries(uv
-#     ws2_32.lib
-#     shell32.lib
-#     psapi.lib
-#     iphlpapi.lib
-#     advapi32.lib
-#   )
-# endif()
+if(WIN32)
+  target_link_libraries(uv
+    ws2_32.lib
+    shell32.lib
+    psapi.lib
+    iphlpapi.lib
+    advapi32.lib
+  )
+endif()
 
-# if(APPLE)
-#   find_library(FOUNDATION_LIBRARY Foundation)
-#   find_library(CORESERVICES_LIBRARY CoreServices)
-#   find_library(APPLICATION_SERVICES_LIBRARY ApplicationServices)
-#   target_link_libraries(uv
-#     ${FOUNDATION_LIBRARY}
-#     ${CORESERVICES_LIBRARY}
-#     ${APPLICATION_SERVICES_LIBRARY}
-#   )
-# endif()
+if(APPLE)
+  find_library(FOUNDATION_LIBRARY Foundation)
+  find_library(CORESERVICES_LIBRARY CoreServices)
+  find_library(APPLICATION_SERVICES_LIBRARY ApplicationServices)
+  target_link_libraries(uv
+    ${FOUNDATION_LIBRARY}
+    ${CORESERVICES_LIBRARY}
+    ${APPLICATION_SERVICES_LIBRARY}
+  )
+endif()
