@@ -1,7 +1,13 @@
 
 all: luv.so
 
-build/luv.so: build/Makefile
+libuv/include:
+	git submodule update --init libuv
+
+luajit/src:
+	git submodule update --init luajit
+
+build/luv.so: build/Makefile libuv/include luajit/src
 	$(MAKE) -C build
 
 luv.so: build/luv.so
