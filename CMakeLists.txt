@@ -5,11 +5,9 @@ project (luv)
 set(CMAKE_BUILD_TYPE Release)
 
 include(uv.cmake)
+include(luajit.cmake)
 
-include_directories(
-  /usr/local/include/luajit-2.0
-  /usr/include/luajit-2.0
-)
+include_directories(luajit/src)
 
 add_library (luv MODULE src/luv.c)
 
@@ -26,10 +24,10 @@ if(APPLE)
   # )
 endif()
 
-if("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-  target_link_libraries(luv uv
-    rt
-  )
+if(WIN32)
+  target_link_libraries(luv uv lua51)
+elseif("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+  target_link_libraries(luv uv rt)
 else()
   target_link_libraries(luv uv)
 endif()

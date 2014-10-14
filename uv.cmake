@@ -53,7 +53,7 @@ set(SOURCES
 if(WIN32)
   add_definitions(
     -D_WIN32_WINNT=0x0600
-    # -D_CRT_SECURE_NO_WARNINGS
+    -D_CRT_SECURE_NO_WARNINGS
     -D_GNU_SOURCE
   )
   set(SOURCES ${SOURCES}
