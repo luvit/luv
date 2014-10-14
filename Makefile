@@ -23,5 +23,5 @@ clean:
 	rm -rf build luv.so
 
 test: luv.so
-	luajit/src/luajit tests/run.lua
+	build/luajit tests/run.lua
 
