@@ -16,4 +16,21 @@ add_library (luv MODULE src/luv.c)
 set_target_properties(luv PROPERTIES OUTPUT_NAME "luv")
 set_target_properties(luv PROPERTIES PREFIX "")
 
-target_link_libraries(luv uv)
+if(APPLE)
+  set(CMAKE_SHARED_MODULE_CREATE_C_FLAGS
+    "${CMAKE_SHARED_MODULE_CREATE_C_FLAGS} -flat_namespace -undefined suppress"
+  )
+  # execute_process(COMMAND which luajit OUTPUT_VARIABLE LUAJIT)
+  # set(CMAKE_SHARED_MODULE_CREATE_C_FLAGS
+  #   "${CMAKE_SHARED_MODULE_CREATE_C_FLAGS} -bundle_loader ${LUAJIT}"
+  # )
+endif()
+
+if("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+  target_link_libraries(luv uv
+    rt
+  )
+else()
+  target_link_libraries(luv uv)
+endif()
+
