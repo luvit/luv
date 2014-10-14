@@ -17,11 +17,9 @@ build/Makefile: build
 clean:
 	rm -rf build luv.so
 
-luajit/src/luajit:
-	LUAJIT_ENABLE_LUA52COMPAT=1 $(MAKE) -C luajit
+luajit/src/luajit: build/Makefile
+	$(MAKE) -C build
 
 test: luv.so luajit/src/luajit
 	luajit/src/luajit tests/run.lua
 
-install-luajit: luajit/src/luajit
-	sudo make -C luajit install
