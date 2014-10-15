@@ -7,7 +7,7 @@ libuv/include:
 luajit/src:
 	git submodule update --init luajit
 
-build/luv.so: build/Makefile libuv/include luajit/src
+build/luv.so: build/Makefile
 	$(MAKE) -C build
 
 luv.so: build/luv.so
@@ -16,7 +16,7 @@ luv.so: build/luv.so
 build:
 	mkdir -p build
 
-build/Makefile: build
+build/Makefile: build libuv/include luajit/src
 	cd build && cmake ..
 
 clean:
