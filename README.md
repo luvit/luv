@@ -75,3 +75,59 @@ end)
 ```
 
 More examples can be found in the [examples](examples) and [tests](tests) folders.
+
+## Building From Source
+
+To build, first install your compiler tools.
+
+### Get a Compiler
+
+On linux this probably means `gcc` and `make`.  On Ubuntu, the `build-essential`
+package is good for this.
+
+On OSX, you probably want XCode which comes with `clang` and `make` and friends.
+
+For windows the free Visual Studio Express works.  If you get the 2013 edition,
+make sure to get the `Windows Deskop` edition.  The `Windows` version doesn't
+include a working C compiler.  Make sure to run all of setup including getting a
+free license.
+
+### Install CMake
+
+Now install Cmake.  The version in `brew` on OSX or most Linux package managers
+is good.  The version on Travis CI is too old and so I use a PPA there.  On
+windows use the installer and make sure to add cmake to your command prompt
+path.
+
+### Install Git
+
+If you haven't already, install git and make sure it's in your path.  This comes
+with XCode on OSX.  On Linux it's in your package manager.  For windows, use the
+installer at <http://git-scm.com>.  Make sure it's available to your windows
+command prompt.
+
+### Clone the Code
+
+Now open a terminal and clone the code.  For windows I recommend the special
+developer command prompt that came with Visual Studio.
+
+```
+git clone https://github.com/luvit/luv.git --recursive
+cd luv
+```
+
+### Build the Code and Test
+
+On windows I wrote a small batch file that runs the correct cmake commands and
+copies the output files for easy access.
+
+```
+C:\Code\luv> msvcbuild.bat
+C:\Code\luv> luajit tests\run.lua
+```
+
+On unix systems, use the Makefile.
+
+```
+~/Code/luv> make test
+```
