@@ -1,7 +1,11 @@
-environment:
-  matrix:
-    - GENERATOR: "Visual Studio 12"
-    - GENERATOR: "Visual Studio 12 Win64"
+platform:
+ - x86
+ - x64
+
+configuration: Release
+
+matrix:
+  fast_finish: true
 
 build_script:
  - git submodule update --init
