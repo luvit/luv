@@ -1,0 +1,15 @@
+environment:
+  matrix:
+    - GENERATOR: "Visual Studio 12"
+    - GENERATOR: "Visual Studio 12 Win64"
+
+build_script:
+ - git submodule update --init
+ - msvcbuild.bat
+
+test_script:
+ - luajit.exe tests\run.lua
+
+artifacts:
+ - path: luv.dll
+ - path: luajit.exe

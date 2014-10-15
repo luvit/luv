@@ -17,7 +17,8 @@ build:
 	mkdir -p build
 
 build/Makefile: build libuv/include luajit/src
-	cd build && cmake ..
+	cmake -H. -Bbuild
+	cmake --build build --config Release
 
 clean:
 	rm -rf build luv.so

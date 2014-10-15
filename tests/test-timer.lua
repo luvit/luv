@@ -21,19 +21,19 @@ return require('lib/tap')(function (test)
   test("simple interval", function (print, p, expect, uv)
     local timer = uv.new_timer()
     local count = 3
-    local function onclose(self)
+    local onclose = expect(function (self)
       assert(self == timer)
       p("closed", timer)
-    end
+    end)
     local function oninterval(self)
       assert(self == timer)
       p("interval", timer)
       count = count - 1
       if count == 0 then
-        uv.close(timer, expect(onclose))
+        uv.close(timer, onclose)
       end
     end
-    uv.timer_start(timer, 10, 10, expect(oninterval, count))
+    uv.timer_start(timer, 10, 10, oninterval)
   end)
 
   -- Test two concurrent timers

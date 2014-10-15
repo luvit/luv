@@ -12,10 +12,12 @@ end)
 
 return require('lib/tap')(function (test)
 
+  if require('ffi').os == "Windows" then return end
+
   test("Catch SIGINT", function (print, p, expect, uv)
     local child, pid
     local input = uv.new_pipe(false)
-    child, pid = uv.spawn(uv.exepath(), {
+    child, pid = assert(uv.spawn(uv.exepath(), {
       -- cwd = uv.cwd(),
       stdio = {input,1,2}
     }, expect(function (self, code, signal)
@@ -25,7 +27,7 @@ return require('lib/tap')(function (test)
       assert(signal == 0)
       uv.close(input)
       uv.close(child)
-    end))
+    end)))
     uv.write(input, child_code)
     uv.shutdown(input)
     uv.timer_start(uv.new_timer(), 200, 0, expect(function (timer)

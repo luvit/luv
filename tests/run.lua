@@ -10,12 +10,13 @@ local req = uv.fs_scandir("tests")
 
 repeat
   local ent = uv.fs_scandir_next(req)
+
   if not ent then
     -- run the tests!
     tap(true)
   end
   local match = string.match(ent.name, "^test%-(.*).lua$")
-  if ent.type == "FILE" and match then
+  if match then
     local path = "tests/test-" .. match
     tap(match)
     require(path)

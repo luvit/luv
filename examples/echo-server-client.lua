@@ -38,7 +38,7 @@ local address = uv.tcp_getsockname(server)
 p("server", server, address)
 
 local client = uv.new_tcp()
-uv.tcp_connect(client, address.ip, address.port, function (self, err)
+uv.tcp_connect(client, "127.0.0.1", address.port, function (self, err)
   assert(not err, err)
 
   uv.read_start(client, function (self, err, chunk)

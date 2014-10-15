@@ -1,6 +1,5 @@
 uv = require('luv')
 local utils = require('lib/utils')
-print = require('lib/utils').print
 
 local stdin
 if uv.guess_handle(0) ~= "TTY" or
@@ -8,7 +7,7 @@ if uv.guess_handle(0) ~= "TTY" or
   error "stdio must be a tty"
 end
 local stdin = uv.new_tty(0, true)
-local stdout = uv.new_tty(1, false)
+local stdout = require('lib/utils').stdout
 
 local debug = require('debug')
 local c = utils.color
