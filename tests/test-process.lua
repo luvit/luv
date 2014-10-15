@@ -4,6 +4,35 @@ return require('lib/tap')(function (test)
     uv.disable_stdio_inheritance()
   end)
 
+  test("process stdout", function (print, p, expect, uv)
+    local stdout = uv.new_pipe(false)
+
+    local handle, pid
+    handle, pid = uv.spawn(uv.exepath(), {
+      args = {"-e", "print 'Hello World'"},
+      stdio = {nil, stdout},
+    }, expect(function (self, code, signal)
+      p("exit", {code=code, signal=signal})
+      assert(self == handle)
+      uv.close(handle)
+    end))
+
+    p{
+      handle=handle,
+      pid=pid
+    }
+
+    uv.read_start(stdout, expect(function (self, err, chunk)
+      p("stdout", {err=err,chunk=chunk})
+      assert(self == stdout)
+      assert(not err, err)
+      uv.close(stdout)
+    end))
+
+  end)
+
+  if require('ffi').os == "Windows" then return end
+
   test("spawn and kill by pid", function (print, p, expect, uv)
     local handle, pid
     handle, pid = uv.spawn("sleep", {

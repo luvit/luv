@@ -63,7 +63,7 @@ return require('lib/tap')(function (test)
     assert(uv.chdir("/"))
     local cwd = assert(uv.cwd())
     p(cwd)
-    assert(cwd == "/")
+    assert(cwd ~= old)
     assert(uv.chdir(old))
   end)
 

@@ -8,7 +8,7 @@ if uv.guess_handle(1) == "TTY" then
   usecolors = true
 else
   utils.stdout = uv.new_pipe(false)
-  uv.pipe_open(1)
+  uv.pipe_open(utils.stdout, 1)
   usecolors = false
 end
 
@@ -140,7 +140,7 @@ end
 
 -- Print replacement that goes through libuv.  This is useful on windows
 -- to use libuv's code to translate ansi escape codes to windows API calls.
-function utils.print(...)
+function print(...)
   uv.write(utils.stdout, table.concat({...}, "\t") .. "\n")
 end
 
@@ -153,7 +153,7 @@ function utils.prettyPrint(...)
     arguments[i] = utils.dump(arguments[i])
   end
 
-  uv.write(utils.stdout, table.concat(arguments, "\t") .. "\n")
+  print(table.concat(arguments, "\t"))
 end
 
 return utils

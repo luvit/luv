@@ -1,0 +1,15 @@
+configuration: Release
+
+matrix:
+  fast_finish: true
+
+build_script:
+ - git submodule update --init
+ - msvcbuild.bat
+
+test_script:
+ - luajit.exe tests\run.lua
+
+artifacts:
+ - path: luv.dll
+ - path: luajit.exe

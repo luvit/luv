@@ -32,7 +32,7 @@ return require('lib/tap')(function (test)
 
   test("tcp echo server and client", function (print, p, expect, uv)
     local server = uv.new_tcp()
-    assert(uv.tcp_bind(server, "0.0.0.0", 0))
+    assert(uv.tcp_bind(server, "127.0.0.1", 0))
     assert(uv.listen(server, 1, expect(function ()
       local client = uv.new_tcp()
       assert(uv.accept(server, client))

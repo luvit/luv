@@ -19,16 +19,18 @@ return require('lib/tap')(function (test)
     end)))
   end)
 
-  test("Get only ipv6 tcp adresses for luvit.io", function (print, p, expect, uv)
-    assert(uv.getaddrinfo("luvit.io", nil, {
-      socktype = "STREAM",
-      family = "INET6",
-    }, expect(function (err, res)
-      assert(not err, err)
-      p(res, #res)
-      assert(#res == 1)
-    end)))
-  end)
+  if require('ffi').os ~= "Windows" then
+    test("Get only ipv6 tcp adresses for luvit.io", function (print, p, expect, uv)
+      assert(uv.getaddrinfo("luvit.io", nil, {
+        socktype = "STREAM",
+        family = "INET6",
+      }, expect(function (err, res)
+        assert(not err, err)
+        p(res, #res)
+        assert(#res == 1)
+      end)))
+    end)
+  end
 
   test("Get ipv4 and ipv6 tcp adresses for luvit.io", function (print, p, expect, uv)
     assert(uv.getaddrinfo("luvit.io", nil, {
@@ -36,7 +38,7 @@ return require('lib/tap')(function (test)
     }, expect(function (err, res)
       assert(not err, err)
       p(res, #res)
-      assert(#res == 2)
+      assert(#res > 0)
     end)))
   end)
 
@@ -44,7 +46,7 @@ return require('lib/tap')(function (test)
     assert(uv.getaddrinfo("luvit.io", nil, nil, expect(function (err, res)
       assert(not err, err)
       p(res, #res)
-      assert(#res >= 4)
+      assert(#res > 0)
     end)))
   end)
 
@@ -54,7 +56,7 @@ return require('lib/tap')(function (test)
     }, expect(function (err, hostname, service)
       p{err=err,hostname=hostname,service=service}
       assert(not err, err)
-      assert(hostname == "0.0.0.0")
+      assert(hostname)
       assert(service)
     end)))
   end)
@@ -76,7 +78,7 @@ return require('lib/tap')(function (test)
     }, expect(function (err, hostname, service)
       p{err=err,hostname=hostname,service=service}
       assert(not err, err)
-      assert(hostname == "::")
+      assert(hostname)
       assert(service)
     end)))
   end)
@@ -99,7 +101,7 @@ return require('lib/tap')(function (test)
     }, expect(function (err, hostname, service)
       p{err=err,hostname=hostname,service=service}
       assert(not err, err)
-      assert(hostname == "::")
+      assert(hostname)
       assert(service == "http")
     end)))
   end)

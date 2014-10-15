@@ -1,4 +1,4 @@
-*.o
-*.so
-luv.luvit
-.c9revisions
+build
+luv.so
+luv.dll
+luajit.exe
