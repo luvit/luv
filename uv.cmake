@@ -27,7 +27,7 @@ include(CheckTypeSize)
 
 cmake_minimum_required(VERSION 2.8.9)
 
-set(LIBUVDIR ${CMAKE_SOURCE_DIR}/libuv)
+set(LIBUVDIR ${CMAKE_CURRENT_LIST_DIR}/libuv)
 
 include_directories(
   ${LIBUVDIR}/src

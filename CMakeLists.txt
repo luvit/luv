@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 2.8)
 
 project (luv)
 
-set(CMAKE_BUILD_TYPE Release)
-
 include(uv.cmake)
 include(luajit.cmake)
 
