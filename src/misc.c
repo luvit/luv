@@ -230,9 +230,7 @@ static int luv_cwd(lua_State* L) {
   char path[2*PATH_MAX];
   int ret = uv_cwd(path, &size);
   if (ret < 0) return luv_error(L, ret);
-  // TODO: find out why the trailing \0 is included
-  // https://github.com/joyent/libuv/issues/1514
-  lua_pushlstring(L, path, size - 1);
+  lua_pushlstring(L, path, size);
   return 1;
 }
 
