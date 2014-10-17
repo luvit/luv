@@ -5,11 +5,11 @@
 # Redistribution and use of this file is allowed according to the terms of the MIT license.
 # Debugged and (now seriously) modified by Ronan Collobert, for Torch7
 
+cmake_minimum_required(VERSION 2.8.9)
+
 project(LuaJIT C ASM)
 
 set(CMAKE_BUILD_TYPE Release)
-
-CMAKE_POLICY(VERSION 2.6)
 
 SET(LUAJIT_DIR ${CMAKE_CURRENT_LIST_DIR}/luajit)
 
@@ -377,7 +377,7 @@ MACRO(LUAJIT_add_custom_commands luajit_target)
         COMMENT "Building Luajitted ${source_file}: ${generated_file}"
       )
 
-      get_filename_component(basedir ${generated_file} DIRECTORY)
+      get_filename_component(basedir ${generated_file} PATH)
       file(MAKE_DIRECTORY ${basedir})
 
       set(target_srcs ${target_srcs} ${generated_file})
