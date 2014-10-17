@@ -2,6 +2,11 @@ language: c
 
 os:
   - linux
+  - osx
+
+before_install:
+  - git submodule update --init --recursive
+  - git submodule update --recursive
 
 before_script:
   - sudo add-apt-repository --yes ppa:kalakris/cmake
@@ -9,6 +14,7 @@ before_script:
   - sudo apt-get install cmake
 
 script:
+  - make
   - make test
 
 notifications:
