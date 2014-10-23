@@ -144,7 +144,6 @@ static const luaL_Reg luv_functions[] = {
   {"pipe_getsockname", luv_pipe_getsockname},
   {"pipe_pending_instances", luv_pipe_pending_instances},
   {"pipe_pending_count", luv_pipe_pending_count},
-  {"pipe_open", luv_pipe_open},
   {"pipe_pending_type", luv_pipe_pending_type},
 
   // tty.c
