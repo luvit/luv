@@ -270,14 +270,15 @@ static int luv_fs_read(lua_State* L) {
   file = lua_tointeger(L, 1);
   len = lua_tointeger(L, 2);
   offset = lua_tointeger(L, 3);
+  req = luv_push_req(L, 4, sizeof(*req));
 
   buf.base = malloc(len);
   if (!buf.base) {
+    req->data = luv_cleanup_req(L, req->data);
     return luaL_error(L, "Failure to allocate buffer");
   }
   buf.len = len;
 
-  req = luv_push_req(L, 4, sizeof(*req));
   // TODO: find out why we can't just use req->ptr for the base
   ((luv_req_t*)req->data)->data = buf.base;
   FS_CALL(read, req, file, &buf, 1, offset);

@@ -87,9 +87,10 @@ static void luv_fulfill_req(lua_State* L, luv_req_t* data, int nargs) {
   }
 }
 
-static void luv_cleanup_req(lua_State* L, luv_req_t* data) {
+static luv_req_t* luv_cleanup_req(lua_State* L, luv_req_t* data) {
   luaL_unref(L, LUA_REGISTRYINDEX, data->req_ref);
   luaL_unref(L, LUA_REGISTRYINDEX, data->callback_ref);
   free(data->data);
   free(data);
+  return NULL;
 }
