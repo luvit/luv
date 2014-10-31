@@ -20,7 +20,7 @@ static void* luv_push_req(lua_State* L, int index, size_t size) {
   uv_req_t* req;
   luv_req_t* data;
 
-  data = malloc(sizeof(*data));
+  data = calloc(1, sizeof(*data));
   if (!data) luaL_error(L, "Problem allocating luv request");
 
   req = lua_newuserdata(L, size);
@@ -37,7 +37,6 @@ static void* luv_push_req(lua_State* L, int index, size_t size) {
   else {
     data->callback_ref = LUA_NOREF;
   }
-  data->data = NULL;
 
   return req;
 }
