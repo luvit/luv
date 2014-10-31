@@ -27,6 +27,10 @@ static int luv_iscontinuation(lua_State* L, int index) {
   return lua_isnone(L, index) || lua_isfunction(L, index);
 }
 
+static int luv_ispositive(lua_State* L, int index) {
+  return lua_isnumber(L, index) && lua_tonumber(L, index) >= 0;
+}
+
 void lschema_check(lua_State* L, lschema_entry schema[]) {
   int num = lua_gettop(L) - 1;
   int i;

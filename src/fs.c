@@ -261,8 +261,8 @@ static int luv_fs_read(lua_State* L) {
 
   lschema_check(L, (lschema_entry[]) {
     {"file", luv_isfile},
-    {"length", lua_isnumber},
-    {"offset", lua_isnumber},
+    {"length", luv_ispositive},
+    {"offset", luv_ispositive},
     {"callback", luv_iscontinuation},
     {NULL}
   });
