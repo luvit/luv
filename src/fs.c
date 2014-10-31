@@ -254,18 +254,30 @@ static int luv_fs_open(lua_State* L) {
 }
 
 static int luv_fs_read(lua_State* L) {
-  uv_file file = luaL_checkinteger(L, 1);
-  int64_t len = luaL_checkinteger(L, 2);
-  int64_t offset = luaL_checkinteger(L, 3);
+  uv_file file;
+  int64_t len, offset;
   uv_buf_t buf;
-  int ref;
   uv_fs_t* req;
-  char* data = malloc(len);
-  if (!data) return luaL_error(L, "Failure to allocate buffer");
-  buf = uv_buf_init(data, len);
-  ref = luv_check_continuation(L, 4);
-  req = lua_newuserdata(L, sizeof(*req));
-  req->data = luv_setup_req(L, ref);
+
+  lschema_check(L, (lschema_entry[]) {
+    {"file", luv_isfile},
+    {"length", lua_isnumber},
+    {"offset", lua_isnumber},
+    {"callback", luv_iscontinuation},
+    {NULL}
+  });
+
+  file = lua_tointeger(L, 1);
+  len = lua_tointeger(L, 2);
+  offset = lua_tointeger(L, 3);
+
+  buf.base = malloc(len);
+  if (!buf.base) {
+    return luaL_error(L, "Failure to allocate buffer");
+  }
+  buf.len = len;
+
+  req = luv_push_req(L, 4, sizeof(*req));
   // TODO: find out why we can't just use req->ptr for the base
   ((luv_req_t*)req->data)->data = buf.base;
   FS_CALL(read, req, file, &buf, 1, offset);

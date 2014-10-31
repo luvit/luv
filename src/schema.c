@@ -14,3 +14,27 @@
  *  limitations under the License.
  *
  */
+#include "schema.h"
+
+// Platform specefic file handle
+static int luv_isfile(lua_State* L, int index) {
+  // TODO: this should act different on windows maybe.
+  return lua_isnumber(L, index);
+}
+
+// Optional function
+static int luv_iscontinuation(lua_State* L, int index) {
+  return lua_isnone(L, index) || lua_isfunction(L, index);
+}
+
+void lschema_check(lua_State* L, lschema_entry schema[]) {
+  int num = lua_gettop(L) - 1;
+  int i;
+  for (i = 0; schema[i].name;) {
+    lschema_entry entry = schema[i++];
+    luaL_argcheck(L, entry.checker(L, i), i, entry.name);
+  }
+  if (num > i) {
+    luaL_argerror(L, i, "Too many arguments");
+  }
+}

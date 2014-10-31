@@ -16,6 +16,7 @@
  */
 
 #include "luv.h"
+#include "schema.c"
 #include "util.c"
 #include "lhandle.c"
 #include "lreq.c"

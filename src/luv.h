@@ -67,6 +67,7 @@ static uv_loop_t* luv_loop(lua_State* L);
 // as you use a different lua_State and thread for each.
 LUALIB_API int luaopen_luv (lua_State *L);
 
+#include "schema.h"
 #include "util.h"
 #include "lhandle.h"
 #include "lreq.h"
