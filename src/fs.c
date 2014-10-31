@@ -253,21 +253,24 @@ static int luv_fs_open(lua_State* L) {
   FS_CALL(open, req, path, flags, mode);
 }
 
+static lschema_entry luv_fs_read_args[] = {
+  {"file", luv_isfile},
+  {"length", luv_ispositive},
+  {"offset", luv_ispositive},
+  {"callback", luv_iscontinuation},
+  {NULL}
+};
+
 static int luv_fs_read(lua_State* L) {
   uv_file file;
-  int64_t len, offset;
+  unsigned int len;
+  int64_t offset;
   uv_buf_t buf;
   uv_fs_t* req;
 
-  lschema_check(L, (lschema_entry[]) {
-    {"file", luv_isfile},
-    {"length", luv_ispositive},
-    {"offset", luv_ispositive},
-    {"callback", luv_iscontinuation},
-    {NULL}
-  });
+  lschema_check(L, luv_fs_read_args);
 
-  file = lua_tointeger(L, 1);
+  file = luv_tofile(L, 1);
   len = lua_tointeger(L, 2);
   offset = lua_tointeger(L, 3);
   req = luv_push_req(L, 4, sizeof(*req));

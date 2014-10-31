@@ -25,6 +25,7 @@ typedef const struct {
 } lschema_entry;
 
 static int luv_isfile(lua_State* L, int index);
+static uv_file luv_tofile(lua_State* L, int index);
 static int luv_iscontinuation(lua_State* L, int index);
 static int luv_ispositive(lua_State* L, int index);
 void lschema_check(lua_State* L, lschema_entry schema[]);

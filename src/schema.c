@@ -18,8 +18,13 @@
 
 // Platform specefic file handle
 static int luv_isfile(lua_State* L, int index) {
-  // TODO: this should act different on windows maybe.
+  // TODO: this should act different on windows probably.
   return lua_isnumber(L, index);
+}
+
+static uv_file luv_tofile(lua_State* L, int index) {
+  // TODO: this should act different on windows probably.
+  return lua_tointeger(L, index);
 }
 
 // Optional function
