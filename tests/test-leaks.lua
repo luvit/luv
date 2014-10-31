@@ -58,17 +58,35 @@ return require('lib/tap')(function (test)
     end)
   end)
 
-  test("reading valid file", function (print, p, expect, uv)
+  test("reading file async", function (print, p, expect, uv)
     local mode = tonumber("644", 8)
     bench(uv, p, 0x500, function ()
-      local req = assert(uv.fs_open("README.md", "r", mode, expect(function (err, fd)
+      local onOpen, onStat, onRead, onClose
+      local fd, stat
+
+      onOpen = expect(function (err, result)
         assert(not err, err)
-        local stat = assert(uv.fs_fstat(fd))
-        assert(uv.fs_read(fd, stat.size, 0))
-        assert(uv.fs_close(fd, expect(function (err)
-          assert(not err, err)
-        end)))
-      end)))
+        fd = result
+        uv.fs_fstat(fd, onStat)
+      end)
+
+      onStat = expect(function (err, result)
+        assert(not err, err)
+        stat = result
+        uv.fs_read(fd, stat.size, 0, onRead)
+      end)
+
+      onRead = expect(function (err, data)
+        assert(not err, err)
+        assert(#data == stat.size)
+        uv.fs_close(fd, onClose)
+      end)
+
+      onClose = expect(function (err)
+        assert(not err, err)
+      end)
+
+      assert(uv.fs_open("README.md", "r", mode, onOpen))
     end)
   end)
 
@@ -76,6 +94,9 @@ return require('lib/tap')(function (test)
     local mode = tonumber("644", 8)
     bench(uv, p, 0x2000, function ()
       local fd = assert(uv.fs_open("README.md", "r", mode))
+      local stat = assert(uv.fs_fstat(fd))
+      local data = assert(uv.fs_read(fd, stat.size, 0))
+      assert(#data == stat.size)
       assert(uv.fs_close(fd))
     end)
   end)
