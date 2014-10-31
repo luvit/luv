@@ -16,6 +16,31 @@
  */
 #include "lreq.h"
 
+static void* luv_push_req(lua_State* L, int index, size_t size) {
+  uv_req_t* req;
+  luv_req_t* data;
+
+  data = calloc(1, sizeof(*data));
+  if (!data) luaL_error(L, "Problem allocating luv request");
+
+  req = lua_newuserdata(L, size);
+  req->data = data;
+  luaL_getmetatable(L, "uv_req");
+  lua_setmetatable(L, -2);
+
+  lua_pushvalue(L, -1);
+  data->req_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+  if (lua_isfunction(L, index)) {
+    lua_pushvalue(L, index);
+    data->callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);;
+  }
+  else {
+    data->callback_ref = LUA_NOREF;
+  }
+
+  return req;
+}
+
 
 static int luv_check_continuation(lua_State* L, int index) {
   if (lua_isnoneornil(L, index)) return LUA_NOREF;
@@ -61,9 +86,10 @@ static void luv_fulfill_req(lua_State* L, luv_req_t* data, int nargs) {
   }
 }
 
-static void luv_cleanup_req(lua_State* L, luv_req_t* data) {
+static luv_req_t* luv_cleanup_req(lua_State* L, luv_req_t* data) {
   luaL_unref(L, LUA_REGISTRYINDEX, data->req_ref);
   luaL_unref(L, LUA_REGISTRYINDEX, data->callback_ref);
   free(data->data);
   free(data);
+  return NULL;
 }

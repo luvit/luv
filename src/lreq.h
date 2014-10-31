@@ -25,6 +25,10 @@ typedef struct {
   void* data; // extra data
 } luv_req_t;
 
+// Create a new userdata for a uv_req_t and setup it's data member
+// Index if the stack index where the optional callback resides.
+static void* luv_push_req(lua_State* L, int index, size_t size);
+
 // Used in the top of a setup function to check the arg
 // and ref the callback to an integer.
 static int luv_check_continuation(lua_State* L, int index);
@@ -35,6 +39,6 @@ static luv_req_t* luv_setup_req(lua_State* L, int ref);
 
 static void luv_fulfill_req(lua_State* L, luv_req_t* data, int nargs);
 
-static void luv_cleanup_req(lua_State* L, luv_req_t* data);
+static luv_req_t* luv_cleanup_req(lua_State* L, luv_req_t* data);
 
 #endif

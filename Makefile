@@ -1,5 +1,5 @@
 
-all: luv.so
+all: luv
 
 libuv/include:
 	git submodule update --init libuv
@@ -10,15 +10,13 @@ luajit/src:
 build/Makefile: libuv/include luajit/src
 	cmake -H. -Bbuild
 
-build/luv.so: build/Makefile
+luv: build/Makefile
 	cmake --build build --config Release
-
-luv.so: build/luv.so
 	ln -sf build/luv.so
 
 clean:
 	rm -rf build luv.so
 
-test: luv.so
+test: luv
 	build/luajit tests/run.lua
 
