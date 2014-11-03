@@ -50,7 +50,7 @@ static int luv_string_to_signal(const char* string) {
 
 static uv_signal_t* luv_check_signal(lua_State* L, int index) {
   uv_signal_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->type = UV_SIGNAL, index, "Expected uv_signal_t");
+  luaL_argcheck(L, handle->type == UV_SIGNAL && handle->data, index, "Expected uv_signal_t");
   return handle;
 }
 

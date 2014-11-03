@@ -18,7 +18,7 @@
 
 static uv_prepare_t* luv_check_prepare(lua_State* L, int index) {
   uv_prepare_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->type = UV_PREPARE, index, "Expected uv_prepare_t");
+  luaL_argcheck(L, handle->type == UV_PREPARE && handle->data, index, "Expected uv_prepare_t");
   return handle;
 }
 

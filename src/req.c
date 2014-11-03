@@ -17,7 +17,9 @@
 #include "luv.h"
 
 static uv_req_t* luv_check_req(lua_State* L, int index) {
-  return luaL_checkudata(L, index, "uv_req");
+  uv_req_t* req = luaL_checkudata(L, index, "uv_req");
+  luaL_argcheck(L, req->data, index, "Expected uv_req_t");
+  return req;
 }
 
 static int luv_req_tostring(lua_State* L) {

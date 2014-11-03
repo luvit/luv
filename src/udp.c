@@ -18,7 +18,7 @@
 
 static uv_udp_t* luv_check_udp(lua_State* L, int index) {
   uv_udp_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->type = UV_UDP, index, "Expected uv_udp_t");
+  luaL_argcheck(L, handle->type == UV_UDP && handle->data, index, "Expected uv_udp_t");
   return handle;
 }
 

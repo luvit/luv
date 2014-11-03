@@ -18,7 +18,7 @@
 
 static uv_async_t* luv_check_async(lua_State* L, int index) {
   uv_async_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->type = UV_ASYNC, index, "Expected uv_async_t");
+  luaL_argcheck(L, handle->type == UV_ASYNC && handle->data, index, "Expected uv_async_t");
   return handle;
 }
 

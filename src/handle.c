@@ -17,7 +17,9 @@
 #include "luv.h"
 
 static uv_handle_t* luv_check_handle(lua_State* L, int index) {
-  return luaL_checkudata(L, index, "uv_handle");
+  uv_handle_t* handle = luaL_checkudata(L, index, "uv_handle");
+  luaL_argcheck(L, handle->data, index, "Expected uv_handle_t");
+  return handle;
 }
 
 // Show the libuv type instead of generic "userdata"
