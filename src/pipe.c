@@ -18,7 +18,7 @@
 
 static uv_pipe_t* luv_check_pipe(lua_State* L, int index) {
   uv_pipe_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->type = UV_NAMED_PIPE, index, "Expected uv_pipe_t");
+  luaL_argcheck(L, handle->type == UV_NAMED_PIPE && handle->data, index, "Expected uv_pipe_t");
   return handle;
 }
 

@@ -19,7 +19,7 @@
 
 static uv_fs_event_t* luv_check_fs_event(lua_State* L, int index) {
   uv_fs_event_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->type = UV_FS_EVENT, index, "Expected uv_fs_event_t");
+  luaL_argcheck(L, handle->type == UV_FS_EVENT && handle->data, index, "Expected uv_fs_event_t");
   return handle;
 }
 

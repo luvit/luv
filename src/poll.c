@@ -18,7 +18,7 @@
 
 static uv_poll_t* luv_check_poll(lua_State* L, int index) {
   uv_poll_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->type = UV_POLL, index, "Expected uv_poll_t");
+  luaL_argcheck(L, handle->type == UV_POLL && handle->data, index, "Expected uv_poll_t");
   return handle;
 }
 

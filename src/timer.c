@@ -18,7 +18,7 @@
 
 static uv_timer_t* luv_check_timer(lua_State* L, int index) {
   uv_timer_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->type = UV_TIMER, index, "Expected uv_timer_t");
+  luaL_argcheck(L, handle->type == UV_TIMER && handle->data, index, "Expected uv_timer_t");
   return handle;
 }
 

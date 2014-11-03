@@ -18,7 +18,7 @@
 
 static uv_tty_t* luv_check_tty(lua_State* L, int index) {
   uv_tty_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->type = UV_TTY, index, "Expected uv_tty_t");
+  luaL_argcheck(L, handle->type == UV_TTY && handle->data, index, "Expected uv_tty_t");
   return handle;
 }
 

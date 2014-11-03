@@ -18,10 +18,10 @@
 
 static uv_stream_t* luv_check_stream(lua_State* L, int index) {
   uv_stream_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L,
+  luaL_argcheck(L, handle->data && (
     handle->type == UV_TCP ||
     handle->type == UV_TTY ||
-    handle->type == UV_NAMED_PIPE,
+    handle->type == UV_NAMED_PIPE),
     index, "uv_stream_t subclass required");
   return handle;
 }
