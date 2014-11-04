@@ -135,6 +135,7 @@ static const luaL_Reg luv_functions[] = {
   {"tcp_getpeername", luv_tcp_getpeername},
   {"tcp_getsockname", luv_tcp_getsockname},
   {"tcp_connect", luv_tcp_connect},
+  {"tcp_write_queue_size", luv_write_queue_size},
 
   // pipe.c
   {"new_pipe", luv_new_pipe},

@@ -151,6 +151,12 @@ static void luv_connect_cb(uv_connect_t* req, int status) {
   req->data = NULL;
 }
 
+static int luv_write_queue_size(lua_State* L) {
+  uv_tcp_t* handle = luv_check_tcp(L, 1);
+  lua_pushinteger(L, handle->write_queue_size);
+  return 1;
+}
+
 static int luv_tcp_connect(lua_State* L) {
   uv_tcp_t* handle = luv_check_tcp(L, 1);
   const char* host = luaL_checkstring(L, 2);
