@@ -35,6 +35,8 @@
 # define S_ISBLK(x)  0
 # define S_ISLNK(x)  0
 # define S_ISSOCK(x) 0
+#else
+# include <unistd.h>
 #endif
 
 #ifndef PATH_MAX

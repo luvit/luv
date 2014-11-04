@@ -100,7 +100,15 @@ static void luv_push_stats_table(lua_State* L, const uv_stat_t* s) {
 #endif
 }
 
-static int luv_string_to_flags(lua_State* L, const char* string) {
+static int luv_check_flags(lua_State* L, int index) {
+  const char* string;
+  if (lua_isnumber(L, index)) {
+    return lua_tointeger(L, index);
+  }
+  else if (!lua_isstring(L, index)) {
+    return luaL_argerror(L, index, "Expected string or integer for file open mode");
+  }
+  string = lua_tostring(L, index);
   if (strcmp(string, "r") == 0) return O_RDONLY;
   if (strcmp(string, "r+") == 0) return O_RDWR;
   if (strcmp(string, "w") == 0) return O_CREAT | O_TRUNC | O_WRONLY;
@@ -110,10 +118,44 @@ static int luv_string_to_flags(lua_State* L, const char* string) {
   return luaL_error(L, "Unknown file open flag '%s'", string);
 }
 
+static int luv_check_amode(lua_State* L, int index) {
+  int i, mode;
+  const char* string;
+  if (lua_isnumber(L, index)) {
+    return lua_tointeger(L, index);
+  }
+  else if (!lua_isstring(L, index)) {
+    return luaL_argerror(L, index, "Expected string or integer for file access mode check");
+  }
+  string = lua_tostring(L, index);
+  mode = 0;
+  for (i = 0; i < strlen(string); ++i) {
+    switch (string[i]) {
+      case 'r': case 'R':
+        mode |= R_OK;
+        break;
+      case 'w': case 'W':
+        mode |= W_OK;
+        break;
+      case 'x': case 'X':
+        mode |= X_OK;
+        break;
+      default:
+        return luaL_argerror(L, index, "Unknown character in access mode string");
+    }
+  }
+  return mode;
+}
+
 /* Processes a result and pushes the data onto the stack
    returns the number of items pushed */
 static int push_fs_result(lua_State* L, uv_fs_t* req) {
   luv_req_t* data = req->data;
+
+  if (req->fs_type == UV_FS_ACCESS) {
+    lua_pushboolean(L, req->result >= 0);
+    return 1;
+  }
 
   if (req->result < 0) {
     lua_pushnil(L);
@@ -208,7 +250,7 @@ static void luv_fs_cb(uv_fs_t* req) {
   sync = data->callback_ref == LUA_NOREF;                 \
   ret = uv_fs_##func(luv_loop(L), req, __VA_ARGS__,       \
                      sync ? NULL : luv_fs_cb);            \
-  if (ret < 0) {                                          \
+  if (req->fs_type != UV_FS_ACCESS && ret < 0) {          \
     lua_pushnil(L);                                       \
     if (req->path) {                                      \
       lua_pushfstring(L, "%s: %s: %s", uv_err_name(req->result), uv_strerror(req->result), req->path); \
@@ -245,7 +287,7 @@ static int luv_fs_close(lua_State* L) {
 
 static int luv_fs_open(lua_State* L) {
   const char* path = luaL_checkstring(L, 1);
-  int flags = luv_string_to_flags(L, luaL_checkstring(L, 2));
+  int flags = luv_check_flags(L, 2);
   int mode = luaL_checkinteger(L, 3);
   int ref = luv_check_continuation(L, 4);
   uv_fs_t* req = lua_newuserdata(L, sizeof(*req));
@@ -431,11 +473,11 @@ static int luv_fs_sendfile(lua_State* L) {
 
 static int luv_fs_access(lua_State* L) {
   const char* path = luaL_checkstring(L, 1);
-  int flags = luaL_checkinteger(L, 2);
+  int amode = luv_check_amode(L, 2);
   int ref = luv_check_continuation(L, 3);
   uv_fs_t* req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
-  FS_CALL(access, req, path, flags);
+  FS_CALL(access, req, path, amode);
 }
 
 static int luv_fs_chmod(lua_State* L) {
