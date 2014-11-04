@@ -23,7 +23,7 @@ static uv_req_t* luv_check_req(lua_State* L, int index) {
 }
 
 static int luv_req_tostring(lua_State* L) {
-  uv_req_t* req = luv_check_req(L, 1);
+  uv_req_t* req = luaL_checkudata(L, 1, "uv_req");
   switch (req->type) {
 #define XX(uc, lc) case UV_##uc: lua_pushfstring(L, "uv_"#lc"_t: %p", req); break;
   UV_REQ_TYPE_MAP(XX)

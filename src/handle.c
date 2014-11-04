@@ -24,7 +24,7 @@ static uv_handle_t* luv_check_handle(lua_State* L, int index) {
 
 // Show the libuv type instead of generic "userdata"
 static int luv_handle_tostring(lua_State* L) {
-  uv_handle_t* handle = luv_check_handle(L, 1);
+  uv_handle_t* handle = luaL_checkudata(L, 1, "uv_handle");
   switch (handle->type) {
 #define XX(uc, lc) case UV_##uc: lua_pushfstring(L, "uv_"#lc"_t: %p", handle); break;
   UV_HANDLE_TYPE_MAP(XX)
