@@ -153,7 +153,7 @@ static int luv_spawn(lua_State* L) {
 
   // Get the cwd
   lua_getfield(L, 2, "cwd");
-  if (lua_type(L, 01) == LUA_TSTRING) {
+  if (lua_type(L, -1) == LUA_TSTRING) {
     options.cwd = (char*)lua_tostring(L, -1);
   }
   else if (lua_type(L, -1) != LUA_TNIL) {
