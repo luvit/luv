@@ -36,8 +36,7 @@ static int luv_new_check(lua_State* L) {
 static void luv_check_cb(uv_check_t* handle) {
   lua_State* L = luv_state(handle->loop);
   luv_handle_t* data = handle->data;
-  luv_find_handle(L, data);
-  luv_call_callback(L, data, LUV_CHECK, 1);
+  luv_call_callback(L, data, LUV_CHECK, 0);
 }
 
 static int luv_check_start(lua_State* L) {

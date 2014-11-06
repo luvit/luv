@@ -11,9 +11,8 @@ return require('lib/tap')(function (test)
     handle, pid = uv.spawn(uv.exepath(), {
       args = {"-e", "print 'Hello World'"},
       stdio = {nil, stdout},
-    }, expect(function (self, code, signal)
+    }, expect(function (code, signal)
       p("exit", {code=code, signal=signal})
-      assert(self == handle)
       uv.close(handle)
     end))
 
@@ -22,9 +21,8 @@ return require('lib/tap')(function (test)
       pid=pid
     }
 
-    uv.read_start(stdout, expect(function (self, err, chunk)
+    uv.read_start(stdout, expect(function (err, chunk)
       p("stdout", {err=err,chunk=chunk})
-      assert(self == stdout)
       assert(not err, err)
       uv.close(stdout)
     end))
@@ -37,9 +35,8 @@ return require('lib/tap')(function (test)
     local handle, pid
     handle, pid = uv.spawn("sleep", {
       args = {1},
-    }, expect(function (self, status, signal)
+    }, expect(function (status, signal)
       p("exit", handle, {status=status,signal=signal})
-      assert(self == handle)
       assert(status == 0)
       assert(signal == 2)
       uv.close(handle)
@@ -52,9 +49,8 @@ return require('lib/tap')(function (test)
     local handle, pid
     handle, pid = uv.spawn("sleep", {
       args = {1},
-    }, expect(function (self, status, signal)
+    }, expect(function (status, signal)
       p("exit", handle, {status=status,signal=signal})
-      assert(self == handle)
       assert(status == 0)
       assert(signal == 15)
       uv.close(handle)
@@ -70,9 +66,8 @@ return require('lib/tap')(function (test)
     local handle, pid
     handle, pid = uv.spawn("cat", {
       stdio = {stdin, stdout},
-    }, expect(function (self, code, signal)
+    }, expect(function (code, signal)
       p("exit", {code=code, signal=signal})
-      assert(self == handle)
       uv.close(handle)
     end))
 
@@ -81,9 +76,8 @@ return require('lib/tap')(function (test)
       pid=pid
     }
 
-    uv.read_start(stdout, expect(function (self, err, chunk)
+    uv.read_start(stdout, expect(function (err, chunk)
       p("stdout", {err=err,chunk=chunk})
-      assert(self == stdout)
       assert(not err, err)
       uv.close(stdout)
     end))

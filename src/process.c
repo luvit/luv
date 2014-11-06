@@ -30,10 +30,9 @@ static uv_process_t* luv_check_process(lua_State* L, int index) {
 static void exit_cb(uv_process_t* handle, int64_t exit_status, int term_signal) {
   lua_State* L = luv_state(handle->loop);
   luv_handle_t* data = handle->data;
-  luv_find_handle(L, data);
   lua_pushinteger(L, exit_status);
   lua_pushinteger(L, term_signal);
-  luv_call_callback(L, data, LUV_EXIT, 3);
+  luv_call_callback(L, data, LUV_EXIT, 2);
 }
 
 static void luv_clean_options(uv_process_options_t* options) {

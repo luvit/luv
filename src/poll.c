@@ -44,8 +44,6 @@ static void luv_poll_cb(uv_poll_t* handle, int status, int events) {
   luv_handle_t* data = handle->data;
   const char* evtstr;
 
-  luv_find_handle(L, data);
-
   if (status < 0) {
     fprintf(stderr, "%s: %s\n", uv_err_name(status), uv_strerror(status));
     lua_pushstring(L, uv_err_name(status));
@@ -62,7 +60,7 @@ static void luv_poll_cb(uv_poll_t* handle, int status, int events) {
   }
   lua_pushstring(L, evtstr);
 
-  luv_call_callback(L, data, LUV_POLL, 3);
+  luv_call_callback(L, data, LUV_POLL, 2);
 }
 
 static int luv_poll_start(lua_State* L) {

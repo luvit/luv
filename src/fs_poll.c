@@ -37,9 +37,6 @@ static int luv_new_fs_poll(lua_State* L) {
 static void luv_fs_poll_cb(uv_fs_poll_t* handle, int status, const uv_stat_t* prev, const uv_stat_t* curr) {
   lua_State* L = luv_state(handle->loop);
 
-  // self
-  luv_find_handle(L, handle->data);
-
   // err
   luv_status(L, status);
 
@@ -59,7 +56,7 @@ static void luv_fs_poll_cb(uv_fs_poll_t* handle, int status, const uv_stat_t* pr
     lua_pushnil(L);
   }
 
-  luv_call_callback(L, handle->data, LUV_FS_POLL, 4);
+  luv_call_callback(L, handle->data, LUV_FS_POLL, 3);
 }
 
 static int luv_fs_poll_start(lua_State* L) {

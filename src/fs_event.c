@@ -36,8 +36,6 @@ static int luv_new_fs_event(lua_State* L) {
 
 static void luv_fs_event_cb(uv_fs_event_t* handle, const char* filename, int events, int status) {
   lua_State* L = luv_state(handle->loop);
-  // self
-  luv_find_handle(L, handle->data);
 
   // err
   luv_status(L, status);
@@ -60,7 +58,7 @@ static void luv_fs_event_cb(uv_fs_event_t* handle, const char* filename, int eve
     lua_setfield(L, -2, "recursive");
   }
 
-  luv_call_callback(L, handle->data, LUV_FS_EVENT, 4);
+  luv_call_callback(L, handle->data, LUV_FS_EVENT, 3);
 }
 
 static int luv_fs_event_start(lua_State* L) {
