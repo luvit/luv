@@ -149,9 +149,8 @@ static int luv_udp_set_ttl(lua_State* L) {
 
 static void luv_udp_send_cb(uv_udp_send_t* req, int status) {
   lua_State* L = luv_state(req->handle->loop);
-  luv_find_handle(L, req->handle->data);
   luv_status(L, status);
-  luv_fulfill_req(L, req->data, 2);
+  luv_fulfill_req(L, req->data, 1);
   luv_cleanup_req(L, req->data);
   req->data = NULL;
 }
@@ -204,9 +203,6 @@ static int luv_udp_try_send(lua_State* L) {
 static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags) {
   lua_State* L = luv_state(handle->loop);
 
-  // self
-  luv_find_handle(L, handle->data);
-
   // err
   if (nread < 0) {
     luv_status(L, nread);
@@ -244,7 +240,7 @@ static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf
     lua_setfield(L, -2, "partial");
   }
 
-  luv_call_callback(L, handle->data, LUV_RECV, 5);
+  luv_call_callback(L, handle->data, LUV_RECV, 4);
 }
 
 static int luv_udp_recv_start(lua_State* L) {

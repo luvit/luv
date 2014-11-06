@@ -25,11 +25,11 @@ local child_code = string.dump(function ()
   end
 
   -- Read the server handle from the parent
-  local function onread(self, err, data)
-    p("onread", {self=self,err=err,data=data})
+  local function onread(err, data)
+    p("onread", {err=err,data=data})
     assert(not err, err)
-    if uv.pipe_pending_count(self) > 0 then
-      local pending_type = uv.pipe_pending_type(self)
+    if uv.pipe_pending_count(pipe) > 0 then
+      local pending_type = uv.pipe_pending_type(pipe)
       p("pending_type", pending_type)
       assert(pending_type == "TCP")
       assert(uv.accept(pipe, server))
@@ -58,14 +58,14 @@ assert(uv.tcp_bind(server, "::1", 1337))
 print("Master process bound to TCP port 1337 on ::1")
 
 
-local function onexit(self, status, signal)
-  p("Child exited", {self=self,status=status,signal=signal})
+local function onexit(status, signal)
+  p("Child exited", {status=status,signal=signal})
 end
 
 local function spawnChild()
   local pipe = uv.new_pipe(true)
   local input = uv.new_pipe(false)
-  local child, pid = assert(uv.spawn(exepath, {
+  local _, pid = assert(uv.spawn(exepath, {
     stdio = {input,1,2,pipe},
     env= {"PIPE_FD=3"}
   }, onexit))
@@ -77,7 +77,7 @@ local function spawnChild()
 end
 
 -- Spawn a child process for each CPU core
-for i = 1, cpu_count do
+for _ = 1, cpu_count do
   spawnChild()
 end
 

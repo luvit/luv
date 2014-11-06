@@ -2,15 +2,12 @@ return require('lib/tap')(function (test)
 
   -- This tests using timers for a simple timeout.
   -- It also tests the handle close callback and
-  -- makes sure self is passed in properly to callbacks.
   test("simple timeout", function (print, p, expect, uv)
     local timer = uv.new_timer()
-    local function onclose(self)
-      assert(self == timer)
+    local function onclose()
       p("closed", timer)
     end
-    local function ontimeout(self)
-      assert(self == timer)
+    local function ontimeout()
       p("timeout", timer)
       uv.close(timer, expect(onclose))
     end
@@ -21,12 +18,10 @@ return require('lib/tap')(function (test)
   test("simple interval", function (print, p, expect, uv)
     local timer = uv.new_timer()
     local count = 3
-    local onclose = expect(function (self)
-      assert(self == timer)
+    local onclose = expect(function ()
       p("closed", timer)
     end)
-    local function oninterval(self)
-      assert(self == timer)
+    local function oninterval()
       p("interval", timer)
       count = count - 1
       if count == 0 then

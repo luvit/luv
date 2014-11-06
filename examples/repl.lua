@@ -1,7 +1,6 @@
-uv = require('luv')
+local uv = require('luv')
 local utils = require('lib/utils')
 
-local stdin
 if uv.guess_handle(0) ~= "TTY" or
    uv.guess_handle(1) ~= "TTY" then
   error "stdio must be a tty"
@@ -70,7 +69,7 @@ local function displayPrompt(prompt)
   uv.write(stdout, prompt .. ' ')
 end
 
-local function onread(self, err, line)
+local function onread(err, line)
   if err then error(err) end
   if line then
     local prompt = evaluateLine(line)

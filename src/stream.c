@@ -28,9 +28,8 @@ static uv_stream_t* luv_check_stream(lua_State* L, int index) {
 
 static void luv_shutdown_cb(uv_shutdown_t* req, int status) {
   lua_State* L = luv_state(req->handle->loop);
-  luv_find_handle(L, req->handle->data);
   luv_status(L, status);
-  luv_fulfill_req(L, req->data, 2);
+  luv_fulfill_req(L, req->data, 1);
   luv_cleanup_req(L, req->data);
   req->data = NULL;
 }
@@ -51,9 +50,8 @@ static int luv_shutdown(lua_State* L) {
 
 static void luv_connection_cb(uv_stream_t* handle, int status) {
   lua_State* L = luv_state(handle->loop);
-  luv_find_handle(L, handle->data);
   luv_status(L, status);
-  luv_call_callback(L, handle->data, LUV_CONNECTION, 2);
+  luv_call_callback(L, handle->data, LUV_CONNECTION, 1);
 }
 
 static int luv_listen(lua_State* L) {
@@ -84,7 +82,6 @@ static void luv_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* b
 
 static void luv_read_cb(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf) {
   lua_State* L = luv_state(handle->loop);
-  luv_find_handle(L, handle->data);
 
   if (nread >= 0) {
     lua_pushnil(L);
@@ -102,7 +99,7 @@ static void luv_read_cb(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
     luv_status(L, nread);
   }
 
-  luv_call_callback(L, handle->data, LUV_READ, 3);
+  luv_call_callback(L, handle->data, LUV_READ, 2);
 }
 
 static int luv_read_start(lua_State* L) {
@@ -125,9 +122,8 @@ static int luv_read_stop(lua_State* L) {
 
 static void luv_write_cb(uv_write_t* req, int status) {
   lua_State* L = luv_state(req->handle->loop);
-  luv_find_handle(L, req->handle->data);
   luv_status(L, status);
-  luv_fulfill_req(L, req->data, 2);
+  luv_fulfill_req(L, req->data, 1);
   luv_cleanup_req(L, req->data);
   req->data = NULL;
 }

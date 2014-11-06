@@ -36,8 +36,7 @@ static int luv_new_prepare(lua_State* L) {
 static void luv_prepare_cb(uv_prepare_t* handle) {
   lua_State* L = luv_state(handle->loop);
   luv_handle_t* data = handle->data;
-  luv_find_handle(L, data);
-  luv_call_callback(L, data, LUV_PREPARE, 1);
+  luv_call_callback(L, data, LUV_PREPARE, 0);
 }
 
 static int luv_prepare_start(lua_State* L) {

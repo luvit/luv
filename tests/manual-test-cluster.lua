@@ -64,11 +64,11 @@ return require('lib/tap')(function (test)
     end
 
     -- Read the server handle from the parent
-    local function onread(self, err, data)
-      p("onread", {self=self,err=err,data=data})
+    local function onread(err, data)
+      p("onread", {err=err,data=data})
       assert(not err, err)
-      if uv.pipe_pending_count(self) > 0 then
-        local pending_type = uv.pipe_pending_type(self)
+      if uv.pipe_pending_count(pipe) > 0 then
+        local pending_type = uv.pipe_pending_type(pipe)
         p("pending_type", pending_type)
         assert(pending_type == "TCP")
         assert(uv.accept(pipe, server))
@@ -121,9 +121,8 @@ return require('lib/tap')(function (test)
 
     local socket = uv.new_tcp()
 
-    assert(uv.tcp_connect(socket, host, port, function (self, err)
-      p("client connected", {self=self,err=err})
-      assert(socket == self)
+    assert(uv.tcp_connect(socket, host, port, function (err)
+      p("client connected", {err=err})
       assert(not err, err)
     end))
 
@@ -136,7 +135,6 @@ return require('lib/tap')(function (test)
     local exepath = assert(uv.exepath())
     local cpu_count = # assert(uv.cpu_info())
     local left = cpu_count
-    local children = {}
 
     local server = uv.new_tcp()
     assert(uv.tcp_bind(server, "::1", 0))
@@ -149,16 +147,17 @@ return require('lib/tap')(function (test)
     local function spawnWorker()
       local pipe = uv.new_pipe(true)
       local input = uv.new_pipe(false)
-      local child, pid = assert(uv.spawn(exepath, {
+      local child, pid
+      child, pid = assert(uv.spawn(exepath, {
         cwd = uv.cwd(),
         stdio = {input,1,2,pipe},
         env= {"PIPE_FD=3"}
-      }, expect(function (self, status, signal)
-        p("Worker exited", {self=self,status=status,signal=signal})
+      }, expect(function (status, signal)
+        p("Worker exited", {status=status,signal=signal})
         assert(status == 42, "worker should return 42")
         assert(signal == 0)
         left = left - 1
-        uv.close(self)
+        uv.close(child)
         uv.close(input)
         uv.close(pipe)
         if left == 0 then
@@ -173,23 +172,22 @@ return require('lib/tap')(function (test)
       assert(uv.shutdown(pipe))
     end
 
-    local onexit = expect(function (self, status, signal)
-      p("Client exited", {self=self,status=status,signal=signal})
-      assert(status == 0)
-      assert(signal == 0)
-      uv.close(self)
-    end, left)
-
     local function spawnClient()
       local input = uv.new_pipe(false)
-      local child, pid = assert(uv.spawn(exepath, {
+      local child, pid
+      child, pid = assert(uv.spawn(exepath, {
         stdio = {input,1,2},
         cwd = uv.cwd(),
         env= {
           "HOST=" .. address.ip,
           "PORT=" .. address.port,
         }
-      }, onexit))
+      }, expect(function (status, signal)
+        p("Client exited", {status=status,signal=signal})
+        assert(status == 0)
+        assert(signal == 0)
+        uv.close(child)
+      end, left)))
       p("Spawned client", pid)
       assert(uv.write(input, client_code))
       assert(uv.shutdown(input))
@@ -197,15 +195,14 @@ return require('lib/tap')(function (test)
     end
 
     -- Spawn a child process for each CPU core
-    for i = 1, cpu_count do
+    for _ = 1, cpu_count do
       spawnWorker()
     end
 
     -- Spawn the clients after a short delay
     local timer = uv.new_timer()
-    uv.timer_start(timer, 1000, 0, expect(function (self)
-      assert(self == timer)
-      for i = 1, cpu_count do
+    uv.timer_start(timer, 1000, 0, expect(function ()
+      for _ = 1, cpu_count do
         spawnClient()
       end
       uv.close(timer)

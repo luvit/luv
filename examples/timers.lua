@@ -3,11 +3,11 @@ local uv = require('luv')
 
 local function set_timeout(timeout, callback)
   local timer = uv.new_timer()
-  local function ontimeout(self)
-    p("ontimeout", self)
-    uv.timer_stop(self)
-    uv.close(self)
-    callback(self)
+  local function ontimeout()
+    p("ontimeout", timer)
+    uv.timer_stop(timer)
+    uv.close(timer)
+    callback(timer)
   end
   uv.timer_start(timer, timeout, 0, ontimeout)
   return timer
@@ -20,9 +20,9 @@ end
 
 local function set_interval(interval, callback)
   local timer = uv.new_timer()
-  local function ontimeout(self)
-    p("interval", self)
-    callback(self)
+  local function ontimeout()
+    p("interval", timer)
+    callback(timer)
   end
   uv.timer_start(timer, interval, interval, ontimeout)
   return timer
@@ -62,5 +62,7 @@ until uv.run('once') == 0
 
 print("done")
 
+uv.walk(uv.close)
+uv.run()
 uv.loop_close()
 
