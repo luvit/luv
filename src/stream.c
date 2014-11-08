@@ -82,24 +82,26 @@ static void luv_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* b
 
 static void luv_read_cb(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf) {
   lua_State* L = luv_state(handle->loop);
+  int nargs;
 
-  if (nread >= 0) {
+  if (nread > 0) {
     lua_pushnil(L);
     lua_pushlstring(L, buf->base, nread);
+    nargs = 2;
   }
 
   free(buf->base);
   if (nread == 0) return;
 
   if (nread == UV_EOF) {
-    lua_pushnil(L); // no error
-    lua_pushnil(L); // nil value to signify EOF
+    nargs = 0;
   }
   else if (nread < 0) {
     luv_status(L, nread);
+    nargs = 1;
   }
 
-  luv_call_callback(L, handle->data, LUV_READ, 2);
+  luv_call_callback(L, handle->data, LUV_READ, nargs);
 }
 
 static int luv_read_start(lua_State* L) {
