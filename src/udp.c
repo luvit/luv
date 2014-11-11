@@ -139,8 +139,8 @@ static int luv_udp_set_broadcast(lua_State* L) {
 static int luv_udp_set_ttl(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   int ttl, ret;
-  luaL_checktype(L, 2, LUA_TBOOLEAN);
-  ttl = lua_toboolean(L, 2);
+  luaL_checktype(L, 2, LUA_TNUMBER);
+  ttl = lua_tonumber(L, 2);
   ret = uv_udp_set_ttl(handle, ttl);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
