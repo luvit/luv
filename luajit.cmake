@@ -7,8 +7,6 @@
 
 cmake_minimum_required(VERSION 2.8.9)
 
-project(LuaJIT C ASM)
-
 set(CMAKE_BUILD_TYPE Release)
 
 SET(LUAJIT_DIR ${CMAKE_CURRENT_LIST_DIR}/luajit)
