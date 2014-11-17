@@ -70,7 +70,7 @@ static void luv_push_stats_table(lua_State* L, const uv_stat_t* s) {
     type = "FILE";
   }
   else if (S_ISDIR(s->st_mode)) {
-    type = "DIR";
+    type = "DIRECTORY";
   }
   else if (S_ISLNK(s->st_mode)) {
     type = "LINK";
@@ -94,10 +94,6 @@ static void luv_push_stats_table(lua_State* L, const uv_stat_t* s) {
   }
   lua_pushstring(L, type);
   lua_setfield(L, -2, "type");
-#ifdef S_ISSOCK
-  lua_pushboolean(L, S_ISSOCK(s->st_mode));
-  lua_setfield(L, -2, "is_socket");
-#endif
 }
 
 static int luv_check_flags(lua_State* L, int index) {
