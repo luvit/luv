@@ -17,18 +17,33 @@
 #include "luv.h"
 
 static uv_stream_t* luv_check_stream(lua_State* L, int index) {
-  const uv_handle_t* handle;
-  luaL_checktype(L, index, LUA_TUSERDATA);
-  handle = lua_topointer(L, index);
-  luaL_argcheck(L, handle->data, index, "Expected uv_stream_t");
-  switch (handle->type) {
-    case UV_TCP: return luaL_checkudata(L, index, "uv_tcp");
-    case UV_TTY: return luaL_checkudata(L, index, "uv_tty");
-    case UV_NAMED_PIPE: return luaL_checkudata(L, index, "uv_pipe");
-    default:
-      luaL_argerror(L, index, "Expected uv_stream_t");
-      return NULL;
+  uv_stream_t* handle = lua_touserdata(L, index);
+  if (handle == NULL) {
+    luaL_argerror(L, index, "Expected uv_stream_t");
+    return NULL;
   }
+  lua_getmetatable(L, index);
+  lua_getfield(L, LUA_REGISTRYINDEX, "uv_tcp");
+  if (lua_rawequal(L, -1, -2)) {
+    lua_pop(L, 2);
+    return handle;
+  }
+  lua_pop(L, 1);
+  lua_getfield(L, LUA_REGISTRYINDEX, "uv_tty");
+  if (lua_rawequal(L, -1, -2)) {
+    lua_pop(L, 2);
+    return handle;
+  }
+  lua_pop(L, 1);
+  lua_getfield(L, LUA_REGISTRYINDEX, "uv_pipe");
+  if (lua_rawequal(L, -1, -2)) {
+    lua_pop(L, 2);
+    return handle;
+  }
+  lua_pop(L, 2);
+
+  luaL_argerror(L, index, "Expected uv_stream_t");
+  return NULL;
 }
 
 static void luv_shutdown_cb(uv_shutdown_t* req, int status) {

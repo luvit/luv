@@ -17,18 +17,25 @@
 #include "luv.h"
 
 static uv_handle_t* luv_check_handle(lua_State* L, int index) {
-  const uv_handle_t* handle;
-  luaL_checktype(L, index, LUA_TUSERDATA);
-  handle = lua_topointer(L, index);
-  luaL_argcheck(L, handle->data, index, "Expected uv_handle_t");
-  switch (handle->type) {
-#define XX(uc, lc) case(UV_##uc): return luaL_checkudata(L, index, "uv_"#lc);
-    UV_HANDLE_TYPE_MAP(XX)
-#undef XX
-  default:
+  uv_handle_t* handle = lua_touserdata(L, index);
+  if (handle == NULL) {
     luaL_argerror(L, index, "Expected uv_handle_t");
     return NULL;
   }
+  lua_getmetatable(L, index);
+#define XX(uc, lc)                                             \
+  lua_getfield(L, LUA_REGISTRYINDEX, "uv_"#lc);                \
+  if (lua_rawequal(L, -1, -2)) {                               \
+    lua_pop(L, 2);                                             \
+    return handle;                                             \
+  }                                                            \
+  lua_pop(L, 1);
+
+  UV_HANDLE_TYPE_MAP(XX)
+#undef XX
+  lua_pop(L, 1);
+  luaL_argerror(L, index, "Expected uv_handle_t");
+  return NULL;
 }
 
 // Show the libuv type instead of generic "userdata"
