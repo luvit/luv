@@ -18,7 +18,7 @@
 #include "luv.h"
 
 static uv_fs_poll_t* luv_check_fs_poll(lua_State* L, int index) {
-  uv_fs_poll_t* handle = luaL_checkudata(L, index, "uv_handle");
+  uv_fs_poll_t* handle = luaL_checkudata(L, index, "uv_fs_poll");
   luaL_argcheck(L, handle->type == UV_FS_POLL && handle->data, index, "Expected uv_fs_poll_t");
   return handle;
 }

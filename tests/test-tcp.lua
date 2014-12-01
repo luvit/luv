@@ -64,4 +64,42 @@ return require('lib/tap')(function (test)
     end)))
   end)
 
+  test("tcp echo server and client with methods", function (print, p, expect, uv)
+    local server = uv.new_tcp()
+    assert(server:bind("127.0.0.1", 0))
+    assert(server:listen(1, expect(function ()
+      local client = uv.new_tcp()
+      assert(server:accept(client))
+      assert(client:read_start(expect(function (err, data)
+        p("server read", {err=err,data=data})
+        assert(not err, err)
+        if data then
+          assert(client:write(data))
+        else
+          assert(client:read_stop())
+          client:close()
+          server:close()
+        end
+      end, 2)))
+    end)))
+
+    local address = server:getsockname()
+    p{server=server,address=address}
+
+    local socket = assert(uv.new_tcp())
+    assert(socket:connect("127.0.0.1", address.port, expect(function ()
+      assert(socket:read_start(expect(function (err, data)
+        p("client read", {err=err,data=data})
+        assert(not err, err)
+        assert(socket:read_stop())
+        socket:close()
+      end)))
+      local req = assert(socket:write("Hello", function (err)
+        p("client onwrite", socket, err)
+        assert(not err, err)
+      end))
+      p{socket=socket,req=req}
+    end)))
+  end)
+
 end)

@@ -67,4 +67,21 @@ return require('lib/tap')(function (test)
     end, 4))
   end)
 
+  test("shrinking interval using methods", function (print, p, expect, uv)
+    local timer = uv.new_timer()
+    timer:start(10, 0, expect(function ()
+      local r = timer:get_repeat()
+      p("interval", timer, r)
+      if r == 0 then
+        timer:set_repeat(8)
+        timer:again()
+      elseif r == 2 then
+        timer:stop()
+        timer:close()
+      else
+        timer:set_repeat(r / 2)
+      end
+    end, 4))
+  end)
+
 end)
