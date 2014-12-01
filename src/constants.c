@@ -340,36 +340,38 @@ static const int luv_af_string_to_num(const char* string) {
 }
 
 static const char* luv_af_num_to_string(const int num) {
+  switch (num) {
 #ifdef AF_UNIX
-  if (num == AF_UNIX) return "unix";
+  case AF_UNIX: return "unix";
 #endif
 #ifdef AF_INET
-  if (num == AF_INET) return "inet";
+  case AF_INET: return "inet";
 #endif
 #ifdef AF_INET6
-  if (num == AF_INET6) return "inet6";
+  case AF_INET6: return "inet6";
 #endif
 #ifdef AF_IPX
-  if (num == AF_IPX) return "ipx";
+  case AF_IPX: return "ipx";
 #endif
 #ifdef AF_NETLINK
-  if (num == AF_NETLINK) return "netlink";
+  case AF_NETLINK: return "netlink";
 #endif
 #ifdef AF_X25
-  if (num == AF_X25) return "x25";
+  case AF_X25: return "x25";
 #endif
 #ifdef AF_AX25
-  if (num == AF_AX25) return "ax25";
+  case AF_AX25: return "ax25";
 #endif
 #ifdef AF_ATMPVC
-  if (num == AF_ATMPVC) return "atmpvc";
+  case AF_ATMPVC: return "atmpvc";
 #endif
 #ifdef AF_APPLETALK
-  if (num == AF_APPLETALK) return "appletalk";
+  case AF_APPLETALK: return "appletalk";
 #endif
 #ifdef AF_PACKET
-  if (num == AF_PACKET) return "packet";
+  case AF_PACKET: return "packet";
 #endif
+  }
   return NULL;
 }
 
@@ -398,24 +400,26 @@ static const int luv_ai_string_to_num(const char* string) {
 }
 
 static const char* luv_ai_num_to_string(const int num) {
+  switch (num) {
 #ifdef AI_ADDRCONFIG
-  if (num == AI_ADDRCONFIG) return "addrconfig";
+  case AI_ADDRCONFIG: return "addrconfig";
 #endif
 #ifdef AI_V4MAPPED
-  if (num == AI_V4MAPPED) return "v4mapped";
+  case AI_V4MAPPED: return "v4mapped";
 #endif
 #ifdef AI_ALL
-  if (num == AI_ALL) return "all";
+  case AI_ALL: return "all";
 #endif
 #ifdef AI_NUMERICHOST
-  if (num == AI_NUMERICHOST) return "numerichost";
+  case AI_NUMERICHOST: return "numerichost";
 #endif
 #ifdef AI_PASSIVE
-  if (num == AI_PASSIVE) return "passive";
+  case AI_PASSIVE: return "passive";
 #endif
 #ifdef AI_NUMERICSERV
-  if (num == AI_NUMERICSERV) return "numericserv";
+  case AI_NUMERICSERV: return "numericserv";
 #endif
+  }
   return NULL;
 }
 
@@ -440,21 +444,23 @@ static const int luv_sock_string_to_num(const char* string) {
 }
 
 static const char* luv_sock_num_to_string(const int num) {
+  switch (num) {
 #ifdef SOCK_STREAM
-  if (num == SOCK_STREAM) return "stream";
+  case SOCK_STREAM: return "stream";
 #endif
 #ifdef SOCK_DGRAM
-  if (num == SOCK_DGRAM) return "dgram";
+  case SOCK_DGRAM: return "dgram";
 #endif
 #ifdef SOCK_SEQPACKET
-  if (num == SOCK_SEQPACKET) return "seqpacket";
+  case SOCK_SEQPACKET: return "seqpacket";
 #endif
 #ifdef SOCK_RAW
-  if (num == SOCK_RAW) return "raw";
+  case SOCK_RAW: return "raw";
 #endif
 #ifdef SOCK_RDM
-  if (num == SOCK_RDM) return "rdm";
+  case SOCK_RDM: return "rdm";
 #endif
+  }
   return NULL;
 }
 
@@ -569,110 +575,118 @@ static const int luv_sig_string_to_num(const char* string) {
 }
 
 static const char* luv_sig_num_to_string(const int num) {
+  switch (num) {
 #ifdef SIGHUP
-  if (num == SIGHUP) return "sighup";
+  case SIGHUP: return "sighup";
 #endif
 #ifdef SIGINT
-  if (num == SIGINT) return "sigint";
+  case SIGINT: return "sigint";
 #endif
 #ifdef SIGQUIT
-  if (num == SIGQUIT) return "sigquit";
+  case SIGQUIT: return "sigquit";
 #endif
 #ifdef SIGILL
-  if (num == SIGILL) return "sigill";
+  case SIGILL: return "sigill";
 #endif
 #ifdef SIGTRAP
-  if (num == SIGTRAP) return "sigtrap";
+  case SIGTRAP: return "sigtrap";
 #endif
 #ifdef SIGABRT
-  if (num == SIGABRT) return "sigabrt";
+  case SIGABRT: return "sigabrt";
 #endif
 #ifdef SIGIOT
-  if (num == SIGIOT) return "sigiot";
+# if SIGIOT != SIGABRT
+  case SIGIOT: return "sigiot";
+# endif
 #endif
 #ifdef SIGBUS
-  if (num == SIGBUS) return "sigbus";
+  case SIGBUS: return "sigbus";
 #endif
 #ifdef SIGFPE
-  if (num == SIGFPE) return "sigfpe";
+  case SIGFPE: return "sigfpe";
 #endif
 #ifdef SIGKILL
-  if (num == SIGKILL) return "sigkill";
+  case SIGKILL: return "sigkill";
 #endif
 #ifdef SIGUSR1
-  if (num == SIGUSR1) return "sigusr1";
+  case SIGUSR1: return "sigusr1";
 #endif
 #ifdef SIGSEGV
-  if (num == SIGSEGV) return "sigsegv";
+  case SIGSEGV: return "sigsegv";
 #endif
 #ifdef SIGUSR2
-  if (num == SIGUSR2) return "sigusr2";
+  case SIGUSR2: return "sigusr2";
 #endif
 #ifdef SIGPIPE
-  if (num == SIGPIPE) return "sigpipe";
+  case SIGPIPE: return "sigpipe";
 #endif
 #ifdef SIGALRM
-  if (num == SIGALRM) return "sigalrm";
+  case SIGALRM: return "sigalrm";
 #endif
 #ifdef SIGTERM
-  if (num == SIGTERM) return "sigterm";
+  case SIGTERM: return "sigterm";
 #endif
 #ifdef SIGCHLD
-  if (num == SIGCHLD) return "sigchld";
+  case SIGCHLD: return "sigchld";
 #endif
 #ifdef SIGSTKFLT
-  if (num == SIGSTKFLT) return "sigstkflt";
+  case SIGSTKFLT: return "sigstkflt";
 #endif
 #ifdef SIGCONT
-  if (num == SIGCONT) return "sigcont";
+  case SIGCONT: return "sigcont";
 #endif
 #ifdef SIGSTOP
-  if (num == SIGSTOP) return "sigstop";
+  case SIGSTOP: return "sigstop";
 #endif
 #ifdef SIGTSTP
-  if (num == SIGTSTP) return "sigtstp";
+  case SIGTSTP: return "sigtstp";
 #endif
 #ifdef SIGBREAK
-  if (num == SIGBREAK) return "sigbreak";
+  case SIGBREAK: return "sigbreak";
 #endif
 #ifdef SIGTTIN
-  if (num == SIGTTIN) return "sigttin";
+  case SIGTTIN: return "sigttin";
 #endif
 #ifdef SIGTTOU
-  if (num == SIGTTOU) return "sigttou";
+  case SIGTTOU: return "sigttou";
 #endif
 #ifdef SIGURG
-  if (num == SIGURG) return "sigurg";
+  case SIGURG: return "sigurg";
 #endif
 #ifdef SIGXCPU
-  if (num == SIGXCPU) return "sigxcpu";
+  case SIGXCPU: return "sigxcpu";
 #endif
 #ifdef SIGXFSZ
-  if (num == SIGXFSZ) return "sigxfsz";
+  case SIGXFSZ: return "sigxfsz";
 #endif
 #ifdef SIGVTALRM
-  if (num == SIGVTALRM) return "sigvtalrm";
+  case SIGVTALRM: return "sigvtalrm";
 #endif
 #ifdef SIGPROF
-  if (num == SIGPROF) return "sigprof";
+  case SIGPROF: return "sigprof";
 #endif
 #ifdef SIGWINCH
-  if (num == SIGWINCH) return "sigwinch";
+  case SIGWINCH: return "sigwinch";
 #endif
 #ifdef SIGIO
-  if (num == SIGIO) return "sigio";
+  case SIGIO: return "sigio";
 #endif
 #ifdef SIGPOLL
-  if (num == SIGPOLL) return "sigpoll";
+# if SIGPOLL != SIGIO
+  case SIGPOLL: return "sigpoll";
+# endif
 #endif
 #ifdef SIGLOST
-  if (num == SIGLOST) return "siglost";
+  case SIGLOST: return "siglost";
 #endif
 #ifdef SIGPWR
-  if (num == SIGPWR) return "sigpwr";
+# if SIGPWR != SIGLOST
+  case SIGPWR: return "sigpwr";
+# endif
 #endif
 #ifdef SIGSYS
-  if (num == SIGSYS) return "sigsys";
+  case SIGSYS: return "sigsys";
 #endif
+  }
   return NULL;
 }
