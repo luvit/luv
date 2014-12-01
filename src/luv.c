@@ -42,6 +42,7 @@
 #include "dns.c"
 // #include "thread.c"
 #include "misc.c"
+#include "constants.c"
 
 static const luaL_Reg luv_functions[] = {
   // loop.c
@@ -271,5 +272,8 @@ LUALIB_API int luaopen_luv (lua_State *L) {
   luv_req_init(L);
   luv_handle_init(L);
   luaL_newlib(L, luv_functions);
+  luv_constants(L);
+  lua_setfield(L, -2, "constants");
+
   return 1;
 }
