@@ -18,32 +18,32 @@
 
 static const char* luv_signal_to_string(int signal) {
 #ifdef SIGINT
-  if (signal == SIGINT) return "SIGINT";
+  if (signal == SIGINT) return "sigint";
 #endif
 #ifdef SIGBREAK
-  if (signal == SIGBREAK) return "SIGBREAK";
+  if (signal == SIGBREAK) return "sigbreak";
 #endif
 #ifdef SIGHUP
-  if (signal == SIGHUP) return "SIGHUP";
+  if (signal == SIGHUP) return "sighup";
 #endif
 #ifdef SIGWINCH
-  if (signal == SIGWINCH) return "SIGWINCH";
+  if (signal == SIGWINCH) return "sigwinch";
 #endif
   return "";
 }
 
 static int luv_string_to_signal(const char* string) {
 #ifdef SIGINT
-  if (strcmp(string, "SIGINT") == 0) return SIGINT;
+  if (strcmp(string, "sigint") == 0) return SIGINT;
 #endif
 #ifdef SIGBREAK
-  if (strcmp(string, "SIGBREAK") == 0) return SIGBREAK;
+  if (strcmp(string, "sigbreak") == 0) return SIGBREAK;
 #endif
 #ifdef SIGHUP
-  if (strcmp(string, "SIGHUP") == 0) return SIGHUP;
+  if (strcmp(string, "sighup") == 0) return SIGHUP;
 #endif
 #ifdef SIGWINCH
-  if (strcmp(string, "SIGWINCH") == 0) return SIGWINCH;
+  if (strcmp(string, "sigwinch") == 0) return SIGWINCH;
 #endif
   return 0;
 }
