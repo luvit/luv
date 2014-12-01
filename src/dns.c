@@ -267,82 +267,82 @@ static int luv_getnameinfo(lua_State* L) {
 
 static int luv_string_to_socktype(const char* string) {
   if (!string) return 0;
-  if (strcmp(string, "STREAM") == 0) return SOCK_STREAM;
-  if (strcmp(string, "DGRAM") == 0) return SOCK_DGRAM;
+  if (strcmp(string, "stream") == 0) return SOCK_STREAM;
+  if (strcmp(string, "dgram") == 0) return SOCK_DGRAM;
   return 0;
 }
 
 static const char* luv_socktype_to_string(int socktype) {
-  if (socktype == SOCK_STREAM) return "STREAM";
-  if (socktype == SOCK_DGRAM) return "DGRAM";
+  if (socktype == SOCK_STREAM) return "stream";
+  if (socktype == SOCK_DGRAM) return "dgram";
   return NULL;
 }
 
 static int luv_string_to_protocol(const char* protocol) {
   if (!protocol) return AF_UNSPEC;
 #ifdef AF_UNIX
-  if (strcmp(protocol, "UNIX") == 0) return AF_UNIX;
+  if (strcmp(protocol, "unix") == 0) return AF_UNIX;
 #endif
 #ifdef AF_INET
-  if (strcmp(protocol, "INET") == 0) return AF_INET;
+  if (strcmp(protocol, "inet") == 0) return AF_INET;
 #endif
 #ifdef AF_INET6
-  if (strcmp(protocol, "INET6") == 0) return AF_INET6;
+  if (strcmp(protocol, "inet6") == 0) return AF_INET6;
 #endif
 #ifdef AF_IPX
-  if (strcmp(protocol, "IPX") == 0) return AF_IPX;
+  if (strcmp(protocol, "ipx") == 0) return AF_IPX;
 #endif
 #ifdef AF_NETLINK
-  if (strcmp(protocol, "NETLINK") == 0) return AF_NETLINK;
+  if (strcmp(protocol, "netlink") == 0) return AF_NETLINK;
 #endif
 #ifdef AF_X25
-  if (strcmp(protocol, "X25") == 0) return AF_X25;
+  if (strcmp(protocol, "x25") == 0) return AF_X25;
 #endif
 #ifdef AF_AX25
-  if (strcmp(protocol, "AX25") == 0) return AF_AX25;
+  if (strcmp(protocol, "ax25") == 0) return AF_AX25;
 #endif
 #ifdef AF_ATMPVC
-  if (strcmp(protocol, "ATMPVC") == 0) return AF_ATMPVC;
+  if (strcmp(protocol, "atmpvc") == 0) return AF_ATMPVC;
 #endif
 #ifdef AF_APPLETALK
-  if (strcmp(protocol, "APPLETALK") == 0) return AF_APPLETALK;
+  if (strcmp(protocol, "appletalk") == 0) return AF_APPLETALK;
 #endif
 #ifdef AF_PACKET
-  if (strcmp(protocol, "PACKET") == 0) return AF_PACKET;
+  if (strcmp(protocol, "packet") == 0) return AF_PACKET;
 #endif
   return 0;
 }
 
 static const char* luv_protocol_to_string(int family) {
 #ifdef AF_UNIX
-  if (family == AF_UNIX) return "UNIX";
+  if (family == AF_UNIX) return "unix";
 #endif
 #ifdef AF_INET
-  if (family == AF_INET) return "INET";
+  if (family == AF_INET) return "inet";
 #endif
 #ifdef AF_INET6
-  if (family == AF_INET6) return "INET6";
+  if (family == AF_INET6) return "inet6";
 #endif
 #ifdef AF_IPX
-  if (family == AF_IPX) return "IPX";
+  if (family == AF_IPX) return "ipx";
 #endif
 #ifdef AF_NETLINK
-  if (family == AF_NETLINK) return "NETLINK";
+  if (family == AF_NETLINK) return "netlink";
 #endif
 #ifdef AF_X25
-  if (family == AF_X25) return "X25";
+  if (family == AF_X25) return "x25";
 #endif
 #ifdef AF_AX25
-  if (family == AF_AX25) return "AX25";
+  if (family == AF_AX25) return "ax25";
 #endif
 #ifdef AF_ATMPVC
-  if (family == AF_ATMPVC) return "ATMPVC";
+  if (family == AF_ATMPVC) return "atmpvc";
 #endif
 #ifdef AF_APPLETALK
-  if (family == AF_APPLETALK) return "APPLETALK";
+  if (family == AF_APPLETALK) return "appletalk";
 #endif
 #ifdef AF_PACKET
-  if (family == AF_PACKET) return "PACKET";
+  if (family == AF_PACKET) return "packet";
 #endif
   return NULL;
 }
