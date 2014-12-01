@@ -32,7 +32,7 @@ static void luv_push_timespec_table(lua_State* L, const uv_timespec_t* t) {
 }
 
 static void luv_push_stats_table(lua_State* L, const uv_stat_t* s) {
-  const char* type;
+  const char* type = NULL;
   lua_createtable(L, 0, 23);
   lua_pushinteger(L, s->st_dev);
   lua_setfield(L, -2, "dev");
@@ -67,33 +67,32 @@ static void luv_push_stats_table(lua_State* L, const uv_stat_t* s) {
   luv_push_timespec_table(L, &s->st_birthtim);
   lua_setfield(L, -2, "birthtim");
   if (S_ISREG(s->st_mode)) {
-    type = "FILE";
+    type = "file";
   }
   else if (S_ISDIR(s->st_mode)) {
-    type = "DIRECTORY";
+    type = "directory";
   }
   else if (S_ISLNK(s->st_mode)) {
-    type = "LINK";
+    type = "link";
   }
   else if (S_ISFIFO(s->st_mode)) {
-    type = "FIFO";
+    type = "fifo";
   }
 #ifdef S_ISSOCK
   else if (S_ISSOCK(s->st_mode)) {
-    type = "SOCKET";
+    type = "socket";
   }
 #endif
   else if (S_ISCHR(s->st_mode)) {
-    type = "CHAR";
+    type = "char";
   }
   else if (S_ISBLK(s->st_mode)) {
-    type = "BLOCK";
+    type = "block";
   }
-  else {
-    type = "UNKNOWN";
+  if (type) {
+    lua_pushstring(L, type);
+    lua_setfield(L, -2, "type");
   }
-  lua_pushstring(L, type);
-  lua_setfield(L, -2, "type");
 }
 
 static int luv_check_flags(lua_State* L, int index) {
@@ -383,13 +382,13 @@ static int luv_fs_scandir_next(lua_State* L) {
   lua_setfield(L, -2, "name");
   switch (ent.type) {
     case UV_DIRENT_UNKNOWN: type = NULL; break;
-    case UV_DIRENT_FILE: type = "FILE"; break;
-    case UV_DIRENT_DIR: type = "DIR"; break;
-    case UV_DIRENT_LINK: type = "LINK"; break;
-    case UV_DIRENT_FIFO: type = "FIFO"; break;
-    case UV_DIRENT_SOCKET: type = "SOCKET"; break;
-    case UV_DIRENT_CHAR: type = "CHAR"; break;
-    case UV_DIRENT_BLOCK: type = "BLOCK"; break;
+    case UV_DIRENT_FILE: type = "file"; break;
+    case UV_DIRENT_DIR: type = "directory"; break;
+    case UV_DIRENT_LINK: type = "link"; break;
+    case UV_DIRENT_FIFO: type = "fifo"; break;
+    case UV_DIRENT_SOCKET: type = "socket"; break;
+    case UV_DIRENT_CHAR: type = "char"; break;
+    case UV_DIRENT_BLOCK: type = "block"; break;
   }
   if (type) {
     lua_pushstring(L, type);
