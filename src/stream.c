@@ -17,13 +17,17 @@
 #include "luv.h"
 
 static uv_stream_t* luv_check_stream(lua_State* L, int index) {
-  uv_stream_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->data && (
-    handle->type == UV_TCP ||
-    handle->type == UV_TTY ||
-    handle->type == UV_NAMED_PIPE),
-    index, "uv_stream_t subclass required");
-  return handle;
+  int isStream;
+  uv_stream_t* handle;
+  if (!(handle = lua_touserdata(L, index))) { goto fail; }
+  lua_getfield(L, LUA_REGISTRYINDEX, "uv_stream");
+  lua_getmetatable(L, index < 0 ? index - 1 : index);
+  lua_rawget(L, -2);
+  isStream = lua_toboolean(L, -1);
+  lua_pop(L, 2);
+  if (isStream) { return handle; }
+  fail: luaL_argerror(L, index, "Expected uv_stream userdata");
+  return NULL;
 }
 
 static void luv_shutdown_cb(uv_shutdown_t* req, int status) {

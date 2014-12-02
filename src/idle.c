@@ -17,7 +17,7 @@
 #include "luv.h"
 
 static uv_idle_t* luv_check_idle(lua_State* L, int index) {
-  uv_idle_t* handle = luaL_checkudata(L, index, "uv_handle");
+  uv_idle_t* handle = luaL_checkudata(L, index, "uv_idle");
   luaL_argcheck(L, handle->type == UV_IDLE && handle->data, index, "Expected uv_idle_t");
   return handle;
 }

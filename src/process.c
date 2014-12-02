@@ -22,7 +22,7 @@ static int luv_disable_stdio_inheritance(lua_State* L) {
 }
 
 static uv_process_t* luv_check_process(lua_State* L, int index) {
-  uv_process_t* handle = luaL_checkudata(L, index, "uv_handle");
+  uv_process_t* handle = luaL_checkudata(L, index, "uv_process");
   luaL_argcheck(L, handle->type == UV_PROCESS && handle->data, index, "Expected uv_process_t");
   return handle;
 }
@@ -203,6 +203,7 @@ static int luv_spawn(lua_State* L) {
   lua_pop(L, 1);
 
   handle = lua_newuserdata(L, sizeof(*handle));
+  handle->type = UV_PROCESS;
   handle->data = luv_setup_handle(L);
 
   if (!lua_isnoneornil(L, 3)) {

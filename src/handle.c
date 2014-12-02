@@ -17,14 +17,22 @@
 #include "luv.h"
 
 static uv_handle_t* luv_check_handle(lua_State* L, int index) {
-  uv_handle_t* handle = luaL_checkudata(L, index, "uv_handle");
-  luaL_argcheck(L, handle->data, index, "Expected uv_handle_t");
-  return handle;
+  int isHandle;
+  uv_handle_t* handle;
+  if (!(handle = lua_touserdata(L, index))) { goto fail; }
+  lua_getfield(L, LUA_REGISTRYINDEX, "uv_handle");
+  lua_getmetatable(L, index < 0 ? index - 1 : index);
+  lua_rawget(L, -2);
+  isHandle = lua_toboolean(L, -1);
+  lua_pop(L, 2);
+  if (isHandle) { return handle; }
+  fail: luaL_argerror(L, index, "Expected uv_handle userdata");
+  return NULL;
 }
 
 // Show the libuv type instead of generic "userdata"
 static int luv_handle_tostring(lua_State* L) {
-  uv_handle_t* handle = luaL_checkudata(L, 1, "uv_handle");
+  uv_handle_t* handle = luv_check_handle(L, 1);
   switch (handle->type) {
 #define XX(uc, lc) case UV_##uc: lua_pushfstring(L, "uv_"#lc"_t: %p", handle); break;
   UV_HANDLE_TYPE_MAP(XX)
@@ -32,13 +40,6 @@ static int luv_handle_tostring(lua_State* L) {
     default: lua_pushfstring(L, "uv_handle_t: %p", handle); break;
   }
   return 1;
-}
-
-static void luv_handle_init(lua_State* L) {
-  luaL_newmetatable (L, "uv_handle");
-  lua_pushcfunction(L, luv_handle_tostring);
-  lua_setfield(L, -2, "__tostring");
-  lua_pop(L, 1);
 }
 
 static int luv_is_active(lua_State* L) {

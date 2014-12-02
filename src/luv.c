@@ -237,6 +237,188 @@ static const luaL_Reg luv_functions[] = {
   {NULL, NULL}
 };
 
+static const luaL_Reg luv_handle_methods[] = {
+  // handle.c
+  {"is_active", luv_is_active},
+  {"is_closing", luv_is_closing},
+  {"close", luv_close},
+  {"ref", luv_ref},
+  {"unref", luv_unref},
+  {"has_ref", luv_has_ref},
+  {"send_buffer_size", luv_send_buffer_size},
+  {"recv_buffer_size", luv_recv_buffer_size},
+  {"fileno", luv_fileno},
+  {NULL, NULL}
+};
+
+static const luaL_Reg luv_async_methods[] = {
+  {"send", luv_async_send},
+  {NULL, NULL}
+};
+
+static const luaL_Reg luv_check_methods[] = {
+  {"start", luv_check_start},
+  {"stop", luv_check_stop},
+  {NULL, NULL}
+};
+
+static const luaL_Reg luv_fs_event_methods[] = {
+  {"start", luv_fs_event_start},
+  {"stop", luv_fs_event_stop},
+  {"getpath", luv_fs_event_getpath},
+  {NULL, NULL}
+};
+
+static const luaL_Reg luv_fs_poll_methods[] = {
+  {"start", luv_fs_poll_start},
+  {"stop", luv_fs_poll_stop},
+  {"getpath", luv_fs_poll_getpath},
+  {NULL, NULL}
+};
+
+static const luaL_Reg luv_idle_methods[] = {
+  {"start", luv_idle_start},
+  {"stop", luv_idle_stop},
+  {NULL, NULL}
+};
+
+static const luaL_Reg luv_stream_methods[] = {
+  {"shutdown", luv_shutdown},
+  {"listen", luv_listen},
+  {"accept", luv_accept},
+  {"read_start", luv_read_start},
+  {"read_stop", luv_read_stop},
+  {"write", luv_write},
+  {"write2", luv_write2},
+  {"try_write", luv_try_write},
+  {"is_readable", luv_is_readable},
+  {"is_writable", luv_is_writable},
+  {"set_blocking", luv_stream_set_blocking},
+  {NULL, NULL}
+};
+
+static const luaL_Reg luv_pipe_methods[] = {
+  {"open", luv_pipe_open},
+  {"bind", luv_pipe_bind},
+  {"connect", luv_pipe_connect},
+  {"getsockname", luv_pipe_getsockname},
+  {"pending_instances", luv_pipe_pending_instances},
+  {"pending_count", luv_pipe_pending_count},
+  {"pending_type", luv_pipe_pending_type},
+  {NULL, NULL}
+};
+
+static const luaL_Reg luv_poll_methods[] = {
+  {"start", luv_poll_start},
+  {"stop", luv_poll_stop},
+  {NULL, NULL}
+};
+
+static const luaL_Reg luv_prepare_methods[] = {
+  {"start", luv_prepare_start},
+  {"stop", luv_prepare_stop},
+  {NULL, NULL}
+};
+
+static const luaL_Reg luv_process_methods[] = {
+  {"kill", luv_process_kill},
+  {NULL, NULL}
+};
+
+static const luaL_Reg luv_tcp_methods[] = {
+  {"open", luv_tcp_open},
+  {"nodelay", luv_tcp_nodelay},
+  {"keepalive", luv_tcp_keepalive},
+  {"simultaneous_accepts", luv_tcp_simultaneous_accepts},
+  {"bind", luv_tcp_bind},
+  {"getpeername", luv_tcp_getpeername},
+  {"getsockname", luv_tcp_getsockname},
+  {"connect", luv_tcp_connect},
+  {"write_queue_size", luv_write_queue_size},
+  {NULL, NULL}
+};
+
+static const luaL_Reg luv_timer_methods[] = {
+  {"start", luv_timer_start},
+  {"stop", luv_timer_stop},
+  {"again", luv_timer_again},
+  {"set_repeat", luv_timer_set_repeat},
+  {"get_repeat", luv_timer_get_repeat},
+  {NULL, NULL}
+};
+
+static const luaL_Reg luv_tty_methods[] = {
+  {"set_mode", luv_tty_set_mode},
+  {"get_winsize", luv_tty_get_winsize},
+  {NULL, NULL}
+};
+
+static const luaL_Reg luv_udp_methods[] = {
+  {"open", luv_udp_open},
+  {"bind", luv_udp_bind},
+  {"bindgetsockname", luv_udp_getsockname},
+  {"set_membership", luv_udp_set_membership},
+  {"set_multicast_loop", luv_udp_set_multicast_loop},
+  {"set_multicast_ttl", luv_udp_set_multicast_ttl},
+  {"set_multicast_interface", luv_udp_set_multicast_interface},
+  {"set_broadcast", luv_udp_set_broadcast},
+  {"set_ttl", luv_udp_set_ttl},
+  {"send", luv_udp_send},
+  {"try_send", luv_udp_try_send},
+  {"recv_start", luv_udp_recv_start},
+  {"recv_stop", luv_udp_recv_stop},
+  {NULL, NULL}
+};
+
+static const luaL_Reg luv_signal_methods[] = {
+  {"start", luv_signal_start},
+  {"stop", luv_signal_stop},
+  {NULL, NULL}
+};
+
+static void luv_handle_init(lua_State* L) {
+
+  lua_newtable(L);
+#define XX(uc, lc)                             \
+    luaL_newmetatable (L, "uv_"#lc);           \
+    lua_pushcfunction(L, luv_handle_tostring); \
+    lua_setfield(L, -2, "__tostring");         \
+    luaL_newlib(L, luv_##lc##_methods);        \
+    luaL_setfuncs(L, luv_handle_methods, 0);   \
+    lua_setfield(L, -2, "__index");            \
+    lua_pushboolean(L, 1);                     \
+    lua_rawset(L, -3);
+
+  UV_HANDLE_TYPE_MAP(XX)
+#undef XX
+  lua_setfield(L, LUA_REGISTRYINDEX, "uv_handle");
+
+  lua_newtable(L);
+
+  luaL_getmetatable(L, "uv_pipe");
+  lua_getfield(L, -1, "__index");
+  luaL_setfuncs(L, luv_stream_methods, 0);
+  lua_pop(L, 1);
+  lua_pushboolean(L, 1);
+  lua_rawset(L, -3);
+
+  luaL_getmetatable(L, "uv_tcp");
+  lua_getfield(L, -1, "__index");
+  luaL_setfuncs(L, luv_stream_methods, 0);
+  lua_pop(L, 1);
+  lua_pushboolean(L, 1);
+  lua_rawset(L, -3);
+
+  luaL_getmetatable(L, "uv_tty");
+  lua_getfield(L, -1, "__index");
+  luaL_setfuncs(L, luv_stream_methods, 0);
+  lua_pop(L, 1);
+  lua_pushboolean(L, 1);
+  lua_rawset(L, -3);
+
+  lua_setfield(L, LUA_REGISTRYINDEX, "uv_stream");
+}
+
 static lua_State* luv_state(uv_loop_t* loop) {
   return loop->data;
 }

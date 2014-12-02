@@ -18,12 +18,23 @@
 
 static luv_handle_t* luv_setup_handle(lua_State* L) {
   luv_handle_t* data;
+  const uv_handle_t* handle = lua_touserdata(L, -1);
   luaL_checktype(L, -1, LUA_TUSERDATA);
 
   data = malloc(sizeof(*data));
   if (!data) luaL_error(L, "Can't allocate luv handle");
 
-  luaL_getmetatable(L, "uv_handle");
+  #define XX(uc, lc) case UV_##uc: \
+    luaL_getmetatable(L, "uv_"#lc); \
+    break;
+  switch (handle->type) {
+    UV_HANDLE_TYPE_MAP(XX)
+    default:
+      luaL_error(L, "Unknown handle type");
+      return NULL;
+  }
+  #undef XX
+
   lua_setmetatable(L, -2);
 
   lua_pushvalue(L, -1);

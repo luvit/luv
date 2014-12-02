@@ -17,7 +17,7 @@
 #include "luv.h"
 
 static uv_tcp_t* luv_check_tcp(lua_State* L, int index) {
-  uv_tcp_t* handle = luaL_checkudata(L, index, "uv_handle");
+  uv_tcp_t* handle = luaL_checkudata(L, index, "uv_tcp");
   luaL_argcheck(L, handle->type == UV_TCP && handle->data, index, "Expected uv_tcp_t");
   return handle;
 }
