@@ -16,38 +16,6 @@
  */
 #include "luv.h"
 
-static const char* luv_signal_to_string(int signal) {
-#ifdef SIGINT
-  if (signal == SIGINT) return "SIGINT";
-#endif
-#ifdef SIGBREAK
-  if (signal == SIGBREAK) return "SIGBREAK";
-#endif
-#ifdef SIGHUP
-  if (signal == SIGHUP) return "SIGHUP";
-#endif
-#ifdef SIGWINCH
-  if (signal == SIGWINCH) return "SIGWINCH";
-#endif
-  return "";
-}
-
-static int luv_string_to_signal(const char* string) {
-#ifdef SIGINT
-  if (strcmp(string, "SIGINT") == 0) return SIGINT;
-#endif
-#ifdef SIGBREAK
-  if (strcmp(string, "SIGBREAK") == 0) return SIGBREAK;
-#endif
-#ifdef SIGHUP
-  if (strcmp(string, "SIGHUP") == 0) return SIGHUP;
-#endif
-#ifdef SIGWINCH
-  if (strcmp(string, "SIGWINCH") == 0) return SIGWINCH;
-#endif
-  return 0;
-}
-
 static uv_signal_t* luv_check_signal(lua_State* L, int index) {
   uv_signal_t* handle = luaL_checkudata(L, index, "uv_handle");
   luaL_argcheck(L, handle->type == UV_SIGNAL && handle->data, index, "Expected uv_signal_t");
@@ -68,14 +36,19 @@ static int luv_new_signal(lua_State* L) {
 static void luv_signal_cb(uv_signal_t* handle, int signum) {
   lua_State* L = luv_state(handle->loop);
   luv_handle_t* data = handle->data;
-  lua_pushstring(L, luv_signal_to_string(signum));
+  lua_pushstring(L, luv_sig_num_to_string(signum));
   luv_call_callback(L, data, LUV_SIGNAL, 1);
 }
 
 static int luv_signal_start(lua_State* L) {
   uv_signal_t* handle = luv_check_signal(L, 1);
   int signum, ret;
-  signum = luv_string_to_signal(luaL_checkstring(L, 2));
+  if (lua_isnumber(L, 2)) {
+    signum = lua_tointeger(L, 2);
+  }
+  if (lua_isstring(L, 2)) {
+    signum = luv_sig_string_to_num(luaL_checkstring(L, 2));
+  }
   luv_check_callback(L, handle->data, LUV_SIGNAL, 3);
   luaL_argcheck(L, signum, 3, "Invalid Signal name");
   ret = uv_signal_start(handle, luv_signal_cb, signum);

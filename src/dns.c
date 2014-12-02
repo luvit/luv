@@ -47,7 +47,7 @@ static void luv_getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinf
           addr = (char*) &((struct sockaddr_in6*) curr->ai_addr)->sin6_addr;
           port = ((struct sockaddr_in6*) curr->ai_addr)->sin6_port;
         }
-        lua_pushstring(L, luv_protocol_to_string(curr->ai_family));
+        lua_pushstring(L, luv_af_num_to_string(curr->ai_family));
         lua_setfield(L, -2, "family");
         uv_inet_ntop(curr->ai_family, addr, ip, INET6_ADDRSTRLEN);
         lua_pushstring(L, ip);
@@ -56,9 +56,9 @@ static void luv_getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinf
           lua_pushinteger(L, ntohs(port));
           lua_setfield(L, -2, "port");
         }
-        lua_pushstring(L, luv_socktype_to_string(curr->ai_socktype));
+        lua_pushstring(L, luv_sock_num_to_string(curr->ai_socktype));
         lua_setfield(L, -2, "socktype");
-        lua_pushstring(L, luv_protocol_to_string(curr->ai_protocol));
+        lua_pushstring(L, luv_af_num_to_string(curr->ai_protocol));
         lua_setfield(L, -2, "protocol");
         if (curr->ai_canonname) {
           lua_pushstring(L, curr->ai_canonname);
@@ -96,8 +96,11 @@ static int luv_getaddrinfo(lua_State* L) {
 
     // Process the `family` hint.
     lua_getfield(L, 3, "family");
-    if (lua_isstring(L, -1)) {
-      hints->ai_family = luv_string_to_protocol(lua_tostring(L, -1));
+    if (lua_isnumber(L, -1)) {
+      hints->ai_family = lua_tointeger(L, -1);
+    }
+    else if (lua_isstring(L, -1)) {
+      hints->ai_family = luv_af_string_to_num(lua_tostring(L, -1));
     }
     else if (lua_isnil(L, -1)) {
       hints->ai_family = AF_UNSPEC;
@@ -109,8 +112,11 @@ static int luv_getaddrinfo(lua_State* L) {
 
     // Process `socktype` hint
     lua_getfield(L, 3, "socktype");
-    if (lua_isstring(L, -1)) {
-      hints->ai_socktype = luv_string_to_socktype(lua_tostring(L, -1));
+    if (lua_isnumber(L, -1)) {
+      hints->ai_socktype = lua_tointeger(L, -1);
+    }
+    else if (lua_isstring(L, -1)) {
+      hints->ai_socktype = luv_sock_string_to_num(lua_tostring(L, -1));
     }
     else if (!lua_isnil(L, -1)) {
       return luaL_argerror(L, 3, "socktype hint must be string if set");
@@ -119,8 +125,11 @@ static int luv_getaddrinfo(lua_State* L) {
 
     // Process the `protocol` hint
     lua_getfield(L, 3, "protocol");
-    if (lua_isstring(L, -1)) {
-      int protocol = luv_string_to_protocol(lua_tostring(L, -1));
+    if (lua_isnumber(L, -1)) {
+      hints->ai_protocol = lua_tointeger(L, -1);
+    }
+    else if (lua_isstring(L, -1)) {
+      int protocol = luv_af_string_to_num(lua_tostring(L, -1));
       if (protocol) {
         hints->ai_protocol = protocol;
       }
@@ -243,8 +252,11 @@ static int luv_getnameinfo(lua_State* L) {
   }
 
   lua_getfield(L, 1, "family");
-  if (lua_isstring(L, -1)) {
-    addr.ss_family = luv_string_to_protocol(lua_tostring(L, -1));
+  if (lua_isnumber(L, -1)) {
+    addr.ss_family = lua_tointeger(L, -1);
+  }
+  else if (lua_isstring(L, -1)) {
+    addr.ss_family = luv_af_string_to_num(lua_tostring(L, -1));
   }
   else if (!lua_isnil(L, -1)) {
     luaL_argerror(L, 1, "family must be string if set");
@@ -265,84 +277,3 @@ static int luv_getnameinfo(lua_State* L) {
   return 1;
 }
 
-static int luv_string_to_socktype(const char* string) {
-  if (!string) return 0;
-  if (strcmp(string, "STREAM") == 0) return SOCK_STREAM;
-  if (strcmp(string, "DGRAM") == 0) return SOCK_DGRAM;
-  return 0;
-}
-
-static const char* luv_socktype_to_string(int socktype) {
-  if (socktype == SOCK_STREAM) return "STREAM";
-  if (socktype == SOCK_DGRAM) return "DGRAM";
-  return NULL;
-}
-
-static int luv_string_to_protocol(const char* protocol) {
-  if (!protocol) return AF_UNSPEC;
-#ifdef AF_UNIX
-  if (strcmp(protocol, "UNIX") == 0) return AF_UNIX;
-#endif
-#ifdef AF_INET
-  if (strcmp(protocol, "INET") == 0) return AF_INET;
-#endif
-#ifdef AF_INET6
-  if (strcmp(protocol, "INET6") == 0) return AF_INET6;
-#endif
-#ifdef AF_IPX
-  if (strcmp(protocol, "IPX") == 0) return AF_IPX;
-#endif
-#ifdef AF_NETLINK
-  if (strcmp(protocol, "NETLINK") == 0) return AF_NETLINK;
-#endif
-#ifdef AF_X25
-  if (strcmp(protocol, "X25") == 0) return AF_X25;
-#endif
-#ifdef AF_AX25
-  if (strcmp(protocol, "AX25") == 0) return AF_AX25;
-#endif
-#ifdef AF_ATMPVC
-  if (strcmp(protocol, "ATMPVC") == 0) return AF_ATMPVC;
-#endif
-#ifdef AF_APPLETALK
-  if (strcmp(protocol, "APPLETALK") == 0) return AF_APPLETALK;
-#endif
-#ifdef AF_PACKET
-  if (strcmp(protocol, "PACKET") == 0) return AF_PACKET;
-#endif
-  return 0;
-}
-
-static const char* luv_protocol_to_string(int family) {
-#ifdef AF_UNIX
-  if (family == AF_UNIX) return "UNIX";
-#endif
-#ifdef AF_INET
-  if (family == AF_INET) return "INET";
-#endif
-#ifdef AF_INET6
-  if (family == AF_INET6) return "INET6";
-#endif
-#ifdef AF_IPX
-  if (family == AF_IPX) return "IPX";
-#endif
-#ifdef AF_NETLINK
-  if (family == AF_NETLINK) return "NETLINK";
-#endif
-#ifdef AF_X25
-  if (family == AF_X25) return "X25";
-#endif
-#ifdef AF_AX25
-  if (family == AF_AX25) return "AX25";
-#endif
-#ifdef AF_ATMPVC
-  if (family == AF_ATMPVC) return "ATMPVC";
-#endif
-#ifdef AF_APPLETALK
-  if (family == AF_APPLETALK) return "APPLETALK";
-#endif
-#ifdef AF_PACKET
-  if (family == AF_PACKET) return "PACKET";
-#endif
-  return NULL;
-}

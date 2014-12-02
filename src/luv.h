@@ -84,10 +84,14 @@ static void luv_connect_cb(uv_connect_t* req, int status);
 // From fs.c
 static void luv_push_stats_table(lua_State* L, const uv_stat_t* s);
 
-// From dns.c
-static int luv_string_to_socktype(const char* string);
-static const char* luv_socktype_to_string(int socktype);
-static int luv_string_to_protocol(const char* protocol);
-static const char* luv_protocol_to_string(int family);
+// from constants.c
+static const int luv_af_string_to_num(const char* string);
+static const char* luv_af_num_to_string(const int num);
+static const int luv_ai_string_to_num(const char* string);
+static const char* luv_ai_num_to_string(const int num);
+static const int luv_sock_string_to_num(const char* string);
+static const char* luv_sock_num_to_string(const int num);
+static const int luv_sig_string_to_num(const char* string);
+static const char* luv_sig_num_to_string(const int num);
 
 #endif

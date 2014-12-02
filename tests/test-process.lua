@@ -42,7 +42,7 @@ return require('lib/tap')(function (test)
       uv.close(handle)
     end))
     p{handle=handle,pid=pid}
-    uv.kill(pid, "SIGINT")
+    uv.kill(pid, "sigint")
   end)
 
   test("spawn and kill by handle", function (print, p, expect, uv)
@@ -56,7 +56,7 @@ return require('lib/tap')(function (test)
       uv.close(handle)
     end))
     p{handle=handle,pid=pid}
-    uv.process_kill(handle, "SIGTERM")
+    uv.process_kill(handle, "sigterm")
   end)
 
   test("process stdio", function (print, p, expect, uv)

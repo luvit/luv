@@ -10,8 +10,8 @@ return require('lib/tap')(function (test)
 
   test("Get only ipv4 tcp adresses for luvit.io", function (print, p, expect, uv)
     assert(uv.getaddrinfo("luvit.io", nil, {
-      socktype = "STREAM",
-      family = "INET",
+      socktype = "stream",
+      family = "inet",
     }, expect(function (err, res)
       assert(not err, err)
       p(res, #res)
@@ -22,8 +22,8 @@ return require('lib/tap')(function (test)
   if require('ffi').os ~= "Windows" then
     test("Get only ipv6 tcp adresses for luvit.io", function (print, p, expect, uv)
       assert(uv.getaddrinfo("luvit.io", nil, {
-        socktype = "STREAM",
-        family = "INET6",
+        socktype = "stream",
+        family = "inet6",
       }, expect(function (err, res)
         assert(not err, err)
         p(res, #res)
@@ -34,7 +34,7 @@ return require('lib/tap')(function (test)
 
   test("Get ipv4 and ipv6 tcp adresses for luvit.io", function (print, p, expect, uv)
     assert(uv.getaddrinfo("luvit.io", nil, {
-      socktype = "STREAM",
+      socktype = "stream",
     }, expect(function (err, res)
       assert(not err, err)
       p(res, #res)
@@ -52,7 +52,7 @@ return require('lib/tap')(function (test)
 
   test("Lookup local ipv4 address", function (print, p, expect, uv)
     assert(uv.getnameinfo({
-      family = "INET",
+      family = "inet",
     }, expect(function (err, hostname, service)
       p{err=err,hostname=hostname,service=service}
       assert(not err, err)
@@ -74,7 +74,7 @@ return require('lib/tap')(function (test)
 
   test("Lookup local ipv6 address", function (print, p, expect, uv)
     assert(uv.getnameinfo({
-      family = "INET6",
+      family = "inet6",
     }, expect(function (err, hostname, service)
       p{err=err,hostname=hostname,service=service}
       assert(not err, err)
@@ -97,7 +97,7 @@ return require('lib/tap')(function (test)
   test("Lookup local port 80 service", function (print, p, expect, uv)
     assert(uv.getnameinfo({
       port = 80,
-      family = "INET6",
+      family = "inet6",
     }, expect(function (err, hostname, service)
       p{err=err,hostname=hostname,service=service}
       assert(not err, err)
