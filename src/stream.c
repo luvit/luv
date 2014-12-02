@@ -17,32 +17,16 @@
 #include "luv.h"
 
 static uv_stream_t* luv_check_stream(lua_State* L, int index) {
-  uv_stream_t* handle = lua_touserdata(L, index);
-  if (handle == NULL) {
-    luaL_argerror(L, index, "Expected uv_stream_t");
-    return NULL;
-  }
-  lua_getmetatable(L, index);
-  lua_getfield(L, LUA_REGISTRYINDEX, "uv_tcp");
-  if (lua_rawequal(L, -1, -2)) {
-    lua_pop(L, 2);
-    return handle;
-  }
-  lua_pop(L, 1);
-  lua_getfield(L, LUA_REGISTRYINDEX, "uv_tty");
-  if (lua_rawequal(L, -1, -2)) {
-    lua_pop(L, 2);
-    return handle;
-  }
-  lua_pop(L, 1);
-  lua_getfield(L, LUA_REGISTRYINDEX, "uv_pipe");
-  if (lua_rawequal(L, -1, -2)) {
-    lua_pop(L, 2);
-    return handle;
-  }
+  int isStream;
+  uv_stream_t* handle;
+  if (!(handle = lua_touserdata(L, index))) { goto fail; }
+  lua_getfield(L, LUA_REGISTRYINDEX, "uv_stream");
+  lua_getmetatable(L, index < 0 ? index - 1 : index);
+  lua_rawget(L, -2);
+  isStream = lua_toboolean(L, -1);
   lua_pop(L, 2);
-
-  luaL_argerror(L, index, "Expected uv_stream_t");
+  if (isStream) { return handle; }
+  fail: luaL_argerror(L, index, "Expected uv_stream userdata");
   return NULL;
 }
 

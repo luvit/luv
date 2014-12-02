@@ -376,32 +376,45 @@ static const luaL_Reg luv_signal_methods[] = {
 
 static void luv_handle_init(lua_State* L) {
 
-#define XX(uc, lc) \
+  lua_newtable(L);
+#define XX(uc, lc)                             \
     luaL_newmetatable (L, "uv_"#lc);           \
     lua_pushcfunction(L, luv_handle_tostring); \
     lua_setfield(L, -2, "__tostring");         \
     luaL_newlib(L, luv_##lc##_methods);        \
     luaL_setfuncs(L, luv_handle_methods, 0);   \
     lua_setfield(L, -2, "__index");            \
-    lua_pop(L, 1);
+    lua_pushboolean(L, 1);                     \
+    lua_rawset(L, -3);
 
   UV_HANDLE_TYPE_MAP(XX)
 #undef XX
+  lua_setfield(L, LUA_REGISTRYINDEX, "uv_handle");
+
+  lua_newtable(L);
 
   luaL_getmetatable(L, "uv_pipe");
   lua_getfield(L, -1, "__index");
   luaL_setfuncs(L, luv_stream_methods, 0);
-  lua_pop(L, 2);
+  lua_pop(L, 1);
+  lua_pushboolean(L, 1);
+  lua_rawset(L, -3);
 
   luaL_getmetatable(L, "uv_tcp");
   lua_getfield(L, -1, "__index");
   luaL_setfuncs(L, luv_stream_methods, 0);
-  lua_pop(L, 2);
+  lua_pop(L, 1);
+  lua_pushboolean(L, 1);
+  lua_rawset(L, -3);
 
   luaL_getmetatable(L, "uv_tty");
   lua_getfield(L, -1, "__index");
   luaL_setfuncs(L, luv_stream_methods, 0);
-  lua_pop(L, 2);
+  lua_pop(L, 1);
+  lua_pushboolean(L, 1);
+  lua_rawset(L, -3);
+
+  lua_setfield(L, LUA_REGISTRYINDEX, "uv_stream");
 }
 
 static lua_State* luv_state(uv_loop_t* loop) {

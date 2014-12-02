@@ -17,24 +17,16 @@
 #include "luv.h"
 
 static uv_handle_t* luv_check_handle(lua_State* L, int index) {
-  uv_handle_t* handle = lua_touserdata(L, index);
-  if (handle == NULL) {
-    luaL_argerror(L, index, "Expected uv_handle_t");
-    return NULL;
-  }
-  lua_getmetatable(L, index);
-#define XX(uc, lc)                                             \
-  lua_getfield(L, LUA_REGISTRYINDEX, "uv_"#lc);                \
-  if (lua_rawequal(L, -1, -2)) {                               \
-    lua_pop(L, 2);                                             \
-    return handle;                                             \
-  }                                                            \
-  lua_pop(L, 1);
-
-  UV_HANDLE_TYPE_MAP(XX)
-#undef XX
-  lua_pop(L, 1);
-  luaL_argerror(L, index, "Expected uv_handle_t");
+  int isHandle;
+  uv_handle_t* handle;
+  if (!(handle = lua_touserdata(L, index))) { goto fail; }
+  lua_getfield(L, LUA_REGISTRYINDEX, "uv_handle");
+  lua_getmetatable(L, index < 0 ? index - 1 : index);
+  lua_rawget(L, -2);
+  isHandle = lua_toboolean(L, -1);
+  lua_pop(L, 2);
+  if (isHandle) { return handle; }
+  fail: luaL_argerror(L, index, "Expected uv_handle userdata");
   return NULL;
 }
 
