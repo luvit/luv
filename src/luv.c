@@ -248,6 +248,7 @@ static const luaL_Reg luv_handle_methods[] = {
   {"send_buffer_size", luv_send_buffer_size},
   {"recv_buffer_size", luv_recv_buffer_size},
   {"fileno", luv_fileno},
+  {NULL, NULL}
 };
 
 static const luaL_Reg luv_async_methods[] = {
@@ -293,6 +294,7 @@ static const luaL_Reg luv_stream_methods[] = {
   {"is_readable", luv_is_readable},
   {"is_writable", luv_is_writable},
   {"set_blocking", luv_stream_set_blocking},
+  {NULL, NULL}
 };
 
 static const luaL_Reg luv_pipe_methods[] = {
