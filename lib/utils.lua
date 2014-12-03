@@ -3,7 +3,7 @@ local uv = require('luv')
 local utils = {}
 local usecolors
 
-if uv.guess_handle(1) == "TTY" then
+if uv.guess_handle(1) == "tty" then
   utils.stdout = uv.new_tty(1, false)
   usecolors = true
 else

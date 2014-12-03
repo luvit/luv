@@ -20,10 +20,10 @@
 static int luv_guess_handle(lua_State* L) {
   uv_file file = luaL_checkint(L, 1);
   switch (uv_guess_handle(file)) {
-#define XX(uc, lc) case UV_##uc: lua_pushstring(L, #uc); break;
+#define XX(uc, lc) case UV_##uc: lua_pushstring(L, #lc); break;
   UV_HANDLE_TYPE_MAP(XX)
 #undef XX
-    case UV_FILE: lua_pushstring(L, "FILE"); break;
+    case UV_FILE: lua_pushstring(L, "file"); break;
     default: return 0;
   }
   return 1;
