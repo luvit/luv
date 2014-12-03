@@ -195,6 +195,10 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
       luv_push_stats_table(L, &req->statbuf);
       return 1;
 
+    case UV_FS_MKDTEMP:
+      lua_pushstring(L, req->path);
+      return 1;
+
     case UV_FS_READLINK:
       lua_pushstring(L, (char*)req->ptr);
       return 1;
