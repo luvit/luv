@@ -104,12 +104,26 @@ static int luv_check_flags(lua_State* L, int index) {
     return luaL_argerror(L, index, "Expected string or integer for file open mode");
   }
   string = lua_tostring(L, index);
-  if (strcmp(string, "r") == 0) return O_RDONLY;
-  if (strcmp(string, "r+") == 0) return O_RDWR;
-  if (strcmp(string, "w") == 0) return O_CREAT | O_TRUNC | O_WRONLY;
-  if (strcmp(string, "w+") == 0) return O_CREAT | O_TRUNC | O_RDWR;
-  if (strcmp(string, "a") == 0) return O_APPEND | O_CREAT | O_WRONLY;
-  if (strcmp(string, "a+") == 0) return O_APPEND | O_CREAT | O_RDWR;
+
+  if (strcmp(string, "r")   == 0) return O_RDONLY;
+  if (strcmp(string, "rs")  == 0 ||
+      strcmp(string, "sr")  == 0) return O_RDONLY | O_SYNC;
+  if (strcmp(string, "r+")  == 0) return O_RDWR;
+  if (strcmp(string, "rs+") == 0 ||
+      strcmp(string, "sr+") == 0) return O_RDWR   | O_SYNC;
+  if (strcmp(string, "w")   == 0) return O_TRUNC  | O_CREAT | O_WRONLY;
+  if (strcmp(string, "wx")  == 0 ||
+      strcmp(string, "xw")  == 0) return O_TRUNC  | O_CREAT | O_WRONLY | O_EXCL;
+  if (strcmp(string, "w+")  == 0) return O_TRUNC  | O_CREAT | O_RDWR;
+  if (strcmp(string, "wx+") == 0 ||
+      strcmp(string, "xw+") == 0) return O_TRUNC  | O_CREAT | O_RDWR   | O_EXCL;
+  if (strcmp(string, "a")   == 0) return O_APPEND | O_CREAT | O_WRONLY;
+  if (strcmp(string, "ax")  == 0 ||
+      strcmp(string, "xa")  == 0) return O_APPEND | O_CREAT | O_WRONLY | O_EXCL;
+  if (strcmp(string, "a+")  == 0) return O_APPEND | O_CREAT | O_RDWR;
+  if (strcmp(string, "ax+") == 0 ||
+      strcmp(string, "xa+") == 0) return O_APPEND | O_CREAT | O_RDWR   | O_EXCL;
+
   return luaL_error(L, "Unknown file open flag '%s'", string);
 }
 
