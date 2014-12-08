@@ -46,7 +46,7 @@ static int luv_is_active(lua_State* L) {
   uv_handle_t* handle = luv_check_handle(L, 1);
   int ret = uv_is_active(handle);
   if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
+  lua_pushboolean(L, ret);
   return 1;
 }
 
