@@ -106,11 +106,15 @@ static int luv_check_flags(lua_State* L, int index) {
   string = lua_tostring(L, index);
 
   if (strcmp(string, "r")   == 0) return O_RDONLY;
+#ifdef O_SYNC
   if (strcmp(string, "rs")  == 0 ||
       strcmp(string, "sr")  == 0) return O_RDONLY | O_SYNC;
+#endif
   if (strcmp(string, "r+")  == 0) return O_RDWR;
+#ifdef O_SYNC
   if (strcmp(string, "rs+") == 0 ||
       strcmp(string, "sr+") == 0) return O_RDWR   | O_SYNC;
+#endif
   if (strcmp(string, "w")   == 0) return O_TRUNC  | O_CREAT | O_WRONLY;
   if (strcmp(string, "wx")  == 0 ||
       strcmp(string, "xw")  == 0) return O_TRUNC  | O_CREAT | O_WRONLY | O_EXCL;
