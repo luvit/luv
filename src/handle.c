@@ -95,7 +95,7 @@ static int luv_has_ref(lua_State* L) {
   uv_handle_t* handle = luv_check_handle(L, 1);
   int ret = uv_has_ref(handle);
   if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
+  lua_pushboolean(L, ret);
   return 1;
 }
 
