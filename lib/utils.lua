@@ -141,7 +141,12 @@ end
 -- Print replacement that goes through libuv.  This is useful on windows
 -- to use libuv's code to translate ansi escape codes to windows API calls.
 function print(...)
-  uv.write(utils.stdout, table.concat({...}, "\t") .. "\n")
+  local n = select('#', ...)
+  local arguments = {...}
+  for i = 1, n do
+    arguments[i] = tostring(arguments[i])
+  end
+  uv.write(utils.stdout, table.concat(arguments, "\t") .. "\n")
 end
 
 -- A nice global data dumper

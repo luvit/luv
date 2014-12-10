@@ -76,10 +76,10 @@ local function run()
     end, debug.traceback)
 
     -- Flush out any more opened handles
-    uv.run()
+    uv.stop()
     uv.walk(function (handle)
       if handle == stdout then return end
-      uv.close(handle)
+      if not uv.is_closing(handle) then uv.close(handle) end
     end)
     uv.run()
     uv.chdir(cwd)
@@ -99,11 +99,11 @@ local function run()
   else
     print("#" .. failed .. " failed test" .. (failed == 1 and "" or "s"))
   end
-  
+
   -- Close all then handles, including stdout
   uv.walk(uv.close)
   uv.run()
-  
+
   os.exit(-failed)
 end
 
