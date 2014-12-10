@@ -46,11 +46,17 @@ static int luv_signal_start(lua_State* L) {
   if (lua_isnumber(L, 2)) {
     signum = lua_tointeger(L, 2);
   }
-  if (lua_isstring(L, 2)) {
+  else if (lua_isstring(L, 2)) {
     signum = luv_sig_string_to_num(luaL_checkstring(L, 2));
+    luaL_argcheck(L, signum, 2, "Invalid Signal name");
   }
-  luv_check_callback(L, handle->data, LUV_SIGNAL, 3);
-  luaL_argcheck(L, signum, 3, "Invalid Signal name");
+  else {
+    return luaL_argerror(L, 2, "Missing Signal name");
+  }
+
+  if (!lua_isnoneornil(L, 3)) {
+    luv_check_callback(L, handle->data, LUV_SIGNAL, 3);
+  }
   ret = uv_signal_start(handle, luv_signal_cb, signum);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
