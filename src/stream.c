@@ -137,13 +137,30 @@ static void luv_write_cb(uv_write_t* req, int status) {
 static int luv_write(lua_State* L) {
   uv_stream_t* handle = luv_check_stream(L, 1);
   uv_write_t* req;
-  uv_buf_t buf;
   int ret, ref;
-  buf.base = (char*) luaL_checklstring(L, 2, &buf.len);
   ref = luv_check_continuation(L, 3);
   req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
-  ret = uv_write(req, handle, &buf, 1, luv_write_cb);
+  if (lua_istable(L, 2)) {
+    size_t count = lua_objlen(L, 2);
+    uv_buf_t *bufs = malloc(sizeof(uv_buf_t) * count);
+    int i;
+    for (i = 0; i < count; ++i) {
+      lua_rawgeti(L, 2, i + 1);
+      bufs[i].base = (char*) luaL_checklstring(L, -1, &(bufs[i].len));
+      lua_pop(L, 1);
+    }
+    ret = uv_write(req, handle, bufs, count, luv_write_cb);
+    free(bufs);
+  }
+  else if (lua_isstring(L, 2)) {
+    uv_buf_t buf;
+    buf.base = (char*) luaL_checklstring(L, 2, &buf.len);
+    ret = uv_write(req, handle, &buf, 1, luv_write_cb);
+  }
+  else {
+    return luaL_argerror(L, 2, "data must be string or table of strings");
+  }
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);

@@ -132,4 +132,36 @@ return require('lib/tap')(function (test)
     end)
   end)
 
+  test("pipe writing with vectors", function (print, p, expect, uv)
+    local port = 0
+    local data = {}
+    for i = 0, 255 do
+      data[i + 1] = string.rep(string.char(i), 100)
+    end
+    bench(uv, p, 0x800, function ()
+      local server = uv.new_tcp()
+      server:bind("::1", port)
+      server:listen(1, expect(function (err)
+        assert(not err, err)
+        local client = uv.new_pipe(false)
+        server:accept(client)
+        client:write(data)
+        client:close()
+        server:close()
+      end))
+      local address = server:getsockname()
+      port = address.port
+      local socket = uv.new_tcp()
+      socket:connect(address.ip, port, expect(function (err)
+        assert(not err, err)
+        socket:read_start(expect(function (err, chunk)
+          assert(not err, err)
+          assert(chunk)
+          socket:close()
+        end))
+      end))
+      uv.run()
+    end)
+  end)
+
 end)
