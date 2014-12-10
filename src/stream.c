@@ -134,6 +134,19 @@ static void luv_write_cb(uv_write_t* req, int status) {
   req->data = NULL;
 }
 
+static uv_buf_t* luv_prep_bufs(lua_State* L, int index, size_t *count) {
+  uv_buf_t *bufs;
+  int i;
+  *count = lua_objlen(L, index);
+  bufs = malloc(sizeof(uv_buf_t) * *count);
+  for (i = 0; i < *count; ++i) {
+    lua_rawgeti(L, index, i + 1);
+    bufs[i].base = (char*) luaL_checklstring(L, -1, &(bufs[i].len));
+    lua_pop(L, 1);
+  }
+  return bufs;
+}
+
 static int luv_write(lua_State* L) {
   uv_stream_t* handle = luv_check_stream(L, 1);
   uv_write_t* req;
@@ -142,14 +155,8 @@ static int luv_write(lua_State* L) {
   req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
   if (lua_istable(L, 2)) {
-    size_t count = lua_objlen(L, 2);
-    uv_buf_t *bufs = malloc(sizeof(uv_buf_t) * count);
-    int i;
-    for (i = 0; i < count; ++i) {
-      lua_rawgeti(L, 2, i + 1);
-      bufs[i].base = (char*) luaL_checklstring(L, -1, &(bufs[i].len));
-      lua_pop(L, 1);
-    }
+    size_t count;
+    uv_buf_t *bufs = luv_prep_bufs(L, 2, &count);
     ret = uv_write(req, handle, bufs, count, luv_write_cb);
     free(bufs);
   }
@@ -178,14 +185,8 @@ static int luv_write2(lua_State* L) {
   req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
   if (lua_istable(L, 2)) {
-    size_t count = lua_objlen(L, 2);
-    uv_buf_t *bufs = malloc(sizeof(uv_buf_t) * count);
-    int i;
-    for (i = 0; i < count; ++i) {
-      lua_rawgeti(L, 2, i + 1);
-      bufs[i].base = (char*) luaL_checklstring(L, -1, &(bufs[i].len));
-      lua_pop(L, 1);
-    }
+    size_t count;
+    uv_buf_t *bufs = luv_prep_bufs(L, 2, &count);
     ret = uv_write2(req, handle, bufs, count, send_handle, luv_write_cb);
     free(bufs);
   }
@@ -208,14 +209,8 @@ static int luv_try_write(lua_State* L) {
   uv_stream_t* handle = luv_check_stream(L, 1);
   int ret;
   if (lua_istable(L, 2)) {
-    size_t count = lua_objlen(L, 2);
-    uv_buf_t *bufs = malloc(sizeof(uv_buf_t) * count);
-    int i;
-    for (i = 0; i < count; ++i) {
-      lua_rawgeti(L, 2, i + 1);
-      bufs[i].base = (char*) luaL_checklstring(L, -1, &(bufs[i].len));
-      lua_pop(L, 1);
-    }
+    size_t count;
+    uv_buf_t *bufs = luv_prep_bufs(L, 2, &count);
     ret = uv_try_write(handle, bufs, count);
     free(bufs);
   }
