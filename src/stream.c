@@ -134,48 +134,98 @@ static void luv_write_cb(uv_write_t* req, int status) {
   req->data = NULL;
 }
 
+static uv_buf_t* luv_prep_bufs(lua_State* L, int index, size_t *count) {
+  uv_buf_t *bufs;
+  int i;
+  *count = lua_objlen(L, index);
+  bufs = malloc(sizeof(uv_buf_t) * *count);
+  for (i = 0; i < *count; ++i) {
+    lua_rawgeti(L, index, i + 1);
+    bufs[i].base = (char*) luaL_checklstring(L, -1, &(bufs[i].len));
+    lua_pop(L, 1);
+  }
+  return bufs;
+}
+
 static int luv_write(lua_State* L) {
   uv_stream_t* handle = luv_check_stream(L, 1);
   uv_write_t* req;
-  uv_buf_t buf;
   int ret, ref;
-  buf.base = (char*) luaL_checklstring(L, 2, &buf.len);
   ref = luv_check_continuation(L, 3);
   req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
-  ret = uv_write(req, handle, &buf, 1, luv_write_cb);
+  if (lua_istable(L, 2)) {
+    size_t count;
+    uv_buf_t *bufs = luv_prep_bufs(L, 2, &count);
+    ret = uv_write(req, handle, bufs, count, luv_write_cb);
+    free(bufs);
+  }
+  else if (lua_isstring(L, 2)) {
+    uv_buf_t buf;
+    buf.base = (char*) luaL_checklstring(L, 2, &buf.len);
+    ret = uv_write(req, handle, &buf, 1, luv_write_cb);
+  }
+  else {
+    return luaL_argerror(L, 2, "data must be string or table of strings");
+  }
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
+  lua_pushvalue(L, 2);
+  ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
   return 1;
 }
 
 static int luv_write2(lua_State* L) {
   uv_stream_t* handle = luv_check_stream(L, 1);
   uv_write_t* req;
-  uv_buf_t buf;
   int ret, ref;
   uv_stream_t* send_handle;
-  buf.base = (char*) luaL_checklstring(L, 2, &buf.len);
   send_handle = luv_check_stream(L, 3);
   ref = luv_check_continuation(L, 4);
   req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
-  ret = uv_write2(req, handle, &buf, 1, send_handle, luv_write_cb);
+  if (lua_istable(L, 2)) {
+    size_t count;
+    uv_buf_t *bufs = luv_prep_bufs(L, 2, &count);
+    ret = uv_write2(req, handle, bufs, count, send_handle, luv_write_cb);
+    free(bufs);
+  }
+  else if (lua_isstring(L, 2)) {
+    uv_buf_t buf;
+    buf.base = (char*) luaL_checklstring(L, 2, &buf.len);
+    ret = uv_write2(req, handle, &buf, 1, send_handle, luv_write_cb);
+  }
+  else {
+    return luaL_argerror(L, 2, "data must be string or table of strings");
+  }
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
+  lua_pushvalue(L, 2);
+  ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
   return 1;
 }
 
 static int luv_try_write(lua_State* L) {
   uv_stream_t* handle = luv_check_stream(L, 1);
-  uv_buf_t buf;
   int ret;
-  buf.base = (char*) luaL_checklstring(L, 2, &buf.len);
-  ret = uv_try_write(handle, &buf, 1);
+  if (lua_istable(L, 2)) {
+    size_t count;
+    uv_buf_t *bufs = luv_prep_bufs(L, 2, &count);
+    ret = uv_try_write(handle, bufs, count);
+    free(bufs);
+  }
+  else if (lua_isstring(L, 2)) {
+    uv_buf_t buf;
+    buf.base = (char*) luaL_checklstring(L, 2, &buf.len);
+    ret = uv_try_write(handle, &buf, 1);
+  }
+  else {
+    return luaL_argerror(L, 2, "data must be string or table of strings");
+  }
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;
