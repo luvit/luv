@@ -134,11 +134,11 @@ return require('lib/tap')(function (test)
 
   test("pipe writing with vectors", function (print, p, expect, uv)
     local port = 0
-    local data = {}
-    for i = 0, 255 do
-      data[i + 1] = string.rep(string.char(i), 100)
-    end
     bench(uv, p, 0x800, function ()
+      local data = {}
+      for i = 0, 100 do
+        data[i + 1] = string.rep(string.char(i), 100)
+      end
       local server = uv.new_tcp()
       server:bind("::1", port)
       server:listen(1, expect(function (err)

@@ -40,6 +40,7 @@ static luv_req_t* luv_setup_req(lua_State* L, int callback_ref) {
   lua_pushvalue(L, -1);
   data->req_ref = luaL_ref(L, LUA_REGISTRYINDEX);
   data->callback_ref = callback_ref;
+  data->data_ref = LUA_NOREF;
   data->data = NULL;
 
   return data;
@@ -64,6 +65,7 @@ static void luv_fulfill_req(lua_State* L, luv_req_t* data, int nargs) {
 static void luv_cleanup_req(lua_State* L, luv_req_t* data) {
   luaL_unref(L, LUA_REGISTRYINDEX, data->req_ref);
   luaL_unref(L, LUA_REGISTRYINDEX, data->callback_ref);
+  luaL_unref(L, LUA_REGISTRYINDEX, data->data_ref);
   free(data->data);
   free(data);
 }

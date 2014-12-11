@@ -172,6 +172,8 @@ static int luv_write(lua_State* L) {
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
+  lua_pushvalue(L, 2);
+  ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
   return 1;
 }
 
@@ -202,6 +204,8 @@ static int luv_write2(lua_State* L) {
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
+  lua_pushvalue(L, 2);
+  ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
   return 1;
 }
 
