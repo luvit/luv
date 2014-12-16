@@ -32,14 +32,14 @@ static int luv_run(lua_State* L) {
   int mode = luaL_checkoption(L, 1, "default", luv_runmodes);
   int ret = uv_run(luv_loop(L), mode);
   if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
+  lua_pushboolean(L, ret);
   return 1;
 }
 
 static int luv_loop_alive(lua_State* L) {
   int ret = uv_loop_alive(luv_loop(L));
   if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
+  lua_pushboolean(L, ret);
   return 1;
 }
 
