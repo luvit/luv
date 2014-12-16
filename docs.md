@@ -178,7 +178,8 @@ All API functions defined here work with any handle type.
 
 > method form `handle:is_active()`
 
-Returns `true` if the handle is active, `false` if it’s inactive. What “active” means depends on the type of handle:
+Returns `true` if the handle is active, `false` if it’s inactive. What “active”
+means depends on the type of handle:
 
  - A [`uv_async_t`][] handle is always active and cannot be deactivated, except
    by closing it with uv_close().
@@ -368,7 +369,8 @@ Stop the timer, the callback will not be called anymore.
 
 > method form `timer:again()`
 
-Stop the timer, and if it is repeating restart it using the repeat value as the timeout. If the timer has never been started before it raises `EINVAL`.
+Stop the timer, and if it is repeating restart it using the repeat value as the
+timeout. If the timer has never been started before it raises `EINVAL`.
 
 ### `uv.timer_set_repeat(timer, repeat)`
 
