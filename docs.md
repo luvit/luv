@@ -274,7 +274,7 @@ it will use `size` to set the new receive buffer size.
 This function works for TCP, pipe and UDP handles on Unix and for TCP and UDP
 handles on Windows.
 
-**Note: Linux will set double the size and return double the size of the
+**Note**: Linux will set double the size and return double the size of the
 original set value.
 
 ### `uv.fileno(handle)`
@@ -289,7 +289,7 @@ other handle type will fail with UV_EINVAL.
 If a handle doesn’t have an attached file descriptor yet or the handle itself
 has been closed, this function will return UV_EBADF.
 
-**Warning: Be very careful when using this function. libuv assumes it’s in
+**Warning**: Be very careful when using this function. libuv assumes it’s in
 control of the file descriptor so any change to it may lead to malfunction.
 
 ## Reference counting
@@ -390,7 +390,6 @@ Get the timer repeat value.
 
 [`uv_prepare_t`]: #uv_prepare_t--prepare-handle
 
-
 ## `uv_check_t` — Check handle
 
 [`uv_check_t`]: #uv_check_t--check-handle
@@ -423,50 +422,130 @@ Stream handles provide an abstraction of a duplex communication channel.
 [`uv_stream_t`][] is an abstract type, libuv provides 3 stream implementations in
 the form of [`uv_tcp_t`][], [`uv_pipe_t`][] and [`uv_tty_t`][].
 
-### `uv.shutdown(stream, callback) -> req`
+### `uv.shutdown(stream, [callback]) -> req`
 
-> (method form `stream:shutdown(callback) -> req`)
+> (method form `stream:shutdown([callback]) -> req`)
+
+Shutdown the outgoing (write) side of a duplex stream. It waits for pending
+write requests to complete. The callback is called after
+shutdown is complete.
 
 ### `uv.listen(stream, backlog, callback)`
 
 > (method form `stream:listen(backlog, callback)`)
 
+Start listening for incoming connections. `backlog` indicates the number of
+connections the kernel might queue, same as `listen(2)`. When a new incoming
+connection is received the callback is called.
+
 ### `uv.accept(stream, client_stream)`
 
 > (method form `stream:accept(client_stream)`)
+
+This call is used in conjunction with `uv.listen()` to accept incoming
+connections. Call this function after receiving a callback to accept the
+connection.
+
+When the connection callback is called it is guaranteed that this function
+will complete successfully the first time. If you attempt to use it more than
+once, it may fail. It is suggested to only call this function once per
+connection call.
+
+```lua
+server:listen(128, function (err)
+  local client = uv.new_tcp()
+  server:accept(client)
+end)
+```
 
 ### `uv.read_start(stream, callback)`
 
 > (method form `stream:read_start(callback)`)
 
+Callback is of the form `(err, data)`.
+
+Read data from an incoming stream. The callback will be made several times until
+there is no more data to read or `uv.read_stop()` is called. When we’ve reached
+EOF, `data` will be `nil`.
+
+```lua
+stream:read_start(function (err, chunk)
+  if err then
+    -- handle read error
+  elseif chunk then
+    -- handle data
+  else
+    -- handle disconnect
+  end
+end)
+```
+
 ### `uv.read_stop(stream)`
 
 > (method form `stream:read_stop()`)
 
-### `uv.write(stream, data, callback)`
+Stop reading data from the stream. The read callback will no longer be called.
 
-> (method form `stream:write(data, callback)`)
+### `uv.write(stream, data, [callback])`
 
-### `uv.write2(stream, data, handle, callback)`
+> (method form `stream:write(data, [callback])`)
 
-> (method form `stream:write2(data, handle, callback)`)
+Write data to stream.
+
+`data` can either be a lua string or a table of strings.  If a table is passed
+in, the C backend will use writev to send all strings in a single system call.
+
+The optional `callback` is for knowing when the write is
+complete.
+
+### `uv.write2(stream, data, send_handle, callback)`
+
+> (method form `stream:write2(data, send_handle, callback)`)
+
+Extended write function for sending handles over a pipe. The pipe must be
+initialized with ip option to `true`.
+
+**Note: `send_handle` must be a TCP socket or pipe, which is a server or a
+connection (listening or connected state). Bound sockets or pipes will be
+assumed to be servers.
 
 ### `uv.try_write(stream, data)`
 
 > (method form `stream:try_write(data)`)
 
+Same as `uv.write()`, but won’t queue a write request if it can’t be completed
+immediately.
+
+Will return number of bytes written (can be less than the supplied buffer size).
+
 ### `uv.is_readable(stream)`
 
 > (method form `stream:is_readable()`)
+
+Returns `true` if the stream is readable, `false` otherwise.
 
 ### `uv.is_writable(stream)`
 
 > (method form `stream:is_writable()`)
 
+Returns `true` if the stream is writable, `false` otherwise.
+
 ### `uv.stream_set_blocking(stream, blocking)`
 
 > (method form `stream:set_blocking(blocking)`)
 
+Enable or disable blocking mode for a stream.
+
+When blocking mode is enabled all writes complete synchronously. The interface
+remains unchanged otherwise, e.g. completion or failure of the operation will
+still be reported through a callback which is made asynchronously.
+
+**Warning**: Relying too much on this API is not recommended. It is likely to
+change significantly in the future. Currently this only works on Windows and
+only for uv_pipe_t handles. Also libuv currently makes no ordering guarantee
+when the blocking mode is changed after write requests have already been
+submitted. Therefore it is recommended to set the blocking mode immediately
+after opening or creating the stream.
 
 ## `uv_tcp_t` — TCP handle
 
