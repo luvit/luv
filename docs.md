@@ -391,29 +391,64 @@ Get the timer repeat value.
 
 [`uv_prepare_t`]: #uv_prepare_t--prepare-handle
 
+**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/prepare.html)
+using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L82-84)
+and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L317-L321)
+from [prepare.c](https://github.com/luvit/luv/blob/master/src/prepare.c)
+
 ## `uv_check_t` — Check handle
 
 [`uv_check_t`]: #uv_check_t--check-handle
+
+**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/check.html)
+using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L87-89)
+and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L259-263)
+from [check.c](https://github.com/luvit/luv/blob/master/src/check.c)
 
 ## `uv_idle_t` — Idle handle
 
 [`uv_idle_t`]: #uv_idle_t--idle-handle
 
+**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/idle.html)
+using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L92-94)
+and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L279-283)
+from [idle.c](https://github.com/luvit/luv/blob/master/src/idle.c)
+
 ## `uv_async_t` — Async handle
 
 [`uv_async_t`]: #uv_async_t--async-handle
+
+**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/async.html)
+using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L97-98)
+and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L253-257)
+from [async.c](https://github.com/luvit/luv/blob/master/src/async.c)
 
 ## `uv_poll_t` — Poll handle
 
 [`uv_poll_t`]: #uv_poll_t--poll-handle
 
+**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/poll.html)
+using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L101-103)
+and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L272-277)
+from [poll.c](https://github.com/luvit/luv/blob/master/src/poll.c)
+
 ## `uv_signal_t` — Signal handle
 
 [`uv_signal_t`]: #uv_signal_t--signal-handle
 
+**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/signal.html)
+using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L106-108)
+and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L373-L377)
+from [signal.c](https://github.com/luvit/luv/blob/master/src/signal.c)
+
 ## `uv_process_t` — Process handle
 
 [`uv_process_t`]: #uv_process_t--process-handle
+
+**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/process.html)
+using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L111-114)
+and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L323-L326)
+from [process.c](https://github.com/luvit/luv/blob/master/src/process.c)
 
 ## `uv_stream_t` — Stream handle
 
@@ -645,34 +680,70 @@ end)
 
 [`uv_pipe_t`]: #uv_pipe_t--pipe-handle
 
+**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/pipe.html)
+using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L142-L149)
+and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L300-L309)
+from [pipe.c](https://github.com/luvit/luv/blob/master/src/pipe.c)
+
 ## `uv_tty_t` — TTY handle
 
 [`uv_tty_t`]: #uv_tty_t--tty-handle
+
+**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/tty.html)
+using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L152-L155)
+and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L350-L354)
+from [tty.c](https://github.com/luvit/luv/blob/master/src/tty.c)
 
 ## `uv_udp_t` — UDP handle
 
 [`uv_udp_t`]: #uv_udp_t--udp-handle
 
+**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/udp.html)
+using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L158-L171)
+and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L356-L371)
+from [udp.c](https://github.com/luvit/luv/blob/master/src/udp.c)
+
 ## `uv_fs_event_t` — FS Event handle
 
 [`uv_fs_event_t`]: #uv_fs_event_t--fs-event-handle
+
+**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/fs_event.html)
+using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L174-L177)
+and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L265-L270)
+from [fs_event.c](https://github.com/luvit/luv/blob/master/src/fs_event.c)
 
 ## `uv_fs_poll_t` — FS Poll handle
 
 [`uv_fs_poll_t`]: #uv_fs_poll_t--fs-poll-handle
 
+**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/fs_poll.html)
+using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L180-L183)
+and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L272-L277)
+from [fs_poll.c](https://github.com/luvit/luv/blob/master/src/fs_poll.c)
+
 ## Filesystem operations
 
 [Filesystem operations]:#filesystem-operations
+
+**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/fs.html)
+using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L186-L213)
+from [fs.c](https://github.com/luvit/luv/blob/master/src/fs.c)
 
 ## DNS utility functions
 
 [DNS utility functions]: #dns-utility-functions
 
+**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/dns.html)
+using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L216-L217)
+from [dns.c](https://github.com/luvit/luv/blob/master/src/dns.c)
+
 ## Miscellaneous utilities
 
 [Miscellaneous utilities]: #miscellaneous-utilities
 
+**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/misc.html)
+using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L220-L235)
+from [misc.c](https://github.com/luvit/luv/blob/master/src/misc.c)
 
 [luv]: https://github.com/luvit/luv
 [luvit]: https://github.com/luvit/luvit
