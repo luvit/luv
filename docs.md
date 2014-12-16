@@ -209,6 +209,51 @@ end)
 
 [`uv_timer_t`]: #uv_timer_t--timer-handle
 
+Timer handles are used to schedule callbacks to be called in the future.
+
+### `uv.new_timer() -> timer`
+
+Creates and initialized a new `uv_timer_t` returns the lua userdata wrapping it.
+
+### `uv.timer_start(timer, timeout, repeat, callback)`
+
+> method form `timer:start(timeout, repeat, callback)`
+
+Start the timer. `timeout` and `repeat` are in milliseconds.
+
+If `timeout` is zero, the callback fires on the next event loop iteration. If
+`repeat` is non-zero, the callback fires first after timeout milliseconds and
+then repeatedly after repeat milliseconds.
+
+### `uv.timer_stop(timer)`
+
+> method form `timer:stop()`
+
+Stop the timer, the callback will not be called anymore.
+
+### `uv.timer_again(timer)`
+
+> method form `timer:again()`
+
+Stop the timer, and if it is repeating restart it using the repeat value as the timeout. If the timer has never been started before it raises `EINVAL`.
+
+### `uv.timer_set_repeat(timer, repeat)`
+
+> method form `timer:set_repeat(repeat)`
+
+Set the repeat value in milliseconds.
+
+> **Note**: If the repeat value is set from a timer callback it does not
+  immediately take effect. If the timer was non-repeating before, it will
+  have been stopped. If it was repeating, then the old repeat value will
+  have been used to schedule the next timeout.
+
+### `uv.timer_get_repeat(timer) -> repeat`
+
+> method form `timer:get_repeat() -> repeat`
+
+Get the timer repeat value.
+
 ## `uv_prepare_t` — Prepare handle
 
 [`uv_prepare_t`]: #uv_prepare_t--prepare-handle
