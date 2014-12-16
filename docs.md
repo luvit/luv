@@ -215,6 +215,36 @@ Timer handles are used to schedule callbacks to be called in the future.
 
 Creates and initialized a new `uv_timer_t` returns the lua userdata wrapping it.
 
+```lua
+-- Creating a simple setTimeout wrapper
+local function setTimeout(timeout, callback)
+  local timer = uv.new_timer()
+  timer:start(timeout, 0, function ()
+    timer:stop()
+    timer:close()
+    callback()
+  end)
+  return timer
+end
+
+-- Creating a simple setInterval wrapper
+local function setInterval(interval, callback)
+  local timer = uv.new_timer()
+  timer:start(interval, interval, function ()
+    timer:stop()
+    timer:close()
+    callback()
+  end)
+  return timer
+end
+
+-- And clearInterval
+local function clearInterval(timer)
+  timer:stop()
+  timer:close()
+end
+```
+
 ### `uv.timer_start(timer, timeout, repeat, callback)`
 
 > method form `timer:start(timeout, repeat, callback)`
