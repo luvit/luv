@@ -56,10 +56,12 @@ static int luv_tcp_nodelay(lua_State* L) {
 static int luv_tcp_keepalive(lua_State* L) {
   uv_tcp_t* handle = luv_check_tcp(L, 1);
   int ret, enable;
-  unsigned int delay;
+  unsigned int delay = 0;
   luaL_checktype(L, 2, LUA_TBOOLEAN);
   enable = lua_toboolean(L, 2);
-  delay = luaL_checkinteger(L, 3);
+  if (enable) {
+    delay = luaL_checkinteger(L, 3);
+  }
   ret = uv_tcp_keepalive(handle, enable, delay);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);

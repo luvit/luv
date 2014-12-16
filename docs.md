@@ -315,7 +315,8 @@ Timer handles are used to schedule callbacks to be called in the future.
 
 ### `uv.new_timer() -> timer`
 
-Creates and initialized a new `uv_timer_t` returns the lua userdata wrapping it.
+Creates and initializes a new `uv_timer_t`. Returns the lua userdata wrapping
+it.
 
 ```lua
 -- Creating a simple setTimeout wrapper
@@ -553,39 +554,74 @@ after opening or creating the stream.
 
 TCP handles are used to represent both TCP streams and servers.
 
-`uv_tcp_t` is a ‘subclass’ of [`uv_stream_t`](#uv_stream_t--stream-handle).
+`uv_tcp_t` is a ‘subclass’ of [`uv_stream_t`][](#uv_stream_t--stream-handle).
 
 ### `uv.new_tcp() -> tcp`
+
+Creates and initializes a new `uv_tcp_t`. Returns the lua userdata wrapping it.
 
 ### `uv.tcp_open(tcp, sock)`
 
 > (method form `tcp:open(sock)`)
 
+Open an existing file descriptor or SOCKET as a TCP handle.
+
+**Note: The user is responsible for setting the file descriptor in non-blocking
+mode.
+
 ### `uv.tcp_nodelay(tcp, enable)`
 
 > (method form `tcp:nodelay(enable)`)
 
-### `uv.tcp_keepalive(tcp, enable)`
+Enable / disable Nagle’s algorithm.
 
-> (method form `tcp:keepalive(enable)`)
+### `uv.tcp_keepalive(tcp, enable, [delay])`
+
+> (method form `tcp:keepalive(enable, [delay])`)
+
+Enable / disable TCP keep-alive. `delay` is the initial delay in seconds, ignored
+when enable is `false`.
 
 ### `uv.tcp_simultaneous_accepts(tcp, enable)`
 
 > (method form `tcp:simultaneous_accepts(enable)`)
 
-### `uv.tcp_bind(tcp, host, port)`
+Enable / disable simultaneous asynchronous accept requests that are queued by
+the operating system when listening for new TCP connections.
 
-> (method form `tcp:bind(host, port)`)
+This setting is used to tune a TCP server for the desired performance. Having
+simultaneous accepts can significantly improve the rate of accepting connections
+(which is why it is enabled by default) but may lead to uneven load distribution
+in multi-process setups.
 
-### `uv.tcp_getpeername(tcp)`
+### `uv.tcp_bind(tcp, address, port)`
 
-> (method form `tcp:getpeername()`)
+> (method form `tcp:bind(address, port)`)
+
+Bind the handle to an address and port. `address` should be an IP address and
+not a domain name.
+
+When the port is already taken, you can expect to see an UV_EADDRINUSE error
+from either `uv.tcp_bind()`, `uv.listen()` or `uv.tcp_connect()`. That is, a
+successful call to this function does not guarantee that the call to `uv.listen()`
+or `uv.tcp_connect()` will succeed as well.
+
+Use a port of `0` to let the OS assign an ephemeral port.  You can look it up
+later using `uv.tcp_getsockname()`.
 
 ### `uv.tcp_getsockname(tcp)`
 
 > (method form `tcp:getsockname()`)
 
-### `uv.tcp_connect(tcp, host, port, callback) -> req`
+Get the current address to which the handle is bound.
+
+### `uv.tcp_getpeername(tcp)`
+
+> (method form `tcp:getpeername()`)
+
+Get the address of the peer connected to the handle.
+
+### `uv.tcp_connect(tcp, address, port, callback) -> req`
 
 > (method form `tcp:connect(host, port, callback) -> req`)
 
@@ -593,6 +629,17 @@ TCP handles are used to represent both TCP streams and servers.
 
 > (method form `tcp:write_queue_size() -> size`)
 
+Establish an IPv4 or IPv6 TCP connection.
+
+The callback is made when the connection has been established or when a
+connection error happened.
+
+```lua
+local client = uv.new_tcp()
+client:connect("127.0.0.1", 8080, function (err)
+  -- check error and carry on.
+end)
+```
 
 ## `uv_pipe_t` — Pipe handle
 
