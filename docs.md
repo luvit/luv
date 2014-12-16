@@ -125,8 +125,8 @@ Get backend file descriptor. Only kqueue, epoll and event ports are supported.
 This can be used in conjunction with `uv_run("nowait")` to poll in one thread
 and run the event loop’s callbacks in another.
 
-> **Note**: Embedding a kqueue fd in another kqueue pollset doesn’t work on all
-  platforms. It’s not an error to add the fd but it never generates events.
+**Note**: Embedding a kqueue fd in another kqueue pollset doesn’t work on all
+platforms. It’s not an error to add the fd but it never generates events.
 
 ### `uv.backend_timeout()`
 
@@ -140,7 +140,7 @@ start of the event loop tick, see `uv.update_time()` for details and rationale.
 The timestamp increases monotonically from some arbitrary point in time. Don’t
 make assumptions about the starting point, you will only get disappointed.
 
-> **Note**: Use `uv.hrtime()` if you need sub-millisecond granularity.
+**Note**: Use `uv.hrtime()` if you need sub-millisecond granularity.
 
 ### `uv.update_time()`
 
@@ -169,41 +169,143 @@ end)
 
 [`uv_handle_t`]: #uv_handle_t--base-handle
 
+`uv_handle_t` is the base type for all libuv handle types.
+
+Structures are aligned so that any libuv handle can be cast to `uv_handle_t`.
+All API functions defined here work with any handle type.
+
 ### `uv.is_active(handle)`
 
 > method form `handle:is_active()`
+
+Returns `true` if the handle is active, `false` if it’s inactive. What “active” means depends on the type of handle:
+
+ - A [`uv_async_t`][] handle is always active and cannot be deactivated, except
+   by closing it with uv_close().
+
+ - A [`uv_pipe_t`][], [`uv_tcp_t`][], [`uv_udp_t`][], etc. handlebasically any
+   handle that deals with i/ois active when it is doing something that
+   involves i/o, like reading, writing, connecting, accepting new connections,
+   etc.
+
+ - A [`uv_check_t`][], [`uv_idle_t`][], [`uv_timer_t`][], etc. handle is active
+   when it has been started with a call to `uv.check_start()`,
+   `uv.idle_start()`, etc.
+
+Rule of thumb: if a handle of type `uv_foo_t` has a `uv.foo_start()` function,
+then it’s active from the moment that function is called. Likewise,
+`uv.foo_stop()` deactivates the handle again.
 
 ### `uv.is_closing(handle)`
 
 > method form `handle:is_closing()`
 
+Returns `true` if the handle is closing or closed, `false` otherwise.
+
+**Note**: This function should only be used between the initialization of the
+handle and the arrival of the close callback.
+
 ### `uv.close(handle, callback)`
 
 > method form `handle:close(callback)`
+
+Request handle to be closed. `callback` will be called asynchronously after this
+call. This MUST be called on each handle before memory is released.
+
+Handles that wrap file descriptors are closed immediately but `callback` will
+still be deferred to the next iteration of the event loop. It gives you a chance
+to free up any resources associated with the handle.
+
+In-progress requests, like `uv_connect_t` or `uv_write_t`, are cancelled and
+have their callbacks called asynchronously with `status=UV_ECANCELED`.
 
 ### `uv.ref(handle)`
 
 > method form `handle:ref()`
 
+Reference the given handle. References are idempotent, that is, if a handle is
+already referenced calling this function again will have no effect.
+
+See [Reference counting][].
+
 ### `uv.unref(handle)`
 
 > method form `handle:unref()`
+
+Un-reference the given handle. References are idempotent, that is, if a handle
+is not referenced calling this function again will have no effect.
+
+See [Reference counting][].
 
 ### `uv.has_ref(handle)`
 
 > method form `handle:has_ref()`
 
-### `uv.send_buffer_size(handle, size)`
+Returns `true` if the handle referenced, `false` otherwise.
+
+See [Reference counting][].
+
+### `uv.send_buffer_size(handle, [size]) -> size`
 
 > method form `handle:send_buffer_size(size)`
 
-### `uv.recv_buffer_size(handle, size)`
+Gets or sets the size of the send buffer that the operating system uses for the
+socket.
+
+If `size` is omitted, it will return the current send buffer size, otherwise it
+will use `size` to set the new send buffer size.
+
+This function works for TCP, pipe and UDP handles on Unix and for TCP and UDP
+handles on Windows.
+
+**Note**: Linux will set double the size and return double the size of the
+original set value.
+
+### `uv.recv_buffer_size(handle, [size])`
 
 > method form `handle:recv_buffer_size(size)`
+
+Gets or sets the size of the receive buffer that the operating system uses for
+the socket.
+
+If `size` is omitted, it will return the current receive buffer size, otherwise
+it will use `size` to set the new receive buffer size.
+
+This function works for TCP, pipe and UDP handles on Unix and for TCP and UDP
+handles on Windows.
+
+**Note: Linux will set double the size and return double the size of the
+original set value.
 
 ### `uv.fileno(handle)`
 
 > method form `handle:fileno()`
+
+Gets the platform dependent file descriptor equivalent.
+
+The following handles are supported: TCP, pipes, TTY, UDP and poll. Passing any
+other handle type will fail with UV_EINVAL.
+
+If a handle doesn’t have an attached file descriptor yet or the handle itself
+has been closed, this function will return UV_EBADF.
+
+**Warning: Be very careful when using this function. libuv assumes it’s in
+control of the file descriptor so any change to it may lead to malfunction.
+
+## Reference counting
+
+[reference counting]: #reference-counting
+
+The libuv event loop (if run in the default mode) will run until there are no
+active and referenced handles left. The user can force the loop to exit early by
+unreferencing handles which are active, for example by calling `uv.unref()`
+after calling `uv.timer_start()`.
+
+A handle can be referenced or unreferenced, the refcounting scheme doesn’t use a
+counter, so both operations are idempotent.
+
+All handles are referenced when active by default, see `uv.is_active()` for a
+more detailed explanation on what being active involves.
 
 ## `uv_timer_t` — Timer handle
 
@@ -273,10 +375,10 @@ Stop the timer, and if it is repeating restart it using the repeat value as the 
 
 Set the repeat value in milliseconds.
 
-> **Note**: If the repeat value is set from a timer callback it does not
-  immediately take effect. If the timer was non-repeating before, it will
-  have been stopped. If it was repeating, then the old repeat value will
-  have been used to schedule the next timeout.
+**Note**: If the repeat value is set from a timer callback it does not
+immediately take effect. If the timer was non-repeating before, it will   have
+been stopped. If it was repeating, then the old repeat value will   have been
+used to schedule the next timeout.
 
 ### `uv.timer_get_repeat(timer) -> repeat`
 
