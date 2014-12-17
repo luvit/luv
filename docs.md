@@ -393,37 +393,139 @@ Get the timer repeat value.
 
 [`uv_prepare_t`]: #uv_prepare_t--prepare-handle
 
-**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/prepare.html)
-using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L82-84)
-and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L317-L321)
-from [prepare.c](https://github.com/luvit/luv/blob/master/src/prepare.c)
+Prepare handles will run the given callback once per loop iteration, right before polling for i/o.
+
+```lua
+local prepare = uv.new_prepare()
+prepare:start(function()
+  print("Before I/O polling")
+end)
+```
+
+### `uv.new_prepare() -> prepare`
+
+Creates and initializes a new `uv_prepare_t`. Returns the lua userdata wrapping
+it.
+
+### `uv.prepare_start(prepare, callback)`
+
+> method form `prepare:start(callback)`
+
+Start the handle with the given callback.
+
+### `uv.prepare_stop(prepare)`
+
+> method form `prepare:stop()`
+
+Stop the handle, the callback will no longer be called.
 
 ## `uv_check_t` — Check handle
 
 [`uv_check_t`]: #uv_check_t--check-handle
 
-**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/check.html)
-using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L87-89)
-and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L259-263)
-from [check.c](https://github.com/luvit/luv/blob/master/src/check.c)
+Check handles will run the given callback once per loop iteration, right after
+polling for i/o.
+
+```lua
+local check = uv.new_check()
+check:start(function()
+  print("After I/O polling")
+end)
+```
+
+### `uv.new_check() -> check`
+
+Creates and initializes a new `uv_check_t`. Returns the lua userdata wrapping
+it.
+
+### `uv.check_start(check, callback)`
+
+> method form `check:start(callback)`
+
+Start the handle with the given callback.
+
+### `uv.check_stop(check)`
+
+> method form `check:stop()`
+
+Stop the handle, the callback will no longer be called.
 
 ## `uv_idle_t` — Idle handle
 
 [`uv_idle_t`]: #uv_idle_t--idle-handle
 
-**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/idle.html)
-using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L92-94)
-and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L279-283)
-from [idle.c](https://github.com/luvit/luv/blob/master/src/idle.c)
+Idle handles will run the given callback once per loop iteration, right before
+the [`uv_prepare_t`][] handles.
+
+**Note**: The notable difference with prepare handles is that when there are
+active idle handles, the loop will perform a zero timeout poll instead of
+blocking for i/o.
+
+**Warning**: Despite the name, idle handles will get their callbacks called on
+every loop iteration, not when the loop is actually “idle”.
+
+```lua
+local idle = uv.new_idle()
+idle:start(function()
+  print("Before I/O polling, no blocking")
+end)
+```
+### `uv.new_idle() -> idle`
+
+Creates and initializes a new `uv_idle_t`. Returns the lua userdata wrapping
+it.
+
+### `uv.idle_start(idle, callback)`
+
+> method form `idle:start(callback)`
+
+Start the handle with the given callback.
+
+### `uv.idle_stop(check)`
+
+> method form `idle:stop()`
+
+Stop the handle, the callback will no longer be called.
 
 ## `uv_async_t` — Async handle
 
 [`uv_async_t`]: #uv_async_t--async-handle
 
-**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/async.html)
-using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L97-98)
-and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L253-257)
-from [async.c](https://github.com/luvit/luv/blob/master/src/async.c)
+Async handles allow the user to “wakeup” the event loop and get a callback
+called from another thread.
+
+```lua
+local async
+async = uv.new_async(function()
+  print("async operation ran")
+  async:close()
+end)
+
+async:send()
+```
+
+### `uv.new_async(callback) -> async`
+
+Creates and initializes a new `uv_async_t`. Returns the lua userdata wrapping
+it. A NULL callback is allowed.
+
+**Note**: Unlike other handle initialization functions, it immediately starts
+the handle.
+
+### `uv.async_send(async)`
+
+> method form `async:send()`
+
+Wakeup the event loop and call the async handle’s callback.
+
+**Note**: It’s safe to call this function from any thread. The callback will be
+called on the loop thread.
+
+**Warning**: libuv will coalesce calls to `uv.async_send(async)`, that is, not
+every call to it will yield an execution of the callback, the only guarantee is
+that it will be called at least once. Thus, calling this function may not
+wakeup the event loop if it was already called previously within a short period
+of time.
 
 ## `uv_poll_t` — Poll handle
 
@@ -438,10 +540,60 @@ from [poll.c](https://github.com/luvit/luv/blob/master/src/poll.c)
 
 [`uv_signal_t`]: #uv_signal_t--signal-handle
 
-**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/signal.html)
-using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L106-108)
-and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L373-L377)
-from [signal.c](https://github.com/luvit/luv/blob/master/src/signal.c)
+Signal handles implement Unix style signal handling on a per-event loop bases.
+
+Reception of some signals is emulated on Windows:
+* SIGINT is normally delivered when the user presses CTRL+C. However, like on
+Unix, it is not generated when terminal raw mode is enabled.
+* SIGBREAK is delivered when the user pressed CTRL + BREAK.
+* SIGHUP is generated when the user closes the console window. On SIGHUP the
+program is given approximately 10 seconds to perform cleanup. After that
+Windows will unconditionally terminate it.
+* SIGWINCH is raised whenever libuv detects that the console has been resized.
+SIGWINCH is emulated by libuv when the program uses a uv_tty_t handle to write
+to the console. SIGWINCH may not always be delivered in a timely manner; libuv
+will only detect size changes when the cursor is being moved. When a readable
+[`uv_tty_t`][] handle is used in raw mode, resizing the console buffer will
+also trigger a SIGWINCH signal.
+
+Watchers for other signals can be successfully created, but these signals are
+never received. These signals are: SIGILL, SIGABRT, SIGFPE, SIGSEGV, SIGTERM
+and SIGKILL.
+
+Calls to raise() or abort() to programmatically raise a signal are not detected
+by libuv; these will not trigger a signal watcher.
+
+**Note**: On Linux SIGRT0 and SIGRT1 (signals 32 and 33) are used by the NPTL
+pthreads library to manage threads. Installing watchers for those signals will
+lead to unpredictable behavior and is strongly discouraged. Future versions of
+libuv may simply reject them.
+
+```lua
+-- Create a new signal handler
+local sigint = uv.new_signal()
+-- Define a handler function
+uv.signal_start(sigint, "sigint", function(signal)
+print("got " .. signal .. ", shutting down")
+os.exit(1)
+end)
+```
+
+### `uv.new_signal() -> signal`
+
+Creates and initializes a new `uv_signal_t`. Returns the lua userdata wrapping
+it.
+
+### `uv.signal_start(signal, signum, callback)`
+
+> method form `signal:start(signum, callback)`
+
+Start the handle with the given callback, watching for the given signal.
+
+### `uv.signal_stop(signal)`
+
+> method form `signal:stop()`
+
+Stop the handle, the callback will no longer be called.
 
 ## `uv_process_t` — Process handle
 
@@ -682,10 +834,82 @@ end)
 
 [`uv_pipe_t`]: #uv_pipe_t--pipe-handle
 
-**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/pipe.html)
-using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L142-L149)
-and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L300-L309)
-from [pipe.c](https://github.com/luvit/luv/blob/master/src/pipe.c)
+Pipe handles provide an abstraction over local domain sockets on Unix and named
+pipes on Windows.
+
+```lua
+local pipe = uv.new_pipe(false)
+
+pipe:bind('/tmp/sock.test')
+
+pipe:listen(128, function()
+  local client = uv.new_pipe(false)
+  pipe:accept(client)
+  client:write("hello!\n")
+  client:close()
+end)
+```
+
+### `uv.new_pipe(ipc) -> pipe`
+
+Creates and initializes a new `uv_pipe_t`. Returns the lua userdata wrapping
+it. The `ipc` argument is a boolean to indicate if this pipe will be used for
+handle passing between processes.
+
+### `uv.pipe_open(file) -> pipe`
+
+Open an existing file descriptor or [`uv_handle_t`][] as a pipe.
+
+**Note**: The user is responsible for setting the file descriptor in
+non-blocking mode.
+
+### `uv.pipe_bind(pipe, name)`
+
+> (method form `pipe:bind(name)`)
+
+Bind the pipe to a file path (Unix) or a name (Windows).
+
+**Note**: Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes,
+typically between 92 and 108 bytes.
+
+### `uv.pipe_connect(pipe, name, callback)`
+
+> (method form `pipe:connect(name, callback)`)
+
+Connect to the Unix domain socket or the named pipe.
+
+**Note**: Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes,
+typically between 92 and 108 bytes.
+
+### `uv.pipe_getsockname(pipe)`
+
+> (method form `pipe:getsockname()`)
+
+Returns the name of the Unix domain socket or the named pipe.
+
+### `uv.pipe_pending_instances(pipe, count)`
+
+> (method form `pipe:pending_instances(count)`)
+
+Set the number of pending pipe instance handles when the pipe server is waiting for connections.
+
+**Note**: This setting applies to Windows only.
+
+### `uv.pipe_pending_count(pipe)`
+
+> (method form `pipe:pending_count()`)
+
+Returns the pending pipe count for the named pipe.
+
+### `uv.pipe_pending_type(pipe)`
+
+> (method form `pipe:pending_type()`)
+
+Used to receive handles over IPC pipes.
+
+First - call [`uv.pipe_pending_count`][], if it’s > 0 then initialize a handle
+of the given type, returned by [`uv.pipe_pending_type`][] and call
+[`uv.accept(pipe, handle)`][].
 
 ## `uv_tty_t` — TTY handle
 
