@@ -539,10 +539,60 @@ from [poll.c](https://github.com/luvit/luv/blob/master/src/poll.c)
 
 [`uv_signal_t`]: #uv_signal_t--signal-handle
 
-**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/signal.html)
-using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L106-108)
-and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L373-L377)
-from [signal.c](https://github.com/luvit/luv/blob/master/src/signal.c)
+Signal handles implement Unix style signal handling on a per-event loop bases.
+
+Reception of some signals is emulated on Windows:
+* SIGINT is normally delivered when the user presses CTRL+C. However, like on
+Unix, it is not generated when terminal raw mode is enabled.
+* SIGBREAK is delivered when the user pressed CTRL + BREAK.
+* SIGHUP is generated when the user closes the console window. On SIGHUP the
+program is given approximately 10 seconds to perform cleanup. After that
+Windows will unconditionally terminate it.
+* SIGWINCH is raised whenever libuv detects that the console has been resized.
+SIGWINCH is emulated by libuv when the program uses a uv_tty_t handle to write
+to the console. SIGWINCH may not always be delivered in a timely manner; libuv
+will only detect size changes when the cursor is being moved. When a readable
+[`uv_tty_t`][] handle is used in raw mode, resizing the console buffer will
+also trigger a SIGWINCH signal.
+
+Watchers for other signals can be successfully created, but these signals are
+never received. These signals are: SIGILL, SIGABRT, SIGFPE, SIGSEGV, SIGTERM
+and SIGKILL.
+
+Calls to raise() or abort() to programmatically raise a signal are not detected
+by libuv; these will not trigger a signal watcher.
+
+**Note**: On Linux SIGRT0 and SIGRT1 (signals 32 and 33) are used by the NPTL
+pthreads library to manage threads. Installing watchers for those signals will
+lead to unpredictable behavior and is strongly discouraged. Future versions of
+libuv may simply reject them.
+
+```lua
+-- Create a new signal handler
+local sigint = uv.new_signal()
+-- Define a handler function
+uv.signal_start(sigint, "sigint", function(signal)
+print("got " .. signal .. ", shutting down")
+os.exit(1)
+end)
+```
+
+### `uv.new_signal() -> signal`
+
+Creates and initializes a new `uv_signal_t`. Returns the lua userdata wrapping
+it.
+
+### `uv.signal_start(signal, signum, callback)`
+
+> method form `signal:start(signum, callback)`
+
+Start the handle with the given callback, watching for the given signal.
+
+### `uv.signal_stop(signal)`
+
+> method form `signal:stop()`
+
+Stop the handle, the callback will no longer be called.
 
 ## `uv_process_t` — Process handle
 
@@ -783,10 +833,82 @@ end)
 
 [`uv_pipe_t`]: #uv_pipe_t--pipe-handle
 
-**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/pipe.html)
-using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L142-L149)
-and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L300-L309)
-from [pipe.c](https://github.com/luvit/luv/blob/master/src/pipe.c)
+Pipe handles provide an abstraction over local domain sockets on Unix and named
+pipes on Windows.
+
+```lua
+local pipe_listener = uv.new_pipe(false)
+
+pipe_listener:bind('/tmp/sock.test')
+
+pipe_listener:listen(128, function()
+  local client = uv.new_pipe(false)
+  pipe_listener:accept(client)
+  client:write("hello!\n")
+  client:close()
+end)
+```
+
+### `uv.new_pipe(ipc) -> pipe`
+
+Creates and initializes a new `uv_pipe_t`. Returns the lua userdata wrapping
+it. The `ipc` argument is a boolean to indicate if this pipe will be used for
+handle passing between processes.
+
+### `uv.pipe_open(file) -> pipe`
+
+Open an existing file descriptor or [`uv_handle_t`][] as a pipe.
+
+**Note**: The user is responsible for setting the file descriptor in
+non-blocking mode.
+
+### `uv.pipe_bind(pipe, name)`
+
+> (method form `pipe:bind(name)`)
+
+Bind the pipe to a file path (Unix) or a name (Windows).
+
+**Note**: Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes,
+typically between 92 and 108 bytes.
+
+### `uv.pipe_connect(pipe, name, callback)`
+
+> (method form `pipe:connect(name, callback)`)
+
+Connect to the Unix domain socket or the named pipe.
+
+**Note**: Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes,
+typically between 92 and 108 bytes.
+
+### `uv.pipe_getsockname(pipe)`
+
+> (method form `pipe:getsockname()`)
+
+Returns the name of the Unix domain socket or the named pipe.
+
+### `uv.pipe_pending_instances(pipe, count)`
+
+> (method form `pipe:pending_instances(count)`)
+
+Set the number of pending pipe instance handles when the pipe server is waiting for connections.
+
+**Note**: This setting applies to Windows only.
+
+### `uv.pipe_pending_count(pipe)`
+
+> (method form `pipe:pending_count()`)
+
+Returns the pending pipe count for the named pipe.
+
+### `uv.pipe_pending_type(pipe)`
+
+> (method form `pipe:pending_type()`)
+
+Used to receive handles over IPC pipes.
+
+First - call [`uv.pipe_pending_count`][], if it’s > 0 then initialize a handle
+of the given type, returned by [`uv.pipe_pending_type`][] and call
+[`uv.accept(pipe, handle)`][].
 
 ## `uv_tty_t` — TTY handle
 
