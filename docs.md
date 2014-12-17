@@ -393,37 +393,138 @@ Get the timer repeat value.
 
 [`uv_prepare_t`]: #uv_prepare_t--prepare-handle
 
-**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/prepare.html)
-using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L82-84)
-and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L317-L321)
-from [prepare.c](https://github.com/luvit/luv/blob/master/src/prepare.c)
+Prepare handles will run the given callback once per loop iteration, right before polling for i/o.
+
+```lua
+local before_loop = uv.new_prepare()
+before_loop.start(function()
+  print("Before I/O polling")
+end)
+```
+
+### `uv.new_prepare() -> prepare`
+
+Creates and initializes a new `uv_prepare_t`. Returns the lua userdata wrapping
+it.
+
+### `uv.prepare_start(prepare, callback)`
+
+> method form `prepare:start(callback)`
+
+Start the handle with the given callback.
+
+### `uv.prepare_stop(prepare)`
+
+> method form `prepare:stop()`
+
+Stop the handle, the callback will no longer be called.
 
 ## `uv_check_t` — Check handle
 
 [`uv_check_t`]: #uv_check_t--check-handle
 
-**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/check.html)
-using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L87-89)
-and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L259-263)
-from [check.c](https://github.com/luvit/luv/blob/master/src/check.c)
+Check handles will run the given callback once per loop iteration, right after polling for i/o.
+
+```lua
+local after_loop = uv.new_check()
+after_loop.start(function()
+  print("After I/O polling")
+end)
+```
+
+### `uv.new_check() -> check`
+
+Creates and initializes a new `uv_check_t`. Returns the lua userdata wrapping
+it.
+
+### `uv.check_start(check, callback)`
+
+> method form `check:start(callback)`
+
+Start the handle with the given callback.
+
+### `uv.check_stop(check)`
+
+> method form `check:stop()`
+
+Stop the handle, the callback will no longer be called.
 
 ## `uv_idle_t` — Idle handle
 
 [`uv_idle_t`]: #uv_idle_t--idle-handle
 
-**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/idle.html)
-using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L92-94)
-and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L279-283)
-from [idle.c](https://github.com/luvit/luv/blob/master/src/idle.c)
+Idle handles will run the given callback once per loop iteration, right before
+the [`uv_prepare_t`][] handles.
+
+**Note**: The notable difference with prepare handles is that when there are
+active idle handles, the loop will perform a zero timeout poll instead of
+blocking for i/o.
+
+**Warning**: Despite the name, idle handles will get their callbacks called on
+every loop iteration, not when the loop is actually “idle”.
+
+```lua
+local before_loop_and_idle = uv.new_idle()
+before_loop_and_idle.start(function()
+  print("Before I/O polling")
+end)
+```
+### `uv.new_idle() -> idle`
+
+Creates and initializes a new `uv_idle_t`. Returns the lua userdata wrapping
+it.
+
+### `uv.idle_start(idle, callback)`
+
+> method form `idle:start(callback)`
+
+Start the handle with the given callback.
+
+### `uv.idle_stop(check)`
+
+> method form `idle:stop()`
+
+Stop the handle, the callback will no longer be called.
 
 ## `uv_async_t` — Async handle
 
 [`uv_async_t`]: #uv_async_t--async-handle
 
-**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/async.html)
-using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L97-98)
-and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L253-257)
-from [async.c](https://github.com/luvit/luv/blob/master/src/async.c)
+Async handles allow the user to “wakeup” the event loop and get a callback
+called from another thread.
+
+```lua
+local async
+async = uv.new_async(function()
+  print("async operation ran")
+  async:close()
+end)
+
+async:send()
+```
+
+### `uv.new_async(callback) -> async`
+
+Creates and initializes a new `uv_async_t`. Returns the lua userdata wrapping
+it. A NULL callback is allowed.
+
+**Note**: Unlike other handle initialization functions, it immediately starts
+the handle.
+
+### `uv.async_send(async)`
+
+> method form `async:send()`
+
+Wakeup the event loop and call the async handle’s callback.
+
+**Note**: It’s safe to call this function from any thread. The callback will be
+called on the loop thread.
+
+**Warning**: libuv will coalesce calls to `uv.async_send(async)`, that is, not
+every call to it will yield an execution of the callback, the only guarantee is
+that it will be called at least once. Thus, calling this function may not
+wakeup the event loop if it was already called previously within a short period
+of time.
 
 ## `uv_poll_t` — Poll handle
 
