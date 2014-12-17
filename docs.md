@@ -423,11 +423,12 @@ Stop the handle, the callback will no longer be called.
 
 [`uv_check_t`]: #uv_check_t--check-handle
 
-Check handles will run the given callback once per loop iteration, right after polling for i/o.
+Check handles will run the given callback once per loop iteration, right after
+polling for i/o.
 
 ```lua
-local after_loop = uv.new_check()
-after_loop:start(function()
+local check = uv.new_check()
+check:start(function()
   print("After I/O polling")
 end)
 ```
@@ -464,9 +465,9 @@ blocking for i/o.
 every loop iteration, not when the loop is actually “idle”.
 
 ```lua
-local before_loop_and_idle = uv.new_idle()
-before_loop_and_idle:start(function()
-  print("Before I/O polling")
+local idle = uv.new_idle()
+idle:start(function()
+  print("Before I/O polling, no blocking")
 end)
 ```
 ### `uv.new_idle() -> idle`
@@ -837,13 +838,13 @@ Pipe handles provide an abstraction over local domain sockets on Unix and named
 pipes on Windows.
 
 ```lua
-local pipe_listener = uv.new_pipe(false)
+local pipe = uv.new_pipe(false)
 
-pipe_listener:bind('/tmp/sock.test')
+pipe:bind('/tmp/sock.test')
 
-pipe_listener:listen(128, function()
+pipe:listen(128, function()
   local client = uv.new_pipe(false)
-  pipe_listener:accept(client)
+  pipe:accept(client)
   client:write("hello!\n")
   client:close()
 end)
