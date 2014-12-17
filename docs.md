@@ -396,8 +396,8 @@ Get the timer repeat value.
 Prepare handles will run the given callback once per loop iteration, right before polling for i/o.
 
 ```lua
-local before_loop = uv.new_prepare()
-before_loop:start(function()
+local prepare = uv.new_prepare()
+prepare:start(function()
   print("Before I/O polling")
 end)
 ```
