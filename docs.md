@@ -397,7 +397,7 @@ Prepare handles will run the given callback once per loop iteration, right befor
 
 ```lua
 local before_loop = uv.new_prepare()
-before_loop.start(function()
+before_loop:start(function()
   print("Before I/O polling")
 end)
 ```
@@ -427,7 +427,7 @@ Check handles will run the given callback once per loop iteration, right after p
 
 ```lua
 local after_loop = uv.new_check()
-after_loop.start(function()
+after_loop:start(function()
   print("After I/O polling")
 end)
 ```
@@ -465,7 +465,7 @@ every loop iteration, not when the loop is actually “idle”.
 
 ```lua
 local before_loop_and_idle = uv.new_idle()
-before_loop_and_idle.start(function()
+before_loop_and_idle:start(function()
   print("Before I/O polling")
 end)
 ```
