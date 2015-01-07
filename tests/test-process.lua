@@ -59,6 +59,15 @@ return require('lib/tap')(function (test)
     uv.process_kill(handle, "sigterm")
   end)
 
+  test("invalid command", function (print, p, expect, uv)
+    local handle, err
+    handle, err = uv.spawn("ksjdfksjdflkjsflksdf", {}, function(exit, code)
+      assert(false)
+    end)
+    assert(handle == nil)
+    assert(err)
+  end)
+
   test("process stdio", function (print, p, expect, uv)
     local stdin = uv.new_pipe(false)
     local stdout = uv.new_pipe(false)
