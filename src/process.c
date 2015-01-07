@@ -213,7 +213,10 @@ static int luv_spawn(lua_State* L) {
   ret = uv_spawn(luv_loop(L), handle, &options);
 
   luv_clean_options(&options);
-  if (ret < 0) return luv_error(L, ret);
+  if (ret < 0) {
+    uv_close(handle, NULL);
+    return luv_error(L, ret);
+  }
   lua_pushinteger(L, handle->pid);
   return 2;
 }
