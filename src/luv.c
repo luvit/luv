@@ -419,12 +419,12 @@ static void luv_handle_init(lua_State* L) {
   lua_setfield(L, LUA_REGISTRYINDEX, "uv_stream");
 }
 
-static lua_State* luv_state(uv_loop_t* loop) {
+lua_State* luv_state(uv_loop_t* loop) {
   return loop->data;
 }
 
 // TODO: find out if storing this somehow in an upvalue is faster
-static uv_loop_t* luv_loop(lua_State* L) {
+uv_loop_t* luv_loop(lua_State* L) {
   uv_loop_t* loop;
   lua_pushstring(L, "uv_loop");
   lua_rawget(L, LUA_REGISTRYINDEX);
