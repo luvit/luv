@@ -59,10 +59,11 @@
 
 // There is a 1-1 relation between a lua_State and a uv_loop_t
 // These helpers will give you one if you have the other
+// These are exposed for extensions built with luv
 // This allows luv to be used in multithreaded applications.
-static lua_State* luv_state(uv_loop_t* loop);
+lua_State* luv_state(uv_loop_t* loop);
 // All libuv callbacks will lua_call directly from this root-per-thread state
-static uv_loop_t* luv_loop(lua_State* L);
+uv_loop_t* luv_loop(lua_State* L);
 
 // This is the main hook to load the library.
 // This can be called multiple times in a process as long
