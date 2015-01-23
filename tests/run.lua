@@ -1,6 +1,7 @@
 -- Run this from the parent directory as
 --
 --     luajit tests/run.lua
+--     lua5.1 tests/run.lua
 --
 
 local tap = require("lib/tap")
