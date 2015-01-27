@@ -20,7 +20,7 @@ return require('lib/tap')(function (test)
   end)
 
   test("Get only ipv6 tcp adresses for luvit.io", function (print, p, expect, uv)
-    if uv.constants.platform == "windows" then return end
+    if uv.platform.os == "Windows" then return end
     assert(uv.getaddrinfo("luvit.io", nil, {
       socktype = "stream",
       family = "inet6",

@@ -12,7 +12,7 @@ end)
 return require('lib/tap')(function (test)
 
   test("Catch SIGINT", function (print, p, expect, uv)
-    if uv.constants.platform == "windows" then return end
+    if uv.platform.os == "Windows" then return end
 
     local child, pid
     local input = uv.new_pipe(false)

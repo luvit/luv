@@ -302,22 +302,6 @@ static int luv_constants(lua_State* L) {
   lua_setfield(L, -2, "SIGSYS");
 #endif
 
-  // PLATFORM
-#if defined(linux)
-# define PLATFORM "linux"
-#elif defined(BSD)
-# define PLATFORM "bsd"
-#elif defined(__APPLE__)
-# define PLATFORM "darwin"
-#elif defined(_WIN32)
-# define PLATFORM "windows"
-#else
-# define PLATFORM "unknown"
-#endif
-  lua_pushliteral(L, PLATFORM);
-  lua_setfield(L, -2, "platform");
-#undef PLATFORM
-
   return 1;
 }
 
