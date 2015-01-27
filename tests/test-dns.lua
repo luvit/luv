@@ -19,18 +19,17 @@ return require('lib/tap')(function (test)
     end)))
   end)
 
-  if require('tests.platform').windows then
-    test("Get only ipv6 tcp adresses for luvit.io", function (print, p, expect, uv)
-      assert(uv.getaddrinfo("luvit.io", nil, {
-        socktype = "stream",
-        family = "inet6",
-      }, expect(function (err, res)
-        assert(not err, err)
-        p(res, #res)
-        assert(#res == 1)
-      end)))
-    end)
-  end
+  test("Get only ipv6 tcp adresses for luvit.io", function (print, p, expect, uv)
+    if uv.constants.platform == "windows" then return end
+    assert(uv.getaddrinfo("luvit.io", nil, {
+      socktype = "stream",
+      family = "inet6",
+    }, expect(function (err, res)
+      assert(not err, err)
+      p(res, #res)
+      assert(#res == 1)
+    end)))
+  end)
 
   test("Get ipv4 and ipv6 tcp adresses for luvit.io", function (print, p, expect, uv)
     assert(uv.getaddrinfo("luvit.io", nil, {

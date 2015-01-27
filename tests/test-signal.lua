@@ -11,9 +11,9 @@ end)
 
 return require('lib/tap')(function (test)
 
-  if require('tests.platform').windows then return end
-
   test("Catch SIGINT", function (print, p, expect, uv)
+    if uv.constants.platform == "windows" then return end
+
     local child, pid
     local input = uv.new_pipe(false)
     child, pid = assert(uv.spawn(uv.exepath(), {

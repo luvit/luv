@@ -29,9 +29,8 @@ return require('lib/tap')(function (test)
 
   end)
 
-  if require('tests.platform').windows then return end
-
   test("spawn and kill by pid", function (print, p, expect, uv)
+    if uv.constants.platform == "windows" then return end
     local handle, pid
     handle, pid = uv.spawn("sleep", {
       args = {1},
@@ -46,6 +45,7 @@ return require('lib/tap')(function (test)
   end)
 
   test("spawn and kill by handle", function (print, p, expect, uv)
+    if uv.constants.platform == "windows" then return end
     local handle, pid
     handle, pid = uv.spawn("sleep", {
       args = {1},
@@ -60,6 +60,7 @@ return require('lib/tap')(function (test)
   end)
 
   test("invalid command", function (print, p, expect, uv)
+    if uv.constants.platform == "windows" then return end
     local handle, err
     handle, err = uv.spawn("ksjdfksjdflkjsflksdf", {}, function(exit, code)
       assert(false)
@@ -69,6 +70,7 @@ return require('lib/tap')(function (test)
   end)
 
   test("process stdio", function (print, p, expect, uv)
+    if uv.constants.platform == "windows" then return end
     local stdin = uv.new_pipe(false)
     local stdout = uv.new_pipe(false)
 
