@@ -59,13 +59,13 @@ static void luv_push_stats_table(lua_State* L, const uv_stat_t* s) {
   lua_pushinteger(L, s->st_gen);
   lua_setfield(L, -2, "gen");
   luv_push_timespec_table(L, &s->st_atim);
-  lua_setfield(L, -2, "atim");
+  lua_setfield(L, -2, "atime");
   luv_push_timespec_table(L, &s->st_mtim);
-  lua_setfield(L, -2, "mtim");
+  lua_setfield(L, -2, "mtime");
   luv_push_timespec_table(L, &s->st_ctim);
-  lua_setfield(L, -2, "ctim");
+  lua_setfield(L, -2, "ctime");
   luv_push_timespec_table(L, &s->st_birthtim);
-  lua_setfield(L, -2, "birthtim");
+  lua_setfield(L, -2, "birthtime");
   if (S_ISREG(s->st_mode)) {
     type = "file";
   }
