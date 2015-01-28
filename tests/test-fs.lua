@@ -29,6 +29,15 @@ return require('lib/tap')(function (test)
     end))
   end)
 
+  test("fs.write", function (print, p, expect, uv)
+    local path = "_test_"
+    local fd = assert(uv.fs_open(path, "w", 438))
+    uv.fs_write(fd, "Hello World\n", -1)
+    uv.fs_write(fd, {"with\n", "more\n", "lines\n"}, -1)
+    uv.fs_close(fd)
+    uv.fs_unlink(path)
+  end)
+
   test("fs.stat sync", function (print, p, expect, uv)
     local stat = assert(uv.fs_stat("README.md"))
     assert(stat.size)

@@ -344,13 +344,27 @@ static int luv_fs_write(lua_State* L) {
   int64_t offset;
   int ref;
   uv_fs_t* req;
-  buf.base = (char*)luaL_checklstring(L, 2, &buf.len);
+  size_t count;
+  uv_buf_t *bufs = NULL;
+
+  if (lua_istable(L, 2)) {
+    bufs = luv_prep_bufs(L, 2, &count);
+  }
+  else if (lua_isstring(L, 2)) {
+    buf.base = (char*) luaL_checklstring(L, 2, &buf.len);
+    count = 1;
+  }
+  else {
+    return luaL_argerror(L, 2, "data must be string or table of strings");
+  }
+
   offset = luaL_checkinteger(L, 3);
   ref = luv_check_continuation(L, 4);
   req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
   req->ptr = buf.base;
-  FS_CALL(write, req, file, &buf, 1, offset);
+  ((luv_req_t*)req->data)->data = bufs;
+  FS_CALL(write, req, file, bufs ? bufs : &buf, count, offset);
 }
 
 static int luv_fs_mkdir(lua_State* L) {
