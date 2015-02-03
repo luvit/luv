@@ -1,13 +1,13 @@
 
 all: luv
 
-libuv/include:
-	git submodule update --init libuv
+deps/libuv/include:
+	git submodule update --init deps/libuv
 
-luajit/src:
-	git submodule update --init luajit
+deps/luajit/src:
+	git submodule update --init deps/luajit
 
-build/Makefile: libuv/include luajit/src
+build/Makefile: deps/libuv/include deps/luajit/src
 	cmake -H. -Bbuild
 
 luv: build/Makefile

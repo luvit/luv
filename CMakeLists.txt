@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 2.8)
 
 project (luv)
 
-include(uv.cmake)
-include(luajit.cmake)
+include(deps/uv.cmake)
+include(deps/luajit.cmake)
 
-include_directories(luajit/src)
+include_directories(deps/luajit/src)
 
 add_library (luv MODULE src/luv.c)
 
