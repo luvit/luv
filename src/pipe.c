@@ -75,6 +75,16 @@ static int luv_pipe_getsockname(lua_State* L) {
   return 1;
 }
 
+static int luv_pipe_getpeername(lua_State* L) {
+  uv_pipe_t* handle = luv_check_pipe(L, 1);
+  size_t len = 2*PATH_MAX;
+  char buf[2*PATH_MAX];
+  int ret = uv_pipe_getpeername(handle, buf, &len);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushlstring(L, buf, len);
+  return 1;
+}
+
 static int luv_pipe_pending_instances(lua_State* L) {
   uv_pipe_t* handle = luv_check_pipe(L, 1);
   int count = luaL_checkinteger(L, 2);

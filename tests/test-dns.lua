@@ -8,6 +8,12 @@ return require('lib/tap')(function (test)
     end)))
   end)
 
+  test("Get all local http addresses sync", function (print, p, expect, uv)
+    local res = assert(uv.getaddrinfo(nil, "http"))
+    p(res, #res)
+    assert(res[1].port == 80)
+  end)
+
   test("Get only ipv4 tcp adresses for luvit.io", function (print, p, expect, uv)
     assert(uv.getaddrinfo("luvit.io", nil, {
       socktype = "stream",
@@ -59,6 +65,15 @@ return require('lib/tap')(function (test)
       assert(hostname)
       assert(service)
     end)))
+  end)
+
+  test("Lookup local ipv4 address sync", function (print, p, expect, uv)
+    local hostname, service = assert(uv.getnameinfo({
+      family = "inet",
+    }))
+    p{hostname=hostname,service=service}
+    assert(hostname)
+    assert(service)
   end)
 
   test("Lookup local 127.0.0.1 ipv4 address", function (print, p, expect, uv)

@@ -22,12 +22,47 @@
 #include <netdb.h>
 #endif
 
+static void luv_pushaddrinfo(lua_State* L, struct addrinfo* res) {
+  char ip[INET6_ADDRSTRLEN];
+  int port, i = 0;
+  const char *addr;
+  struct addrinfo* curr = res;
+  lua_newtable(L);
+  for (curr = res; curr; curr = curr->ai_next) {
+    if (curr->ai_family == AF_INET || curr->ai_family == AF_INET6) {
+      lua_newtable(L);
+      if (curr->ai_family == AF_INET) {
+        addr = (char*) &((struct sockaddr_in*) curr->ai_addr)->sin_addr;
+        port = ((struct sockaddr_in*) curr->ai_addr)->sin_port;
+      } else {
+        addr = (char*) &((struct sockaddr_in6*) curr->ai_addr)->sin6_addr;
+        port = ((struct sockaddr_in6*) curr->ai_addr)->sin6_port;
+      }
+      lua_pushstring(L, luv_af_num_to_string(curr->ai_family));
+      lua_setfield(L, -2, "family");
+      uv_inet_ntop(curr->ai_family, addr, ip, INET6_ADDRSTRLEN);
+      lua_pushstring(L, ip);
+      lua_setfield(L, -2, "addr");
+      if (ntohs(port)) {
+        lua_pushinteger(L, ntohs(port));
+        lua_setfield(L, -2, "port");
+      }
+      lua_pushstring(L, luv_sock_num_to_string(curr->ai_socktype));
+      lua_setfield(L, -2, "socktype");
+      lua_pushstring(L, luv_af_num_to_string(curr->ai_protocol));
+      lua_setfield(L, -2, "protocol");
+      if (curr->ai_canonname) {
+        lua_pushstring(L, curr->ai_canonname);
+        lua_setfield(L, -2, "canonname");
+      }
+      lua_rawseti(L, -2, ++i);
+    }
+  }
+}
+
 static void luv_getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res) {
   lua_State* L = luv_state(req->loop);
-  struct addrinfo* curr = res;
-  char ip[INET6_ADDRSTRLEN];
-  const char *addr;
-  int port, nargs, i = 0;
+  int nargs;
 
   if (status < 0) {
     luv_status(L, status);
@@ -35,38 +70,8 @@ static void luv_getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinf
   }
   else {
     lua_pushnil(L);
-    lua_newtable(L);
+    luv_pushaddrinfo(L, res);
     nargs = 2;
-    for (curr = res; curr; curr = curr->ai_next) {
-      if (curr->ai_family == AF_INET || curr->ai_family == AF_INET6) {
-        lua_newtable(L);
-        if (curr->ai_family == AF_INET) {
-          addr = (char*) &((struct sockaddr_in*) curr->ai_addr)->sin_addr;
-          port = ((struct sockaddr_in*) curr->ai_addr)->sin_port;
-        } else {
-          addr = (char*) &((struct sockaddr_in6*) curr->ai_addr)->sin6_addr;
-          port = ((struct sockaddr_in6*) curr->ai_addr)->sin6_port;
-        }
-        lua_pushstring(L, luv_af_num_to_string(curr->ai_family));
-        lua_setfield(L, -2, "family");
-        uv_inet_ntop(curr->ai_family, addr, ip, INET6_ADDRSTRLEN);
-        lua_pushstring(L, ip);
-        lua_setfield(L, -2, "addr");
-        if (ntohs(port)) {
-          lua_pushinteger(L, ntohs(port));
-          lua_setfield(L, -2, "port");
-        }
-        lua_pushstring(L, luv_sock_num_to_string(curr->ai_socktype));
-        lua_setfield(L, -2, "socktype");
-        lua_pushstring(L, luv_af_num_to_string(curr->ai_protocol));
-        lua_setfield(L, -2, "protocol");
-        if (curr->ai_canonname) {
-          lua_pushstring(L, curr->ai_canonname);
-          lua_setfield(L, -2, "canonname");
-        }
-        lua_rawseti(L, -2, ++i);
-      }
-    }
   }
   luv_fulfill_req(L, req->data, nargs);
   luv_cleanup_req(L, req->data);
@@ -82,14 +87,13 @@ static int luv_getaddrinfo(lua_State* L) {
   struct addrinfo hints_s;
   struct addrinfo* hints = &hints_s;
   int ret, ref;
-  if (lua_isnil(L, 1)) node = NULL;
+  if (lua_isnoneornil(L, 1)) node = NULL;
   else node = luaL_checkstring(L, 1);
-  if (lua_isnil(L, 2)) service = NULL;
+  if (lua_isnoneornil(L, 2)) service = NULL;
   else service = luaL_checkstring(L, 2);
-  if (!lua_isnil(L, 3)) luaL_checktype(L, 3, LUA_TTABLE);
+  if (!lua_isnoneornil(L, 3)) luaL_checktype(L, 3, LUA_TTABLE);
   else hints = NULL;
-  luaL_checktype(L, 4, LUA_TFUNCTION);
-  ref = luv_check_continuation(L, 4);
+  ref = lua_isnoneornil(L, 4) ? LUA_NOREF : luv_check_continuation(L, 4);
   if (hints) {
     // Initialize the hints
     memset(hints, 0, sizeof(*hints));
@@ -181,10 +185,17 @@ static int luv_getaddrinfo(lua_State* L) {
   req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
 
-  ret = uv_getaddrinfo(luv_loop(L), req, luv_getaddrinfo_cb, node, service, hints);
+  ret = uv_getaddrinfo(luv_loop(L), req, ref == LUA_NOREF ? NULL : luv_getaddrinfo_cb, node, service, hints);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
+  }
+  if (ref == LUA_NOREF) {
+
+    lua_pop(L, 1);
+    luv_pushaddrinfo(L, req->addrinfo);
+    uv_freeaddrinfo(req->addrinfo);
+    luv_cleanup_req(L, req->data);
   }
   return 1;
 }
@@ -214,7 +225,7 @@ static int luv_getnameinfo(lua_State* L) {
   uv_getnameinfo_t* req;
   struct sockaddr_storage addr;
   const char* ip = NULL;
-  int flags = 0;
+  int flags = 0, sync;
   int ret, ref, port = 0;
 
   luaL_checktype(L, 1, LUA_TTABLE);
@@ -263,16 +274,22 @@ static int luv_getnameinfo(lua_State* L) {
   }
   lua_pop(L, 1);
 
-  luaL_checktype(L, 2, LUA_TFUNCTION);
-  ref = luv_check_continuation(L, 2);
+  ref = lua_isnoneornil(L, 2) ? LUA_NOREF : luv_check_continuation(L, 2);
 
   req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
 
-  ret = uv_getnameinfo(luv_loop(L), req, luv_getnameinfo_cb, (struct sockaddr*)&addr, flags);
+  ret = uv_getnameinfo(luv_loop(L), req, ref == LUA_NOREF ? NULL : luv_getnameinfo_cb, (struct sockaddr*)&addr, flags);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
+  }
+  if (ref == LUA_NOREF) {
+    lua_pop(L, 1);
+    lua_pushstring(L, req->host);
+    lua_pushstring(L, req->service);
+    luv_cleanup_req(L, req->data);
+    return 2;
   }
   return 1;
 }
