@@ -1,6 +1,6 @@
 [submodule "libuv"]
-	path = libuv
+	path = deps/libuv
 	url = https://github.com/libuv/libuv.git
 [submodule "luajit"]
-	path = luajit
+	path = deps/luajit
 	url = http://luajit.org/git/luajit-2.0.git
