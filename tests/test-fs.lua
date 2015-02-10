@@ -66,5 +66,17 @@ return require('lib/tap')(function (test)
     end)))
   end)
 
+  test("fs.scandir", function (print, p, expect, uv)
+    local req = uv.fs_scandir('.')
+    local function iter()
+      return uv.fs_scandir_next(req)
+    end
+    for entry in iter do
+      p(entry)
+      assert(entry.name)
+      assert(entry.type)
+    end
+  end)
+
 
 end)
