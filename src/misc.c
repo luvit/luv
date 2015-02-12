@@ -16,6 +16,9 @@
  */
 
 #include "luv.h"
+#ifdef _WIN32
+#include <process.h>
+#endif
 
 static int luv_guess_handle(lua_State* L) {
   uv_file file = luaL_checkint(L, 1);
@@ -250,3 +253,41 @@ static int luv_hrtime(lua_State* L) {
   lua_pushnumber(L, uv_hrtime());
   return 1;
 }
+
+static int luv_getpid(lua_State* L){
+  int pid = getpid();
+  lua_pushinteger(L, pid);
+  return 1;
+}
+
+#ifndef _WIN32
+static int luv_getuid(lua_State* L){
+  int uid = getuid();
+  lua_pushinteger(L, uid);
+  return 1;
+}
+
+static int luv_getgid(lua_State* L){
+  int gid = getgid();
+  lua_pushinteger(L, gid);
+  return 1;
+}
+
+static int luv_setuid(lua_State* L){
+  int uid = luaL_checkint(L, 1);
+  int r = setuid(uid);
+  if (-1 == r) {
+    luaL_error(L, "Error setting UID");
+  }
+  return 0;
+}
+
+static int luv_setgid(lua_State* L){
+  int gid = luaL_checkint(L, 1);
+  int r = setgid(gid);
+  if (-1 == r) {
+    luaL_error(L, "Error setting GID");
+  }
+  return 0;
+}
+#endif

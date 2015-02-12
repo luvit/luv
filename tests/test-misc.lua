@@ -72,4 +72,8 @@ return require('lib/tap')(function (test)
     p(time)
   end)
 
+  test("test_getpid", function (print, p, expect, uv)
+    assert(uv.getpid())
+  end)
+
 end)
