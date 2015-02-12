@@ -218,22 +218,29 @@ static const luaL_Reg luv_functions[] = {
   {"getnameinfo", luv_getnameinfo},
 
   // misc.c
-  {"guess_handle", luv_guess_handle},
-  {"version", luv_version},
-  {"version_string", luv_version_string},
-  {"get_process_title", luv_get_process_title},
-  {"set_process_title", luv_set_process_title},
-  {"resident_set_memory", luv_resident_set_memory},
-  {"uptime", luv_uptime},
-  {"getrusage", luv_getrusage},
+  {"chdir", luv_chdir},
   {"cpu_info", luv_cpu_info},
+  {"cwd", luv_cwd},
+  {"exepath", luv_exepath},
+  {"get_process_title", luv_get_process_title},
+  {"get_total_memory", luv_get_total_memory},
+  {"getpid", luv_getpid},
+#ifndef _WIN32
+  {"getuid", luv_getuid},
+  {"setuid", luv_setuid},
+  {"getgid", luv_getgid},
+  {"setgid", luv_setgid},
+#endif
+  {"getrusage", luv_getrusage},
+  {"guess_handle", luv_guess_handle},
+  {"hrtime", luv_hrtime},
   {"interface_addresses", luv_interface_addresses},
   {"loadavg", luv_loadavg},
-  {"exepath", luv_exepath},
-  {"cwd", luv_cwd},
-  {"chdir", luv_chdir},
-  {"get_total_memory", luv_get_total_memory},
-  {"hrtime", luv_hrtime},
+  {"resident_set_memory", luv_resident_set_memory},
+  {"set_process_title", luv_set_process_title},
+  {"uptime", luv_uptime},
+  {"version", luv_version},
+  {"version_string", luv_version_string},
 
   {NULL, NULL}
 };
