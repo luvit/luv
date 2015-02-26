@@ -92,6 +92,10 @@ if(WIN32)
     ${LIBUVDIR}/src/win/winsock.h
   )
 else()
+  add_definitions(
+    -D__EXTENSIONS__
+    -D_XOPEN_SOURCE=500
+  )
   include_directories(${LIBUVDIR}/src/unix)
   set(SOURCES ${SOURCES}
     ${LIBUVDIR}/include/uv-unix.h
