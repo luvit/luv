@@ -92,10 +92,6 @@ if(WIN32)
     ${LIBUVDIR}/src/win/winsock.h
   )
 else()
-  add_definitions(
-    -D__EXTENSIONS__
-    -D_XOPEN_SOURCE=500
-  )
   include_directories(${LIBUVDIR}/src/unix)
   set(SOURCES ${SOURCES}
     ${LIBUVDIR}/include/uv-unix.h
@@ -155,6 +151,17 @@ if("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
   )
 endif()
 
+## SunOS
+if("${CMAKE_SYSTEM_NAME}" MATCHES "SunOS")
+  add_definitions(
+    -D__EXTENSIONS__
+    -D_XOPEN_SOURCE=500
+  )
+  set(SOURCES ${SOURCES}
+    ${LIBUVDIR}/src/unix/sunos.c
+  )
+endif()
+
 ## Darwin
 if(APPLE)
   add_definitions(
@@ -192,6 +199,14 @@ if(WIN32)
     psapi.lib
     iphlpapi.lib
     advapi32.lib
+  )
+endif()
+
+if("${CMAKE_SYSTEM_NAME}" MATCHES "SunOS")
+  target_link_libraries(uv
+    kstat
+    socket
+    sendfile
   )
 endif()
 
