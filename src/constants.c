@@ -49,6 +49,10 @@ static int luv_constants(lua_State* L) {
   lua_pushinteger(L, O_EXCL);
   lua_setfield(L, -2, "O_EXCL");
 #endif
+#ifdef O_EXLOCK
+  lua_pushinteger(L, O_EXLOCK);
+  lua_setfield(L, -2, "O_EXLOCK");
+#endif
 #ifdef O_NOCTTY
   lua_pushinteger(L, O_NOCTTY);
   lua_setfield(L, -2, "O_NOCTTY");
