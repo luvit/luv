@@ -12,6 +12,11 @@ else(LUV_LUA_INCDIR)
   include_directories(deps/luajit/src)
 endif(LUV_LUA_INCDIR)
 
+if( NOT EXISTS "deps/libuv/src" )
+  message( SEND_ERROR "The git submodules are not available. Please run git submodule update --init")
+endif()
+
+
 add_library (luv MODULE src/luv.c)
 
 set_target_properties(luv PROPERTIES OUTPUT_NAME "luv")
