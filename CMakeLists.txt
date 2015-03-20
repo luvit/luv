@@ -13,7 +13,13 @@ else(LUV_LUA_INCDIR)
 endif(LUV_LUA_INCDIR)
 
 if( NOT EXISTS "deps/libuv/src" )
-  message( SEND_ERROR "The git submodules are not available. Please run git submodule update --init")
+  execute_process(COMMAND
+    git submodule update --init
+    WORKING_DIRECTORY PROJECT_SOURCE_DIR
+  )
+  if( NOT EXISTS "deps/libuv/src" )
+    message( SEND_ERROR "The git submodules are not available. Please run git submodule update --init")
+  endif()
 endif()
 
 
