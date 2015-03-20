@@ -3,9 +3,14 @@ cmake_minimum_required(VERSION 2.8)
 project (luv)
 
 include(deps/uv.cmake)
-include(deps/luajit.cmake)
 
-include_directories(deps/luajit/src)
+if (LUV_LUA_INCDIR)
+  include_directories(${LUV_LUA_INCDIR})
+  link_directories(${LUV_LUA_LIBDIR})
+else(LUV_LUA_INCDIR)
+  include(deps/luajit.cmake)
+  include_directories(deps/luajit/src)
+endif(LUV_LUA_INCDIR)
 
 add_library (luv MODULE src/luv.c)
 
@@ -31,3 +36,6 @@ else()
   target_link_libraries(luv uv)
 endif()
 
+if (LUV_INSTALL_PREFIX)
+  install(TARGETS luv DESTINATION "${LUV_INSTALL_PREFIX}/lib")
+endif(LUV_INSTALL_PREFIX)
