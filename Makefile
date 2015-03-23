@@ -26,9 +26,12 @@ reset:
 	  git clean -f -d && \
 	  git checkout .
 
-publish-src: reset
-	tar -czvf luv-src.tar.gz \
-	  --exclude 'luv-src.tar.gz' --exclude '.git*' --exclude build . && \
-	  github-release upload --user luvit --repo luv --tag ${LUV_TAG} \
-	  --file luv-src.tar.gz --name luv-src.tar.gz
+publish-luarocks: reset
+	rm -rf luv-${LUV_TAG}
+	mkdir -p luv-${LUV_TAG}/deps
+	cp -r src CMakeLists.txt LICENSE.txt README.md docs.md luv-${LUV_TAG}/
+	cp -r deps/libuv deps/uv.cmake luv-${LUV_TAG}/deps/
+	tar -czvf luv-${LUV_TAG}.tar.gz luv-${LUV_TAG}
+	github-release upload --user luvit --repo luv --tag ${LUV_TAG} \
+	  --file luv-${LUV_TAG}.tar.gz --name luv-${LUV_TAG}.tar.gz
 
