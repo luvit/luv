@@ -1,3 +1,4 @@
+LUV_TAG=$(shell git describe --tags)
 
 all: luv
 
@@ -19,4 +20,15 @@ clean:
 
 test: luv
 	build/luajit tests/run.lua
+
+reset:
+	git submodule update --init --recursive && \
+	  git clean -f -d && \
+	  git checkout .
+
+publish-src: reset
+	tar -czvf luv-src.tar.gz \
+	  --exclude 'luv-src.tar.gz' --exclude '.git*' --exclude build . && \
+	  github-release upload --user luvit --repo luv --tag ${LUV_TAG} \
+	  --file luv-src.tar.gz --name luv-src.tar.gz
 
