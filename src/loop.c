@@ -30,7 +30,34 @@ static const char *const luv_runmodes[] = {
 
 static int luv_run(lua_State* L) {
   int mode = luaL_checkoption(L, 1, "default", luv_runmodes);
+  int existing_error_handler = 0;
+  int has_error_cb = !lua_isnoneornil(L, 2);
+
+  if (has_error_cb) {
+    // Ensure error handler is a function.
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+
+    // Store the old error handler
+    lua_pushstring(L, "error_handler");
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    existing_error_handler = luaL_ref(L, LUA_REGISTRYINDEX);
+
+    // Replace with new error handler
+    lua_pushstring(L, "error_handler");
+    lua_pushvalue(L, 2);
+    lua_rawset(L, LUA_REGISTRYINDEX);
+  }
+
   int ret = uv_run(luv_loop(L), mode);
+
+  if (has_error_cb) {
+    // Restore the old error_handler
+    lua_pushstring(L, "error_handler");
+    lua_rawgeti(L, LUA_REGISTRYINDEX, existing_error_handler);
+    lua_rawset(L, LUA_REGISTRYINDEX);
+    luaL_unref(L, LUA_REGISTRYINDEX, existing_error_handler);
+  }
+
   if (ret < 0) return luv_error(L, ret);
   lua_pushboolean(L, ret);
   return 1;
