@@ -64,7 +64,10 @@ static void luv_call_callback(lua_State* L, luv_handle_t* data, luv_callback_id 
     if (nargs) {
       lua_insert(L, -1 - nargs);
     }
-    lua_call(L, nargs, 0);
+    if (lua_pcall(L, nargs, 0, 0)) {
+      fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
+      exit(-1);
+    }
   }
 }
 
