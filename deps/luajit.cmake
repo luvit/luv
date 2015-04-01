@@ -5,11 +5,7 @@
 # Redistribution and use of this file is allowed according to the terms of the MIT license.
 # Debugged and (now seriously) modified by Ronan Collobert, for Torch7
 
-cmake_minimum_required(VERSION 2.8.9)
-
 project(LuaJIT C ASM)
-
-set(CMAKE_BUILD_TYPE Release)
 
 SET(LUAJIT_DIR ${CMAKE_CURRENT_LIST_DIR}/luajit)
 
@@ -19,7 +15,7 @@ SET(CMAKE_REQUIRED_INCLUDES
   ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-OPTION(WITH_AMALG "Build eveything in one shot (needs memory)" ON)
+OPTION(WITH_AMALG "Build eveything in one shot (needs memory)" OFF)
 
 # Ugly warnings
 IF(MSVC)
@@ -274,8 +270,8 @@ SET(SRC_LJCORE
   ${LUAJIT_DIR}/src/lj_lib.c
   ${LUAJIT_DIR}/src/lj_alloc.c
   ${LUAJIT_DIR}/src/lib_aux.c
-  ${LUAJIT_DIR}/${SRC_LJLIB}
-  ${LUAJIT_DIR}/src/lib_init.c)
+  ${LUAJIT_DIR}/src/lib_init.c
+  ${SRC_LJLIB})
 
 SET(SRC_BUILDVM
   ${LUAJIT_DIR}/src/host/buildvm.c
@@ -322,7 +318,6 @@ SET(DEPS
   )
 
 ## COMPILE
-set(LUAJIT_DIR ${LUAJIT_DIR})
 include_directories(
   ${LUAJIT_DIR}/dynasm
   ${LUAJIT_DIR}/src
