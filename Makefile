@@ -1,4 +1,8 @@
 LUV_TAG=$(shell git describe --tags)
+CMAKE_OPTIONS=
+ifdef WITHOUT_AMALG
+	CMAKE_OPTIONS+= -DWITH_AMALG=OFF
+endif
 
 all: luv
 
@@ -9,7 +13,7 @@ deps/luajit/src:
 	git submodule update --init deps/luajit
 
 build/Makefile: deps/libuv/include deps/luajit/src
-	cmake -H. -Bbuild
+	cmake -H. -Bbuild ${CMAKE_OPTIONS}
 
 luv: build/Makefile
 	cmake --build build --config Debug
