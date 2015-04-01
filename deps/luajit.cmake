@@ -15,7 +15,7 @@ SET(CMAKE_REQUIRED_INCLUDES
   ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-OPTION(WITH_AMALG "Build eveything in one shot (needs memory)" OFF)
+OPTION(WITH_AMALG "Build eveything in one shot (needs memory)" ON)
 
 # Ugly warnings
 IF(MSVC)
