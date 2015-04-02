@@ -49,8 +49,7 @@ static void luv_fs_event_cb(uv_fs_event_t* handle, const char* filename, int eve
     lua_pushboolean(L, 1);
     lua_setfield(L, -2, "rename");
   }
-  if (events & UV_CHANGE)
-  {
+  if (events & UV_CHANGE) {
     lua_pushboolean(L, 1);
     lua_setfield(L, -2, "change");
   }
