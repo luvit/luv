@@ -45,17 +45,13 @@ static void luv_fs_event_cb(uv_fs_event_t* handle, const char* filename, int eve
 
   // events
   lua_newtable(L);
-  if (events & UV_FS_EVENT_WATCH_ENTRY) {
+  if (events & UV_RENAME) {
     lua_pushboolean(L, 1);
-    lua_setfield(L, -2, "watch_entry");
+    lua_setfield(L, -2, "rename");
   }
-  if (events & UV_FS_EVENT_STAT) {
+  if (events & UV_CHANGE) {
     lua_pushboolean(L, 1);
-    lua_setfield(L, -2, "stat");
-  }
-  if (events & UV_FS_EVENT_RECURSIVE) {
-    lua_pushboolean(L, 1);
-    lua_setfield(L, -2, "recursive");
+    lua_setfield(L, -2, "change");
   }
 
   luv_call_callback(L, handle->data, LUV_FS_EVENT, 3);
