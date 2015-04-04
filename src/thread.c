@@ -39,12 +39,12 @@ typedef struct {
   luv_thread_arg_t argv[LUV_THREAD_MAXNUM_ARG];
 } luv_thread_t;
 
-static void luv_thread_arg_set(lua_State*L, luv_thread_t* thread, int idx) {
-  int top = lua_gettop(L);
+static int luv_thread_arg_set(lua_State*L, luv_thread_arg_t* argv, int idx, int top)
+{
   int i = idx;
   while (i <= top && i <= LUV_THREAD_MAXNUM_ARG + idx)
   {
-    luv_thread_arg_t *arg = thread->argv + i - idx;
+    luv_thread_arg_t *arg = argv + i - idx;
     arg->type = lua_type(L, i);
     switch (arg->type)
     {
@@ -70,7 +70,7 @@ static void luv_thread_arg_set(lua_State*L, luv_thread_t* thread, int idx) {
     }
     i++;
   }
-  thread->argc = i - idx;
+  return i - idx;
 }
 
 static luv_thread_t* luv_check_thread(lua_State* L, int index)
@@ -93,7 +93,7 @@ static int luv_thread_gc(lua_State *L) {
 
 static int luv_thread_tostring(lua_State* L)
 {
-  luv_thread_t* thd = luaL_checkudata(L, 1, "uv_thread");
+  luv_thread_t* thd = luv_check_thread(L, 1);
   lua_pushfstring(L, "uv_thread_t: %p", thd->handle);
   return 1;
 }
@@ -171,7 +171,7 @@ static int luv_thread_create(lua_State* L) {
   thread = luv_check_thread(L, 1);
   luaL_checktype(L, 2, LUA_TFUNCTION);
 
-  luv_thread_arg_set(L, thread, 3);
+  thread->argc = luv_thread_arg_set(L, thread->argv, 3, lua_gettop(L));
 
   lua_getfield(L, LUA_GLOBALSINDEX, "string");
   lua_getfield(L, -1, "dump");
@@ -221,6 +221,12 @@ static int luv_thread_equal(lua_State* L)
   return 1;
 }
 
+static const luaL_Reg luv_thread_methods[] = {
+  {"create", luv_thread_create}, 
+  {"equal", luv_thread_equal},
+  {"join", luv_thread_join},
+  {NULL, NULL}
+};
 
 static void luv_thread_init(lua_State* L) {
   luaL_newmetatable(L, "uv_thread");
@@ -230,5 +236,8 @@ static void luv_thread_init(lua_State* L) {
   lua_setfield(L, -2, "__eq");
   lua_pushcfunction(L, luv_thread_gc);
   lua_setfield(L, -2, "__gc");
+  lua_newtable(L);
+  luaL_setfuncs(L, luv_thread_methods, 0);
+  lua_setfield(L, -2, "__index");
   lua_pop(L, 1);
 }

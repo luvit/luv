@@ -38,9 +38,9 @@
 #include "fs_event.c"
 #include "fs_poll.c"
 #include "fs.c"
-// #include "work.c"
 #include "dns.c"
 #include "thread.c"
+#include "work.c"
 #include "misc.c"
 #include "constants.c"
 
@@ -248,6 +248,10 @@ static const luaL_Reg luv_functions[] = {
   {"thread_equal", luv_thread_equal},
   {"thread_self", luv_thread_self},
   {"thread_join", luv_thread_join},
+
+  // work.c
+  {"new_work", luv_new_work},
+  {"queue_work", luv_queue_work},
 
   {NULL, NULL}
 };
@@ -474,6 +478,7 @@ LUALIB_API int luaopen_luv (lua_State *L) {
   lua_setfield(L, -2, "constants");
 
   luv_thread_init(L);
+  luv_work_init(L);
 
   return 1;
 }
