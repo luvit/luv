@@ -18,10 +18,11 @@
 
 typedef struct {
   lua_State* L;       /* main vm in loop thread */
-
   const unsigned char* code;
   int len;
 
+  uv_async_t async;
+  int async_cb;       /* in loop thread, call when async message recived */
   //int work_cb;      /* in pool,lua work cb script */
   int after_work_cb;  /* in loop thread, lua after work cb script */
 } luv_work_ctx_t;
@@ -191,22 +192,65 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
   }
 }
 
+static void async_cb(uv_async_t *handle)
+{
+  luv_work_t*work = handle->data;
+  luv_work_ctx_t* ctx = work->ctx;
+  lua_State*L = ctx->L;
+  int i;
+  lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->async_cb);
+  i = 0;
+  while (i < work->argc)
+  {
+    luv_thread_arg_t* arg = work->argv + i;
+    switch (arg->type)
+    {
+    case LUA_TNIL:
+      lua_pushnil(L);
+      break;
+    case LUA_TBOOLEAN:
+      lua_pushboolean(L, arg->val.bool);
+      break;
+    case LUA_TLIGHTUSERDATA:
+      lua_pushlightuserdata(L, arg->val.point);
+      break;
+    case LUA_TNUMBER:
+      lua_pushnumber(L, arg->val.num);
+      break;
+    case LUA_TSTRING:
+      lua_pushlstring(L, arg->val.str.base, arg->val.str.len);
+      break;
+    default:
+      fprintf(stderr, "Error: thread arg not support type %s at %d",
+        luaL_typename(L, arg->type), i + 1);
+    }
+    i++;
+  }
+  if (lua_pcall(L, i, 0, 0))
+  {
+    fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
+  }
+}
+
 static int luv_new_work(lua_State* L) {
   int len;
   const unsigned char* buff;
   luv_work_ctx_t* ctx;
+  int async;
+
+  luaL_checktype(L, 1, LUA_TFUNCTION);
+  luaL_checktype(L, 2, LUA_TFUNCTION);
+  if(!lua_isnoneornil(L, 3))
+    luaL_checktype(L, 3, LUA_TFUNCTION);
 
   ctx = lua_newuserdata(L, sizeof(*ctx));
   memset(ctx, 0, sizeof(*ctx));
-  luaL_checktype(L, 1, LUA_TFUNCTION);
-  luaL_checktype(L, 2, LUA_TFUNCTION);
 
   lua_getfield(L, LUA_GLOBALSINDEX, "string");
   lua_getfield(L, -1, "dump");
   lua_remove(L, -2);
   lua_pushvalue(L, 1);
-  if (lua_pcall(L, 1, 1, 0))
-  {
+  if (lua_pcall(L, 1, 1, 0)) {
     fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
     exit(-1);
   }
@@ -217,6 +261,12 @@ static int luv_new_work(lua_State* L) {
   lua_pop(L, 1);
   lua_pushvalue(L, 2);
   ctx->after_work_cb = luaL_ref(L, LUA_REGISTRYINDEX);
+  if (lua_gettop(L) == 4) {
+    lua_pushvalue(L, 3);
+    ctx->async_cb = luaL_ref(L, LUA_REGISTRYINDEX);
+    uv_async_init(luv_loop(L), &ctx->async, async_cb);
+  } else
+    ctx->async_cb = LUA_REFNIL;
   ctx->L = L;
   luaL_getmetatable(L, "luv_work_ctx");
   lua_setmetatable(L, -2);
@@ -251,6 +301,9 @@ static void luv_work_init(lua_State* L) {
   lua_setfield(L, -2, "__tostring");
   lua_pushcfunction(L, luv_work_ctx_gc);
   lua_setfield(L, -2, "__gc");
+  lua_newtable(L);
+  luaL_setfuncs(L, luv_work_ctx_methods, 0);
+  lua_setfield(L, -2, "__index");
   lua_pop(L, 1);
 
   luaL_newmetatable(L, "luv_work");
