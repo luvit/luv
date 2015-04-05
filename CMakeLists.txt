@@ -2,15 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project (luv)
 
-include(deps/uv.cmake)
-
-if (LUV_LUA_INCDIR)
-  include_directories(${LUV_LUA_INCDIR})
-  link_directories(${LUV_LUA_LIBDIR})
-else(LUV_LUA_INCDIR)
-  include(deps/luajit.cmake)
-  include_directories(deps/luajit/src)
-endif(LUV_LUA_INCDIR)
+option(WITH_SHARED_LIBUV "Link to a shared libuv library instead of static linking" OFF)
+option(WITH_SHARED_LUAJIT "Link to a shared LuaJIT library instead of static linking" OFF)
 
 if( NOT EXISTS "deps/libuv/src" )
   execute_process(COMMAND
@@ -22,6 +15,27 @@ if( NOT EXISTS "deps/libuv/src" )
   endif()
 endif()
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+
+if (WITH_SHARED_LIBUV)
+  find_package(Libuv)
+  if (LIBUV_FOUND)
+    include_directories(${Libuv_INCLUDE_DIRS})
+  endif (LIBUV_FOUND)
+else (WITH_SHARED_LIBUV)
+  include(deps/uv.cmake)
+endif (WITH_SHARED_LIBUV)
+
+if (WITH_SHARED_LUAJIT)
+  find_package(LuaJIT)
+  if (LUAJIT_FOUND)
+    include_directories(${LuaJIT_INCLUDE_DIRS})
+    link_directories(${LUAJIT_LIBRARIES})
+  endif (LUAJIT_FOUND)
+else (WITH_SHARED_LUAJIT)
+  include(deps/luajit.cmake)
+  include_directories(deps/luajit/src)
+endif (WITH_SHARED_LUAJIT)
 
 add_library (luv MODULE src/luv.c)
 
