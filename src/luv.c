@@ -478,7 +478,7 @@ LUALIB_API int luaopen_luv (lua_State *L) {
   luv_constants(L);
   lua_setfield(L, -2, "constants");
 
-  luv_thread_init(L);
+  luv_thread_init(L, NULL, NULL);
   luv_work_init(L);
 
   return 1;

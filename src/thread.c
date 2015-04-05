@@ -16,35 +16,47 @@
 */
 #include "luv.h"
 
-typedef struct {
-  /* only support LUA_TNIL, LUA_TBOOLEAN, LUA_TLIGHTUSERDATA, LUA_TNUMBER, LUA_TSTRING*/
-  int type;
-  union {
-    lua_Number num;
-    int bool;
-    void *point;
-    struct {
-      const char* base;
-      int len;
-    } str;
-  } val;
-} luv_thread_arg_t;
+#include "lthreadpool.h"
 
-#define LUV_THREAD_MAXNUM_ARG 9
 typedef struct {
   uv_thread_t handle;
-  const unsigned char* code;
+  unsigned char* code;
   int len;
   int argc;
-  luv_thread_arg_t argv[LUV_THREAD_MAXNUM_ARG];
+  luv_thread_arg_t arg;
 } luv_thread_t;
 
-static int luv_thread_arg_set(lua_State*L, luv_thread_arg_t* argv, int idx, int top)
+static luv_acquire_vm acquire_vm_cb = NULL;
+static luv_release_vm release_vm_cb = NULL;
+
+static lua_State* luv_thread_acquire_vm() {
+  lua_State* L = luaL_newstate();
+
+  // Add in the lua standard libraries
+  luaL_openlibs(L);
+
+  // Get package.preload so we can store builtins in it.
+  lua_getglobal(L, "package");
+  lua_getfield(L, -1, "preload");
+  lua_remove(L, -2); // Remove package
+
+  // Store uv module definition at preload.uv
+  lua_pushcfunction(L, luaopen_luv);
+  lua_setfield(L, -2, "uv");
+  lua_pop(L, 1);
+  return L;
+}
+
+static void luv_thread_release_vm(lua_State*L) {
+  lua_close(L);
+}
+
+static int luv_thread_arg_set(lua_State*L, luv_thread_arg_t* args, int idx, int top)
 {
-  int i = idx;
+  int i = idx > 0 ? idx : 1;
   while (i <= top && i <= LUV_THREAD_MAXNUM_ARG + idx)
   {
-    luv_thread_arg_t *arg = argv + i - idx;
+    luv_val_t *arg = args->argv + i - idx;
     arg->type = lua_type(L, i);
     switch (arg->type)
     {
@@ -70,7 +82,43 @@ static int luv_thread_arg_set(lua_State*L, luv_thread_arg_t* argv, int idx, int 
     }
     i++;
   }
-  return i - idx;
+  args->argc = i - idx;
+  return args->argc;
+}
+
+static void luv_thread_arg_clear(luv_thread_arg_t* args) {
+  args->argc = 0;
+}
+
+int luv_thread_arg_push(lua_State*L, const luv_thread_arg_t* args) {
+  int i = 0;
+  while (i < args->argc)
+  {
+    const luv_val_t* arg = args->argv + i;
+    switch (arg->type)
+    {
+    case LUA_TNIL:
+      lua_pushnil(L);
+      break;
+    case LUA_TBOOLEAN:
+      lua_pushboolean(L, arg->val.bool);
+      break;
+    case LUA_TLIGHTUSERDATA:
+      lua_pushlightuserdata(L, arg->val.point);
+      break;
+    case LUA_TNUMBER:
+      lua_pushnumber(L, arg->val.num);
+      break;
+    case LUA_TSTRING:
+      lua_pushlstring(L, arg->val.str.base, arg->val.str.len);
+      break;
+    default:
+      fprintf(stderr, "Error: thread arg not support type %s at %d",
+        luaL_typename(L, arg->type), i + 1);
+    }
+    i++;
+  };
+  return i;
 }
 
 static luv_thread_t* luv_check_thread(lua_State* L, int index)
@@ -81,13 +129,10 @@ static luv_thread_t* luv_check_thread(lua_State* L, int index)
 
 static int luv_thread_gc(lua_State *L) {
   luv_thread_t* tid = luv_check_thread(L, 1);
-  int i;
-  for (i = 0; i < tid->argc; i++ ){ 
-    luv_thread_arg_t *arg = tid->argv + i;
-    if (arg->type == LUA_TSTRING) {
-      free(arg->val.str.base);
-    }
-  }
+  free(tid->code);
+  tid->code = NULL;
+  tid->len = 0;
+  luv_thread_arg_clear(&tid->arg);
   return 0;
 }
 
@@ -101,56 +146,17 @@ static int luv_thread_tostring(lua_State* L)
 static void luv_thread_cb(void* varg) {
   luv_thread_t* thd = (luv_thread_t*)varg;
   uv_thread_t tid = uv_thread_self();
-  lua_State *L = luaL_newstate();
-
-  // Add in the lua standard libraries
-  luaL_openlibs(L);
-
-  // Get package.preload so we can store builtins in it.
-  lua_getglobal(L, "package");
-  lua_getfield(L, -1, "preload");
-  lua_remove(L, -2); // Remove package
-
-  // Store uv module definition at preload.uv
-  lua_pushcfunction(L, luaopen_luv);
-  lua_setfield(L, -2, "uv");
-  lua_pop(L, 1);
-
+  lua_State *L = acquire_vm_cb();
   if (luaL_loadbuffer(L, thd->code, thd->len, "=thread") == 0)
   {
-    int i = 0;
-    while (i < thd->argc)
-    {
-      luv_thread_arg_t* arg = thd->argv+i;
-      switch (arg->type) {
-      case LUA_TNIL:
-        lua_pushnil(L);
-        break;
-      case LUA_TBOOLEAN:
-        lua_pushboolean(L, arg->val.bool);
-        break;
-      case LUA_TLIGHTUSERDATA:
-        lua_pushlightuserdata(L, arg->val.point);
-        break;
-      case LUA_TNUMBER:
-        lua_pushnumber(L, arg->val.num);
-        break;
-      case LUA_TSTRING:
-        lua_pushlstring(L, arg->val.str.base, arg->val.str.len);
-        break;
-      default:
-        fprintf(stderr, "Error: thread arg not support type %s at %d",
-          luaL_typename(L, arg->type), i+1);
-      }
-      i++;
-    }
+    int i = luv_thread_arg_push(L, &thd->arg);
     if (lua_pcall(L, i, 0, 0)) {
       fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
     }
   } else {
     fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
   }
-  lua_close(L);
+  release_vm_cb(L);
 }
 
 static int luv_new_thread(lua_State* L) {
@@ -171,7 +177,7 @@ static int luv_thread_create(lua_State* L) {
   thread = luv_check_thread(L, 1);
   luaL_checktype(L, 2, LUA_TFUNCTION);
 
-  thread->argc = luv_thread_arg_set(L, thread->argv, 3, lua_gettop(L));
+  thread->argc = luv_thread_arg_set(L, &thread->arg, 3, lua_gettop(L));
 
   lua_getfield(L, LUA_GLOBALSINDEX, "string");
   lua_getfield(L, -1, "dump");
@@ -219,12 +225,8 @@ static int luv_thread_equal(lua_State* L) {
   lua_pushboolean(L, ret);
   return 1;
 }
-/* Pause the calling thread for a number of milliseconds. */
-void uv_sleep(int msec)
-{
-  Sleep(msec);
-}
 
+/* Pause the calling thread for a number of milliseconds. */
 static int luv_thread_sleep(lua_State* L) {
 #ifdef _WIN32
   DWORD msec = luaL_checkinteger(L, 1);
@@ -243,7 +245,7 @@ static const luaL_Reg luv_thread_methods[] = {
   {NULL, NULL}
 };
 
-static void luv_thread_init(lua_State* L) {
+static void luv_thread_init(lua_State* L, luv_acquire_vm acquire_vm, luv_release_vm release_vm) {
   luaL_newmetatable(L, "uv_thread");
   lua_pushcfunction(L, luv_thread_tostring);
   lua_setfield(L, -2, "__tostring");
@@ -255,4 +257,8 @@ static void luv_thread_init(lua_State* L) {
   luaL_setfuncs(L, luv_thread_methods, 0);
   lua_setfield(L, -2, "__index");
   lua_pop(L, 1);
+
+  acquire_vm_cb = acquire_vm ? acquire_vm : luv_thread_acquire_vm;
+  release_vm_cb = release_vm ? release_vm : luv_thread_release_vm;
 }
+

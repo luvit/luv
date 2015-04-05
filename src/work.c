@@ -16,9 +16,11 @@
 */
 #include "luv.h"
 
+#include "lthreadpool.h"
+
 typedef struct {
   lua_State* L;       /* main vm in loop thread */
-  const unsigned char* code;
+  unsigned char* code;
   int len;
 
   uv_async_t async;
@@ -31,9 +33,7 @@ typedef struct {
   uv_work_t work;
   luv_work_ctx_t* ctx;
 
-  int argc;
-  /* paramater for work_cb, and return to after_work_cb */
-  luv_thread_arg_t argv[LUV_THREAD_MAXNUM_ARG];
+  luv_thread_arg_t arg;
 } luv_work_t;
 
 static uv_key_t L_key;
@@ -51,14 +51,7 @@ static luv_work_t* luv_check_work(lua_State* L, int index)
 
 static int luv_work_gc(lua_State *L) {
   luv_work_t* work = luv_check_work(L, 1);
-  int i;
-  for (i = 0; i < work->argc; i++)
-  {
-    luv_thread_arg_t *arg = work->argv + i;
-    if (arg->type == LUA_TSTRING) {
-      free(arg->val.str.base);
-    }
-  }
+  luv_thread_arg_clear(&work->arg);
   return 0;
 }
 
@@ -67,7 +60,8 @@ static int luv_work_ctx_gc(lua_State *L)
   luv_work_ctx_t* ctx = luv_check_work_ctx(L, 1);
   free(ctx->code);
   luaL_unref(L, LUA_REGISTRYINDEX, ctx->after_work_cb);
-  ctx->after_work_cb = LUA_REFNIL;
+  luaL_unref(L, LUA_REGISTRYINDEX, ctx->async_cb);
+
    return 0;
 }
 
@@ -94,63 +88,23 @@ static void luv_work_cb(uv_work_t* req)
   int top;
   if (L == NULL) {
     /* should vm reuse in pool? */
-    L = luaL_newstate();
-    // Add in the lua standard libraries
-    luaL_openlibs(L);
-
-    // Get package.preload so we can store builtins in it.
-    lua_getglobal(L, "package");
-    lua_getfield(L, -1, "preload");
-    lua_remove(L, -2); // Remove package
-
-    // Store uv module definition at preload.uv
-    lua_pushcfunction(L, luaopen_luv);
-    lua_setfield(L, -2, "uv");
-    lua_pop(L, 1);
+    L = acquire_vm_cb();
 
     uv_key_set(&L_key, L);
   }
   top = lua_gettop(L);
   if (luaL_loadbuffer(L, ctx->code, ctx->len, "=pool") == 0)
   {
-    int i = 0;
-    while (i < work->argc)
-    {
-      luv_thread_arg_t* arg = work->argv + i;
-      switch (arg->type) {
-      case LUA_TNIL:
-        lua_pushnil(L);
-        break;
-      case LUA_TBOOLEAN:
-        lua_pushboolean(L, arg->val.bool);
-        break;
-      case LUA_TLIGHTUSERDATA:
-        lua_pushlightuserdata(L, arg->val.point);
-        break;
-      case LUA_TNUMBER:
-        lua_pushnumber(L, arg->val.num);
-        break;
-      case LUA_TSTRING:
-        lua_pushlstring(L, arg->val.str.base, arg->val.str.len);
-        free(arg->val.str.base);
-        arg->val.str.len = 0;
-        arg->val.str.base = NULL;
-        break;
-      default:
-        fprintf(stderr, "Error: thread arg not support type %s at %d",
-          luaL_typename(L, arg->type), i+1);
-      }
-      i++;
-    }
+    int i = luv_thread_arg_push(L, &work->arg);
     if (lua_pcall(L, i, LUA_MULTRET, 0)) {
       fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
     }
-    work->argc = luv_thread_arg_set(L, work->argv, top, lua_gettop(L));
+    luv_thread_arg_set(L, &work->arg, top, lua_gettop(L));
   } else {
     fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
   }
 
-  //lua_close(L);
+  //release_vm_cb(L);
 }
 
 static void luv_after_work_cb(uv_work_t* req, int status) {
@@ -159,33 +113,7 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
   lua_State*L = ctx->L;
   int i;
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->after_work_cb);
-  i = 0;
-  while (i < work->argc)
-  {
-    luv_thread_arg_t* arg = work->argv + i;
-    switch (arg->type)
-    {
-    case LUA_TNIL:
-      lua_pushnil(L);
-      break;
-    case LUA_TBOOLEAN:
-      lua_pushboolean(L, arg->val.bool);
-      break;
-    case LUA_TLIGHTUSERDATA:
-      lua_pushlightuserdata(L, arg->val.point);
-      break;
-    case LUA_TNUMBER:
-      lua_pushnumber(L, arg->val.num);
-      break;
-    case LUA_TSTRING:
-      lua_pushlstring(L, arg->val.str.base, arg->val.str.len);
-      break;
-    default:
-      fprintf(stderr, "Error: thread arg not support type %s at %d",
-        luaL_typename(L, arg->type), i + 1);
-    }
-    i++;
-  }
+  i = luv_thread_arg_push(L, &work->arg);
   if (lua_pcall(L, i, 0, 0))
   {
     fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
@@ -199,33 +127,7 @@ static void async_cb(uv_async_t *handle)
   lua_State*L = ctx->L;
   int i;
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->async_cb);
-  i = 0;
-  while (i < work->argc)
-  {
-    luv_thread_arg_t* arg = work->argv + i;
-    switch (arg->type)
-    {
-    case LUA_TNIL:
-      lua_pushnil(L);
-      break;
-    case LUA_TBOOLEAN:
-      lua_pushboolean(L, arg->val.bool);
-      break;
-    case LUA_TLIGHTUSERDATA:
-      lua_pushlightuserdata(L, arg->val.point);
-      break;
-    case LUA_TNUMBER:
-      lua_pushnumber(L, arg->val.num);
-      break;
-    case LUA_TSTRING:
-      lua_pushlstring(L, arg->val.str.base, arg->val.str.len);
-      break;
-    default:
-      fprintf(stderr, "Error: thread arg not support type %s at %d",
-        luaL_typename(L, arg->type), i + 1);
-    }
-    i++;
-  }
+  i = luv_thread_arg_push(L, &work->arg);
   if (lua_pcall(L, i, 0, 0))
   {
     fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
@@ -281,7 +183,7 @@ static int luv_queue_work(lua_State* L) {
   ctx = luv_check_work_ctx(L, 1);
   work = lua_newuserdata(L, sizeof(*work));
   memset(work, 0, sizeof(*work));
-  work->argc = luv_thread_arg_set(L, work->argv, 2, top);
+  luv_thread_arg_set(L, &work->arg, 2, top);
   work->ctx = ctx;
   work->work.data = work;
   ret = uv_queue_work(luv_loop(L), &work->work, luv_work_cb, luv_after_work_cb);
