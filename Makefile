@@ -1,5 +1,5 @@
 LUV_TAG=$(shell git describe --tags)
-CMAKE_OPTIONS=
+
 ifdef WITHOUT_AMALG
 	CMAKE_OPTIONS+= -DWITH_AMALG=OFF
 endif
