@@ -1,26 +1,29 @@
 return require('lib/tap')(function (test)
   --thread not return anything
   test("test thread sleep msecs in loop thread", function(print,p,expect,uv)
-    local b = os.clock()
-    uv.sleep(500)
-    local e = os.clock()
-    local cost = (e-b)*1000
-    p("stdout", {sleep=500,cost=cost})
-    assert(cost>=500,"should equals")
+    local sleep = 1000
+    local b = os.time()
+    uv.sleep(sleep)
+    local e = os.time()
+    local cost = (e-b)
+    p("stdout", {sleep=string.format('sleep %d ms',1000),string.format('cost %d seconds',cost)})
+    assert(cost>=sleep/1000,"should equals")
   end)
 
   test("test thread create", function(print,p,expect,uv)
+    local sleep = 1000
     local thread_id = uv.new_thread()
-    local b = os.clock()
-    uv.thread_create(thread_id,function(step,...) 
+    local b = os.time()
+    uv.thread_create(thread_id,function(sleep,...) 
       local uv = require('luv')
-      uv.sleep(500)
-    end)
+      uv.sleep(sleep)
+    end,sleep)
     uv.thread_join(thread_id)
-    local e = os.clock()
-    local cost = (e-b)*1000
-    p("stdout", {sleep=500,cost=cost})
-    assert(cost>=500,"should equals")
+    local e = os.time()
+    print(e,b)
+    local cost = (e-b)
+    p("stdout", {sleep=string.format('sleep %d ms',1000),string.format('cost %d seconds',cost)})
+    assert(cost>=sleep/1000,"should equals")
   end)
 
   test("test thread create with arguments", function(print,p,expect,uv)
