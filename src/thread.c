@@ -173,7 +173,7 @@ static int luv_new_thread(lua_State* L) {
 static int luv_thread_create(lua_State* L) {
   luv_thread_t *thread;
   int ret;
-  int len;
+  size_t len;
   const unsigned char* buff;
 
   thread = luv_check_thread(L, 1);

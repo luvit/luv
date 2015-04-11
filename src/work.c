@@ -21,7 +21,7 @@
 typedef struct {
   lua_State* L;       /* main vm in loop thread */
   unsigned char* code;
-  int len;
+  size_t len;
 
   uv_async_t async;
   int async_cb;       /* in loop thread, call when async message recived */
@@ -143,7 +143,7 @@ static void async_cb(uv_async_t *handle)
 }
 
 static int luv_new_work(lua_State* L) {
-  int len;
+  size_t len;
   const unsigned char* buff;
   luv_work_ctx_t* ctx;
   int async;

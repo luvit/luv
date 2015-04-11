@@ -32,7 +32,7 @@ typedef struct {
     struct
     {
       const char* base;
-      int len;
+      size_t len;
     } str;
   } val;
 } luv_val_t;
