@@ -118,6 +118,14 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
   {
     fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
   }
+  lua_pushlightuserdata(L, work->ctx);
+  lua_pushnil(L);
+  lua_settable(L, LUA_REGISTRYINDEX);
+
+  lua_pushlightuserdata(L, work);
+  lua_pushnil(L);
+  lua_settable(L, LUA_REGISTRYINDEX);
+
 }
 
 static void async_cb(uv_async_t *handle)
@@ -180,14 +188,23 @@ static int luv_queue_work(lua_State* L) {
   luv_work_t* work;
   int ret;
   int top = lua_gettop(L);
-  ctx = luv_check_work_ctx(L, 1);
-  work = lua_newuserdata(L, sizeof(*work));
+  ctx = luv_check_work_ctx(L, 1);   // ctx should ref up
+  work = lua_newuserdata(L, sizeof(*work)); //work should ref up
   memset(work, 0, sizeof(*work));
   luv_thread_arg_set(L, &work->arg, 2, top);
   work->ctx = ctx;
   work->work.data = work;
   ret = uv_queue_work(luv_loop(L), &work->work, luv_work_cb, luv_after_work_cb);
   if (ret < 0) return luv_error(L, ret);
+
+  lua_pushlightuserdata(L, work->ctx);
+  lua_pushvalue(L, 1);
+  lua_settable(L, LUA_REGISTRYINDEX);
+
+  lua_pushlightuserdata(L, work);
+  lua_pushvalue(L, -2);
+  lua_settable(L, LUA_REGISTRYINDEX);
+
   lua_pushboolean(L, 1);
   return 1;
 }

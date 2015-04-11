@@ -53,7 +53,9 @@ static void luv_thread_release_vm(lua_State*L) {
 
 static int luv_thread_arg_set(lua_State*L, luv_thread_arg_t* args, int idx, int top)
 {
-  int i = idx > 0 ? idx : 1;
+  int i;
+  idx = idx > 0 ? idx : 1;
+  i = idx;
   while (i <= top && i <= LUV_THREAD_MAXNUM_ARG + idx)
   {
     luv_val_t *arg = args->argv + i - idx;
