@@ -1,4 +1,3 @@
-local openssl = require('openssl')
 return require('lib/tap')(function (test) 
   test("test threadpool", function(print,p,expect,_uv)
     local ctx = _uv.new_work(
