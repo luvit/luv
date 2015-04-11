@@ -123,6 +123,28 @@ int luv_thread_arg_push(lua_State*L, const luv_thread_arg_t* args) {
   return i;
 }
 
+static 
+const unsigned char* luv_thread_dumped(lua_State* L, int idx, size_t *l) {
+  if (lua_isstring(L, idx)) {
+    return lua_tolstring(L, idx, l);
+  } else {
+    const unsigned char* buff;
+    luaL_checktype(L, idx, LUA_TFUNCTION);
+    lua_getfield(L, LUA_GLOBALSINDEX, "string");
+    lua_getfield(L, -1, "dump");
+    lua_remove(L, -2);
+    lua_pushvalue(L, idx);
+    if (lua_pcall(L, 1, 1, 0))
+    {
+      fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
+      exit(-1);
+    }
+    buff = lua_tolstring(L, -1, l);
+    lua_pop(L, 1);
+    return buff;
+  } 
+}
+
 static luv_thread_t* luv_check_thread(lua_State* L, int index)
 {
   luv_thread_t* thread = luaL_checkudata(L, index, "uv_thread");
@@ -177,19 +199,9 @@ static int luv_thread_create(lua_State* L) {
   const unsigned char* buff;
 
   thread = luv_check_thread(L, 1);
-  luaL_checktype(L, 2, LUA_TFUNCTION);
+  buff = luv_thread_dumped(L, 2, &len);
 
   thread->argc = luv_thread_arg_set(L, &thread->arg, 3, lua_gettop(L));
-
-  lua_getfield(L, LUA_GLOBALSINDEX, "string");
-  lua_getfield(L, -1, "dump");
-  lua_remove(L, -2);
-  lua_pushvalue(L, 2);
-  if (lua_pcall(L, 1, 1, 0)) {
-    fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
-    exit(-1);
-  }
-  buff = lua_tolstring(L, -1, &len);
   thread->len = len;
   thread->code = malloc(thread->len);
   memcpy(thread->code, buff, len);

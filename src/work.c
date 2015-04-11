@@ -148,7 +148,7 @@ static int luv_new_work(lua_State* L) {
   luv_work_ctx_t* ctx;
   int async;
 
-  luaL_checktype(L, 1, LUA_TFUNCTION);
+  buff = luv_thread_dumped(L, 1, &len);
   luaL_checktype(L, 2, LUA_TFUNCTION);
   if(!lua_isnoneornil(L, 3))
     luaL_checktype(L, 3, LUA_TFUNCTION);
@@ -156,19 +156,10 @@ static int luv_new_work(lua_State* L) {
   ctx = lua_newuserdata(L, sizeof(*ctx));
   memset(ctx, 0, sizeof(*ctx));
 
-  lua_getfield(L, LUA_GLOBALSINDEX, "string");
-  lua_getfield(L, -1, "dump");
-  lua_remove(L, -2);
-  lua_pushvalue(L, 1);
-  if (lua_pcall(L, 1, 1, 0)) {
-    fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
-    exit(-1);
-  }
-  buff = lua_tolstring(L, -1, &len);
   ctx->len = len;
   ctx->code = malloc(ctx->len);
   memcpy(ctx->code, buff, len);
-  lua_pop(L, 1);
+
   lua_pushvalue(L, 2);
   ctx->after_work_cb = luaL_ref(L, LUA_REGISTRYINDEX);
   if (lua_gettop(L) == 4) {
