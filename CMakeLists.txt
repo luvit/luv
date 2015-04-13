@@ -5,10 +5,6 @@ project (luv)
 option(WITH_SHARED_LIBUV "Link to a shared libuv library instead of static linking" OFF)
 option(WITH_SHARED_LUAJIT "Link to a shared LuaJIT library instead of static linking" OFF)
 
-if( NOT EXISTS "deps/libuv/src" )
-  message( SEND_ERROR "The git submodules are not available. Please run git submodule update --init")
-endif()
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 if (WITH_SHARED_LIBUV)
