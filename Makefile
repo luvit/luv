@@ -4,6 +4,13 @@ ifdef WITHOUT_AMALG
 	CMAKE_OPTIONS+= -DWITH_AMALG=OFF
 endif
 
+WITH_SHARED_LIBUV ?= OFF
+WITH_SHARED_LUAJIT ?= OFF
+
+CMAKE_OPTIONS += \
+	-DWITH_SHARED_LIBUV=$(WITH_SHARED_LIBUV) \
+	-DWITH_SHARED_LUAJIT=$(WITH_SHARED_LUAJIT)
+
 all: luv
 
 deps/libuv/include:
@@ -38,4 +45,3 @@ publish-luarocks: reset
 	tar -czvf luv-${LUV_TAG}.tar.gz luv-${LUV_TAG}
 	github-release upload --user luvit --repo luv --tag ${LUV_TAG} \
 	  --file luv-${LUV_TAG}.tar.gz --name luv-${LUV_TAG}.tar.gz
-
