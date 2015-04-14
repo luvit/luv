@@ -5,22 +5,12 @@ project (luv)
 option(WITH_SHARED_LIBUV "Link to a shared libuv library instead of static linking" OFF)
 option(WITH_SHARED_LUAJIT "Link to a shared LuaJIT library instead of static linking" OFF)
 
-if( NOT EXISTS "deps/libuv/src" )
-  execute_process(COMMAND
-    git submodule update --init
-    WORKING_DIRECTORY PROJECT_SOURCE_DIR
-  )
-  if( NOT EXISTS "deps/libuv/src" )
-    message( SEND_ERROR "The git submodules are not available. Please run git submodule update --init")
-  endif()
-endif()
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 if (WITH_SHARED_LIBUV)
   find_package(Libuv)
   if (LIBUV_FOUND)
-    include_directories(${Libuv_INCLUDE_DIRS})
+    include_directories(${LIBUV_INCLUDE_DIR})
   endif (LIBUV_FOUND)
 else (WITH_SHARED_LIBUV)
   include(deps/uv.cmake)
@@ -29,7 +19,7 @@ endif (WITH_SHARED_LIBUV)
 if (WITH_SHARED_LUAJIT)
   find_package(LuaJIT)
   if (LUAJIT_FOUND)
-    include_directories(${LuaJIT_INCLUDE_DIRS})
+    include_directories(${LUAJIT_INCLUDE_DIR})
     link_directories(${LUAJIT_LIBRARIES})
   endif (LUAJIT_FOUND)
 else (WITH_SHARED_LUAJIT)
