@@ -9,7 +9,7 @@ WITH_SHARED_LUAJIT ?= OFF
 
 CMAKE_OPTIONS += \
 	-DWITH_SHARED_LIBUV=$(WITH_SHARED_LIBUV) \
-	-DWITH_SHARED_LUAJIT=$(WITH_SHARED_LUAJIT)
+	-DWITH_SHARED_LUAJIT=$(WITH_SHARED_LUAJIT) \
 
 all: luv
 
@@ -20,7 +20,7 @@ deps/luajit/src:
 	git submodule update --init deps/luajit
 
 build/Makefile: deps/libuv/include deps/luajit/src
-	cmake -H. -Bbuild ${CMAKE_OPTIONS}
+	cmake -H. -Bbuild ${CMAKE_OPTIONS} -DWITH_AMALG=OFF
 
 luv: build/Makefile
 	cmake --build build --config Debug
