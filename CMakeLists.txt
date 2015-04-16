@@ -13,6 +13,11 @@ option(WITH_SHARED_LUAJIT "Link to a shared LuaJIT library instead of static lin
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
+set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
+	CACHE PATH "Installation directory for libraries")
+set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include/luv"
+	CACHE PATH "Installation directory for headers")
+
 if (WITH_SHARED_LIBUV)
   find_package(Libuv)
   if (LIBUV_FOUND)
@@ -61,12 +66,12 @@ else()
   target_link_libraries(luv uv)
 endif()
 
-if (LUV_INSTALL_PREFIX)
-  install(TARGETS luv LIBRARY DESTINATION "${LUV_INSTALL_PREFIX}/lib")
+if (CMAKE_INSTALL_PREFIX)
+  install(TARGETS luv LIBRARY DESTINATION "${INSTALL_LIB_DIR}")
   if (BUILD_SHARED_LIBS)
     install(
       FILES src/luv.h src/util.h src/lhandle.h src/lreq.h
-      DESTINATION "${LUV_INSTALL_PREFIX}/include/luv"
+      DESTINATION "${INSTALL_INC_DIR}"
     )
   endif (BUILD_SHARED_LIBS)
-endif(LUV_INSTALL_PREFIX)
+endif (CMAKE_INSTALL_PREFIX)
