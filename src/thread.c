@@ -77,7 +77,7 @@ static int luv_thread_arg_set(lua_State*L, luv_thread_arg_t* args, int idx, int 
       arg->val.str.base = lua_tolstring(L, i, &arg->val.str.len);
       break;
     default:
-      fprintf(stderr, "Error: thread arg not support type %s at %d",
+      fprintf(stderr, "Error: thread arg not support type '%s' at %d",
         luaL_typename(L, arg->type), i);
       exit(-1);
       break;
@@ -183,31 +183,25 @@ static void luv_thread_cb(void* varg) {
 }
 
 static int luv_new_thread(lua_State* L) {
+  int ret;
+  size_t len;
+  const char* buff;
   luv_thread_t* thread;
   thread = lua_newuserdata(L, sizeof(*thread));
   memset(thread, 0, sizeof(*thread));
   luaL_getmetatable(L, "uv_thread");
   lua_setmetatable(L, -2);
-  return 1;
-}
 
-static int luv_thread_create(lua_State* L) {
-  luv_thread_t *thread;
-  int ret;
-  size_t len;
-  const char* buff;
+  buff = luv_thread_dumped(L, 1, &len);
 
-  thread = luv_check_thread(L, 1);
-  buff = luv_thread_dumped(L, 2, &len);
-
-  thread->argc = luv_thread_arg_set(L, &thread->arg, 3, lua_gettop(L));
+  thread->argc = luv_thread_arg_set(L, &thread->arg, 2, lua_gettop(L) - 1);
   thread->len = len;
   thread->code = malloc(thread->len);
   memcpy(thread->code, buff, len);
 
   ret = uv_thread_create(&thread->handle, luv_thread_cb, thread);
   if (ret < 0) return luv_error(L, ret);
-  lua_pushboolean(L, 1);
+
   return 1;
 }
 
@@ -252,7 +246,6 @@ static int luv_thread_sleep(lua_State* L) {
 }
 
 static const luaL_Reg luv_thread_methods[] = {
-  {"create", luv_thread_create},
   {"equal", luv_thread_equal},
   {"join", luv_thread_join},
   {NULL, NULL}
