@@ -225,7 +225,7 @@ static int luv_getnameinfo(lua_State* L) {
   uv_getnameinfo_t* req;
   struct sockaddr_storage addr;
   const char* ip = NULL;
-  int flags = 0, sync;
+  int flags = 0;
   int ret, ref, port = 0;
 
   luaL_checktype(L, 1, LUA_TTABLE);

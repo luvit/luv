@@ -136,7 +136,7 @@ static void luv_write_cb(uv_write_t* req, int status) {
 
 static uv_buf_t* luv_prep_bufs(lua_State* L, int index, size_t *count) {
   uv_buf_t *bufs;
-  int i;
+  size_t i;
   *count = lua_rawlen(L, index);
   bufs = malloc(sizeof(uv_buf_t) * *count);
   for (i = 0; i < *count; ++i) {

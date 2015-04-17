@@ -132,7 +132,8 @@ static int luv_check_flags(lua_State* L, int index) {
 }
 
 static int luv_check_amode(lua_State* L, int index) {
-  int i, mode;
+  size_t i;
+  int mode;
   const char* string;
   if (lua_isnumber(L, index)) {
     return lua_tointeger(L, index);
