@@ -915,10 +915,71 @@ of the given type, returned by [`uv.pipe_pending_type`][] and call
 
 [`uv_tty_t`]: #uv_tty_t--tty-handle
 
-**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/tty.html)
-using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L152-L155)
-and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L350-L354)
-from [tty.c](https://github.com/luvit/luv/blob/master/src/tty.c)
+TTY handles represent a stream for the console.
+
+```lua
+-- Simple echo program
+local stdin = uv.new_tty(0, true)
+local stdout = uv.new_tty(1, false)
+
+stdin:read_start(function (err, data)
+  assert(not err, err)
+  if data then
+    stdout:write(data)
+  else
+    stdin:close()
+    stdout:close()
+  end
+end)
+```
+
+### uv.new_tty(fd, readable) -> tty
+
+Initialize a new TTY stream with the given file descriptor. Usually the file
+descriptor will be:
+
+ - 0 - stdin
+ - 1 - stdout
+ - 2 - stderr
+
+`readable, specifies if you plan on calling uv_read_start() with this stream.
+`stdin is readable, stdout is not.
+
+On Unix this function will try to open /dev/tty and use it if the passed file
+descriptor refers to a TTY. This lets libuv put the tty in non-blocking mode
+without affecting other processes that share the tty.
+
+Note: If opening `/dev/tty` fails, libuv falls back to blocking writes for
+non-readable TTY streams.
+
+### uv.tty_set_mode(mode)
+
+> (method form `tty:set_mode(mode)`)
+
+Set the TTY using the specified terminal mode.
+
+Parameter `mode` is a C enum with the following values:
+
+- 0 - UV_TTY_MODE_NORMAL: Initial/normal terminal mode
+
+- 1 - UV_TTY_MODE_RAW: Raw input mode (On Windows, ENABLE_WINDOW_INPUT is
+  also enabled)
+
+- 2 - UV_TTY_MODE_IO: Binary-safe I/O mode for IPC (Unix-only)
+
+## uv.tty_reset_mode()
+
+To be called when the program exits. Resets TTY settings to default values for
+the next process to take over.
+
+This function is async signal-safe on Unix platforms but can fail with error
+code UV_EBUSY if you call it when execution is inside uv_tty_set_mode().
+
+## uv.tty_get_winsize() -> w, h
+
+> (method form `tty:get_winsize() -> w, h`)
+
+Gets the current Window size.
 
 ## `uv_udp_t` — UDP handle
 
