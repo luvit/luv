@@ -17,6 +17,7 @@
 #include "luv.h"
 
 #include "lthreadpool.h"
+#include <lualib.h>
 
 typedef struct {
   uv_thread_t handle;

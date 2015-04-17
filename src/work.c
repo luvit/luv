@@ -146,7 +146,6 @@ static int luv_new_work(lua_State* L) {
   size_t len;
   const unsigned char* buff;
   luv_work_ctx_t* ctx;
-  int async;
 
   buff = luv_thread_dumped(L, 1, &len);
   luaL_checktype(L, 2, LUA_TFUNCTION);
