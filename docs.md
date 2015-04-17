@@ -985,10 +985,115 @@ Gets the current Window size.
 
 [`uv_udp_t`]: #uv_udp_t--udp-handle
 
-**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/udp.html)
-using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L158-L171)
-and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L356-L371)
-from [udp.c](https://github.com/luvit/luv/blob/master/src/udp.c)
+UDP handles encapsulate UDP communication for both clients and servers.
+
+### uv.new_udp() -> udp
+
+Initialize a new UDP handle. The actual socket is created lazily.
+
+### uv.udp_open(udp, fd)
+
+> (method form `udp:open(fd)`)
+
+Opens an existing file descriptor or Windows SOCKET as a UDP handle.
+
+Unix only: The only requirement of the sock argument is that it follows the
+datagram contract (works in unconnected mode, supports sendmsg()/recvmsg(),
+etc). In other words, other datagram-type sockets like raw sockets or netlink
+sockets can also be passed to this function.
+
+The file descriptor is set to non-blocking mode.
+
+Note: The passed file descriptor or SOCKET is not checked for its type, but
+it’s required that it represents a valid datagram socket.
+
+### uv.udp_bind(udp, host, port)
+
+> (method form `udp:bind(host, port)`)
+
+Bind the UDP handle to an IP address and port.
+
+### uv.udp_getsockname(udp)
+
+> (method form `udp:getsockname()`)
+
+Get the local IP and port of the UDP handle.
+
+### uv.udp_set_membership(udp, multicast_addr, interface_addr, membership)
+
+> (method form `udp:set_membership(multicast_addr, interface_addr, membership)`)
+
+Set membership for a multicast address.
+
+`multicast_addr` is multicast address to set membership for.
+
+`interface_addr` is interface address.
+
+`membership` can be the string `"leave"` or `"join"`.
+
+### uv.udp_set_multicast_loop(udp, on)
+
+> (method form `udp:set_multicast_loop(on)`)
+
+Set IP multicast loop flag. Makes multicast packets loop back to local
+sockets.
+
+`on` is a boolean.
+
+### uv.udp_set_multicast_ttl(udp, tty)
+
+> (method form `udp:set_multicast_ttl(tty)`)
+
+Set the multicast ttl.
+
+`ttl` is an integer 1 through 255.
+
+### uv.udp_set_multicast_interface(udp, interface_addr)
+
+> (method form `udp:set_multicast_interface(interface_addr)`)
+
+Set the multicast interface to send or receive data on.
+
+### uv.udp_set_broadcast(udp, on)
+
+Set broadcast on or off.
+
+> (method form `udp:set_broadcast(, on)`)
+
+### uv.udp_set_ttl(udp, ttl)
+
+> (method form `udp:set_ttl(ttl)`)
+
+Set the time to live.
+
+`ttl` is an integer 1 through 255.
+
+### uv.udp_send(udp, data, host, port, callback)
+
+> (method form `udp:send(data, host, port, callback)`)
+
+Send data over the UDP socket. If the socket has not previously been bound
+with `uv_udp_bind()` it will be bound to `0.0.0.0` (the “all interfaces” IPv4
+address) and a random port number.
+
+### uv.udp_try_send(udp, data, host, port)
+
+> (method form `udp:try_send(data, host, port)`)
+
+Same as `uv_udp_send()`, but won’t queue a send request if it can’t be
+completed immediately.
+
+### uv.udp_recv_start(udp, callback)
+
+> (method form `udp:recv_start(callback)`)
+
+Prepare for receiving data. If the socket has not previously been bound with
+`uv_udp_bind()` it is bound to `0.0.0.0` (the “all interfaces” IPv4 address)
+and a random port number.
+
+### uv.udp_recv_stop(udp)
+
+> (method form `udp:recv_stop()`)
 
 ## `uv_fs_event_t` — FS Event handle
 

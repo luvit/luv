@@ -159,7 +159,7 @@ static const luaL_Reg luv_functions[] = {
   {"new_udp", luv_new_udp},
   {"udp_open", luv_udp_open},
   {"udp_bind", luv_udp_bind},
-  {"udp_bindgetsockname", luv_udp_getsockname},
+  {"udp_getsockname", luv_udp_getsockname},
   {"udp_set_membership", luv_udp_set_membership},
   {"udp_set_multicast_loop", luv_udp_set_multicast_loop},
   {"udp_set_multicast_ttl", luv_udp_set_multicast_ttl},

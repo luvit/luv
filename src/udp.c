@@ -87,7 +87,7 @@ static int luv_udp_set_membership(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   const char* multicast_addr = luaL_checkstring(L, 2);
   const char* interface_addr = luaL_checkstring(L, 3);
-  uv_membership membership = luaL_checkoption(L, 2, NULL, luv_membership_opts);
+  uv_membership membership = luaL_checkoption(L, 4, NULL, luv_membership_opts);
   int ret = uv_udp_set_membership(handle, multicast_addr, interface_addr, membership);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
@@ -108,8 +108,7 @@ static int luv_udp_set_multicast_loop(lua_State* L) {
 static int luv_udp_set_multicast_ttl(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   int ttl, ret;
-  luaL_checktype(L, 2, LUA_TBOOLEAN);
-  ttl = lua_toboolean(L, 2);
+  ttl = luaL_checkinteger(L, 2);
   ret = uv_udp_set_multicast_ttl(handle, ttl);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
@@ -139,8 +138,7 @@ static int luv_udp_set_broadcast(lua_State* L) {
 static int luv_udp_set_ttl(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   int ttl, ret;
-  luaL_checktype(L, 2, LUA_TNUMBER);
-  ttl = lua_tonumber(L, 2);
+  ttl = luaL_checknumber(L, 2);
   ret = uv_udp_set_ttl(handle, ttl);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
