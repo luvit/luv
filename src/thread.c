@@ -20,7 +20,7 @@
 
 typedef struct {
   uv_thread_t handle;
-  unsigned char* code;
+  char* code;
   int len;
   int argc;
   luv_thread_arg_t arg;
@@ -123,11 +123,11 @@ int luv_thread_arg_push(lua_State*L, const luv_thread_arg_t* args) {
   return i;
 }
 
-static const unsigned char* luv_thread_dumped(lua_State* L, int idx, size_t *l) {
+static const char* luv_thread_dumped(lua_State* L, int idx, size_t *l) {
   if (lua_isstring(L, idx)) {
     return lua_tolstring(L, idx, l);
   } else {
-    const unsigned char* buff;
+    const char* buff;
     luaL_checktype(L, idx, LUA_TFUNCTION);
     lua_getfield(L, LUA_GLOBALSINDEX, "string");
     lua_getfield(L, -1, "dump");
@@ -195,7 +195,7 @@ static int luv_thread_create(lua_State* L) {
   luv_thread_t *thread;
   int ret;
   size_t len;
-  const unsigned char* buff;
+  const char* buff;
 
   thread = luv_check_thread(L, 1);
   buff = luv_thread_dumped(L, 2, &len);
