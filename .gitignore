@@ -1,4 +1,5 @@
 build
+libluv.so
 luv.so
 luv.dll
 luajit.exe

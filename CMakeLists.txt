@@ -2,10 +2,21 @@ cmake_minimum_required(VERSION 2.8)
 
 project (luv)
 
+set(LUV_VERSION_MAJOR 1)
+set(LUV_VERSION_MINOR 4)
+set(LUV_VERSION_PATCH 2)
+set(LUV_VERSION ${LUV_VERSION_MAJOR}.${LUV_VERSION_MINOR}.${LUV_VERSION_PATCH})
+
+option(BUILD_SHARED_LIBS "Build shared library" OFF)
 option(WITH_SHARED_LIBUV "Link to a shared libuv library instead of static linking" OFF)
 option(WITH_SHARED_LUAJIT "Link to a shared LuaJIT library instead of static linking" OFF)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+
+set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
+	CACHE PATH "Installation directory for libraries")
+set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include/luv"
+	CACHE PATH "Installation directory for headers")
 
 if (WITH_SHARED_LIBUV)
   find_package(Libuv)
@@ -27,10 +38,14 @@ else (WITH_SHARED_LUAJIT)
   include_directories(deps/luajit/src)
 endif (WITH_SHARED_LUAJIT)
 
-add_library (luv MODULE src/luv.c)
-
-set_target_properties(luv PROPERTIES OUTPUT_NAME "luv")
-set_target_properties(luv PROPERTIES PREFIX "")
+if (BUILD_SHARED_LIBS)
+  add_library(luv src/luv.c)
+  set_target_properties(luv
+    PROPERTIES VERSION ${LUV_VERSION} SOVERSION ${LUV_VERSION_MAJOR})
+else (BUILD_SHARED_LIBS)
+  add_library(luv MODULE src/luv.c)
+  set_target_properties(luv PROPERTIES PREFIX "")
+endif (BUILD_SHARED_LIBS)
 
 if(APPLE)
   set(CMAKE_SHARED_MODULE_CREATE_C_FLAGS
@@ -51,6 +66,12 @@ else()
   target_link_libraries(luv uv)
 endif()
 
-if (LUV_INSTALL_PREFIX)
-  install(TARGETS luv DESTINATION "${LUV_INSTALL_PREFIX}/lib")
-endif(LUV_INSTALL_PREFIX)
+if (CMAKE_INSTALL_PREFIX)
+  install(TARGETS luv LIBRARY DESTINATION "${INSTALL_LIB_DIR}")
+  if (BUILD_SHARED_LIBS)
+    install(
+      FILES src/luv.h src/util.h src/lhandle.h src/lreq.h
+      DESTINATION "${INSTALL_INC_DIR}"
+    )
+  endif (BUILD_SHARED_LIBS)
+endif (CMAKE_INSTALL_PREFIX)
