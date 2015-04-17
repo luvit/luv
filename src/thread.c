@@ -17,7 +17,6 @@
 #include "luv.h"
 
 #include "lthreadpool.h"
-#include <lualib.h>
 
 typedef struct {
   uv_thread_t handle;
@@ -124,8 +123,7 @@ int luv_thread_arg_push(lua_State*L, const luv_thread_arg_t* args) {
   return i;
 }
 
-static 
-const unsigned char* luv_thread_dumped(lua_State* L, int idx, size_t *l) {
+static const unsigned char* luv_thread_dumped(lua_State* L, int idx, size_t *l) {
   if (lua_isstring(L, idx)) {
     return lua_tolstring(L, idx, l);
   } else {
@@ -143,7 +141,7 @@ const unsigned char* luv_thread_dumped(lua_State* L, int idx, size_t *l) {
     buff = lua_tolstring(L, -1, l);
     lua_pop(L, 1);
     return buff;
-  } 
+  }
 }
 
 static luv_thread_t* luv_check_thread(lua_State* L, int index)
@@ -206,7 +204,7 @@ static int luv_thread_create(lua_State* L) {
   thread->len = len;
   thread->code = malloc(thread->len);
   memcpy(thread->code, buff, len);
-  
+
   ret = uv_thread_create(&thread->handle, luv_thread_cb, thread);
   if (ret < 0) return luv_error(L, ret);
   lua_pushboolean(L, 1);
@@ -254,7 +252,7 @@ static int luv_thread_sleep(lua_State* L) {
 }
 
 static const luaL_Reg luv_thread_methods[] = {
-  {"create", luv_thread_create}, 
+  {"create", luv_thread_create},
   {"equal", luv_thread_equal},
   {"join", luv_thread_join},
   {NULL, NULL}

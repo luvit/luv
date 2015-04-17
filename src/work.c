@@ -174,7 +174,7 @@ static int luv_new_work(lua_State* L) {
 }
 
 static int luv_queue_work(lua_State* L) {
-  luv_work_ctx_t* ctx; 
+  luv_work_ctx_t* ctx;
   luv_work_t* work;
   int ret;
   int top = lua_gettop(L);
