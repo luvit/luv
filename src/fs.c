@@ -352,7 +352,7 @@ static int luv_fs_write(lua_State* L) {
     bufs = luv_prep_bufs(L, 2, &count);
   }
   else if (lua_isstring(L, 2)) {
-    buf.base = (char*) luaL_checklstring(L, 2, &buf.len);
+    luv_check_buf(L, 2, &buf);
     count = 1;
   }
   else {

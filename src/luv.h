@@ -29,11 +29,13 @@
 # include <fcntl.h>
 # include <sys/types.h>
 # include <sys/stat.h>
-# define S_ISREG(x)  (((x) & _S_IFMT) == _S_IFREG)
-# define S_ISDIR(x)  (((x) & _S_IFMT) == _S_IFDIR)
-# define S_ISFIFO(x) (((x) & _S_IFMT) == _S_IFIFO)
-# define S_ISCHR(x)  (((x) & _S_IFMT) == _S_IFCHR)
-# define S_ISBLK(x)  0
+# ifndef __MINGW32__
+#   define S_ISREG(x)  (((x) & _S_IFMT) == _S_IFREG)
+#   define S_ISDIR(x)  (((x) & _S_IFMT) == _S_IFDIR)
+#   define S_ISFIFO(x) (((x) & _S_IFMT) == _S_IFIFO)
+#   define S_ISCHR(x)  (((x) & _S_IFMT) == _S_IFCHR)
+#   define S_ISBLK(x)  0
+# endif
 # define S_ISLNK(x)  0
 # define S_ISSOCK(x) 0
 #else
@@ -78,6 +80,8 @@ LUALIB_API int luaopen_luv (lua_State *L);
 // From stream.c
 static uv_stream_t* luv_check_stream(lua_State* L, int index);
 static void luv_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);
+static void luv_check_buf(lua_State *L, int idx, uv_buf_t *pbuf);
+static uv_buf_t* luv_prep_bufs(lua_State* L, int index, size_t *count);
 
 // from tcp.c
 static void parse_sockaddr(lua_State* L, struct sockaddr_storage* address, int addrlen);
