@@ -129,7 +129,7 @@ static const char* luv_thread_dumped(lua_State* L, int idx, size_t *l) {
   } else {
     const char* buff;
     luaL_checktype(L, idx, LUA_TFUNCTION);
-    lua_getfield(L, LUA_GLOBALSINDEX, "string");
+    lua_getglobal(L, "string");
     lua_getfield(L, -1, "dump");
     lua_remove(L, -2);
     lua_pushvalue(L, idx);

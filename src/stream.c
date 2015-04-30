@@ -16,6 +16,12 @@
  */
 #include "luv.h"
 
+static void luv_check_buf(lua_State *L, int idx, uv_buf_t *pbuf) {
+    size_t len;
+    pbuf->base = (char*)luaL_checklstring(L, idx, &len);
+    pbuf->len = len;
+}
+
 static uv_stream_t* luv_check_stream(lua_State* L, int index) {
   int isStream;
   uv_stream_t* handle;
@@ -141,7 +147,7 @@ static uv_buf_t* luv_prep_bufs(lua_State* L, int index, size_t *count) {
   bufs = malloc(sizeof(uv_buf_t) * *count);
   for (i = 0; i < *count; ++i) {
     lua_rawgeti(L, index, i + 1);
-    bufs[i].base = (char*) luaL_checklstring(L, -1, &(bufs[i].len));
+    luv_check_buf(L, -1, &bufs[i]);
     lua_pop(L, 1);
   }
   return bufs;
@@ -162,7 +168,7 @@ static int luv_write(lua_State* L) {
   }
   else if (lua_isstring(L, 2)) {
     uv_buf_t buf;
-    buf.base = (char*) luaL_checklstring(L, 2, &buf.len);
+    luv_check_buf(L, 2, &buf);
     ret = uv_write(req, handle, &buf, 1, luv_write_cb);
   }
   else {
@@ -194,7 +200,7 @@ static int luv_write2(lua_State* L) {
   }
   else if (lua_isstring(L, 2)) {
     uv_buf_t buf;
-    buf.base = (char*) luaL_checklstring(L, 2, &buf.len);
+    luv_check_buf(L, 2, &buf);
     ret = uv_write2(req, handle, &buf, 1, send_handle, luv_write_cb);
   }
   else {
@@ -220,7 +226,7 @@ static int luv_try_write(lua_State* L) {
   }
   else if (lua_isstring(L, 2)) {
     uv_buf_t buf;
-    buf.base = (char*) luaL_checklstring(L, 2, &buf.len);
+    luv_check_buf(L, 2, &buf);
     ret = uv_try_write(handle, &buf, 1);
   }
   else {

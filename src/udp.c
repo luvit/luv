@@ -160,7 +160,7 @@ static int luv_udp_send(lua_State* L) {
   int ret, port, ref;
   const char* host;
   struct sockaddr_storage addr;
-  buf.base = (char*) luaL_checklstring(L, 2, &buf.len);
+  luv_check_buf(L, 2, &buf);
   host = luaL_checkstring(L, 3);
   port = luaL_checkinteger(L, 4);
   if (uv_ip4_addr(host, port, (struct sockaddr_in*)&addr) &&
@@ -185,7 +185,7 @@ static int luv_udp_try_send(lua_State* L) {
   int ret, port;
   const char* host;
   struct sockaddr_storage addr;
-  buf.base = (char*) luaL_checklstring(L, 2, &buf.len);
+  luv_check_buf(L, 2, &buf);
   host = luaL_checkstring(L, 3);
   port = luaL_checkinteger(L, 4);
   if (uv_ip4_addr(host, port, (struct sockaddr_in*)&addr) &&

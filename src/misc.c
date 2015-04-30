@@ -21,7 +21,7 @@
 #endif
 
 static int luv_guess_handle(lua_State* L) {
-  uv_file file = luaL_checkint(L, 1);
+  uv_file file = luaL_checkinteger(L, 1);
   switch (uv_guess_handle(file)) {
 #define XX(uc, lc) case UV_##uc: lua_pushstring(L, #lc); break;
   UV_HANDLE_TYPE_MAP(XX)
@@ -274,7 +274,7 @@ static int luv_getgid(lua_State* L){
 }
 
 static int luv_setuid(lua_State* L){
-  int uid = luaL_checkint(L, 1);
+  int uid = luaL_checkinteger(L, 1);
   int r = setuid(uid);
   if (-1 == r) {
     luaL_error(L, "Error setting UID");
@@ -283,7 +283,7 @@ static int luv_setuid(lua_State* L){
 }
 
 static int luv_setgid(lua_State* L){
-  int gid = luaL_checkint(L, 1);
+  int gid = luaL_checkinteger(L, 1);
   int r = setgid(gid);
   if (-1 == r) {
     luaL_error(L, "Error setting GID");
