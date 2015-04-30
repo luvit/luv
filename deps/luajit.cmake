@@ -5,7 +5,7 @@
 # Redistribution and use of this file is allowed according to the terms of the MIT license.
 # Debugged and (now seriously) modified by Ronan Collobert, for Torch7
 
-project(LuaJIT C ASM)
+#project(LuaJIT C ASM)
 
 SET(LUAJIT_DIR ${CMAKE_CURRENT_LIST_DIR}/luajit)
 
@@ -324,10 +324,21 @@ include_directories(
   ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-IF(WITH_AMALG)
-  add_library(luajit-5.1 STATIC ${LUAJIT_DIR}/src/ljamalg.c ${DEPS} )
+IF(WITH_SHARED_LUA)
+    IF(WITH_AMALG)
+	add_library(luajit-5.1 SHARED ${LUAJIT_DIR}/src/ljamalg.c ${DEPS} )
+    ELSE()
+	add_library(luajit-5.1 SHARED ${SRC_LJCORE} ${DEPS} )
+    ENDIF()
+    SET_TARGET_PROPERTIES(luajit-5.1 PROPERTIES OUTPUT_NAME "lua51")
 ELSE()
-  add_library(luajit-5.1 STATIC ${SRC_LJCORE} ${DEPS} )
+    IF(WITH_AMALG)
+	add_library(luajit-5.1 STATIC ${LUAJIT_DIR}/src/ljamalg.c ${DEPS} )
+    ELSE()
+	add_library(luajit-5.1 STATIC ${SRC_LJCORE} ${DEPS} )
+    ENDIF()
+    SET_TARGET_PROPERTIES(luajit-5.1 PROPERTIES
+	PREFIX "lib" IMPORT_PREFIX "lib" OUTPUT_NAME "luajit")
 ENDIF()
 
 target_link_libraries (luajit-5.1 ${LIBS} )

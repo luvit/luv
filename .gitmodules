@@ -4,3 +4,6 @@
 [submodule "luajit"]
 	path = deps/luajit
 	url = http://luajit.org/git/luajit-2.0.git
+[submodule "lua"]
+	path = deps/lua
+	url = https://github.com/lua/lua
