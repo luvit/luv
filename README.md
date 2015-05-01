@@ -16,15 +16,18 @@ The best docs currently are the [libuv docs](http://docs.libuv.org/) themselves.
 ```lua
 local uv = require('luv')
 
+-- Create a handle to a uv_timer_t
+local timer = uv.new_timer()
+
 -- This will wait 1000ms and then continue inside the callback
-uv.timer_start(uv.new_timer(), 1000, 0, function (timer)
+timer:start(1000, 0, function ()
   -- timer here is the value we passed in before from new_timer.
 
   print ("Awake!")
 
   -- You must always close your uv handles or you'll leak memory
   -- We can't depend on the GC since it doesn't know enough about libuv.
-  uv.close(timer)
+  timer:close()
 end)
 
 print("Sleeping");
@@ -37,18 +40,20 @@ uv.run()
 
 Here is an example of an TCP echo server
 ```lua
+local uv = require('luv')
+
 local function create_server(host, port, on_connection)
 
   local server = uv.new_tcp()
-  uv.tcp_bind(server, host, port)
+  server:bind(host, port)
 
-  uv.listen(server, 128, function(self)
+  server:listen(128, function(self)
     -- self is the same as server
     assert(self == server)
 
     -- Accept the client
     local client = uv.new_tcp()
-    uv.accept(server, client)
+    server:accept(client)
 
     on_connection(client)
   end)
@@ -56,22 +61,26 @@ local function create_server(host, port, on_connection)
   return server
 end
 
-create_server("0.0.0.0", 0, function (client)
+local server = create_server("0.0.0.0", 0, function (client)
 
-  uv.read_start(client, function (self, err, chunk)
+  client:read_start(function (err, chunk)
 
     -- Crash on errors
     assert(not err, err)
 
     if chunk then
       -- Echo anything heard
-      uv.write(client, chunk)
+      client:write(chunk)
     else
       -- When the stream ends, close the socket
-      uv.close(client)
+      client:close()
     end
   end)
 end)
+
+print("TCP Echo serverr listening on port " .. server:getsockname().port)
+
+uv.run()
 ```
 
 More examples can be found in the [examples](examples) and [tests](tests) folders.
