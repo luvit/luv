@@ -62,7 +62,7 @@ endif()
 
 if(WIN32)
   add_definitions(-DLUA_BUILD_AS_DLL -DLUA_LIB)
-  target_link_libraries(luv uv lua51)
+  target_link_libraries(luv uv luajit-5.1)
 elseif("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
   target_link_libraries(luv uv rt)
 else()

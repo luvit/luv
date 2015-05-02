@@ -325,18 +325,16 @@ include_directories(
 )
 
 IF(WITH_AMALG)
-  add_library(lua51 STATIC ${LUAJIT_DIR}/src/ljamalg.c ${DEPS} )
+  add_library(luajit-5.1 STATIC ${LUAJIT_DIR}/src/ljamalg.c ${DEPS} )
 ELSE()
-  add_library(lua51 STATIC ${SRC_LJCORE} ${DEPS} )
+  add_library(luajit-5.1 STATIC ${SRC_LJCORE} ${DEPS} )
 ENDIF()
 
-target_link_libraries (lua51 ${LIBS} )
-SET_TARGET_PROPERTIES(lua51 PROPERTIES
-  PREFIX "lib" IMPORT_PREFIX "lib" OUTPUT_NAME "luajit")
+target_link_libraries (luajit-5.1 ${LIBS} )
 
 IF(WIN32)
   add_executable(luajit ${LUAJIT_DIR}/src/luajit.c)
-  target_link_libraries(luajit lua51)
+  target_link_libraries(luajit luajit-5.1)
 ELSE()
   IF(WITH_AMALG)
     add_executable(luajit ${LUAJIT_DIR}/src/luajit.c ${LUAJIT_DIR}/src/ljamalg.c ${DEPS})
