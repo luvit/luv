@@ -74,10 +74,10 @@ if (CMAKE_INSTALL_PREFIX)
     ARCHIVE DESTINATION "${INSTALL_LIB_DIR}"
     LIBRARY DESTINATION "${INSTALL_LIB_DIR}"
   )
-  if (BUILD_SHARED_LIBS)
+  if (NOT BUILD_MODULE)
     install(
       FILES src/luv.h src/util.h src/lhandle.h src/lreq.h
       DESTINATION "${INSTALL_INC_DIR}"
     )
-  endif (BUILD_SHARED_LIBS)
+  endif (NOT BUILD_MODULE)
 endif (CMAKE_INSTALL_PREFIX)
