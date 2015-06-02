@@ -99,6 +99,7 @@ static const luaL_Reg luv_functions[] = {
 
   // poll.c
   {"new_poll", luv_new_poll},
+  {"new_socket_poll", luv_new_socket_poll},
   {"poll_start", luv_poll_start},
   {"poll_stop", luv_poll_stop},
 
