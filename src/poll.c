@@ -34,6 +34,18 @@ static int luv_new_poll(lua_State* L) {
   return 1;
 }
 
+static int luv_new_socket_poll(lua_State* L) {
+  int fd = luaL_checkinteger(L, 1);
+  uv_poll_t* handle = lua_newuserdata(L, sizeof(*handle));
+  int ret = uv_poll_init_socket(luv_loop(L), handle, fd);
+  if (ret < 0) {
+    lua_pop(L, 1);
+    return luv_error(L, ret);
+  }
+  handle->data = luv_setup_handle(L);
+  return 1;
+}
+
 // These are the same order as uv_run_mode which also starts at 0
 static const char *const luv_pollevents[] = {
   "r", "w", "rw", NULL
