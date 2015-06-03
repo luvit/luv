@@ -219,6 +219,7 @@ static const luaL_Reg luv_functions[] = {
 
   // misc.c
   {"chdir", luv_chdir},
+  {"os_homedir", luv_os_homedir},
   {"cpu_info", luv_cpu_info},
   {"cwd", luv_cwd},
   {"exepath", luv_exepath},

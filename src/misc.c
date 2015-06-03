@@ -244,6 +244,15 @@ static int luv_chdir(lua_State* L) {
   return 1;
 }
 
+static int luv_os_homedir(lua_State* L) {
+  size_t size = 2*PATH_MAX;
+  char homedir[2*PATH_MAX];
+  int ret = uv_os_homedir(homedir, &size);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushlstring(L, homedir, size);
+  return 1;
+}
+
 static int luv_get_total_memory(lua_State* L) {
   lua_pushnumber(L, uv_get_total_memory());
   return 1;
