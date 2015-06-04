@@ -199,6 +199,7 @@ if(WIN32)
     psapi.lib
     iphlpapi.lib
     advapi32.lib
+    Userenv.lib
   )
 endif()
 
