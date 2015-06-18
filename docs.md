@@ -531,10 +531,66 @@ of time.
 
 [`uv_poll_t`]: #uv_poll_t--poll-handle
 
-**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/poll.html)
-using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L101-103)
-and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L272-277)
-from [poll.c](https://github.com/luvit/luv/blob/master/src/poll.c)
+Poll handles are used to watch file descriptors for readability and writability,
+similar to the purpose of [poll(2)](http://linux.die.net/man/2/poll).
+
+The purpose of poll handles is to enable integrating external libraries that
+rely on the event loop to signal it about the socket status changes, like c-ares
+or libssh2. Using `uv_poll_t` for any other purpose is not recommended;
+`uv_tcp_t`, `uv_udp_t`, etc. provide an implementation that is faster and more
+scalable than what can be achieved with `uv_poll_t`, especially on Windows.
+
+It is possible that poll handles occasionally signal that a file descriptor is
+readable or writable even when it isn’t. The user should therefore always be
+prepared to handle EAGAIN or equivalent when it attempts to read from or write
+to the fd.
+
+It is not okay to have multiple active poll handles for the same socket, this
+can cause libuv to busyloop or otherwise malfunction.
+
+The user should not close a file descriptor while it is being polled by an
+active poll handle. This can cause the handle to report an error, but it might
+also start polling another socket. However the fd can be safely closed
+immediately after a call to `uv.poll_stop()` or `uv.close()`.
+
+**Note** On windows only sockets can be polled with poll handles. On Unix any
+file descriptor that would be accepted by poll(2) can be used.
+
+
+### `uv.new_poll(fd)`
+
+Initialize the handle using a file descriptor.
+
+The file descriptor is set to non-blocking mode.
+
+### `uv.new_socket_poll(fd)`
+
+Initialize the handle using a socket descriptor. On Unix this is identical to
+`uv.poll_init()`. On windows it takes a SOCKET handle.
+
+The socket is set to non-blocking mode.
+
+### `uv.poll_start(poll, events, callback)`
+
+> method form `poll:start()`
+
+Starts polling the file descriptor. `events` is `"r"`, `"w"`, or `"rw"` and
+translates to a bitmask made up of UV_READABLE and UV_WRITABLE. As soon as an
+event is detected the callback will be called with status set to 0, and the
+detected events set on the events field.
+
+The user should not close the socket while the handle is active. If the user
+does that anyway, the callback may be called reporting an error status, but this
+is not guaranteed.
+
+**Note** Calling `uv.poll_start()`` on a handle that is already active is fine.
+Doing so will update the events mask that is being watched for.
+
+## `uv.poll_stop(poll)`
+
+> method form `poll:stop()`
+
+Stop polling the file descriptor, the callback will no longer be called.
 
 ## `uv_signal_t` — Signal handle
 
@@ -1140,4 +1196,3 @@ from [misc.c](https://github.com/luvit/luv/blob/master/src/misc.c)
 [luv]: https://github.com/luvit/luv
 [luvit]: https://github.com/luvit/luvit
 [libuv]: https://github.com/libuv/libuv
-
