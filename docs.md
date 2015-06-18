@@ -557,13 +557,13 @@ immediately after a call to `uv.poll_stop()` or `uv.close()`.
 file descriptor that would be accepted by poll(2) can be used.
 
 
-### `uv.new_poll(fd)`
+### `uv.new_poll(fd) -> poll`
 
 Initialize the handle using a file descriptor.
 
 The file descriptor is set to non-blocking mode.
 
-### `uv.new_socket_poll(fd)`
+### `uv.new_socket_poll(fd) -> poll`
 
 Initialize the handle using a socket descriptor. On Unix this is identical to
 `uv.poll_init()`. On windows it takes a SOCKET handle.
@@ -655,10 +655,122 @@ Stop the handle, the callback will no longer be called.
 
 [`uv_process_t`]: #uv_process_t--process-handle
 
-**TODO**: port docs from [docs.libuv.org](http://docs.libuv.org/en/v1.x/process.html)
-using [functions](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L111-114)
-and [methods](https://github.com/luvit/luv/blob/25278a3871962cab29763692fdc3b270a7e96fe9/src/luv.c#L323-L326)
-from [process.c](https://github.com/luvit/luv/blob/master/src/process.c)
+Process handles will spawn a new process and allow the user to control it and
+establish communication channels with it using streams.
+
+### `uv.disable_stdio_inheritance()`
+
+Disables inheritance for file descriptors / handles that this process inherited
+from its parent. The effect is that child processes spawned by this process
+don’t accidentally inherit these handles.
+
+It is recommended to call this function as early in your program as possible,
+before the inherited file descriptors can be closed or duplicated.
+
+**Note** This function works on a best-effort basis: there is no guarantee that
+libuv can discover all file descriptors that were inherited. In general it does
+a better job on Windows than it does on Unix.
+
+### `uv.spawn(file, options, onexit) -> process, pid`
+
+Initializes the process handle and starts the process. If the process is
+successfully spawned, this function will return the handle and pid of the child
+process.
+
+Possible reasons for failing to spawn would include (but not be limited to) the
+file to execute not existing, not having permissions to use the setuid or setgid
+specified, or not having enough memory to allocate for the new process.
+
+
+```lua
+local stdout = uv.new_pipe(false)
+local stderr = uv.new_pipe(false)
+local stdin = uv.new_pipe(false)
+
+local handle, pid
+
+local function onexit(code, signal)
+  p("exit", {code=code,signal=signal})
+end
+
+local function onclose()
+  p("close")
+end
+
+local function onread(err, chunk)
+  assert(not err, err)
+  if (chunk) then
+    p("data", {data=chunk})
+  else
+    p("end")
+  end
+end
+
+local function onshutdown()
+  uv.close(handle, onclose)
+end
+
+handle, pid = uv.spawn("cat", {
+  stdio = {stdin, stdout, stderr}
+}, onexit)
+
+p{
+  handle=handle,
+  pid=pid
+}
+
+uv.read_start(stdout, onread)
+uv.read_start(stderr, onread)
+uv.write(stdin, "Hello World")
+uv.shutdown(stdin, onshutdown)
+```
+
+ - `options.args` - Command line arguments as a list of string. The first string
+   should be the path to the program. On Windows this uses CreateProcess which
+   concatenates the arguments into a string this can cause some strange errors.
+   (See `options.verbatim` below for Windows.)
+ - `options.stdio` - Set the file descriptors that will be made available to the
+   child process. The convention is that the first entries are stdin, stdout,
+   and stderr. (**Note** On Windows file descriptors after the third are
+   available to the child process only if the child processes uses the MSVCRT
+   runtime.)
+ - `options.env` - Set environment variables for the new process.
+ - `options.cwd` - Set current working directory for the subprocess.
+ - `options.uid` - Set the child process' user id.
+ - `options.gid` - Set the child process' group id.
+ - `options.verbatim` - If true, do not wrap any arguments in quotes, or perform
+   any other escaping, when converting the argument list into a command line
+   string. This option is only meaningful on Windows systems. On Unix it is
+   silently ignored.
+ - `options.detached` - If true, spawn the child process in a detached state -
+   this will make it a process group leader, and will effectively enable the
+   child to keep running after the parent exits. Note that the child process
+   will still keep the parent's event loop alive unless the parent process calls
+   `uv.unref()` on the child's process handle.
+ - `options.hide` - If true, hide the subprocess console window that would
+   normally be created. This option is only meaningful on Windows systems. On
+   Unix it is silently ignored.
+
+The `options.stdio` entries can take many shapes.
+
+- If they are numbers, then the child process inherits that same zero-indexed fd
+  from the parent process.
+- If `uv_stream_h` handles are passed in, those are used as a read-write pipe or
+  inherited stream depending if the stream has a valid fd.
+- Including `nil` placeholders means to ignore that fd in the child.
+
+When the child process exits, the `onexit` callback will be called with exit
+code and signal.
+
+### `uv.process_kill(process, sigmun)`
+
+> method form `process:kill(sigmun)`
+
+Sends the specified signal to the given process handle.
+
+### `uv.kill(pid, sigmun)`
+
+Sends the specified signal to the given PID.
 
 ## `uv_stream_t` — Stream handle
 
