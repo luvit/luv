@@ -1028,8 +1028,7 @@ handle passing between processes.
 
 Open an existing file descriptor or [`uv_handle_t`][] as a pipe.
 
-**Note**: The user is responsible for setting the file descriptor in
-non-blocking mode.
+**Note**: The file descriptor is set to non-blocking mode.
 
 ### `uv.pipe_bind(pipe, name)`
 
