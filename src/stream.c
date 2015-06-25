@@ -100,7 +100,10 @@ static void luv_read_cb(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
     nargs = 2;
   }
 
-  free(buf->base);
+  if (buf->base != 0 && buf->len != 0) {
+    free(buf->base);
+  }
+
   if (nread == 0) return;
 
   if (nread == UV_EOF) {
