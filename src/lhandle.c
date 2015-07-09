@@ -52,22 +52,50 @@ static void luv_check_callback(lua_State* L, luv_handle_t* data, luv_callback_id
   data->callbacks[id] = luaL_ref(L, LUA_REGISTRYINDEX);
 }
 
+static int traceback (lua_State *L) {
+  if (!lua_isstring(L, 1))  /* 'message' not a string? */
+    return 1;  /* keep it intact */
+  lua_getfield(L, LUA_GLOBALSINDEX, "debug");
+  if (!lua_istable(L, -1)) {
+    lua_pop(L, 1);
+    return 1;
+  }
+  lua_getfield(L, -1, "traceback");
+  if (!lua_isfunction(L, -1)) {
+    lua_pop(L, 2);
+    return 1;
+  }
+  lua_pushvalue(L, 1);  /* pass error message */
+  lua_pushinteger(L, 2);  /* skip this function and traceback */
+  lua_call(L, 2, 1);  /* call debug.traceback */
+  return 1;
+}
+
 static void luv_call_callback(lua_State* L, luv_handle_t* data, luv_callback_id id, int nargs) {
   int ref = data->callbacks[id];
   if (ref == LUA_NOREF) {
     lua_pop(L, nargs);
   }
   else {
+    // Get the traceback function in case of error
+    lua_pushcfunction(L, traceback);
+    // And insert it before the args if there are any.
+    if (nargs) {
+      lua_insert(L, -1 - nargs);
+    }
     // Get the callback
     lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
     // And insert it before the args if there are any.
     if (nargs) {
       lua_insert(L, -1 - nargs);
     }
-    if (lua_pcall(L, nargs, 0, 0)) {
+
+    if (lua_pcall(L, nargs, 0, -2 - nargs)) {
       fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
       exit(-1);
     }
+    // Remove the traceback function
+    lua_pop(L, 1);
   }
 }
 
