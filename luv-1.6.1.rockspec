@@ -1,13 +1,13 @@
 package = "luv"
-version = "1.4.2-2"
+version = "1.6.1"
 source = {
-  url = 'https://github.com/luvit/luv/releases/download/1.4.2-2/luv-1.4.2-2.tar.gz',
+  url = 'https://github.com/luvit/luv/releases/download/v1.6.1/luv-v1.6.1.tar.gz',
 }
 
 description = {
   summary = "Bare libuv bindings for lua",
   detailed = [[
-libuv bindings for luajit and lua 5.1/5.2.
+libuv bindings for luajit and lua 5.1/5.3.
 
 This library makes libuv available to lua scripts. It was made for the luvit project but should usable from nearly any lua project.
   ]],
