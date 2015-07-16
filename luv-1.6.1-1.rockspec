@@ -27,6 +27,7 @@ build = {
     LUV_INSTALL_PREFIX = "$(PREFIX)",
     LUV_LUA_LIBDIR = "$(LUA_LIBDIR)",
     LUV_LUA_INCDIR = "$(LUA_INCDIR)",
+    LUA_BUILD_TYPE = "System",
     BUILD_SHARED_LIBS="ON",
   }
 }
