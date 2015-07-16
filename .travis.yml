@@ -3,6 +3,8 @@ sudo: false
 
 addons:
   apt:
+    sources:
+    - kalakris-cmake
     packages:
     - cmake
 
