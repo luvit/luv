@@ -305,6 +305,7 @@ static int luv_constants(lua_State* L) {
   lua_pushinteger(L, SIGSYS);
   lua_setfield(L, -2, "SIGSYS");
 #endif
+
   return 1;
 }
 

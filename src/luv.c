@@ -43,6 +43,7 @@
 #include "work.c"
 #include "misc.c"
 #include "constants.c"
+#include "platform.c"
 
 static const luaL_Reg luv_functions[] = {
   // loop.c
@@ -478,6 +479,8 @@ LUALIB_API int luaopen_luv (lua_State *L) {
   luaL_newlib(L, luv_functions);
   luv_constants(L);
   lua_setfield(L, -2, "constants");
+  luv_platform(L);
+  lua_setfield(L, -2, "platform");
 
   luv_thread_init(L, NULL, NULL);
   luv_work_init(L);
