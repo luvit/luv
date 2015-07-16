@@ -26,6 +26,7 @@ if (NOT LUA_BUILD_TYPE)
 endif (NOT LUA_BUILD_TYPE)
 
 if (WITH_LUA_ENGINE STREQUAL Lua)
+  add_definitions(-DLUA_USE_DLOPEN)
   set(USE_LUAJIT OFF)
 else ()
   set(USE_LUAJIT ON)

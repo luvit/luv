@@ -10,6 +10,13 @@ WITH_SHARED_LIBUV ?= OFF
 WITH_LUA_ENGINE ?= LuaJIT
 LUA_BUILD_TYPE ?= Static
 
+
+ifeq ($(WITH_LUA_ENGINE), LuaJIT)
+  LUABIN=build/luajit
+else
+  LUABIN=build/lua
+endif
+
 CMAKE_OPTIONS += \
 	-DBUILD_MODULE=$(BUILD_MODULE) \
 	-DBUILD_SHARED_LIBS=$(BUILD_SHARED_LIBS) \
@@ -36,7 +43,7 @@ clean:
 	rm -rf build luv.so
 
 test: luv
-	build/luajit tests/run.lua
+	${LUABIN} tests/run.lua
 
 reset:
 	git submodule update --init --recursive && \
