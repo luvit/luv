@@ -17,6 +17,7 @@ return require('lib/tap')(function (test)
     local child, pid
     local input = uv.new_pipe(false)
     child, pid = assert(uv.spawn(uv.exepath(), {
+      args = {"-"},
       -- cwd = uv.cwd(),
       stdio = {input,1,2}
     }, expect(function (code, signal)

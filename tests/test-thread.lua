@@ -26,7 +26,7 @@ return require('lib/tap')(function (test)
       assert(five == 5)
       assert(hw == 'helloworld')
       require('luv').sleep(1000)
-    end, unpack(args)):join()
+    end, table.unpack(args)):join()
     local elapsed = (os.time() - before) * 1000
     assert(elapsed >= 1000, "elapsed should be at least delay ")
   end)
