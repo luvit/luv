@@ -26,7 +26,7 @@ void luv_stack_dump(lua_State* L, const char* name) {
         fprintf(stderr, "  %d %s \"%s\"\n", i, lua_typename(L, type), lua_tostring(L, i));
         break;
       case LUA_TNUMBER:
-        fprintf(stderr, "  %d %s %ld\n", i, lua_typename(L, type), lua_tointeger(L, i));
+        fprintf(stderr, "  %d %s %ld\n", i, lua_typename(L, type), (long int) lua_tointeger(L, i));
         break;
       case LUA_TUSERDATA:
         fprintf(stderr, "  %d %s %p\n", i, lua_typename(L, type), lua_touserdata(L, i));
