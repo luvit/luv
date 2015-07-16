@@ -29,7 +29,7 @@ return require('lib/tap')(function (test)
 
   end)
 
-  if require('ffi').os == "Windows" then return end
+  if _G.isWindows then return end
 
   test("spawn and kill by pid", function (print, p, expect, uv)
     local handle, pid

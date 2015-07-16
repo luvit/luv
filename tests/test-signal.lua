@@ -11,7 +11,7 @@ end)
 
 return require('lib/tap')(function (test)
 
-  if require('ffi').os == "Windows" then return end
+  if _G.isWindows then return end
 
   test("Catch SIGINT", function (print, p, expect, uv)
     local child, pid
