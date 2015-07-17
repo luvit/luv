@@ -1,10 +1,16 @@
 configuration: Release
 
+environment:
+  matrix:
+    - LUV_ARCH: amd64
+    - LUV_ARCH: ia32
+
 matrix:
   fast_finish: true
 
 build_script:
  - git submodule update --init
+ - msvcbuild.bat %LUV_ARCH%
  - msvcbuild.bat
 
 test_script:
