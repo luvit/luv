@@ -145,7 +145,7 @@ static const char* luv_thread_dumped(lua_State* L, int idx, size_t *l) {
       luaL_pushresult(&b);
       buff = lua_tolstring(L, -1, l);
     } else
-      lua_error(L, "Error: unable to dump given function");
+      luaL_error(L, "Error: unable to dump given function");
     lua_settop(L, top);
 
     return buff;
@@ -259,7 +259,7 @@ static const luaL_Reg luv_thread_methods[] = {
   {NULL, NULL}
 };
 
-static void luv_thread_init(lua_State* L, luv_acquire_vm acquire_vm, luv_release_vm release_vm) {
+static void luv_thread_init(lua_State* L) {
   luaL_newmetatable(L, "uv_thread");
   lua_pushcfunction(L, luv_thread_tostring);
   lua_setfield(L, -2, "__tostring");
@@ -272,7 +272,12 @@ static void luv_thread_init(lua_State* L, luv_acquire_vm acquire_vm, luv_release
   lua_setfield(L, -2, "__index");
   lua_pop(L, 1);
 
-  acquire_vm_cb = acquire_vm ? acquire_vm : luv_thread_acquire_vm;
-  release_vm_cb = release_vm ? release_vm : luv_thread_release_vm;
+  acquire_vm_cb = luv_thread_acquire_vm;
+  release_vm_cb = luv_thread_release_vm;
 }
 
+LUALIB_API void luv_set_thread_cb(luv_acquire_vm acquire, luv_release_vm release)
+{
+  acquire_vm_cb = acquire;
+  release_vm_cb = release;
+}
