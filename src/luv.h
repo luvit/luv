@@ -103,5 +103,6 @@ static const char* luv_sig_num_to_string(const int num);
 
 typedef lua_State* (*luv_acquire_vm)();
 typedef void (*luv_release_vm)(lua_State* L);
+LUALIB_API void luv_set_thread_cb(luv_acquire_vm acquire, luv_release_vm release);
 
 #endif

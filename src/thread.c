@@ -123,23 +123,35 @@ int luv_thread_arg_push(lua_State*L, const luv_thread_arg_t* args) {
   return i;
 }
 
+int thread_dump(lua_State *L, const void* p, size_t sz, void* B)
+{
+  (void)L;
+  luaL_addlstring((luaL_Buffer*)B, (const char *)p, sz);
+  return 0;
+}
+
 static const char* luv_thread_dumped(lua_State* L, int idx, size_t *l) {
   if (lua_isstring(L, idx)) {
     return lua_tolstring(L, idx, l);
   } else {
-    const char* buff;
+    const char* buff = NULL;
+    int top = lua_gettop(L);
     luaL_checktype(L, idx, LUA_TFUNCTION);
-    lua_getglobal(L, "string");
-    lua_getfield(L, -1, "dump");
-    lua_remove(L, -2);
     lua_pushvalue(L, idx);
-    if (lua_pcall(L, 1, 1, 0))
+    luaL_Buffer b;
+    luaL_buffinit(L, &b);
+#if LUA_VERSION_NUM>=503
+    if (lua_dump(L, thread_dump, &b, 1) == 0)
+#else
+    if (lua_dump(L, thread_dump, &b) == 0)
+#endif
     {
-      fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
-      exit(-1);
-    }
-    buff = lua_tolstring(L, -1, l);
-    lua_pop(L, 1);
+      luaL_pushresult(&b);
+      buff = lua_tolstring(L, -1, l);
+    } else
+      luaL_error(L, "Error: unable to dump given function");
+    lua_settop(L, top);
+
     return buff;
   }
 }
@@ -251,7 +263,7 @@ static const luaL_Reg luv_thread_methods[] = {
   {NULL, NULL}
 };
 
-static void luv_thread_init(lua_State* L, luv_acquire_vm acquire_vm, luv_release_vm release_vm) {
+static void luv_thread_init(lua_State* L) {
   luaL_newmetatable(L, "uv_thread");
   lua_pushcfunction(L, luv_thread_tostring);
   lua_setfield(L, -2, "__tostring");
@@ -264,7 +276,12 @@ static void luv_thread_init(lua_State* L, luv_acquire_vm acquire_vm, luv_release
   lua_setfield(L, -2, "__index");
   lua_pop(L, 1);
 
-  acquire_vm_cb = acquire_vm ? acquire_vm : luv_thread_acquire_vm;
-  release_vm_cb = release_vm ? release_vm : luv_thread_release_vm;
+  acquire_vm_cb = luv_thread_acquire_vm;
+  release_vm_cb = luv_thread_release_vm;
 }
 
+LUALIB_API void luv_set_thread_cb(luv_acquire_vm acquire, luv_release_vm release)
+{
+  acquire_vm_cb = acquire;
+  release_vm_cb = release;
+}
