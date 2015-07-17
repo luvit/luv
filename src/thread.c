@@ -123,23 +123,31 @@ int luv_thread_arg_push(lua_State*L, const luv_thread_arg_t* args) {
   return i;
 }
 
+int thread_dump(lua_State *L, const void* p, size_t sz, void* B)
+{
+  (void)L;
+  luaL_addlstring((luaL_Buffer*)B, (const char *)p, sz);
+  return 0;
+}
+
 static const char* luv_thread_dumped(lua_State* L, int idx, size_t *l) {
   if (lua_isstring(L, idx)) {
     return lua_tolstring(L, idx, l);
   } else {
-    const char* buff;
+    const char* buff = NULL;
+    int top = lua_gettop(L);
     luaL_checktype(L, idx, LUA_TFUNCTION);
-    lua_getglobal(L, "string");
-    lua_getfield(L, -1, "dump");
-    lua_remove(L, -2);
     lua_pushvalue(L, idx);
-    if (lua_pcall(L, 1, 1, 0))
+    luaL_Buffer b;
+    luaL_buffinit(L, &b);
+    if (lua_dump(L, thread_dump, &b) == 0)
     {
-      fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
-      exit(-1);
-    }
-    buff = lua_tolstring(L, -1, l);
-    lua_pop(L, 1);
+      luaL_pushresult(&b);
+      buff = lua_tolstring(L, -1, l);
+    } else
+      lua_error(L, "Error: unable to dump given function");
+    lua_settop(L, top);
+
     return buff;
   }
 }
