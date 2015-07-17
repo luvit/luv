@@ -140,12 +140,16 @@ static const char* luv_thread_dumped(lua_State* L, int idx, size_t *l) {
     lua_pushvalue(L, idx);
     luaL_Buffer b;
     luaL_buffinit(L, &b);
+#if LUA_VERSION_NUM < 503
     if (lua_dump(L, thread_dump, &b) == 0)
+#else
+    if (lua_dump(L, thread_dump, &b, 0) == 0)
+#endif
     {
       luaL_pushresult(&b);
       buff = lua_tolstring(L, -1, l);
     } else
-      lua_error(L, "Error: unable to dump given function");
+      luaL_error(L, "Error: unable to dump given function");
     lua_settop(L, top);
 
     return buff;
