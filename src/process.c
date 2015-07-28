@@ -35,6 +35,11 @@ static void exit_cb(uv_process_t* handle, int64_t exit_status, int term_signal) 
   luv_call_callback(L, data, LUV_EXIT, 2);
 }
 
+static void luv_spawn_close_cb(uv_handle_t* handle) {
+  lua_State *L = luv_state(handle->loop);
+  luv_cleanup_handle(L, handle->data);
+}
+
 static void luv_clean_options(uv_process_options_t* options) {
   free(options->args);
   free(options->stdio);
@@ -214,8 +219,7 @@ static int luv_spawn(lua_State* L) {
 
   luv_clean_options(&options);
   if (ret < 0) {
-    luv_cleanup_handle(L, handle->data);
-    uv_close((uv_handle_t*)handle, NULL);
+    uv_close((uv_handle_t*)handle, luv_spawn_close_cb);
     return luv_error(L, ret);
   }
   lua_pushinteger(L, handle->pid);
