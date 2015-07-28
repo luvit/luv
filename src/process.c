@@ -216,6 +216,7 @@ static int luv_spawn(lua_State* L) {
   if (ret < 0) {
     luv_cleanup_handle(L, handle->data);
     uv_close((uv_handle_t*)handle, NULL);
+    uv_run(luv_loop(L), UV_RUN_ONCE);
     return luv_error(L, ret);
   }
   lua_pushinteger(L, handle->pid);
