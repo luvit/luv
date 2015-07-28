@@ -5,7 +5,11 @@ luv
 
 [![Windows Build status](https://ci.appveyor.com/api/projects/status/uo1qhdcc0vcqsiok/branch/master?svg=true)](https://ci.appveyor.com/project/racker-buildbot/luv/branch/master)
 
-[libuv](https://github.com/joyent/libuv) bindings for [luajit](http://luajit.org/) and [lua](http://www.lua.org/) [5.1](http://www.lua.org/manual/5.1/manual.html)/[5.2](http://www.lua.org/manual/5.2/manual.html).
+[libuv](https://github.com/joyent/libuv) bindings for
+[luajit](http://luajit.org/) and [lua](http://www.lua.org/)
+[5.1](http://www.lua.org/manual/5.1/manual.html)/
+[5.2](http://www.lua.org/manual/5.2/manual.html)/
+[5.3](http://www.lua.org/manual/5.3/manual.html).
 
 This library makes libuv available to lua scripts.  It was made for the [luvit](http://luvit.io/) project but should usable from nearly any lua project.
 
@@ -139,4 +143,71 @@ On unix systems, use the Makefile.
 
 ```
 ~/Code/luv> make test
+```
+
+This will build luv as a module library. Module libraries are plugins that are
+not linked into other targets.
+
+#### Build with PUC Lua 5.3
+By default luv is linked with LuaJIT 2.0.4. If you rather like to link luv
+with PUC Lua 5.3 you can run make with:
+
+```
+~/Code/luv> WITH_LUA_ENGINE=Lua make
+```
+
+#### Build as static library
+
+If you want to build luv as a static library run make with:
+
+```
+~/Code/luv> BUILD_MODULE=OFF make
+```
+
+This will create a static library `libluv.a`.
+
+#### Build as shared library
+
+If you want to build luv as a shared library run make with:
+
+```
+~/Code/luv> BUILD_MODULE=OFF BUILD_SHARED_LIBS=ON make
+```
+
+This will create a shared library `libluv.so`.
+
+#### Build with shared libraries
+
+By default the build system will build luv with the supplied dependencies.
+These are:
+  * libuv
+  * LuaJIT or Lua
+
+However, if your target system has already one or more of these dependencies
+installed you can link `luv` against them.
+
+##### Linking with shared libuv
+
+The default shared library name for libuv is `libuv`. To link against it use:
+
+```
+~/Code/luv> WITH_SHARED_LIBUV=ON make
+```
+
+##### Linking with shared LuaJIT
+
+The default shared library name for LuaJIT is `libluajit-5.1`. To link against
+it use:
+
+```
+~/Code/luv> LUA_BUILD_TYPE=System make
+```
+
+##### Linking with shared Lua 5.x
+
+The default shared library name for Lua 5.x is `liblua5.x`. To link against
+it use:
+
+```
+~/Code/luv> LUA_BUILD_TYPE=System WITH_LUA_ENGINE=Lua make
 ```
