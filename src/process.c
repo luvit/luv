@@ -219,6 +219,9 @@ static int luv_spawn(lua_State* L) {
 
   luv_clean_options(&options);
   if (ret < 0) {
+    /* The async callback is required here because luajit GC may reclaim the
+     * luv handle before libuv is done closing it down.
+     */
     uv_close((uv_handle_t*)handle, luv_spawn_close_cb);
     return luv_error(L, ret);
   }
