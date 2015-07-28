@@ -5,7 +5,11 @@ luv
 
 [![Windows Build status](https://ci.appveyor.com/api/projects/status/uo1qhdcc0vcqsiok/branch/master?svg=true)](https://ci.appveyor.com/project/racker-buildbot/luv/branch/master)
 
-[libuv](https://github.com/joyent/libuv) bindings for [luajit](http://luajit.org/) and [lua](http://www.lua.org/) [5.1](http://www.lua.org/manual/5.1/manual.html)/[5.2](http://www.lua.org/manual/5.2/manual.html).
+[libuv](https://github.com/joyent/libuv) bindings for
+[luajit](http://luajit.org/) and [lua](http://www.lua.org/)
+[5.1](http://www.lua.org/manual/5.1/manual.html)/
+[5.2](http://www.lua.org/manual/5.2/manual.html)/
+[5.3](http://www.lua.org/manual/5.3/manual.html).
 
 This library makes libuv available to lua scripts.  It was made for the [luvit](http://luvit.io/) project but should usable from nearly any lua project.
 
