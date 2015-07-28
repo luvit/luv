@@ -149,7 +149,7 @@ This will build luv as a module library. Module libraries are plugins that are
 not linked into other targets.
 
 #### Build with PUC Lua 5.3
-By default `luv` is linked with LuaJIT 2.0.4. If you rather like to link `luv`
+By default luv is linked with LuaJIT 2.0.4. If you rather like to link luv
 with PUC Lua 5.3 you can run make with:
 
 ```
@@ -158,7 +158,7 @@ with PUC Lua 5.3 you can run make with:
 
 #### Build as static library
 
-If you want to build luv as a shared library run make with:
+If you want to build luv as a static library run make with:
 
 ```
 ~/Code/luv> BUILD_MODULE=OFF make
@@ -178,7 +178,7 @@ This will create a shared library `libluv.so`.
 
 #### Build with shared libraries
 
-By default the build system will build `luv` with the supplied dependencies.
+By default the build system will build luv with the supplied dependencies.
 These are:
   * libuv
   * LuaJIT or Lua
