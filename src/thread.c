@@ -65,7 +65,7 @@ static int luv_thread_arg_set(lua_State*L, luv_thread_arg_t* args, int idx, int 
     case LUA_TNIL:
       break;
     case LUA_TBOOLEAN:
-      arg->val.bool = lua_toboolean(L, i);
+      arg->val.boolean = lua_toboolean(L, i);
       break;
     case LUA_TNUMBER:
       arg->val.num = lua_tonumber(L, i);
@@ -103,7 +103,7 @@ int luv_thread_arg_push(lua_State*L, const luv_thread_arg_t* args) {
       lua_pushnil(L);
       break;
     case LUA_TBOOLEAN:
-      lua_pushboolean(L, arg->val.bool);
+      lua_pushboolean(L, arg->val.boolean);
       break;
     case LUA_TLIGHTUSERDATA:
       lua_pushlightuserdata(L, arg->val.point);

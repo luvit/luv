@@ -27,7 +27,7 @@ typedef struct {
   union
   {
     lua_Number num;
-    int bool;
+    int boolean;
     void *point;
     struct
     {
