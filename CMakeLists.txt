@@ -34,11 +34,6 @@ endif ()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
-	CACHE PATH "Installation directory for libraries")
-set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include/luv"
-	CACHE PATH "Installation directory for headers")
-
 if (WITH_SHARED_LIBUV)
   find_package(Libuv)
   if (LIBUV_FOUND)
@@ -121,6 +116,19 @@ elseif("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
 else()
   target_link_libraries(luv uv)
 endif()
+
+if (BUILD_MODULE)
+  if (WIN32)
+    set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib")
+  else (WIN32)
+    set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib/lua/${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}")
+  endif (WIN32)
+else (BUILD_MODULE)
+  set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
+    CACHE PATH "Installation directory for libraries")
+  set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include/luv"
+    CACHE PATH "Installation directory for headers")
+endif (BUILD_MODULE)
 
 if (CMAKE_INSTALL_PREFIX)
   install(TARGETS luv
