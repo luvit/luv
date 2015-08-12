@@ -102,4 +102,13 @@ return require('lib/tap')(function (test)
     end)))
   end)
 
+  test("tcp invalid ip address", function (print, p, expect, uv)
+    local ip = '127.0.0.100005'
+    local server = uv.new_tcp()
+    local status, err = pcall(function() uv.tcp_bind(server, ip, 1000) end)
+    assert(not status)
+    p(err)
+    assert(err:find(ip))
+    uv.close(server)
+  end)
 end)

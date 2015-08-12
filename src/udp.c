@@ -51,7 +51,7 @@ static int luv_udp_bind(lua_State* L) {
   int ret;
   if (uv_ip4_addr(host, port, (struct sockaddr_in*)&addr) &&
       uv_ip6_addr(host, port, (struct sockaddr_in6*)&addr)) {
-    return luaL_argerror(L, 2, "Invalid IP address or port");
+    return luaL_error(L, "Invalid IP address or port [%s:%d]", host, port);
   }
   if (lua_type(L, 4) == LUA_TTABLE) {
     luaL_checktype(L, 4, LUA_TTABLE);
@@ -165,7 +165,7 @@ static int luv_udp_send(lua_State* L) {
   port = luaL_checkinteger(L, 4);
   if (uv_ip4_addr(host, port, (struct sockaddr_in*)&addr) &&
       uv_ip6_addr(host, port, (struct sockaddr_in6*)&addr)) {
-    return luaL_argerror(L, 2, "Invalid IP address or port");
+    return luaL_error(L, "Invalid IP address or port [%s:%d]", host, port);
   }
   ref = luv_check_continuation(L, 5);
   req = lua_newuserdata(L, sizeof(*req));
@@ -190,7 +190,7 @@ static int luv_udp_try_send(lua_State* L) {
   port = luaL_checkinteger(L, 4);
   if (uv_ip4_addr(host, port, (struct sockaddr_in*)&addr) &&
       uv_ip6_addr(host, port, (struct sockaddr_in6*)&addr)) {
-    return luaL_argerror(L, 3, "Invalid IP address or port");
+    return luaL_error(L, "Invalid IP address or port [%s:%d]", host, port);
   }
   ret = uv_udp_try_send(handle, &buf, 1, (struct sockaddr*)&addr);
   if (ret < 0) return luv_error(L, ret);
