@@ -136,9 +136,9 @@ static const char* luv_thread_dumped(lua_State* L, int idx, size_t *l) {
   } else {
     const char* buff = NULL;
     int top = lua_gettop(L);
+    luaL_Buffer b;
     luaL_checktype(L, idx, LUA_TFUNCTION);
     lua_pushvalue(L, idx);
-    luaL_Buffer b;
     luaL_buffinit(L, &b);
 #if LUA_VERSION_NUM>=503
     if (lua_dump(L, thread_dump, &b, 1) == 0)
