@@ -192,6 +192,9 @@ static int luv_interface_addresses(lua_State* L) {
     lua_pushboolean(L, interfaces[i].is_internal);
     lua_setfield(L, -2, "internal");
 
+    lua_pushlstring(L, interfaces[i].phys_addr, sizeof(interfaces[i].phys_addr));
+    lua_setfield(L, -2, "mac");
+
     if (interfaces[i].address.address4.sin_family == AF_INET) {
       uv_ip4_name(&interfaces[i].address.address4,ip, sizeof(ip));
     } else if (interfaces[i].address.address4.sin_family == AF_INET6) {
