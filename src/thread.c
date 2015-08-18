@@ -276,8 +276,8 @@ static void luv_thread_init(lua_State* L) {
   lua_setfield(L, -2, "__index");
   lua_pop(L, 1);
 
-  acquire_vm_cb = luv_thread_acquire_vm;
-  release_vm_cb = luv_thread_release_vm;
+  if (acquire_vm_cb == NULL) acquire_vm_cb = luv_thread_acquire_vm;
+  if (release_vm_cb == NULL) release_vm_cb = luv_thread_release_vm;
 }
 
 LUALIB_API void luv_set_thread_cb(luv_acquire_vm acquire, luv_release_vm release)
