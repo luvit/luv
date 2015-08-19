@@ -88,7 +88,7 @@ static int luv_tcp_bind(lua_State* L) {
   int ret;
   if (uv_ip4_addr(host, port, (struct sockaddr_in*)&addr) &&
       uv_ip6_addr(host, port, (struct sockaddr_in6*)&addr)) {
-    return luaL_argerror(L, 2, "Invalid IP address or port");
+    return luaL_error(L, "Invalid IP address or port [%s:%d]", host, port);
   }
   if (lua_type(L, 4) == LUA_TTABLE) {
     lua_getfield(L, 4, "ipv6only");
@@ -167,7 +167,7 @@ static int luv_tcp_connect(lua_State* L) {
   int ret, ref;
   if (uv_ip4_addr(host, port, (struct sockaddr_in*)&addr) &&
       uv_ip6_addr(host, port, (struct sockaddr_in6*)&addr)) {
-    return luaL_argerror(L, 3, "Invalid IP address or port");
+    return luaL_error(L, "Invalid IP address or port [%s:%d]", host, port);
   }
   ref = luv_check_continuation(L, 4);
 
