@@ -92,19 +92,40 @@ static void luv_work_cb(uv_work_t* req)
 
     uv_key_set(&L_key, L);
   }
+
   top = lua_gettop(L);
-  if (luaL_loadbuffer(L, ctx->code, ctx->len, "=pool") == 0)
+  lua_pushlstring(L, ctx->code, ctx->len);
+  lua_rawget(L, LUA_REGISTRYINDEX);
+  if (lua_isnil(L, -1))
+  {
+    lua_pop(L, 1);
+    
+    lua_pushlstring(L, ctx->code, ctx->len);
+    if (luaL_loadbuffer(L, ctx->code, ctx->len, "=pool") != 0)
+    {
+      fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
+      lua_pop(L, 2);
+
+      lua_pushnil(L);
+    } else
+    {
+      lua_pushvalue(L, -1);
+      lua_insert(L, lua_gettop(L) - 2);
+      lua_rawset(L, LUA_REGISTRYINDEX);
+    }
+  }
+
+  if (lua_isfunction(L, -1))
   {
     int i = luv_thread_arg_push(L, &work->arg);
     if (lua_pcall(L, i, LUA_MULTRET, 0)) {
       fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
     }
-    luv_thread_arg_set(L, &work->arg, top, lua_gettop(L));
+    luv_thread_arg_set(L, &work->arg, top + 1, lua_gettop(L));
   } else {
-    fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
+    fprintf(stderr, "Uncaught Error: %s can't be work entry\n", 
+      lua_typename(L, lua_type(L,-1)));
   }
-
-  //release_vm_cb(L);
 }
 
 static void luv_after_work_cb(uv_work_t* req, int status) {
@@ -222,5 +243,6 @@ static void luv_work_init(lua_State* L) {
   lua_setfield(L, -2, "__gc");
   lua_pop(L, 1);
 
-  uv_key_create(&L_key);
+  if (uv_thread_self()==0)
+    uv_key_create(&L_key);
 }
