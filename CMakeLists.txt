@@ -11,6 +11,8 @@ option(BUILD_MODULE "Build as module" ON)
 option(BUILD_SHARED_LIBS "Build shared library" OFF)
 option(WITH_SHARED_LIBUV "Link to a shared libuv library instead of static linking" OFF)
 
+find_package(Threads)
+
 if (NOT WITH_LUA_ENGINE)
   set(WITH_LUA_ENGINE "LuaJIT"
     CACHE STRING "Link to LuaJIT or PUC Lua" FORCE)
@@ -112,9 +114,9 @@ if(WIN32)
     string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
   endforeach()
 elseif("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-  target_link_libraries(luv uv rt)
+  target_link_libraries(luv uv rt ${CMAKE_THREAD_LIBS_INIT})
 else()
-  target_link_libraries(luv uv)
+  target_link_libraries(luv uv ${CMAKE_THREAD_LIBS_INIT})
 endif()
 
 if (BUILD_MODULE)
