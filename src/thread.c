@@ -74,8 +74,17 @@ static int luv_thread_arg_set(lua_State*L, luv_thread_arg_t* args, int idx, int 
       arg->val.point = lua_touserdata(L, i);
       break;
     case LUA_TSTRING:
-      arg->val.str.base = lua_tolstring(L, i, &arg->val.str.len);
+    {
+      const char* p = lua_tolstring(L, i, &arg->val.str.len);
+      arg->val.str.base = malloc(arg->val.str.len);
+      if (arg->val.str.base == NULL)
+      {
+        perror("out of memory");
+        return 0;
+      }
+      memcpy((void*)arg->val.str.base, p, arg->val.str.len);
       break;
+    }
     default:
       fprintf(stderr, "Error: thread arg not support type '%s' at %d",
         luaL_typename(L, arg->type), i);
@@ -89,6 +98,14 @@ static int luv_thread_arg_set(lua_State*L, luv_thread_arg_t* args, int idx, int 
 }
 
 static void luv_thread_arg_clear(luv_thread_arg_t* args) {
+  int i;
+  for (i = 0; i < args->argc; i++)
+  {
+    if (args->argv[i].type == LUA_TSTRING)
+    {
+      free((void*)args->argv[i].val.str.base);
+    }
+  }
   args->argc = 0;
 }
 

@@ -18,6 +18,7 @@ return require('lib/tap')(function (test)
   test("test thread create with arguments", function(print, p, expect, uv)
     local before = os.time()
     local args = {500, 'string', nil, false, 5, "helloworld"}
+    local unpack = unpack or table.unpack
     uv.new_thread(function(num,s,null,bool,five,hw)
       assert(type(num) == "number")
       assert(type(s) == "string")
@@ -26,7 +27,7 @@ return require('lib/tap')(function (test)
       assert(five == 5)
       assert(hw == 'helloworld')
       require('luv').sleep(1000)
-    end, table.unpack(args)):join()
+    end, unpack(args)):join()
     local elapsed = (os.time() - before) * 1000
     assert(elapsed >= 1000, "elapsed should be at least delay ")
   end)
