@@ -43,18 +43,6 @@ static luv_work_ctx_t* luv_check_work_ctx(lua_State* L, int index)
   return ctx;
 }
 
-static luv_work_t* luv_check_work(lua_State* L, int index)
-{
-  luv_work_t* work = luaL_checkudata(L, index, "uv_work");
-  return work;
-}
-
-static int luv_work_gc(lua_State *L) {
-  luv_work_t* work = luv_check_work(L, 1);
-  luv_thread_arg_clear(&work->arg);
-  return 0;
-}
-
 static int luv_work_ctx_gc(lua_State *L)
 {
   luv_work_ctx_t* ctx = luv_check_work_ctx(L, 1);
@@ -72,13 +60,6 @@ static int luv_work_ctx_tostring(lua_State* L)
   return 1;
 }
 
-static int luv_work_tostring(lua_State* L)
-{
-  luv_work_t* work = luv_check_work(L, 1);
-  lua_pushfstring(L, "uv_work_t: %p", &work->work);
-  return 1;
-}
-
 static void luv_work_cb(uv_work_t* req)
 {
   uv_thread_t tid = uv_thread_self();
@@ -92,19 +73,42 @@ static void luv_work_cb(uv_work_t* req)
 
     uv_key_set(&L_key, L);
   }
+
   top = lua_gettop(L);
-  if (luaL_loadbuffer(L, ctx->code, ctx->len, "=pool") == 0)
+  lua_pushlstring(L, ctx->code, ctx->len);
+  lua_rawget(L, LUA_REGISTRYINDEX);
+  if (lua_isnil(L, -1))
+  {
+    lua_pop(L, 1);
+    
+    lua_pushlstring(L, ctx->code, ctx->len);
+    if (luaL_loadbuffer(L, ctx->code, ctx->len, "=pool") != 0)
+    {
+      fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
+      lua_pop(L, 2);
+
+      lua_pushnil(L);
+    } else
+    {
+      lua_pushvalue(L, -1);
+      lua_insert(L, lua_gettop(L) - 2);
+      lua_rawset(L, LUA_REGISTRYINDEX);
+    }
+  }
+
+  if (lua_isfunction(L, -1))
   {
     int i = luv_thread_arg_push(L, &work->arg);
     if (lua_pcall(L, i, LUA_MULTRET, 0)) {
       fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
     }
-    luv_thread_arg_set(L, &work->arg, top, lua_gettop(L));
+    luv_thread_arg_clear(&work->arg);
+    luv_thread_arg_set(L, &work->arg, top + 1, lua_gettop(L));
+    lua_settop(L, top);
   } else {
-    fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
+    fprintf(stderr, "Uncaught Error: %s can't be work entry\n", 
+      lua_typename(L, lua_type(L,-1)));
   }
-
-  //release_vm_cb(L);
 }
 
 static void luv_after_work_cb(uv_work_t* req, int status) {
@@ -118,14 +122,8 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
   {
     fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
   }
-  lua_pushlightuserdata(L, work->ctx);
-  lua_pushnil(L);
-  lua_settable(L, LUA_REGISTRYINDEX);
-
-  lua_pushlightuserdata(L, work);
-  lua_pushnil(L);
-  lua_settable(L, LUA_REGISTRYINDEX);
-
+  luv_thread_arg_clear(&work->arg);
+  free(work);
 }
 
 static void async_cb(uv_async_t *handle)
@@ -174,26 +172,19 @@ static int luv_new_work(lua_State* L) {
 }
 
 static int luv_queue_work(lua_State* L) {
-  luv_work_ctx_t* ctx;
-  luv_work_t* work;
-  int ret;
   int top = lua_gettop(L);
-  ctx = luv_check_work_ctx(L, 1);   // ctx should ref up
-  work = lua_newuserdata(L, sizeof(*work)); //work should ref up
-  memset(work, 0, sizeof(*work));
+  luv_work_ctx_t* ctx = luv_check_work_ctx(L, 1);   // ctx should ref up
+  luv_work_t* work = malloc(sizeof(*work));
+  int ret;
+
   luv_thread_arg_set(L, &work->arg, 2, top);
   work->ctx = ctx;
   work->work.data = work;
   ret = uv_queue_work(luv_loop(L), &work->work, luv_work_cb, luv_after_work_cb);
-  if (ret < 0) return luv_error(L, ret);
-
-  lua_pushlightuserdata(L, work->ctx);
-  lua_pushvalue(L, 1);
-  lua_settable(L, LUA_REGISTRYINDEX);
-
-  lua_pushlightuserdata(L, work);
-  lua_pushvalue(L, -2);
-  lua_settable(L, LUA_REGISTRYINDEX);
+  if (ret < 0) {
+    free(work);
+    return luv_error(L, ret);
+  }
 
   lua_pushboolean(L, 1);
   return 1;
@@ -204,6 +195,7 @@ static const luaL_Reg luv_work_ctx_methods[] = {
   {NULL, NULL}
 };
 
+static int key_inited = 0;
 static void luv_work_init(lua_State* L) {
   luaL_newmetatable(L, "luv_work_ctx");
   lua_pushcfunction(L, luv_work_ctx_tostring);
@@ -215,12 +207,8 @@ static void luv_work_init(lua_State* L) {
   lua_setfield(L, -2, "__index");
   lua_pop(L, 1);
 
-  luaL_newmetatable(L, "luv_work");
-  lua_pushcfunction(L, luv_work_tostring);
-  lua_setfield(L, -2, "__tostring");
-  lua_pushcfunction(L, luv_work_gc);
-  lua_setfield(L, -2, "__gc");
-  lua_pop(L, 1);
-
-  uv_key_create(&L_key);
+  if (key_inited==0) {
+    key_inited = 1;
+    uv_key_create(&L_key);
+  }
 }
