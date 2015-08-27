@@ -19,14 +19,13 @@
 #include "lthreadpool.h"
 
 typedef struct {
-  lua_State* L;       /* main vm in loop thread */
-  char* code;
+  lua_State* L;       /* vm in main */
+  char* code;         /* thread entry code */
   size_t len;
 
   uv_async_t async;
-  int async_cb;       /* in loop thread, call when async message recived */
-  //int work_cb;      /* in pool,lua work cb script */
-  int after_work_cb;  /* in loop thread, lua after work cb script */
+  int async_cb;       /* ref, run in main, call when async message received, NYI */
+  int after_work_cb;  /* ref, run in main ,call after work cb*/
 } luv_work_ctx_t;
 
 typedef struct {
@@ -37,6 +36,7 @@ typedef struct {
 } luv_work_t;
 
 static uv_key_t L_key;
+
 static luv_work_ctx_t* luv_check_work_ctx(lua_State* L, int index)
 {
   luv_work_ctx_t* ctx = luaL_checkudata(L, index, "luv_work_ctx");
@@ -50,7 +50,7 @@ static int luv_work_ctx_gc(lua_State *L)
   luaL_unref(L, LUA_REGISTRYINDEX, ctx->after_work_cb);
   luaL_unref(L, LUA_REGISTRYINDEX, ctx->async_cb);
 
-   return 0;
+  return 0;
 }
 
 static int luv_work_ctx_tostring(lua_State* L)
@@ -68,9 +68,8 @@ static void luv_work_cb(uv_work_t* req)
   lua_State *L = uv_key_get(&L_key);
   int top;
   if (L == NULL) {
-    /* should vm reuse in pool? */
+    /* vm reuse in threadpool */
     L = acquire_vm_cb();
-
     uv_key_set(&L_key, L);
   }
 
@@ -122,6 +121,12 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
   {
     fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
   }
+
+  //ref down to ctx 
+  lua_pushlightuserdata(L, work);
+  lua_pushnil(L);
+  lua_rawset(L, LUA_REGISTRYINDEX);
+
   luv_thread_arg_clear(&work->arg);
   free(work);
 }
@@ -173,7 +178,7 @@ static int luv_new_work(lua_State* L) {
 
 static int luv_queue_work(lua_State* L) {
   int top = lua_gettop(L);
-  luv_work_ctx_t* ctx = luv_check_work_ctx(L, 1);   // ctx should ref up
+  luv_work_ctx_t* ctx = luv_check_work_ctx(L, 1);
   luv_work_t* work = malloc(sizeof(*work));
   int ret;
 
@@ -185,6 +190,11 @@ static int luv_queue_work(lua_State* L) {
     free(work);
     return luv_error(L, ret);
   }
+
+  //ref up to ctx 
+  lua_pushlightuserdata(L, work);
+  lua_pushvalue(L, 1);
+  lua_rawset(L, LUA_REGISTRYINDEX);
 
   lua_pushboolean(L, 1);
   return 1;
