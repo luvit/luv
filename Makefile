@@ -58,4 +58,4 @@ publish-luarocks:
 	tar -czvf luv-${LUV_TAG}.tar.gz luv-${LUV_TAG}
 	github-release upload --user luvit --repo luv --tag ${LUV_TAG} \
 	  --file luv-${LUV_TAG}.tar.gz --name luv-${LUV_TAG}.tar.gz
-	luarocks upload luv-1.7.4-0.rockspec --api-key=${LUAROCKS_TOKEN}
+	luarocks upload luv-${LUV_TAG}.rockspec --api-key=${LUAROCKS_TOKEN}
