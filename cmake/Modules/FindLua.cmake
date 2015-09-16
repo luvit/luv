@@ -64,21 +64,28 @@ ELSE() # standalone -- not using luarocks
       PATHS ${LUA_DIR}/../lib
       ${LUA_DIR}
       NO_DEFAULT_PATH)
+    FIND_PATH(LUA_INCLUDE_DIR lua.h
+      ${LUA_DIR}/../include/lua-5.1
+      ${LUA_DIR}/../include/lua51
+      ${LUA_DIR}/../include/lua
+      ${LUA_DIR}/../include
+      NO_DEFAULT_PATH)
   ELSE()
     FIND_LIBRARY(LUA_LIBRARIES
       NAMES luajit libluajit luajit-5.1 libluajit-5.1
       PATHS ${LUA_DIR}/../lib
       ${LUA_DIR}
       NO_DEFAULT_PATH)
+    FIND_PATH(LUA_INCLUDE_DIR lua.h
+      ${LUA_DIR}/../include/luajit-2.0
+      ${LUA_DIR}/../include/lua-5.1
+      ${LUA_DIR}/../include/lua51
+      ${LUA_DIR}/../include/lua
+      ${LUA_DIR}/../include
+      NO_DEFAULT_PATH)
   ENDIF()
   MESSAGE(STATUS "Lua library: ${LUA_LIBRARIES}")
 
-  FIND_PATH(LUA_INCLUDE_DIR lua.h
-    ${LUA_DIR}/../include/lua-5.1
-    ${LUA_DIR}/../include/lua51
-    ${LUA_DIR}/../include/lua
-    ${LUA_DIR}/../include
-    NO_DEFAULT_PATH)
 
   MESSAGE(STATUS "Lua include directory: ${LUA_INCLUDE_DIR}")
 
