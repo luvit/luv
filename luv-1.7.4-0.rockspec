@@ -1,7 +1,7 @@
 package = "luv"
-version = "1.6.1-2"
+version = "1.7.4-0"
 source = {
-  url = 'https://github.com/luvit/luv/releases/download/v1.6.1/luv-v1.6.1.tar.gz',
+  url = 'https://github.com/luvit/luv/releases/download/v1.7.4/luv-v1.7.4.tar.gz',
 }
 
 description = {
@@ -23,11 +23,20 @@ dependencies = {
 -- cmake --build build --target install --config Release
 build = {
   type = 'cmake',
-  variables = {
-    LUV_INSTALL_PREFIX = "$(PREFIX)",
-    LUV_LUA_LIBDIR = "$(LUA_LIBDIR)",
-    LUV_LUA_INCDIR = "$(LUA_INCDIR)",
-    LUA_BUILD_TYPE = "System",
-    BUILD_SHARED_LIBS="ON",
-  }
+  build_variables = {
+     CFLAGS="$(CFLAGS)",
+     LIBFLAG="$(LIBFLAG)",
+     LUA_LIBDIR="$(LUA_LIBDIR)",
+     LUA_BINDIR="$(LUA_BINDIR)",
+     LUA_INCDIR="$(LUA_INCDIR)",
+     LUA="$(LUA)",
+     BUILD_SHARED_LIBS="ON",
+  },
+  install_variables = {
+     PREFIX="$(PREFIX)",
+     BINDIR="$(BINDIR)",
+     LIBDIR="$(LIBDIR)",
+     LUADIR="$(LUADIR)",
+     CONFDIR="$(CONFDIR)",
+  },
 }
