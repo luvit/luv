@@ -50,7 +50,7 @@ reset:
 	  git clean -f -d && \
 	  git checkout .
 
-publish-luarocks: reset
+publish-luarocks:
 	rm -rf luv-${LUV_TAG}
 	mkdir -p luv-${LUV_TAG}/deps
 	cp -r src cmake CMakeLists.txt LICENSE.txt README.md docs.md luv-${LUV_TAG}/
@@ -58,3 +58,4 @@ publish-luarocks: reset
 	tar -czvf luv-${LUV_TAG}.tar.gz luv-${LUV_TAG}
 	github-release upload --user luvit --repo luv --tag ${LUV_TAG} \
 	  --file luv-${LUV_TAG}.tar.gz --name luv-${LUV_TAG}.tar.gz
+	luarocks upload luv-${LUV_TAG}.rockspec --api-key=${LUAROCKS_TOKEN}
