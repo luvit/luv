@@ -1,7 +1,7 @@
 package = "luv"
-version = "1.7.4-0"
+version = "1.7.4-1"
 source = {
-  url = 'https://github.com/luvit/luv/releases/download/v1.7.4/luv-v1.7.4.tar.gz',
+  url = 'https://github.com/luvit/luv/releases/download/1.7.4-1/luv-1.7.4-1.tar.gz',
 }
 
 description = {
@@ -34,9 +34,9 @@ build = {
   },
   install_variables = {
      PREFIX="$(PREFIX)",
-     BINDIR="$(BINDIR)",
-     LIBDIR="$(LIBDIR)",
-     LUADIR="$(LUADIR)",
-     CONFDIR="$(CONFDIR)",
+     INSTALL_BINDIR="$(BINDIR)",
+     INSTALL_LIBDIR="$(LIBDIR)",
+     INSTALL_LUADIR="$(LUADIR)",
+     INSTALL_CONFDIR="$(CONFDIR)",
   },
 }

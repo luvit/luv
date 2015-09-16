@@ -117,8 +117,9 @@ else()
   target_link_libraries(luv uv)
 endif()
 
-if (LIBDIR)
-  set(INSTALL_LIB_DIR "${LIBDIR}")
+if (INSTALL_LIBDIR)
+  # This is set by luarocks when building
+  set(INSTALL_LIB_DIR "${INSTALL_LIBDIR}")
 elseif (BUILD_MODULE)
   if (WIN32)
     set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib")
