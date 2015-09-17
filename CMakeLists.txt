@@ -8,25 +8,10 @@ option(WITH_SHARED_LIBUV "Link to a shared libuv library instead of static linki
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-message("CFLAGS: " ${CFLAGS})
-message("LIBFLAG: " ${LIBFLAG})
-message("LUA_LIBDIR: " ${LUA_LIBDIR})
-message("LUA_BINDIR: " ${LUA_BINDIR})
-message("LUA_INCDIR: " ${LUA_INCDIR})
-message("LUA: " ${LUA})
-message("PREFIX: " ${PREFIX})
-message("BINDIR: " ${BINDIR})
-message("LIBDIR: " ${LIBDIR})
-message("LUADIR: " ${LUADIR})
-message("CONFDIR: " ${CONFDIR})
-
 find_package(Lua)
 
 message(STATUS "Lua executable: " ${LUA_EXECUTABLE}) # - the full path to lua
-message(STATUS "Lua libraries: " ${LUA_LIBRARIES}) # - the lua shared library
 message(STATUS "Lua include dir: " ${LUA_INCLUDE_DIR}) # - directory for lua includes
-message(STATUS "Lua package path: " ${LUA_PACKAGE_PATH}) # - where Lua searches for Lua packages
-message(STATUS "Lua package cpath: " ${LUA_PACKAGE_CPATH}) # - where Lua searches for library packages
 
 include_directories(${LUA_INCLUDE_DIR})
 
