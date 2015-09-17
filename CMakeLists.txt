@@ -57,6 +57,8 @@ if (LUA)
   SET(LUA_PACKAGE_PATH "${LUADIR}")
   SET(LUA_PACKAGE_CPATH "${LIBDIR}")
 
+  SET(INSTALL_LIB_DIR ${LIBDIR})
+
   IF(LUALIB) # present on windows platforms only
     SET(LUA_LIBRARIES "${LUALIB}")
   ELSE() # too bad, luarocks does not provide it (pfff...)
@@ -152,18 +154,20 @@ else()
   target_link_libraries(luv uv)
 endif()
 
-if (BUILD_MODULE)
-  if (WIN32)
-    set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib")
-  else (WIN32)
-    set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib/lua/${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}")
-  endif (WIN32)
-else (BUILD_MODULE)
-  set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
-    CACHE PATH "Installation directory for libraries")
-  set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include/luv"
-    CACHE PATH "Installation directory for headers")
-endif (BUILD_MODULE)
+if (NOT LUA)
+  if (BUILD_MODULE)
+    if (WIN32)
+      set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib")
+    else (WIN32)
+      set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib/lua/${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}")
+    endif (WIN32)
+  else (BUILD_MODULE)
+    set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
+      CACHE PATH "Installation directory for libraries")
+    set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include/luv"
+      CACHE PATH "Installation directory for headers")
+  endif (BUILD_MODULE)
+endif ()
 
 if (CMAKE_INSTALL_PREFIX)
   install(TARGETS luv
