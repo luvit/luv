@@ -23,6 +23,7 @@ build = {
   type = 'cmake',
   variables = {
      CMAKE_C_FLAGS="$(CFLAGS)",
+     CMAKE_MODULE_LINKER_FLAGS="$(LIBFLAG)",
      LUA_LIBDIR="$(LUA_LIBDIR)",
      LUA_INCDIR="$(LUA_INCDIR)",
      LUA="$(LUA)",

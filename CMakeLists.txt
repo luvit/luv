@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-cmake_policy(SET CMP0053 OLD)
+#cmake_policy(SET CMP0053 OLD)
 
 project (luv C ASM)
 
@@ -46,6 +46,12 @@ endif (WITH_SHARED_LIBUV)
 
 if (LUA)
   MESSAGE(STATUS "Lua: using information from luarocks")
+
+  MESSAGE(STATUS "LUA_LIBDIR: " ${LUA_LIBDIR})
+  MESSAGE(STATUS "LUA_INCDIR: " ${LUA_INCDIR})
+  MESSAGE(STATUS "LUA: " ${LUA})
+
+
   SET(LUA_EXECUTABLE "${LUA}")
   SET(LUA_INCLUDE_DIR "${LUA_INCDIR}")
   SET(LUA_PACKAGE_PATH "${LUADIR}")
@@ -65,11 +71,11 @@ if (LUA)
         NAMES lua liblua
         PATHS ${LUA_LIBDIR}
         NO_DEFAULT_PATH)
-    ELSE()
-      MESSAGE(FATAL_ERROR "You seem to have a non-standard lua installation -- are you using luajit-rocks?")
     ENDIF()
     MESSAGE(STATUS "Lua library guess (no info from luarocks): ${LUA_LIBRARIES}")
   ENDIF()
+  include_directories(${LUA_INCLUDE_DIR})
+  link_directories(${LUA_LIBRARIES})
 else (LUA)
   if (LUA_BUILD_TYPE STREQUAL System)
     if (USE_LUAJIT)
