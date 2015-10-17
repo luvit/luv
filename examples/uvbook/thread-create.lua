@@ -1,10 +1,8 @@
 local uv = require('luv')
 
-local hare_id = uv.new_thread()
-local tortoise_id = uv.new_thread()
 local step = 10
 
-uv.thread_create(hare_id,function(step,...) 
+local hare_id = uv.new_thread(function(step,...)
     local ffi = require'ffi'
     local uv = require('luv')
     local sleep 
@@ -23,7 +21,7 @@ uv.thread_create(hare_id,function(step,...)
     print("Hare done running!")
 end, step,true,'abcd','false')
 
-uv.thread_create(tortoise_id,function(step,...)
+local tortoise_id = uv.new_thread(function(step,...)
     local uv = require('luv')
     while (step>0) do 
         step = step - 1
