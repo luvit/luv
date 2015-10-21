@@ -105,4 +105,7 @@ typedef lua_State* (*luv_acquire_vm)();
 typedef void (*luv_release_vm)(lua_State* L);
 LUALIB_API void luv_set_thread_cb(luv_acquire_vm acquire, luv_release_vm release);
 
+lua_State* luv_state(uv_loop_t* loop);
+uv_loop_t* luv_loop(lua_State* L);
+
 #endif
