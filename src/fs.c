@@ -350,6 +350,7 @@ static int luv_fs_write(lua_State* L) {
 
   if (lua_istable(L, 2)) {
     bufs = luv_prep_bufs(L, 2, &count);
+    buf.base = NULL;
   }
   else if (lua_isstring(L, 2)) {
     luv_check_buf(L, 2, &buf);
