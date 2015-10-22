@@ -65,9 +65,9 @@
 // These helpers will give you one if you have the other
 // These are exposed for extensions built with luv
 // This allows luv to be used in multithreaded applications.
-lua_State* luv_state(uv_loop_t* loop);
+LUALIB_API lua_State* luv_state(uv_loop_t* loop);
 // All libuv callbacks will lua_call directly from this root-per-thread state
-uv_loop_t* luv_loop(lua_State* L);
+LUALIB_API uv_loop_t* luv_loop(lua_State* L);
 
 // This is the main hook to load the library.
 // This can be called multiple times in a process as long
@@ -104,8 +104,5 @@ static const char* luv_sig_num_to_string(const int num);
 typedef lua_State* (*luv_acquire_vm)();
 typedef void (*luv_release_vm)(lua_State* L);
 LUALIB_API void luv_set_thread_cb(luv_acquire_vm acquire, luv_release_vm release);
-
-LUALIB_API lua_State* luv_state(uv_loop_t* loop);
-LUALIB_API uv_loop_t* luv_loop(lua_State* L);
 
 #endif
