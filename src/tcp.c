@@ -17,13 +17,13 @@
 #include "luv.h"
 
 static uv_tcp_t* luv_check_tcp(lua_State* L, int index) {
-  uv_tcp_t* handle = luaL_checkudata(L, index, "uv_tcp");
+  uv_tcp_t* handle = luv_checkudata(L, index, "uv_tcp");
   luaL_argcheck(L, handle->type == UV_TCP && handle->data, index, "Expected uv_tcp_t");
   return handle;
 }
 
 static int luv_new_tcp(lua_State* L) {
-  uv_tcp_t* handle = lua_newuserdata(L, sizeof(*handle));
+  uv_tcp_t* handle = luv_newuserdata(L, sizeof(*handle));
   int ret = uv_tcp_init(luv_loop(L), handle);
   if (ret < 0) {
     lua_pop(L, 1);

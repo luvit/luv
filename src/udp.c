@@ -17,13 +17,13 @@
 #include "luv.h"
 
 static uv_udp_t* luv_check_udp(lua_State* L, int index) {
-  uv_udp_t* handle = luaL_checkudata(L, index, "uv_udp");
+  uv_udp_t* handle = luv_checkudata(L, index, "uv_udp");
   luaL_argcheck(L, handle->type == UV_UDP && handle->data, index, "Expected uv_udp_t");
   return handle;
 }
 
 static int luv_new_udp(lua_State* L) {
-  uv_udp_t* handle = lua_newuserdata(L, sizeof(*handle));
+  uv_udp_t* handle = luv_newuserdata(L, sizeof(*handle));
   int ret = uv_udp_init(luv_loop(L), handle);
   if (ret < 0) {
     lua_pop(L, 1);

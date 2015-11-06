@@ -18,7 +18,7 @@
 
 static luv_handle_t* luv_setup_handle(lua_State* L) {
   luv_handle_t* data;
-  const uv_handle_t* handle = lua_touserdata(L, -1);
+  const uv_handle_t* handle = *(void**)lua_touserdata(L, -1);
   luaL_checktype(L, -1, LUA_TUSERDATA);
 
   data = malloc(sizeof(*data));
@@ -42,6 +42,7 @@ static luv_handle_t* luv_setup_handle(lua_State* L) {
   data->ref = luaL_ref(L, LUA_REGISTRYINDEX);
   data->callbacks[0] = LUA_NOREF;
   data->callbacks[1] = LUA_NOREF;
+  data->extra = NULL;
   return data;
 }
 
@@ -105,6 +106,8 @@ static void luv_cleanup_handle(lua_State* L, luv_handle_t* data) {
   luaL_unref(L, LUA_REGISTRYINDEX, data->ref);
   luaL_unref(L, LUA_REGISTRYINDEX, data->callbacks[0]);
   luaL_unref(L, LUA_REGISTRYINDEX, data->callbacks[1]);
+  if (data->extra)
+    free(data->extra);
   free(data);
 }
 
