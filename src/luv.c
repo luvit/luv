@@ -226,6 +226,7 @@ static const luaL_Reg luv_functions[] = {
   {"exepath", luv_exepath},
   {"get_process_title", luv_get_process_title},
   {"get_total_memory", luv_get_total_memory},
+  {"get_free_memory", luv_get_free_memory},
   {"getpid", luv_getpid},
 #ifndef _WIN32
   {"getuid", luv_getuid},

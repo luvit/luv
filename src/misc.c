@@ -261,6 +261,11 @@ static int luv_get_total_memory(lua_State* L) {
   return 1;
 }
 
+static int luv_get_free_memory(lua_State* L) {
+  lua_pushnumber(L, uv_get_free_memory());
+  return 1;
+}
+
 static int luv_hrtime(lua_State* L) {
   lua_pushnumber(L, uv_hrtime());
   return 1;
