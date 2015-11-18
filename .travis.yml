@@ -11,6 +11,7 @@ addons:
 env:
   - WITH_LUA_ENGINE=LuaJIT
   - WITH_LUA_ENGINE=Lua
+  - PROCESS_CLEANUP_TEST=1
 
 os:
   - linux
@@ -21,8 +22,7 @@ before_install:
   - git submodule update --recursive
 
 script:
-  - make
-  - make test
+  - if [ "x$PROCESS_CLEANUP_TEST" = "x" ]; then make && make test; else ./tests/test-sigchld-after-lua_close.sh; fi
 
 notifications:
   email: true

@@ -456,16 +456,43 @@ LUALIB_API uv_loop_t* luv_loop(lua_State* L) {
   return loop;
 }
 
+static void walk_cb(uv_handle_t *handle, void *arg)
+{
+  if (!uv_is_closing(handle)) {
+    uv_close(handle, luv_close_cb);
+  }
+}
+
+static int loop_gc(lua_State *L) {
+  uv_loop_t* loop = luv_loop(L);
+  // Call uv_close on every active handle
+  uv_walk(loop, walk_cb, NULL);
+  // Run the event loop until all handles are successfully closed
+  while (uv_loop_close(loop)) {
+    uv_run(loop, UV_RUN_DEFAULT);
+  }
+  return 0;
+}
+
 LUALIB_API int luaopen_luv (lua_State *L) {
 
   uv_loop_t* loop;
   int ret;
+
+  // Setup the uv_loop meta table for a proper __gc
+  luaL_newmetatable(L, "uv_loop.meta");
+  lua_pushstring(L, "__gc");
+  lua_pushcfunction(L, loop_gc);
+  lua_settable(L, -3);
 
   loop = lua_newuserdata(L, sizeof(*loop));
   ret = uv_loop_init(loop);
   if (ret < 0) {
     return luaL_error(L, "%s: %s\n", uv_err_name(ret), uv_strerror(ret));
   }
+  // setup the metatable for __gc
+  luaL_getmetatable(L, "uv_loop.meta");
+  lua_setmetatable(L, -2);
   // Tell the state how to find the loop.
   lua_pushstring(L, "uv_loop");
   lua_insert(L, -2);
