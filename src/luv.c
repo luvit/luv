@@ -456,9 +456,21 @@ LUALIB_API uv_loop_t* luv_loop(lua_State* L) {
   return loop;
 }
 
+static void walk_cb(uv_handle_t *handle, void *arg)
+{
+  if (!uv_is_closing(handle)) {
+    uv_close(handle, luv_close_cb);
+  }
+}
+
 static int loop_gc(lua_State *L) {
   uv_loop_t* loop = luv_loop(L);
-  uv_loop_close(loop);
+  // Call uv_close on every active handle
+  uv_walk(loop, walk_cb, NULL);
+  // Run the event loop until all handles are successfully closed
+  while (uv_loop_close(loop)) {
+    uv_run(loop, UV_RUN_DEFAULT);
+  }
   return 0;
 }
 
