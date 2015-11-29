@@ -24,7 +24,7 @@ cq:wrap(function()
 	end
 end)
 
-uv.timer_start(uv.new_timer(), 1000, 1000, function()
+uv.new_timer():start(1000, 1000, function()
 	print("HELLO FROM LUV")
 end)
 
