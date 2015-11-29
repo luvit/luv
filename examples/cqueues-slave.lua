@@ -12,7 +12,10 @@ do
   local function reset_timer()
     local timeout = cq:timeout()
     if timeout then
-      timer:set_repeat(timeout * 1000)
+      -- libuv takes milliseconds as an integer,
+      -- while cqueues gives timeouts as a floating point number
+      -- use `math.ceil` as we'd rather wake up late than early
+      timer:set_repeat(math.ceil(timeout * 1000))
       timer:again()
     end
   end
