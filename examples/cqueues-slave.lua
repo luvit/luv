@@ -17,9 +17,13 @@ do
       -- use `math.ceil` as we'd rather wake up late than early
       timer:set_repeat(math.ceil(timeout * 1000))
       timer:again()
+    else
+      -- stop timer for now; it may be restarted later.
+      timer:stop()
     end
   end
   local function onready()
+    -- Step the cqueues loop once (sleeping for max 0 seconds)
     assert(cq:step(0))
     reset_timer()
   end
