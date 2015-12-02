@@ -17,13 +17,13 @@
 #include "luv.h"
 
 static uv_prepare_t* luv_check_prepare(lua_State* L, int index) {
-  uv_prepare_t* handle = luaL_checkudata(L, index, "uv_prepare");
+  uv_prepare_t* handle = luv_checkudata(L, index, "uv_prepare");
   luaL_argcheck(L, handle->type == UV_PREPARE && handle->data, index, "Expected uv_prepare_t");
   return handle;
 }
 
 static int luv_new_prepare(lua_State* L) {
-  uv_prepare_t* handle = lua_newuserdata(L, sizeof(*handle));
+  uv_prepare_t* handle = luv_newuserdata(L, sizeof(*handle));
   int ret = uv_prepare_init(luv_loop(L), handle);
   if (ret < 0) {
     lua_pop(L, 1);

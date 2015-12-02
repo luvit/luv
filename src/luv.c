@@ -406,6 +406,8 @@ static void luv_handle_init(lua_State* L) {
     luaL_newmetatable (L, "uv_"#lc);           \
     lua_pushcfunction(L, luv_handle_tostring); \
     lua_setfield(L, -2, "__tostring");         \
+    lua_pushcfunction(L, luv_handle_gc);       \
+    lua_setfield(L, -2, "__gc");               \
     luaL_newlib(L, luv_##lc##_methods);        \
     luaL_setfuncs(L, luv_handle_methods, 0);   \
     lua_setfield(L, -2, "__index");            \
@@ -497,18 +499,19 @@ LUALIB_API int luaopen_luv (lua_State *L) {
   lua_pushstring(L, "uv_loop");
   lua_insert(L, -2);
   lua_rawset(L, LUA_REGISTRYINDEX);
+  lua_pop(L, 1);
 
   // Tell the loop how to find the state.
   loop->data = L;
 
   luv_req_init(L);
   luv_handle_init(L);
+  luv_thread_init(L);
+  luv_work_init(L);
+
   luaL_newlib(L, luv_functions);
   luv_constants(L);
   lua_setfield(L, -2, "constants");
-
-  luv_thread_init(L);
-  luv_work_init(L);
 
   return 1;
 }

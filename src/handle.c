@@ -16,10 +16,22 @@
  */
 #include "luv.h"
 
+static void* luv_newuserdata(lua_State* L, size_t sz) {
+  void* handle = malloc(sz);
+  if (handle) {
+    *(void**)lua_newuserdata(L, sizeof(void*)) = handle;
+  }
+  return handle;
+}
+
+static void* luv_checkudata(lua_State* L, int ud, const char* tname) {
+  return *(void**) luaL_checkudata(L, ud, tname);
+}
+
 static uv_handle_t* luv_check_handle(lua_State* L, int index) {
   int isHandle;
   uv_handle_t* handle;
-  if (!(handle = lua_touserdata(L, index))) { goto fail; }
+  if (!(handle = *(void**)lua_touserdata(L, index))) { goto fail; }
   lua_getfield(L, LUA_REGISTRYINDEX, "uv_handle");
   lua_getmetatable(L, index < 0 ? index - 1 : index);
   lua_rawget(L, -2);
@@ -76,6 +88,26 @@ static int luv_close(lua_State* L) {
     luv_check_callback(L, handle->data, LUV_CLOSED, 2);
   }
   uv_close(handle, luv_close_cb);
+  return 0;
+}
+
+static void luv_gc_cb(uv_handle_t* handle) {
+  luv_close_cb(handle);
+  free(handle);
+}
+
+static int luv_handle_gc(lua_State* L) {
+  void** udata = lua_touserdata(L, 1);
+  uv_handle_t* handle = *udata;
+  if (handle != NULL) {
+    if (!uv_is_closing(handle))
+      uv_close(handle, luv_gc_cb);
+    else 
+      free(*udata);
+
+    *udata = NULL;
+  }
+
   return 0;
 }
 

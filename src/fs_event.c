@@ -18,13 +18,13 @@
 #include "luv.h"
 
 static uv_fs_event_t* luv_check_fs_event(lua_State* L, int index) {
-  uv_fs_event_t* handle = luaL_checkudata(L, index, "uv_fs_event");
+  uv_fs_event_t* handle = luv_checkudata(L, index, "uv_fs_event");
   luaL_argcheck(L, handle->type == UV_FS_EVENT && handle->data, index, "Expected uv_fs_event_t");
   return handle;
 }
 
 static int luv_new_fs_event(lua_State* L) {
-  uv_fs_event_t* handle = lua_newuserdata(L, sizeof(*handle));
+  uv_fs_event_t* handle = luv_newuserdata(L, sizeof(*handle));
   int ret = uv_fs_event_init(luv_loop(L), handle);
   if (ret < 0) {
     lua_pop(L, 1);

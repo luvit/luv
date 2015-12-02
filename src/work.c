@@ -102,7 +102,7 @@ static void luv_work_cb(uv_work_t* req)
       fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
     }
     luv_thread_arg_clear(&work->arg);
-    luv_thread_arg_set(L, &work->arg, top + 1, lua_gettop(L));
+    luv_thread_arg_set(L, &work->arg, top + 1, lua_gettop(L), 0);
     lua_settop(L, top);
   } else {
     fprintf(stderr, "Uncaught Error: %s can't be work entry\n", 
@@ -182,7 +182,7 @@ static int luv_queue_work(lua_State* L) {
   luv_work_t* work = malloc(sizeof(*work));
   int ret;
 
-  luv_thread_arg_set(L, &work->arg, 2, top);
+  luv_thread_arg_set(L, &work->arg, 2, top, 0);
   work->ctx = ctx;
   work->work.data = work;
   ret = uv_queue_work(luv_loop(L), &work->work, luv_work_cb, luv_after_work_cb);

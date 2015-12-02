@@ -28,9 +28,8 @@ typedef struct {
   {
     lua_Number num;
     int boolean;
-    void *point;
-    struct
-    {
+    void* userdata;
+    struct {
       const char* base;
       size_t len;
     } str;
@@ -42,5 +41,8 @@ typedef struct {
   luv_val_t argv[LUV_THREAD_MAXNUM_ARG];
 } luv_thread_arg_t;
 
+static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int top, int flag);
+static int luv_thread_arg_push(lua_State* L, const luv_thread_arg_t* args);
+static void luv_thread_arg_clear(luv_thread_arg_t* args);
 
 #endif //LUV_LTHREADPOOL_H

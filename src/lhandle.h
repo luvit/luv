@@ -41,6 +41,7 @@
 typedef struct {
   int ref;
   int callbacks[2];
+  void* extra;
 } luv_handle_t;
 
 // Setup the handle at the top of the stack

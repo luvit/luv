@@ -17,13 +17,13 @@
 #include "luv.h"
 
 static uv_idle_t* luv_check_idle(lua_State* L, int index) {
-  uv_idle_t* handle = luaL_checkudata(L, index, "uv_idle");
+  uv_idle_t* handle = luv_checkudata(L, index, "uv_idle");
   luaL_argcheck(L, handle->type == UV_IDLE && handle->data, index, "Expected uv_idle_t");
   return handle;
 }
 
 static int luv_new_idle(lua_State* L) {
-  uv_idle_t* handle = lua_newuserdata(L, sizeof(*handle));
+  uv_idle_t* handle = luv_newuserdata(L, sizeof(*handle));
   int ret = uv_idle_init(luv_loop(L), handle);
   if (ret < 0) {
     lua_pop(L, 1);
