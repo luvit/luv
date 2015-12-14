@@ -91,6 +91,9 @@ if(WIN32)
     ${LIBUVDIR}/src/win/winsock.c
     ${LIBUVDIR}/src/win/winsock.h
   )
+  if ("${MSVS_VERSION}" LESS "2015")
+    set(SOURCES ${SOURCES} ${LIBUVDIR}/src/win/snprintf.c)
+  endif()
 else()
   include_directories(${LIBUVDIR}/src/unix)
   set(SOURCES ${SOURCES}
