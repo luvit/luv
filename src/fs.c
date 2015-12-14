@@ -219,6 +219,7 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
       return 1;
 
     case UV_FS_READLINK:
+    case UV_FS_REALPATH:
       lua_pushstring(L, (char*)req->ptr);
       return 1;
 
@@ -586,6 +587,14 @@ static int luv_fs_readlink(lua_State* L) {
   uv_fs_t* req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
   FS_CALL(readlink, req, path);
+}
+
+static int luv_fs_realpath(lua_State* L) {
+  const char* path = luaL_checkstring(L, 1);
+  int ref = luv_check_continuation(L, 2);
+  uv_fs_t* req = lua_newuserdata(L, sizeof(*req));
+  req->data = luv_setup_req(L, ref);
+  FS_CALL(realpath, req, path);
 }
 
 static int luv_fs_chown(lua_State* L) {

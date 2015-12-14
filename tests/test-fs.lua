@@ -79,4 +79,12 @@ return require('lib/tap')(function (test)
   end)
 
 
+  test("fs.realpath", function (print, p, expect, uv)
+    p(assert(uv.fs_realpath('.')))
+    assert(uv.fs_realpath('.', expect(function (err, path)
+      assert(not err, err)
+      p(path)
+    end)))
+  end)
+
 end)
