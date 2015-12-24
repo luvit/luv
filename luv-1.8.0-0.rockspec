@@ -1,7 +1,7 @@
 package = "luv"
-version = "1.7.4-5"
+version = "1.8.0-0"
 source = {
-  url = 'https://github.com/luvit/luv/releases/download/1.7.4-5/luv-1.7.4-5.tar.gz',
+  url = 'https://github.com/luvit/luv/releases/download/1.8.0-0/luv-1.8.0-0.tar.gz',
 }
 
 description = {
