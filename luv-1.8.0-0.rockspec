@@ -27,7 +27,6 @@ build = {
      LUA_LIBDIR="$(LUA_LIBDIR)",
      LUA_INCDIR="$(LUA_INCDIR)",
      LUA="$(LUA)",
-     PREFIX="$(PREFIX)",
      LIBDIR="$(LIBDIR)",
      LUADIR="$(LUADIR)",
   },
