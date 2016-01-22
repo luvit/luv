@@ -18,10 +18,8 @@ cache:
   - c:\lua -> appveyor.yml
   - c:\external -> appveyor.yml
 
-init:
-  - git submodule update --init
-
 install:
+  - git submodule update --init
   - call .ci\set_compiler_env.bat
   - call .ci\install.bat
   - luarocks make
