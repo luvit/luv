@@ -24,19 +24,18 @@ cache:
 
 install:
   - git submodule update --init
-  - call .ci\set_compiler_env.bat
-  - call .ci\install.bat
 
 build_script:
-  - luarocks make
   - msvcbuild.bat
+  # Test rock installation
+  - call .ci\set_compiler_env.bat
+  - call .ci\install.bat
+  - luarocks make
+  - ps: if("$(Get-Location)" -eq $(lua -e "print(require'luv'.cwd())")) { "LuaRocks test OK" } else { "LuaRocks test failed"; exit 1 }
+  - luarocks remove luv
 
 test_script:
   - luajit.exe tests\run.lua
-  - ps: if("$(Get-Location)" -eq $(lua -e "print(require'luv'.cwd())")) { "LuaRocks smoke test OK" } else { "LuaRocks smoke test failed" }
-
-after_test:
-  - luarocks remove luv
 
 artifacts:
   - path: luv.dll

@@ -24,13 +24,12 @@ before_install:
   - git submodule update --init --recursive
   - git submodule update --recursive
 
-install:
-  - source .ci/setenv_lua.sh
-
 script:
-  - luarocks make
-  - test $PWD = `lua -e "print(require'luv'.cwd())"` && echo "LuaRocks smoke test OK" || echo "LuaRocks smoke test failed"
   - if [ "x$PROCESS_CLEANUP_TEST" = "x" ]; then make && make test; else ./tests/test-sigchld-after-lua_close.sh; fi
+  # Test rock installation
+  - source .ci/setenv_lua.sh
+  - luarocks make
+  - test $PWD = `lua -e "print(require'luv'.cwd())"` && echo "LuaRocks test OK" || { echo "LuaRocks test failed"; exit 1 }
 
 notifications:
   email: true
