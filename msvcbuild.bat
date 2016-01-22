@@ -1,10 +1,12 @@
 IF NOT "x%1" == "x" GOTO :%1
 GOTO :build
 
+:x64
 :amd64
 cmake -H. -Bbuild -G"Visual Studio 12 Win64"
 GOTO :end
 
+:x86
 :ia32
 cmake -H. -Bbuild -G"Visual Studio 12"
 GOTO :end

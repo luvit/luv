@@ -1,21 +1,42 @@
 configuration: Release
 
 environment:
+  LUAROCKS_VER: 2.3.0
   matrix:
-    - LUV_ARCH: amd64
-    - LUV_ARCH: ia32
+  - LUA_VER: 5.3.2  # Lua 5.3.2 with compatibility flags disabled.
+    NOCOMPAT: true
+  - LJ_VER: 2.1
 
 matrix:
   fast_finish: true
 
+platform:
+  - x86
+  - x64
+
+cache:
+  - c:\lua -> appveyor.yml
+  - c:\external -> appveyor.yml
+
+init:
+  - git submodule update --init
+
+install:
+  - call .ci\set_compiler_env.bat
+  - call .ci\install.bat
+  - luarocks make
+
 build_script:
- - git submodule update --init
- - msvcbuild.bat %LUV_ARCH%
- - msvcbuild.bat
+  - msvcbuild.bat %platform%
+  - msvcbuild.bat
 
 test_script:
- - luajit.exe tests\run.lua
+  - luajit.exe tests\run.lua
+  - ps: if("$(Get-Location)" -eq $(lua -e "print(require'luv'.cwd())")) { "LuaRocks smoke test OK" } else { "LuaRocks smoke test failed" }
+
+after_test:
+  - luarocks remove luv
 
 artifacts:
- - path: luv.dll
- - path: luajit.exe
+  - path: luv.dll
+  - path: luajit.exe
