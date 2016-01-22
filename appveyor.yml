@@ -27,15 +27,13 @@ install:
 
 build_script:
   - msvcbuild.bat
+  - luajit.exe tests\run.lua
   # Test rock installation
   - call .ci\set_compiler_env.bat
   - call .ci\install.bat
   - luarocks make
   - ps: if("$(Get-Location)" -eq $(lua -e "print(require'luv'.cwd())")) { "LuaRocks test OK" } else { "LuaRocks test failed"; exit 1 }
   - luarocks remove luv
-
-test_script:
-  - luajit.exe tests\run.lua
 
 artifacts:
   - path: luv.dll
