@@ -1,20 +1,11 @@
-IF NOT "x%1" == "x" GOTO :%1
-GOTO :build
+set ARCH=" Win64"
+if "%platform%" EQU "x86" ( set ARCH="" )
 
-:x64
-:amd64
-cmake -H. -Bbuild -G"Visual Studio 12 Win64"
-GOTO :end
+set VS_VER="12"
+if "%configuration%"=="2015" ( set VS_VER="14" )
+if "%configuration%"=="2013" ( set VS_VER="12" )
 
-:x86
-:ia32
-cmake -H. -Bbuild -G"Visual Studio 12"
-GOTO :end
-
-:build
-IF NOT EXIST build call msvcbuild.bat amd64
+cmake -H. -Bbuild -G"Visual Studio %VS_VER%%ARCH%"
 cmake --build build --config Release
 copy build\Release\luv.dll .
 copy build\Release\luajit.exe .
-
-:end

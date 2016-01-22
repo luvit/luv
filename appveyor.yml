@@ -1,14 +1,18 @@
-configuration: Release
+matrix:
+  fast_finish: true
 
+# Test with the latest two releases of MSVC
+configuration:
+  - 2015
+  - 2013
+
+# Test with the latest Lua and LuaJIT versions
 environment:
   LUAROCKS_VER: 2.3.0
   matrix:
-  - LUA_VER: 5.3.2  # Lua 5.3.2 with compatibility flags disabled.
-    NOCOMPAT: true
+  - LUA_VER: 5.3.2
+    NOCOMPAT: true  # with compatibility flags disabled.
   - LJ_VER: 2.1
-
-matrix:
-  fast_finish: true
 
 platform:
   - x86
@@ -25,7 +29,6 @@ install:
   - luarocks make
 
 build_script:
-  - msvcbuild.bat %platform%
   - msvcbuild.bat
 
 test_script:
