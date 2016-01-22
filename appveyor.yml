@@ -1,5 +1,5 @@
 matrix:
-  fast_finish: true
+  fast_finish: false
 
 # Test with the latest two releases of MSVC
 configuration:
