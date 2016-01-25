@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
-#cmake_policy(SET CMP0053 OLD)
+
+if(POLICY CMP0053)
+  cmake_policy(SET CMP0053 NEW) # faster evaluation of variable references
+endif()
 
 project (luv C ASM)
 
@@ -54,7 +57,6 @@ if (LUA)
   MESSAGE(STATUS "LUA_INCDIR: " ${LUA_INCDIR})
   MESSAGE(STATUS "LUA: " ${LUA})
 
-
   SET(LUA_EXECUTABLE "${LUA}")
   SET(LUA_INCLUDE_DIR "${LUA_INCDIR}")
   SET(LUA_PACKAGE_PATH "${LUADIR}")
@@ -62,25 +64,21 @@ if (LUA)
 
   SET(INSTALL_LIB_DIR ${LIBDIR})
 
-  IF(LUALIB) # present on windows platforms only
-    SET(LUA_LIBRARIES "${LUALIB}")
-  ELSE() # too bad, luarocks does not provide it (pfff...)
-    GET_FILENAME_COMPONENT(LUA_EXEC_NAME ${LUA_EXECUTABLE} NAME_WE)
-    IF(LUA_EXEC_NAME STREQUAL "luajit")
+  GET_FILENAME_COMPONENT(LUA_EXEC_NAME ${LUA_EXECUTABLE} NAME_WE)
+  IF(LUA_EXEC_NAME STREQUAL "luajit")
+  FIND_LIBRARY(LUA_LIBRARIES
+    NAMES luajit libluajit
+    PATHS ${LUA_LIBDIR}
+    NO_DEFAULT_PATH)
+  ELSEIF(LUA_EXEC_NAME STREQUAL "lua")
     FIND_LIBRARY(LUA_LIBRARIES
-      NAMES luajit libluajit
+      NAMES lua lua53 lua52 lua51 liblua liblua53 liblua52 liblua51
       PATHS ${LUA_LIBDIR}
       NO_DEFAULT_PATH)
-    ELSEIF(LUA_EXEC_NAME STREQUAL "lua")
-      FIND_LIBRARY(LUA_LIBRARIES
-        NAMES lua liblua
-        PATHS ${LUA_LIBDIR}
-        NO_DEFAULT_PATH)
-    ENDIF()
-    MESSAGE(STATUS "Lua library guess (no info from luarocks): ${LUA_LIBRARIES}")
   ENDIF()
+  MESSAGE(STATUS "Lua library: ${LUA_LIBRARIES}")
+
   include_directories(${LUA_INCLUDE_DIR})
-  link_directories(${LUA_LIBRARIES})
 else (LUA)
   if (LUA_BUILD_TYPE STREQUAL System)
     if (USE_LUAJIT)
@@ -93,7 +91,6 @@ else (LUA)
       find_package(Lua)
       if (LUA_FOUND)
         include_directories(${LUA_INCLUDE_DIR})
-        link_directories(${LUA_LIBRARIES})
       endif (LUA_FOUND)
     endif (USE_LUAJIT)
 
@@ -136,15 +133,19 @@ endif()
 
 if(WIN32)
   add_definitions(-DLUA_BUILD_AS_DLL -DLUA_LIB)
-  if (USE_LUAJIT)
-    target_link_libraries(luv uv luajit-5.1)
-  else (USE_LUAJIT)
-    if (LUA_BUILD_TYPE STREQUAL System)
-        target_link_libraries(luv uv ${LUA_LIBRARIES})
-    else (LUA_BUILD_TYPE STREQUAL System)
-        target_link_libraries(luv uv lualib)
-    endif (LUA_BUILD_TYPE STREQUAL System)
-  endif (USE_LUAJIT)
+  if (LUA)
+    target_link_libraries(luv uv ${LUA_LIBRARIES})
+  else (LUA)
+    if (USE_LUAJIT)
+      target_link_libraries(luv uv luajit-5.1)
+    else (USE_LUAJIT)
+      if (LUA_BUILD_TYPE STREQUAL System)
+          target_link_libraries(luv uv ${LUA_LIBRARIES})
+      else (LUA_BUILD_TYPE STREQUAL System)
+          target_link_libraries(luv uv lualib)
+      endif (LUA_BUILD_TYPE STREQUAL System)
+    endif (USE_LUAJIT)
+  endif (LUA)
   # replace /MD to /MT to avoid link msvcr*.dll
   set(CompilerFlags
     CMAKE_C_FLAGS
