@@ -71,13 +71,13 @@ return require('lib/tap')(function (test)
     local function iter()
       return uv.fs_scandir_next(req)
     end
-    for entry in iter do
-      p(entry)
-      assert(entry.name)
-      -- assert(entry.type) -- TODO: find out why this fails on travis containers.
+    for name, ftype in iter do
+      p{name=name, ftype=ftype}
+      assert(name)
+      -- ftype is not available in all filesystems; e.g. it's provided
+      -- for HFS+ (OSX), but not for ext4 (Linux).
     end
   end)
-
 
   test("fs.realpath", function (print, p, expect, uv)
     p(assert(uv.fs_realpath('.')))

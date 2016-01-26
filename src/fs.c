@@ -416,24 +416,21 @@ static int luv_fs_scandir_next(lua_State* L) {
     return 0;
   }
   if (ret < 0) return luv_error(L, ret);
-  lua_createtable(L, 0, 2);
   lua_pushstring(L, ent.name);
-  lua_setfield(L, -2, "name");
+  if (ent.type == UV_DIRENT_UNKNOWN) return 1;
   switch (ent.type) {
-    case UV_DIRENT_UNKNOWN: type = NULL; break;
-    case UV_DIRENT_FILE: type = "file"; break;
-    case UV_DIRENT_DIR: type = "directory"; break;
-    case UV_DIRENT_LINK: type = "link"; break;
-    case UV_DIRENT_FIFO: type = "fifo"; break;
+    case UV_DIRENT_FILE:   type = "file"; break;
+    case UV_DIRENT_DIR:    type = "directory"; break;
+    case UV_DIRENT_LINK:   type = "link"; break;
+    case UV_DIRENT_FIFO:   type = "fifo"; break;
     case UV_DIRENT_SOCKET: type = "socket"; break;
-    case UV_DIRENT_CHAR: type = "char"; break;
-    case UV_DIRENT_BLOCK: type = "block"; break;
+    case UV_DIRENT_CHAR:   type = "char"; break;
+    case UV_DIRENT_BLOCK:  type = "block"; break;
+    default:
+      assert(0);
   }
-  if (type) {
-    lua_pushstring(L, type);
-    lua_setfield(L, -2, "type");
-  }
-  return 1;
+  lua_pushstring(L, type);
+  return 2;
 }
 
 static int luv_fs_stat(lua_State* L) {
