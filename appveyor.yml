@@ -1,5 +1,4 @@
-matrix:
-  fast_finish: true
+os: Visual Studio 2015
 
 # Test with the latest two releases of MSVC
 configuration:
@@ -17,6 +16,9 @@ environment:
 platform:
   - x86
   - x64
+
+matrix:
+  fast_finish: true
 
 cache:
   - c:\lua -> appveyor.yml
