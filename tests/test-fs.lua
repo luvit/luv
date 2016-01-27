@@ -74,8 +74,8 @@ return require('lib/tap')(function (test)
     for name, ftype in iter do
       p{name=name, ftype=ftype}
       assert(name)
-      -- ftype is not available in all filesystems; e.g. it's provided
-      -- for HFS+ (OSX), but not for ext4 (Linux).
+      -- ftype is not available in all filesystems; for example it's
+      -- provided for HFS+ (OSX), NTFS (Windows) but not for ext4 (Linux).
     end
   end)
 

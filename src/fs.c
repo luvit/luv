@@ -417,17 +417,16 @@ static int luv_fs_scandir_next(lua_State* L) {
   }
   if (ret < 0) return luv_error(L, ret);
   lua_pushstring(L, ent.name);
-  if (ent.type == UV_DIRENT_UNKNOWN) return 1;
   switch (ent.type) {
-    case UV_DIRENT_FILE:   type = "file"; break;
-    case UV_DIRENT_DIR:    type = "directory"; break;
-    case UV_DIRENT_LINK:   type = "link"; break;
-    case UV_DIRENT_FIFO:   type = "fifo"; break;
-    case UV_DIRENT_SOCKET: type = "socket"; break;
-    case UV_DIRENT_CHAR:   type = "char"; break;
-    case UV_DIRENT_BLOCK:  type = "block"; break;
-    default:
-      assert(0);
+    case UV_DIRENT_UNKNOWN: return 1;
+    case UV_DIRENT_FILE:    type = "file"; break;
+    case UV_DIRENT_DIR:     type = "directory"; break;
+    case UV_DIRENT_LINK:    type = "link"; break;
+    case UV_DIRENT_FIFO:    type = "fifo"; break;
+    case UV_DIRENT_SOCKET:  type = "socket"; break;
+    case UV_DIRENT_CHAR:    type = "char"; break;
+    case UV_DIRENT_BLOCK:   type = "block"; break;
+    default: assert(0);
   }
   lua_pushstring(L, type);
   return 2;
