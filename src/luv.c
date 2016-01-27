@@ -461,6 +461,7 @@ LUALIB_API uv_loop_t* luv_loop(lua_State* L) {
 
 static void walk_cb(uv_handle_t *handle, void *arg)
 {
+  (void)arg;
   if (!uv_is_closing(handle)) {
     uv_close(handle, luv_close_cb);
   }
