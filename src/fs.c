@@ -428,6 +428,7 @@ static int luv_fs_scandir_next(lua_State* L) {
     case UV_DIRENT_SOCKET: type = "socket"; break;
     case UV_DIRENT_CHAR: type = "char"; break;
     case UV_DIRENT_BLOCK: type = "block"; break;
+    default: type = NULL;
   }
   if (type) {
     lua_pushstring(L, type);
