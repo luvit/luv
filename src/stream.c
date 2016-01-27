@@ -85,6 +85,7 @@ static int luv_accept(lua_State* L) {
 }
 
 static void luv_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
+  (void)handle;
   buf->base = malloc(suggested_size);
   assert(buf->base);
   buf->len = suggested_size;
