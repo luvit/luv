@@ -308,7 +308,7 @@ static int luv_constants(lua_State* L) {
   return 1;
 }
 
-static const int luv_af_string_to_num(const char* string) {
+static int luv_af_string_to_num(const char* string) {
   if (!string) return AF_UNSPEC;
 #ifdef AF_UNIX
   if (strcmp(string, "unix") == 0) return AF_UNIX;
@@ -380,7 +380,7 @@ static const char* luv_af_num_to_string(const int num) {
 }
 
 
-static const int luv_ai_string_to_num(const char* string) {
+static int luv_ai_string_to_num(const char* string) {
   if (!string) return 0;
 #ifdef AI_ADDRCONFIG
   if (strcmp(string, "addrconfig") == 0) return AI_ADDRCONFIG;
@@ -427,7 +427,7 @@ static const char* luv_ai_num_to_string(const int num) {
   return NULL;
 }
 
-static const int luv_sock_string_to_num(const char* string) {
+static int luv_sock_string_to_num(const char* string) {
   if (!string) return 0;
 #ifdef SOCK_STREAM
   if (strcmp(string, "stream") == 0) return SOCK_STREAM;
@@ -468,7 +468,7 @@ static const char* luv_sock_num_to_string(const int num) {
   return NULL;
 }
 
-static const int luv_sig_string_to_num(const char* string) {
+static int luv_sig_string_to_num(const char* string) {
   if (!string) return 0;
 #ifdef SIGHUP
   if (strcmp(string, "sighup") == 0) return SIGHUP;
