@@ -82,6 +82,7 @@ static int luv_poll_start(lua_State* L) {
     case 0: events = UV_READABLE; break;
     case 1: events = UV_WRITABLE; break;
     case 2: events = UV_READABLE | UV_WRITABLE; break;
+    default: events = 0; /* unreachable */
   }
   luv_check_callback(L, handle->data, LUV_POLL, 3);
   ret = uv_poll_start(handle, events, luv_poll_cb);
