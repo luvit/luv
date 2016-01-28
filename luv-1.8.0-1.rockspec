@@ -1,7 +1,7 @@
 package = "luv"
-version = "1.8.0-0"
+version = "1.8.0-1"
 source = {
-  url = 'https://github.com/luvit/luv/releases/download/1.8.0-0/luv-1.8.0-0.tar.gz',
+  url = 'https://github.com/luvit/luv/releases/download/1.8.0-1/luv-1.8.0-1.tar.gz',
 }
 
 description = {
@@ -9,7 +9,8 @@ description = {
   detailed = [[
 libuv bindings for luajit and lua 5.1/5.2/5.3.
 
-This library makes libuv available to lua scripts. It was made for the luvit project but should usable from nearly any lua project.
+This library makes libuv available to lua scripts. It was made for the luvit
+project but should usable from nearly any lua project.
   ]],
   homepage = "https://github.com/luvit/luv",
   license = "Apache 2.0"
