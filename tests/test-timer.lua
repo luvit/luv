@@ -32,18 +32,18 @@ return require('lib/tap')(function (test)
   end)
 
   -- Test two concurrent timers
-  -- There is a small race condition, but there are 50ms of wiggle room.
-  -- 250ms is halfway between 2x100ms and 3x100ms
+  -- There is a small race condition, but there are 100ms of wiggle room.
+  -- 400ms is halfway between 100+200ms and 100+400ms
   test("timeout with interval", function (print, p, expect, uv)
     local a = uv.new_timer()
     local b = uv.new_timer()
-    uv.timer_start(a, 250, 0, expect(function ()
+    uv.timer_start(a, 400, 0, expect(function ()
       p("timeout", a)
       uv.timer_stop(b)
       uv.close(a)
       uv.close(b)
     end))
-    uv.timer_start(b, 100, 100, expect(function ()
+    uv.timer_start(b, 100, 200, expect(function ()
       p("interval", b)
     end, 2))
   end)
