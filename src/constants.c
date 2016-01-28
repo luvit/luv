@@ -308,7 +308,7 @@ static int luv_constants(lua_State* L) {
   return 1;
 }
 
-static const int luv_af_string_to_num(const char* string) {
+static int luv_af_string_to_num(const char* string) {
   if (!string) return AF_UNSPEC;
 #ifdef AF_UNIX
   if (strcmp(string, "unix") == 0) return AF_UNIX;
@@ -380,54 +380,7 @@ static const char* luv_af_num_to_string(const int num) {
 }
 
 
-static const int luv_ai_string_to_num(const char* string) {
-  if (!string) return 0;
-#ifdef AI_ADDRCONFIG
-  if (strcmp(string, "addrconfig") == 0) return AI_ADDRCONFIG;
-#endif
-#ifdef AI_V4MAPPED
-  if (strcmp(string, "v4mapped") == 0) return AI_V4MAPPED;
-#endif
-#ifdef AI_ALL
-  if (strcmp(string, "all") == 0) return AI_ALL;
-#endif
-#ifdef AI_NUMERICHOST
-  if (strcmp(string, "numerichost") == 0) return AI_NUMERICHOST;
-#endif
-#ifdef AI_PASSIVE
-  if (strcmp(string, "passive") == 0) return AI_PASSIVE;
-#endif
-#ifdef AI_NUMERICSERV
-  if (strcmp(string, "numericserv") == 0) return AI_NUMERICSERV;
-#endif
-  return 0;
-}
-
-static const char* luv_ai_num_to_string(const int num) {
-  switch (num) {
-#ifdef AI_ADDRCONFIG
-  case AI_ADDRCONFIG: return "addrconfig";
-#endif
-#ifdef AI_V4MAPPED
-  case AI_V4MAPPED: return "v4mapped";
-#endif
-#ifdef AI_ALL
-  case AI_ALL: return "all";
-#endif
-#ifdef AI_NUMERICHOST
-  case AI_NUMERICHOST: return "numerichost";
-#endif
-#ifdef AI_PASSIVE
-  case AI_PASSIVE: return "passive";
-#endif
-#ifdef AI_NUMERICSERV
-  case AI_NUMERICSERV: return "numericserv";
-#endif
-  }
-  return NULL;
-}
-
-static const int luv_sock_string_to_num(const char* string) {
+static int luv_sock_string_to_num(const char* string) {
   if (!string) return 0;
 #ifdef SOCK_STREAM
   if (strcmp(string, "stream") == 0) return SOCK_STREAM;
@@ -468,7 +421,7 @@ static const char* luv_sock_num_to_string(const int num) {
   return NULL;
 }
 
-static const int luv_sig_string_to_num(const char* string) {
+static int luv_sig_string_to_num(const char* string) {
   if (!string) return 0;
 #ifdef SIGHUP
   if (strcmp(string, "sighup") == 0) return SIGHUP;

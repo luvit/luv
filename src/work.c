@@ -62,7 +62,6 @@ static int luv_work_ctx_tostring(lua_State* L)
 
 static void luv_work_cb(uv_work_t* req)
 {
-  uv_thread_t tid = uv_thread_self();
   luv_work_t* work = req->data;
   luv_work_ctx_t* ctx = work->ctx;
   lua_State *L = uv_key_get(&L_key);
@@ -115,6 +114,7 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
   luv_work_ctx_t* ctx = work->ctx;
   lua_State*L = ctx->L;
   int i;
+  (void)status;
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->after_work_cb);
   i = luv_thread_arg_push(L, &work->arg);
   if (lua_pcall(L, i, 0, 0))
