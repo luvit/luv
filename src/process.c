@@ -111,7 +111,14 @@ static int luv_spawn(lua_State* L) {
         uv_stream_t* stream = luv_check_stream(L, -1);
         int err = uv_fileno((uv_handle_t*)stream, &fd);
         if (err == UV_EINVAL || err == UV_EBADF) {
-          options.stdio[i].flags = UV_CREATE_PIPE | UV_READABLE_PIPE | UV_WRITABLE_PIPE;
+          // stdin (fd 0) is read-only, stdout and stderr (fds 1 & 2) are
+          // write-only, and all fds > 2 are read-write
+          int flags = UV_CREATE_PIPE;
+          if (i == 0 || i > 2)
+            flags |= UV_READABLE_PIPE;
+          if (i != 0)
+            flags |= UV_WRITABLE_PIPE;
+          options.stdio[i].flags = flags;
         }
         else {
           options.stdio[i].flags = UV_INHERIT_STREAM;
@@ -257,4 +264,3 @@ static int luv_kill(lua_State* L) {
   lua_pushinteger(L, ret);
   return 1;
 }
-
