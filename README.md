@@ -51,9 +51,9 @@ local function create_server(host, port, on_connection)
   local server = uv.new_tcp()
   server:bind(host, port)
 
-  server:listen(128, function(self)
-    -- self is the same as server
-    assert(self == server)
+  server:listen(128, function(err)
+    -- Make sure there was no problem setting up listen
+    assert(not err, err)
 
     -- Accept the client
     local client = uv.new_tcp()
