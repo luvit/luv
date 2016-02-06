@@ -224,6 +224,9 @@ SET(SRC_LJCORE
   ${LUAJIT_DIR}/src/lj_gc.c
   ${LUAJIT_DIR}/src/lj_err.c
   ${LUAJIT_DIR}/src/lj_char.c
+  ${LUAJIT_DIR}/src/lj_buf.c
+  ${LUAJIT_DIR}/src/lj_profile.c
+  ${LUAJIT_DIR}/src/lj_strfmt.c
   ${LUAJIT_DIR}/src/lj_bc.c
   ${LUAJIT_DIR}/src/lj_obj.c
   ${LUAJIT_DIR}/src/lj_str.c
