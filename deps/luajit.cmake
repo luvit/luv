@@ -271,6 +271,7 @@ SET(SRC_LJCORE
   ${LUAJIT_DIR}/src/lj_clib.c
   ${LUAJIT_DIR}/src/lj_cparse.c
   ${LUAJIT_DIR}/src/lj_lib.c
+  ${LUAJIT_DIR}/src/lj_vmmath.c
   ${LUAJIT_DIR}/src/lj_alloc.c
   ${LUAJIT_DIR}/src/lib_aux.c
   ${LUAJIT_DIR}/src/lib_init.c
