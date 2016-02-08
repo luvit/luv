@@ -272,6 +272,7 @@ SET(SRC_LJCORE
   ${LUAJIT_DIR}/src/lj_cparse.c
   ${LUAJIT_DIR}/src/lj_lib.c
   ${LUAJIT_DIR}/src/lj_alloc.c
+  ${LUAJIT_DIR}/src/lj_vmmath.c
   ${LUAJIT_DIR}/src/lib_aux.c
   ${LUAJIT_DIR}/src/lib_init.c
   ${SRC_LJLIB})
@@ -300,8 +301,8 @@ if (MSVC)
   add_buildvm_target ( lj_vm.obj peobj )
   set (LJ_VM_SRC ${CMAKE_CURRENT_BINARY_DIR}/lj_vm.obj)
 else ()
-  add_buildvm_target ( lj_vm.s ${LJVM_MODE} )
-  set (LJ_VM_SRC ${CMAKE_CURRENT_BINARY_DIR}/lj_vm.s)
+  add_buildvm_target ( lj_vm.S ${LJVM_MODE} )
+  set (LJ_VM_SRC ${CMAKE_CURRENT_BINARY_DIR}/lj_vm.S)
 endif ()
 add_buildvm_target ( lj_ffdef.h   ffdef   ${SRC_LJLIB} )
 add_buildvm_target ( lj_bcdef.h  bcdef  ${SRC_LJLIB} )
