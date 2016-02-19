@@ -1,5 +1,5 @@
 # Modfied from luajit.cmake
-# Added LUAJIT_ADD_EXECUTABLE Ryan Phillips <ryan at trolocsis.com>
+# Added LUA_ADD_EXECUTABLE Ryan Phillips <ryan at trolocsis.com>
 # This CMakeLists.txt has been first taken from LuaDist
 # Copyright (C) 2007-2011 LuaDist.
 # Created by Peter Drahoš
@@ -8,7 +8,7 @@
 
 #project(Lua53 C)
 
-SET(LUA_DIR ${CMAKE_CURRENT_LIST_DIR}/lua)
+SET(LUA_DIR ${CMAKE_CURRENT_LIST_DIR}/lua CACHE PATH "location of lua sources")
 
 SET(CMAKE_REQUIRED_INCLUDES
   ${LUA_DIR}
@@ -96,15 +96,15 @@ SET(SRC_LUACORE
 
 IF(WITH_SHARED_LUA)
   IF(WITH_AMALG)
-    add_library(lualib SHARED ${LUA_DIR}/../lua_one.c ${DEPS})
+    add_library(lualib SHARED ${LUA_DIR}/../lua_one.c)
   ELSE()
-    add_library(lualib SHARED ${SRC_LUACORE} ${DEPS} )
+    add_library(lualib SHARED ${SRC_LUACORE})
   ENDIF()
 ELSE()
   IF(WITH_AMALG)
-    add_library(lualib STATIC ${LUA_DIR}/../lua_one.c ${DEPS} )
+    add_library(lualib STATIC ${LUA_DIR}/../lua_one.c )
   ELSE()
-    add_library(lualib STATIC ${SRC_LUACORE} ${DEPS} )
+    add_library(lualib STATIC ${SRC_LUACORE} )
   ENDIF()
   set_target_properties(lualib PROPERTIES
     PREFIX "lib" IMPORT_PREFIX "lib")
@@ -118,11 +118,55 @@ IF(WIN32)
   target_link_libraries(lua lualib)
 ELSE()
   IF(WITH_AMALG)
-    add_executable(lua ${LUA_DIR}/src/lua.c ${LUA_DIR}/lua_one.c ${DEPS})
+    add_executable(lua ${LUA_DIR}/src/lua.c ${LUA_DIR}/lua_one.c)
   ELSE()
-    add_executable(lua ${LUA_DIR}/src/lua.c ${SRC_LUACORE} ${DEPS})
+    add_executable(lua ${LUA_DIR}/src/lua.c ${SRC_LUACORE})
   ENDIF()
   target_link_libraries(lua ${LIBS})
   SET_TARGET_PROPERTIES(lua PROPERTIES ENABLE_EXPORTS ON)
 ENDIF(WIN32)
 
+MACRO(LUA_add_custom_commands luajit_target)
+  SET(target_srcs "")
+  FOREACH(file ${ARGN})
+    IF(${file} MATCHES ".*\\.lua$")
+      set(file "${CMAKE_CURRENT_SOURCE_DIR}/${file}")
+      set(source_file ${file})
+      string(LENGTH ${CMAKE_SOURCE_DIR} _luajit_source_dir_length)
+      string(LENGTH ${file} _luajit_file_length)
+      math(EXPR _begin "${_luajit_source_dir_length} + 1")
+      math(EXPR _stripped_file_length "${_luajit_file_length} - ${_luajit_source_dir_length} - 1")
+      string(SUBSTRING ${file} ${_begin} ${_stripped_file_length} stripped_file)
+
+      set(generated_file "${CMAKE_BINARY_DIR}/luacode_tmp/${stripped_file}_${luajit_target}_generated.c")
+
+      add_custom_command(
+        OUTPUT ${generated_file}
+        MAIN_DEPENDENCY ${source_file}
+        DEPENDS lua
+        COMMAND lua
+	ARGS "${LUA_DIR}/../luac.lua"
+          ${source_file}
+          ${generated_file}
+        COMMENT "Building Lua ${source_file}: ${generated_file}"
+      )
+
+      get_filename_component(basedir ${generated_file} PATH)
+      file(MAKE_DIRECTORY ${basedir})
+
+      set(target_srcs ${target_srcs} ${generated_file})
+      set_source_files_properties(
+        ${generated_file}
+        properties
+        generated true        # to say that "it is OK that the obj-files do not exist before build time"
+      )
+    ELSE()
+      set(target_srcs ${target_srcs} ${file})
+    ENDIF(${file} MATCHES ".*\\.lua$")
+  ENDFOREACH(file)
+ENDMACRO()
+
+MACRO(LUA_ADD_EXECUTABLE luajit_target)
+  LUA_add_custom_commands(${luajit_target} ${ARGN})
+  add_executable(${luajit_target} ${target_srcs})
+ENDMACRO(LUA_ADD_EXECUTABLE luajit_target)
