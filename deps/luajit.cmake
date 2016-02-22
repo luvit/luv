@@ -1,4 +1,4 @@
-# Added LUAJIT_ADD_EXECUTABLE Ryan Phillips <ryan at trolocsis.com>
+# Added LUA_ADD_EXECUTABLE Ryan Phillips <ryan at trolocsis.com>
 # This CMakeLists.txt has been first taken from LuaDist
 # Copyright (C) 2007-2011 LuaDist.
 # Created by Peter Drahoš
@@ -401,7 +401,8 @@ MACRO(LUAJIT_add_custom_commands luajit_target)
   ENDFOREACH(file)
 ENDMACRO()
 
-MACRO(LUAJIT_ADD_EXECUTABLE luajit_target)
+MACRO(LUA_ADD_EXECUTABLE luajit_target)
   LUAJIT_add_custom_commands(${luajit_target} ${ARGN})
   add_executable(${luajit_target} ${target_srcs})
-ENDMACRO(LUAJIT_ADD_EXECUTABLE luajit_target)
+ENDMACRO(LUA_ADD_EXECUTABLE luajit_target)
+
