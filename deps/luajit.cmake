@@ -227,6 +227,7 @@ SET(SRC_LJCORE
   ${LUAJIT_DIR}/src/lj_buf.c
   ${LUAJIT_DIR}/src/lj_profile.c
   ${LUAJIT_DIR}/src/lj_strfmt.c
+  ${LUAJIT_DIR}/src/lj_strfmt_num.c
   ${LUAJIT_DIR}/src/lj_bc.c
   ${LUAJIT_DIR}/src/lj_obj.c
   ${LUAJIT_DIR}/src/lj_str.c
@@ -284,6 +285,7 @@ SET(SRC_BUILDVM
   ${LUAJIT_DIR}/src/host/buildvm_lib.c
   ${LUAJIT_DIR}/src/host/buildvm_fold.c
   ${CMAKE_CURRENT_BINARY_DIR}/buildvm_arch.h)
+
 
 ## GENERATE
 ADD_EXECUTABLE(buildvm ${SRC_BUILDVM})
@@ -405,4 +407,3 @@ MACRO(LUA_ADD_EXECUTABLE luajit_target)
   LUAJIT_add_custom_commands(${luajit_target} ${ARGN})
   add_executable(${luajit_target} ${target_srcs})
 ENDMACRO(LUA_ADD_EXECUTABLE luajit_target)
-
