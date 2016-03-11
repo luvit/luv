@@ -30,6 +30,13 @@ script:
   - source .ci/setenv_lua.sh
   - luarocks make
   - test $PWD = `lua -e "print(require'luv'.cwd())"`
+  - luarocks remove luv
+  # Test the alternate rockspec
+  - mkdir build/lib
+  - cp build/libuv.a build/lib
+  - cp -a deps/libuv/include build
+  - luarocks make rockspecs/$(ls rockspecs) LIBUV_DIR=build
+  - test $PWD = `lua -e "print(require'luv'.cwd())"`
 
 notifications:
   email: true
