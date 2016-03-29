@@ -15,6 +15,10 @@ option(BUILD_MODULE "Build as module" ON)
 option(BUILD_SHARED_LIBS "Build shared library" OFF)
 option(WITH_SHARED_LIBUV "Link to a shared libuv library instead of static linking" OFF)
 
+if (MINGW)
+  add_definitions(-D_WIN32_WINNT=0x0600)
+endif (MINGW)
+
 if (NOT WITH_LUA_ENGINE)
   set(WITH_LUA_ENGINE "LuaJIT"
     CACHE STRING "Link to LuaJIT or PUC Lua" FORCE)
