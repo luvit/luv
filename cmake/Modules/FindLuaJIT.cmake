@@ -24,7 +24,7 @@
 #  LUA_VERSION_PATCH  - the patch version of Lua
 
 FIND_PATH(LUAJIT_INCLUDE_DIR NAMES lua.h PATH_SUFFIXES luajit-2.0)
-FIND_LIBRARY(LUAJIT_LIBRARIES NAMES luajit-5.1)
+FIND_LIBRARY(LUAJIT_LIBRARIES NAMES luajit-5.1 luajit)
 
 if (LUAJIT_INCLUDE_DIR AND EXISTS "${LUAJIT_INCLUDE_DIR}/lua.h")
     # At least 5.[012] have different ways to express the version
