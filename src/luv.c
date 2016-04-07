@@ -247,8 +247,10 @@ static const luaL_Reg luv_functions[] = {
   {"uptime", luv_uptime},
   {"version", luv_version},
   {"version_string", luv_version_string},
+#ifndef _WIN32
   {"print_all_handles", luv_print_all_handles},
   {"print_active_handles", luv_print_active_handles},
+#endif
 
   // thread.c
   {"new_thread", luv_new_thread},
