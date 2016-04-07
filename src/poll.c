@@ -48,7 +48,7 @@ static int luv_new_socket_poll(lua_State* L) {
 
 // These are the same order as uv_run_mode which also starts at 0
 static const char *const luv_pollevents[] = {
-  "r", "w", "rw", NULL
+  "r", "w", "rw", "d", "rd", "wd", "rwd", NULL
 };
 
 static void luv_poll_cb(uv_poll_t* handle, int status, int events) {
@@ -68,6 +68,10 @@ static void luv_poll_cb(uv_poll_t* handle, int status, int events) {
     case UV_READABLE: evtstr = "r"; break;
     case UV_WRITABLE: evtstr = "w"; break;
     case UV_READABLE|UV_WRITABLE: evtstr = "rw"; break;
+    case UV_DISCONNECT: evtstr = "d"; break;
+    case UV_READABLE|UV_DISCONNECT: evtstr = "rd"; break;
+    case UV_WRITABLE|UV_DISCONNECT: evtstr = "wd"; break;
+    case UV_READABLE|UV_WRITABLE|UV_DISCONNECT: evtstr = "rwd"; break;
     default: evtstr = ""; break;
   }
   lua_pushstring(L, evtstr);
@@ -82,6 +86,10 @@ static int luv_poll_start(lua_State* L) {
     case 0: events = UV_READABLE; break;
     case 1: events = UV_WRITABLE; break;
     case 2: events = UV_READABLE | UV_WRITABLE; break;
+    case 3: events = UV_DISCONNECT; break;
+    case 4: events = UV_READABLE|UV_DISCONNECT; break;
+    case 5: events = UV_WRITABLE|UV_DISCONNECT; break;
+    case 6: events = UV_READABLE|UV_WRITABLE|UV_DISCONNECT; break;
     default: events = 0; /* unreachable */
   }
   luv_check_callback(L, handle->data, LUV_POLL, 3);
