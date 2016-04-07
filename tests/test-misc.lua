@@ -63,6 +63,16 @@ return require('lib/tap')(function (test)
     p(path)
   end)
 
+  test("uv.os_tmpdir", function (print, p, expect, uv)
+    local path = assert(uv.os_tmpdir())
+    p(path)
+  end)
+
+  test("uv.os_get_passwd", function (print, p, expect, uv)
+    local passwd = assert(uv.os_get_passwd())
+    p(passwd)
+  end)
+
   test("uv.cwd and uv.chdir", function (print, p, expect, uv)
     local old = assert(uv.cwd())
     p(old)

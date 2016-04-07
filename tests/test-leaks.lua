@@ -25,7 +25,7 @@ return require('lib/tap')(function (test)
   end
 
   test("fs-write", function (print, p, expect, uv)
-    bench(uv, p, 0x7000, function ()
+    bench(uv, p, 0xf00, function ()
       local path = "_test_"
       local fd = assert(uv.fs_open(path, "w", 438))
       uv.fs_write(fd, "Hello World\n", -1)
@@ -36,7 +36,7 @@ return require('lib/tap')(function (test)
   end)
 
   test("lots-o-timers", function (print, p, expect, uv)
-    bench(uv, p, 0x10000, function ()
+    bench(uv, p, 0x100000, function ()
       local timer = uv.new_timer()
       uv.close(timer)
     end)

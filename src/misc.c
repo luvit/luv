@@ -253,12 +253,50 @@ static int luv_chdir(lua_State* L) {
   return 1;
 }
 
+static int luv_os_tmpdir(lua_State* L) {
+  size_t size = 2*PATH_MAX;
+  char tmpdir[2*PATH_MAX];
+  int ret = uv_os_tmpdir(tmpdir, &size);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushlstring(L, tmpdir, size);
+  return 1;
+}
+
 static int luv_os_homedir(lua_State* L) {
   size_t size = 2*PATH_MAX;
   char homedir[2*PATH_MAX];
   int ret = uv_os_homedir(homedir, &size);
   if (ret < 0) return luv_error(L, ret);
   lua_pushlstring(L, homedir, size);
+  return 1;
+}
+
+static int luv_os_get_passwd(lua_State* L) {
+  uv_passwd_t pwd;
+  int ret = uv_os_get_passwd(&pwd);
+  if (ret < 0) return luv_error(L, ret);
+  lua_newtable(L);
+  if (pwd.username) {
+    lua_pushstring(L, pwd.username);
+    lua_setfield(L, -2, "username");
+  }
+  if (pwd.uid >= 0) {
+    lua_pushinteger(L, pwd.uid);
+    lua_setfield(L, -2, "uid");
+  }
+  if (pwd.gid >= 0) {
+    lua_pushinteger(L, pwd.gid);
+    lua_setfield(L, -2, "gid");
+  }
+  if (pwd.shell) {
+    lua_pushstring(L, pwd.shell);
+    lua_setfield(L, -2, "shell");
+  }
+  if (pwd.homedir) {
+    lua_pushstring(L, pwd.homedir);
+    lua_setfield(L, -2, "homedir");
+  }
+  uv_os_free_passwd(&pwd);
   return 1;
 }
 
