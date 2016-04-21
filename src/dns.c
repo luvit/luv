@@ -150,13 +150,17 @@ static int luv_getaddrinfo(lua_State* L) {
     if (lua_toboolean(L, -1)) hints->ai_flags |=  AI_ADDRCONFIG;
     lua_pop(L, 1);
 
+#ifdef AI_V4MAPPED
     lua_getfield(L, 3, "v4mapped");
     if (lua_toboolean(L, -1)) hints->ai_flags |=  AI_V4MAPPED;
     lua_pop(L, 1);
+#endif
 
+#ifdef AI_ALL
     lua_getfield(L, 3, "all");
     if (lua_toboolean(L, -1)) hints->ai_flags |=  AI_ALL;
     lua_pop(L, 1);
+#endif
 
     lua_getfield(L, 3, "numerichost");
     if (lua_toboolean(L, -1)) hints->ai_flags |=  AI_NUMERICHOST;
