@@ -200,7 +200,7 @@ if(WIN32)
     psapi.lib
     iphlpapi.lib
     advapi32.lib
-    Userenv.lib
+    userenv.lib
   )
 endif()
 
