@@ -1,6 +1,6 @@
 -- Alternate rockspec that uses luarocks builtin builder
 package = "luv"
-version = "1.9.0-2"
+version = "1.9.0-3"
 source = {
   url = 'https://github.com/luvit/luv/releases/download/'..version..'/luv-'..version..'.tar.gz'
 }
