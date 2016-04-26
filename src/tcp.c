@@ -181,6 +181,7 @@ static int luv_tcp_connect(lua_State* L) {
   req->data = luv_setup_req(L, ref);
   ret = uv_tcp_connect(req, handle, (struct sockaddr*)&addr, luv_connect_cb);
   if (ret < 0) {
+    luv_cleanup_req(L, req->data);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }

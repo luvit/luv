@@ -52,6 +52,7 @@ static int luv_shutdown(lua_State* L) {
   req->data = luv_setup_req(L, ref);
   ret = uv_shutdown(req, handle, luv_shutdown_cb);
   if (ret < 0) {
+    luv_cleanup_req(L, req->data);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
@@ -176,6 +177,7 @@ static int luv_write(lua_State* L) {
     return luaL_argerror(L, 2, "data must be string or table of strings");
   }
   if (ret < 0) {
+    luv_cleanup_req(L, req->data);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
@@ -208,6 +210,7 @@ static int luv_write2(lua_State* L) {
     return luaL_argerror(L, 2, "data must be string or table of strings");
   }
   if (ret < 0) {
+    luv_cleanup_req(L, req->data);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
@@ -260,4 +263,3 @@ static int luv_stream_set_blocking(lua_State* L) {
   lua_pushinteger(L, ret);
   return 1;
 }
-

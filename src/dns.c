@@ -93,7 +93,6 @@ static int luv_getaddrinfo(lua_State* L) {
   else service = luaL_checkstring(L, 2);
   if (!lua_isnoneornil(L, 3)) luaL_checktype(L, 3, LUA_TTABLE);
   else hints = NULL;
-  ref = lua_isnoneornil(L, 4) ? LUA_NOREF : luv_check_continuation(L, 4);
   if (hints) {
     // Initialize the hints
     memset(hints, 0, sizeof(*hints));
@@ -182,11 +181,13 @@ static int luv_getaddrinfo(lua_State* L) {
     lua_pop(L, 1);
   }
 
+  ref = luv_check_continuation(L, 4);
   req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
 
   ret = uv_getaddrinfo(luv_loop(L), req, ref == LUA_NOREF ? NULL : luv_getaddrinfo_cb, node, service, hints);
   if (ret < 0) {
+    luv_cleanup_req(L, req->data);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
@@ -274,13 +275,14 @@ static int luv_getnameinfo(lua_State* L) {
   }
   lua_pop(L, 1);
 
-  ref = lua_isnoneornil(L, 2) ? LUA_NOREF : luv_check_continuation(L, 2);
+  ref = luv_check_continuation(L, 2);
 
   req = lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
 
   ret = uv_getnameinfo(luv_loop(L), req, ref == LUA_NOREF ? NULL : luv_getnameinfo_cb, (struct sockaddr*)&addr, flags);
   if (ret < 0) {
+    luv_cleanup_req(L, req->data);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
@@ -293,4 +295,3 @@ static int luv_getnameinfo(lua_State* L) {
   }
   return 1;
 }
-
