@@ -195,6 +195,12 @@ if("${CMAKE_SYSTEM_NAME}" MATCHES "FreeBSD")
   )
 endif()
 
+if("${CMAKE_SYSTEM_NAME}" MATCHES "OpenBSD")
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package(Threads REQUIRED)
+  target_link_libraries(uv Threads::Threads)
+endif()
+
 if("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
   target_link_libraries(uv
     pthread
