@@ -138,6 +138,14 @@ if("${CMAKE_SYSTEM_NAME}" MATCHES "FreeBSD")
   )
 endif()
 
+## OpenBSD
+if("${CMAKE_SYSTEM_NAME}" MATCHES "OpenBSD")
+  set(SOURCES ${SOURCES}
+    ${LIBUVDIR}/src/unix/kqueue.c
+    ${LIBUVDIR}/src/unix/openbsd.c
+  )
+endif()
+
 ## Linux
 if("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
   add_definitions(
@@ -185,6 +193,12 @@ if("${CMAKE_SYSTEM_NAME}" MATCHES "FreeBSD")
     pthread
     kvm
   )
+endif()
+
+if("${CMAKE_SYSTEM_NAME}" MATCHES "OpenBSD")
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package(Threads REQUIRED)
+  target_link_libraries(uv Threads::Threads)
 endif()
 
 if("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
