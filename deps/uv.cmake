@@ -138,6 +138,14 @@ if("${CMAKE_SYSTEM_NAME}" MATCHES "FreeBSD")
   )
 endif()
 
+## OpenBSD
+if("${CMAKE_SYSTEM_NAME}" MATCHES "OpenBSD")
+  set(SOURCES ${SOURCES}
+    ${LIBUVDIR}/src/unix/kqueue.c
+    ${LIBUVDIR}/src/unix/openbsd.c
+  )
+endif()
+
 ## Linux
 if("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
   add_definitions(
