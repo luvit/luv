@@ -26,6 +26,7 @@ static uv_stream_t* luv_check_stream(lua_State* L, int index) {
   int isStream;
   uv_stream_t* handle;
   if (!(handle = *(void**) lua_touserdata(L, index))) { goto fail; }
+  if (!handle->data) { goto fail; }
   lua_getfield(L, LUA_REGISTRYINDEX, "uv_stream");
   lua_getmetatable(L, index < 0 ? index - 1 : index);
   lua_rawget(L, -2);

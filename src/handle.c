@@ -32,6 +32,7 @@ static uv_handle_t* luv_check_handle(lua_State* L, int index) {
   int isHandle;
   uv_handle_t* handle;
   if (!(handle = *(void**)lua_touserdata(L, index))) { goto fail; }
+  if (!handle->data) { goto fail; }
   lua_getfield(L, LUA_REGISTRYINDEX, "uv_handle");
   lua_getmetatable(L, index < 0 ? index - 1 : index);
   lua_rawget(L, -2);
@@ -102,7 +103,7 @@ static int luv_handle_gc(lua_State* L) {
   if (handle != NULL) {
     if (!uv_is_closing(handle))
       uv_close(handle, luv_gc_cb);
-    else 
+    else
       free(*udata);
 
     *udata = NULL;
