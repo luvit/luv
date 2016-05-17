@@ -123,6 +123,11 @@ else()
     ${LIBUVDIR}/src/unix/tty.c
     ${LIBUVDIR}/src/unix/udp.c
   )
+  if(APPLE)
+    set(SOURCES ${SOURCES}
+      ${LIBUVDIR}/src/unix/pthread-barrier.c
+    )
+  endif()
 endif()
 
 check_type_size("void*" SIZEOF_VOID_P)
