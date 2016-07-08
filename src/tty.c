@@ -17,7 +17,7 @@
 #include "luv.h"
 
 static uv_tty_t* luv_check_tty(lua_State* L, int index) {
-  uv_tty_t* handle = luv_checkudata(L, index, "uv_tty");
+  uv_tty_t* handle = (uv_tty_t*)luv_checkudata(L, index, "uv_tty");
   luaL_argcheck(L, handle->type == UV_TTY && handle->data, index, "Expected uv_tty_t");
   return handle;
 }
@@ -28,7 +28,7 @@ static int luv_new_tty(lua_State* L) {
   uv_file fd = luaL_checkinteger(L, 1);
   luaL_checktype(L, 2, LUA_TBOOLEAN);
   readable = lua_toboolean(L, 2);
-  handle = luv_newuserdata(L, sizeof(*handle));
+  handle = (uv_tty_t*)luv_newuserdata(L, sizeof(*handle));
   ret = uv_tty_init(luv_loop(L), handle, fd, readable);
   if (ret < 0) {
     lua_pop(L, 1);

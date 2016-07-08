@@ -31,7 +31,7 @@ static void* luv_checkudata(lua_State* L, int ud, const char* tname) {
 static uv_handle_t* luv_check_handle(lua_State* L, int index) {
   int isHandle;
   uv_handle_t* handle;
-  if (!(handle = *(void**)lua_touserdata(L, index))) { goto fail; }
+  if (!(handle = *(uv_handle_t**)lua_touserdata(L, index))) { goto fail; }
   if (!handle->data) { goto fail; }
   lua_getfield(L, LUA_REGISTRYINDEX, "uv_handle");
   lua_getmetatable(L, index < 0 ? index - 1 : index);
@@ -73,7 +73,7 @@ static int luv_is_closing(lua_State* L) {
 
 static void luv_close_cb(uv_handle_t* handle) {
   lua_State* L = luv_state(handle->loop);
-  luv_handle_t* data = handle->data;
+  luv_handle_t* data = (luv_handle_t*)handle->data;
   if (!data) return;
   luv_call_callback(L, data, LUV_CLOSED, 0);
   luv_cleanup_handle(L, data);
@@ -86,7 +86,7 @@ static int luv_close(lua_State* L) {
     luaL_error(L, "handle %p is already closing", handle);
   }
   if (!lua_isnoneornil(L, 2)) {
-    luv_check_callback(L, handle->data, LUV_CLOSED, 2);
+    luv_check_callback(L, (luv_handle_t*)handle->data, LUV_CLOSED, 2);
   }
   uv_close(handle, luv_close_cb);
   return 0;
@@ -98,7 +98,7 @@ static void luv_gc_cb(uv_handle_t* handle) {
 }
 
 static int luv_handle_gc(lua_State* L) {
-  void** udata = lua_touserdata(L, 1);
+  uv_handle_t** udata = (uv_handle_t**)lua_touserdata(L, 1);
   uv_handle_t* handle = *udata;
   if (handle != NULL) {
     if (!uv_is_closing(handle))

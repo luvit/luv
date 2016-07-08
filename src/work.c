@@ -39,7 +39,7 @@ static uv_key_t L_key;
 
 static luv_work_ctx_t* luv_check_work_ctx(lua_State* L, int index)
 {
-  luv_work_ctx_t* ctx = luaL_checkudata(L, index, "luv_work_ctx");
+  luv_work_ctx_t* ctx = (luv_work_ctx_t*)luaL_checkudata(L, index, "luv_work_ctx");
   return ctx;
 }
 
@@ -62,9 +62,9 @@ static int luv_work_ctx_tostring(lua_State* L)
 
 static void luv_work_cb(uv_work_t* req)
 {
-  luv_work_t* work = req->data;
+  luv_work_t* work = (luv_work_t*)req->data;
   luv_work_ctx_t* ctx = work->ctx;
-  lua_State *L = uv_key_get(&L_key);
+  lua_State *L = (lua_State *)uv_key_get(&L_key);
   int top;
   if (L == NULL) {
     /* vm reuse in threadpool */
@@ -110,7 +110,7 @@ static void luv_work_cb(uv_work_t* req)
 }
 
 static void luv_after_work_cb(uv_work_t* req, int status) {
-  luv_work_t* work = req->data;
+  luv_work_t* work = (luv_work_t*)req->data;
   luv_work_ctx_t* ctx = work->ctx;
   lua_State*L = ctx->L;
   int i;
@@ -133,7 +133,7 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
 
 static void async_cb(uv_async_t *handle)
 {
-  luv_work_t*work = handle->data;
+  luv_work_t* work = (luv_work_t*)handle->data;
   luv_work_ctx_t* ctx = work->ctx;
   lua_State*L = ctx->L;
   int i;
@@ -155,11 +155,11 @@ static int luv_new_work(lua_State* L) {
   if(!lua_isnoneornil(L, 3))
     luaL_checktype(L, 3, LUA_TFUNCTION);
 
-  ctx = lua_newuserdata(L, sizeof(*ctx));
+  ctx = (luv_work_ctx_t*)lua_newuserdata(L, sizeof(*ctx));
   memset(ctx, 0, sizeof(*ctx));
 
   ctx->len = len;
-  ctx->code = malloc(ctx->len);
+  ctx->code = (char*)malloc(ctx->len);
   memcpy(ctx->code, buff, len);
 
   lua_pushvalue(L, 2);
@@ -179,7 +179,7 @@ static int luv_new_work(lua_State* L) {
 static int luv_queue_work(lua_State* L) {
   int top = lua_gettop(L);
   luv_work_ctx_t* ctx = luv_check_work_ctx(L, 1);
-  luv_work_t* work = malloc(sizeof(*work));
+  luv_work_t* work = (luv_work_t*)malloc(sizeof(*work));
   int ret;
 
   luv_thread_arg_set(L, &work->arg, 2, top, 0);

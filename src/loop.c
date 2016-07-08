@@ -30,7 +30,7 @@ static const char *const luv_runmodes[] = {
 
 static int luv_run(lua_State* L) {
   int mode = luaL_checkoption(L, 1, "default", luv_runmodes);
-  int ret = uv_run(luv_loop(L), mode);
+  int ret = uv_run(luv_loop(L), (uv_run_mode)mode);
   if (ret < 0) return luv_error(L, ret);
   lua_pushboolean(L, ret);
   return 1;
@@ -73,8 +73,8 @@ static int luv_update_time(lua_State* L) {
 }
 
 static void luv_walk_cb(uv_handle_t* handle, void* arg) {
-  lua_State* L = arg;
-  luv_handle_t* data = handle->data;
+  lua_State* L = (lua_State*)arg;
+  luv_handle_t* data = (luv_handle_t*)handle->data;
 
   // Sanity check
   // Most invalid values are large and refs are small, 0x1000000 is arbitrary.

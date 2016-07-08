@@ -17,14 +17,14 @@
 #include "luv.h"
 
 static uv_poll_t* luv_check_poll(lua_State* L, int index) {
-  uv_poll_t* handle = luv_checkudata(L, index, "uv_poll");
+  uv_poll_t* handle = (uv_poll_t*)luv_checkudata(L, index, "uv_poll");
   luaL_argcheck(L, handle->type == UV_POLL && handle->data, index, "Expected uv_poll_t");
   return handle;
 }
 
 static int luv_new_poll(lua_State* L) {
   int fd = luaL_checkinteger(L, 1);
-  uv_poll_t* handle = luv_newuserdata(L, sizeof(*handle));
+  uv_poll_t* handle = (uv_poll_t*)luv_newuserdata(L, sizeof(*handle));
   int ret = uv_poll_init(luv_loop(L), handle, fd);
   if (ret < 0) {
     lua_pop(L, 1);
@@ -36,7 +36,7 @@ static int luv_new_poll(lua_State* L) {
 
 static int luv_new_socket_poll(lua_State* L) {
   int fd = luaL_checkinteger(L, 1);
-  uv_poll_t* handle = luv_newuserdata(L, sizeof(*handle));
+  uv_poll_t* handle = (uv_poll_t*)luv_newuserdata(L, sizeof(*handle));
   int ret = uv_poll_init_socket(luv_loop(L), handle, fd);
   if (ret < 0) {
     lua_pop(L, 1);
@@ -53,7 +53,7 @@ static const char *const luv_pollevents[] = {
 
 static void luv_poll_cb(uv_poll_t* handle, int status, int events) {
   lua_State* L = luv_state(handle->loop);
-  luv_handle_t* data = handle->data;
+  luv_handle_t* data = (luv_handle_t*)handle->data;
   const char* evtstr;
 
   if (status < 0) {
@@ -92,7 +92,7 @@ static int luv_poll_start(lua_State* L) {
     case 6: events = UV_READABLE|UV_WRITABLE|UV_DISCONNECT; break;
     default: events = 0; /* unreachable */
   }
-  luv_check_callback(L, handle->data, LUV_POLL, 3);
+  luv_check_callback(L, (luv_handle_t*)handle->data, LUV_POLL, 3);
   ret = uv_poll_start(handle, events, luv_poll_cb);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);

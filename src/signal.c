@@ -17,13 +17,13 @@
 #include "luv.h"
 
 static uv_signal_t* luv_check_signal(lua_State* L, int index) {
-  uv_signal_t* handle = luv_checkudata(L, index, "uv_signal");
+  uv_signal_t* handle = (uv_signal_t*)luv_checkudata(L, index, "uv_signal");
   luaL_argcheck(L, handle->type == UV_SIGNAL && handle->data, index, "Expected uv_signal_t");
   return handle;
 }
 
 static int luv_new_signal(lua_State* L) {
-  uv_signal_t* handle = luv_newuserdata(L, sizeof(*handle));
+  uv_signal_t* handle = (uv_signal_t*)luv_newuserdata(L, sizeof(*handle));
   int ret = uv_signal_init(luv_loop(L), handle);
   if (ret < 0) {
     lua_pop(L, 1);
@@ -35,7 +35,7 @@ static int luv_new_signal(lua_State* L) {
 
 static void luv_signal_cb(uv_signal_t* handle, int signum) {
   lua_State* L = luv_state(handle->loop);
-  luv_handle_t* data = handle->data;
+  luv_handle_t* data = (luv_handle_t*)handle->data;
   lua_pushstring(L, luv_sig_num_to_string(signum));
   luv_call_callback(L, data, LUV_SIGNAL, 1);
 }
@@ -55,7 +55,7 @@ static int luv_signal_start(lua_State* L) {
   }
 
   if (!lua_isnoneornil(L, 3)) {
-    luv_check_callback(L, handle->data, LUV_SIGNAL, 3);
+    luv_check_callback(L, (luv_handle_t*)handle->data, LUV_SIGNAL, 3);
   }
   ret = uv_signal_start(handle, luv_signal_cb, signum);
   if (ret < 0) return luv_error(L, ret);
