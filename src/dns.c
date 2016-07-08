@@ -73,8 +73,8 @@ static void luv_getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinf
     luv_pushaddrinfo(L, res);
     nargs = 2;
   }
-  luv_fulfill_req(L, req->data, nargs);
-  luv_cleanup_req(L, req->data);
+  luv_fulfill_req(L, (luv_req_t*)req->data, nargs);
+  luv_cleanup_req(L, (luv_req_t*)req->data);
   req->data = NULL;
   if (res) uv_freeaddrinfo(res);
 }
@@ -186,12 +186,12 @@ static int luv_getaddrinfo(lua_State* L) {
   }
 
   ref = luv_check_continuation(L, 4);
-  req = lua_newuserdata(L, sizeof(*req));
+  req = (uv_getaddrinfo_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
 
   ret = uv_getaddrinfo(luv_loop(L), req, ref == LUA_NOREF ? NULL : luv_getaddrinfo_cb, node, service, hints);
   if (ret < 0) {
-    luv_cleanup_req(L, req->data);
+    luv_cleanup_req(L, (luv_req_t*)req->data);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
@@ -200,7 +200,7 @@ static int luv_getaddrinfo(lua_State* L) {
     lua_pop(L, 1);
     luv_pushaddrinfo(L, req->addrinfo);
     uv_freeaddrinfo(req->addrinfo);
-    luv_cleanup_req(L, req->data);
+    luv_cleanup_req(L, (luv_req_t*)req->data);
   }
   return 1;
 }
@@ -221,8 +221,8 @@ static void luv_getnameinfo_cb(uv_getnameinfo_t* req, int status, const char* ho
     nargs = 3;
   }
 
-  luv_fulfill_req(L, req->data, nargs);
-  luv_cleanup_req(L, req->data);
+  luv_fulfill_req(L, (luv_req_t*)req->data, nargs);
+  luv_cleanup_req(L, (luv_req_t*)req->data);
   req->data = NULL;
 }
 
@@ -281,12 +281,12 @@ static int luv_getnameinfo(lua_State* L) {
 
   ref = luv_check_continuation(L, 2);
 
-  req = lua_newuserdata(L, sizeof(*req));
+  req = (uv_getnameinfo_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
 
   ret = uv_getnameinfo(luv_loop(L), req, ref == LUA_NOREF ? NULL : luv_getnameinfo_cb, (struct sockaddr*)&addr, flags);
   if (ret < 0) {
-    luv_cleanup_req(L, req->data);
+    luv_cleanup_req(L, (luv_req_t*)req->data);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
@@ -294,7 +294,7 @@ static int luv_getnameinfo(lua_State* L) {
     lua_pop(L, 1);
     lua_pushstring(L, req->host);
     lua_pushstring(L, req->service);
-    luv_cleanup_req(L, req->data);
+    luv_cleanup_req(L, (luv_req_t*)req->data);
     return 2;
   }
   return 1;

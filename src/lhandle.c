@@ -18,10 +18,10 @@
 
 static luv_handle_t* luv_setup_handle(lua_State* L) {
   luv_handle_t* data;
-  const uv_handle_t* handle = *(void**)lua_touserdata(L, -1);
+  const uv_handle_t* handle = *(uv_handle_t**)lua_touserdata(L, -1);
   luaL_checktype(L, -1, LUA_TUSERDATA);
 
-  data = malloc(sizeof(*data));
+  data = (luv_handle_t*)malloc(sizeof(*data));
   if (!data) luaL_error(L, "Can't allocate luv handle");
 
   #define XX(uc, lc) case UV_##uc: \

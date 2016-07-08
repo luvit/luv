@@ -17,7 +17,7 @@
 #include "luv.h"
 
 static uv_pipe_t* luv_check_pipe(lua_State* L, int index) {
-  uv_pipe_t* handle = luv_checkudata(L, index, "uv_pipe");
+  uv_pipe_t* handle = (uv_pipe_t*)luv_checkudata(L, index, "uv_pipe");
   luaL_argcheck(L, handle->type == UV_NAMED_PIPE && handle->data, index, "Expected uv_pipe_t");
   return handle;
 }
@@ -27,7 +27,7 @@ static int luv_new_pipe(lua_State* L) {
   int ipc, ret;
   luaL_checktype(L, 1, LUA_TBOOLEAN);
   ipc = lua_toboolean(L, 1);
-  handle = luv_newuserdata(L, sizeof(*handle));
+  handle = (uv_pipe_t*)luv_newuserdata(L, sizeof(*handle));
   ret = uv_pipe_init(luv_loop(L), handle, ipc);
   if (ret < 0) {
     lua_pop(L, 1);
@@ -59,7 +59,7 @@ static int luv_pipe_connect(lua_State* L) {
   uv_pipe_t* handle = luv_check_pipe(L, 1);
   const char* name = luaL_checkstring(L, 2);
   int ref = luv_check_continuation(L, 3);
-  uv_connect_t* req = lua_newuserdata(L, sizeof(*req));
+  uv_connect_t* req = (uv_connect_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
   uv_pipe_connect(req, handle, name, luv_connect_cb);
   return 1;

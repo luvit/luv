@@ -23,14 +23,14 @@ static int luv_disable_stdio_inheritance(lua_State* L) {
 }
 
 static uv_process_t* luv_check_process(lua_State* L, int index) {
-  uv_process_t* handle = luv_checkudata(L, index, "uv_process");
+  uv_process_t* handle = (uv_process_t*)luv_checkudata(L, index, "uv_process");
   luaL_argcheck(L, handle->type == UV_PROCESS && handle->data, index, "Expected uv_process_t");
   return handle;
 }
 
 static void exit_cb(uv_process_t* handle, int64_t exit_status, int term_signal) {
   lua_State* L = luv_state(handle->loop);
-  luv_handle_t* data = handle->data;
+  luv_handle_t* data = (luv_handle_t*)handle->data;
   lua_pushinteger(L, exit_status);
   lua_pushinteger(L, term_signal);
   luv_call_callback(L, data, LUV_EXIT, 2);
@@ -38,7 +38,7 @@ static void exit_cb(uv_process_t* handle, int64_t exit_status, int term_signal) 
 
 static void luv_spawn_close_cb(uv_handle_t* handle) {
   lua_State *L = luv_state(handle->loop);
-  luv_cleanup_handle(L, handle->data);
+  luv_cleanup_handle(L, (luv_handle_t*)handle->data);
 }
 
 static void luv_clean_options(uv_process_options_t* options) {
@@ -75,7 +75,7 @@ static int luv_spawn(lua_State* L) {
     len = 1;
   }
   // +1 for null terminator at end
-  options.args = malloc((len + 1) * sizeof(*options.args));
+  options.args = (char**)malloc((len + 1) * sizeof(*options.args));
   if (!options.args) {
     luv_clean_options(&options);
     return luaL_error(L, "Problem allocating args");
@@ -93,7 +93,7 @@ static int luv_spawn(lua_State* L) {
   lua_getfield(L, 2, "stdio");
   if (lua_type(L, -1) == LUA_TTABLE) {
     options.stdio_count = len = lua_rawlen(L, -1);
-    options.stdio = malloc(len * sizeof(*options.stdio));
+    options.stdio = (uv_stdio_container_t*)malloc(len * sizeof(*options.stdio));
     if (!options.stdio) {
       luv_clean_options(&options);
       return luaL_error(L, "Problem allocating stdio");
@@ -118,7 +118,7 @@ static int luv_spawn(lua_State* L) {
             flags |= UV_READABLE_PIPE;
           if (i != 0)
             flags |= UV_WRITABLE_PIPE;
-          options.stdio[i].flags = flags;
+          options.stdio[i].flags = (uv_stdio_flags)flags;
         }
         else {
           options.stdio[i].flags = UV_INHERIT_STREAM;
@@ -145,7 +145,7 @@ static int luv_spawn(lua_State* L) {
   lua_getfield(L, 2, "env");
   if (lua_type(L, -1) == LUA_TTABLE) {
     len = lua_rawlen(L, -1);
-    options.env = malloc((len + 1) * sizeof(*options.env));
+    options.env = (char**)malloc((len + 1) * sizeof(*options.env));
     if (!options.env) {
       luv_clean_options(&options);
       return luaL_error(L, "Problem allocating env");
@@ -215,12 +215,12 @@ static int luv_spawn(lua_State* L) {
   }
   lua_pop(L, 1);
 
-  handle = luv_newuserdata(L, sizeof(*handle));
+  handle = (uv_process_t*)luv_newuserdata(L, sizeof(*handle));
   handle->type = UV_PROCESS;
   handle->data = luv_setup_handle(L);
 
   if (!lua_isnoneornil(L, 3)) {
-    luv_check_callback(L, handle->data, LUV_EXIT, 3);
+    luv_check_callback(L, (luv_handle_t*)handle->data, LUV_EXIT, 3);
   }
 
   ret = uv_spawn(luv_loop(L), handle, &options);

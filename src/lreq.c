@@ -31,7 +31,7 @@ static luv_req_t* luv_setup_req(lua_State* L, int callback_ref) {
 
   luaL_checktype(L, -1, LUA_TUSERDATA);
 
-  data = malloc(sizeof(*data));
+  data = (luv_req_t*)malloc(sizeof(*data));
   if (!data) luaL_error(L, "Problem allocating luv request");
 
   luaL_getmetatable(L, "uv_req");

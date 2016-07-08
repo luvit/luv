@@ -452,7 +452,7 @@ static void luv_handle_init(lua_State* L) {
 }
 
 LUALIB_API lua_State* luv_state(uv_loop_t* loop) {
-  return loop->data;
+  return (lua_State*)loop->data;
 }
 
 // TODO: find out if storing this somehow in an upvalue is faster
@@ -460,7 +460,7 @@ LUALIB_API uv_loop_t* luv_loop(lua_State* L) {
   uv_loop_t* loop;
   lua_pushstring(L, "uv_loop");
   lua_rawget(L, LUA_REGISTRYINDEX);
-  loop = lua_touserdata(L, -1);
+  loop = (uv_loop_t*)lua_touserdata(L, -1);
   lua_pop(L, 1);
   return loop;
 }
@@ -495,7 +495,7 @@ LUALIB_API int luaopen_luv (lua_State *L) {
   lua_pushcfunction(L, loop_gc);
   lua_settable(L, -3);
 
-  loop = lua_newuserdata(L, sizeof(*loop));
+  loop = (uv_loop_t*)lua_newuserdata(L, sizeof(*loop));
   ret = uv_loop_init(loop);
   if (ret < 0) {
     return luaL_error(L, "%s: %s\n", uv_err_name(ret), uv_strerror(ret));
@@ -521,5 +521,7 @@ LUALIB_API int luaopen_luv (lua_State *L) {
   luv_constants(L);
   lua_setfield(L, -2, "constants");
 
+  lua_pushvalue(L, -1);
+  lua_setglobal(L, "uv");
   return 1;
 }

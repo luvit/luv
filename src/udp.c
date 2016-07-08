@@ -17,13 +17,13 @@
 #include "luv.h"
 
 static uv_udp_t* luv_check_udp(lua_State* L, int index) {
-  uv_udp_t* handle = luv_checkudata(L, index, "uv_udp");
+  uv_udp_t* handle = (uv_udp_t*)luv_checkudata(L, index, "uv_udp");
   luaL_argcheck(L, handle->type == UV_UDP && handle->data, index, "Expected uv_udp_t");
   return handle;
 }
 
 static int luv_new_udp(lua_State* L) {
-  uv_udp_t* handle = luv_newuserdata(L, sizeof(*handle));
+  uv_udp_t* handle = (uv_udp_t*)luv_newuserdata(L, sizeof(*handle));
   int ret;
   if (lua_isnoneornil(L, 1)) {
     ret = uv_udp_init(luv_loop(L), handle);
@@ -93,7 +93,7 @@ static int luv_udp_set_membership(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   const char* multicast_addr = luaL_checkstring(L, 2);
   const char* interface_addr = luaL_checkstring(L, 3);
-  uv_membership membership = luaL_checkoption(L, 4, NULL, luv_membership_opts);
+  uv_membership membership = (uv_membership)luaL_checkoption(L, 4, NULL, luv_membership_opts);
   int ret = uv_udp_set_membership(handle, multicast_addr, interface_addr, membership);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
@@ -154,8 +154,8 @@ static int luv_udp_set_ttl(lua_State* L) {
 static void luv_udp_send_cb(uv_udp_send_t* req, int status) {
   lua_State* L = luv_state(req->handle->loop);
   luv_status(L, status);
-  luv_fulfill_req(L, req->data, 1);
-  luv_cleanup_req(L, req->data);
+  luv_fulfill_req(L, (luv_req_t*)req->data, 1);
+  luv_cleanup_req(L, (luv_req_t*)req->data);
   req->data = NULL;
 }
 
@@ -174,11 +174,11 @@ static int luv_udp_send(lua_State* L) {
     return luaL_error(L, "Invalid IP address or port [%s:%d]", host, port);
   }
   ref = luv_check_continuation(L, 5);
-  req = lua_newuserdata(L, sizeof(*req));
+  req = (uv_udp_send_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
   ret = uv_udp_send(req, handle, &buf, 1, (struct sockaddr*)&addr, luv_udp_send_cb);
   if (ret < 0) {
-    luv_cleanup_req(L, req->data);
+    luv_cleanup_req(L, (luv_req_t*)req->data);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
@@ -245,13 +245,13 @@ static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf
     lua_setfield(L, -2, "partial");
   }
 
-  luv_call_callback(L, handle->data, LUV_RECV, 4);
+  luv_call_callback(L, (luv_handle_t*)handle->data, LUV_RECV, 4);
 }
 
 static int luv_udp_recv_start(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   int ret;
-  luv_check_callback(L, handle->data, LUV_RECV, 2);
+  luv_check_callback(L, (luv_handle_t*)handle->data, LUV_RECV, 2);
   ret = uv_udp_recv_start(handle, luv_alloc_cb, luv_udp_recv_cb);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);

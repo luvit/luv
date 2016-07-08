@@ -17,13 +17,13 @@
 #include "luv.h"
 
 static uv_idle_t* luv_check_idle(lua_State* L, int index) {
-  uv_idle_t* handle = luv_checkudata(L, index, "uv_idle");
+  uv_idle_t* handle = (uv_idle_t*)luv_checkudata(L, index, "uv_idle");
   luaL_argcheck(L, handle->type == UV_IDLE && handle->data, index, "Expected uv_idle_t");
   return handle;
 }
 
 static int luv_new_idle(lua_State* L) {
-  uv_idle_t* handle = luv_newuserdata(L, sizeof(*handle));
+  uv_idle_t* handle = (uv_idle_t*)luv_newuserdata(L, sizeof(*handle));
   int ret = uv_idle_init(luv_loop(L), handle);
   if (ret < 0) {
     lua_pop(L, 1);
@@ -35,14 +35,14 @@ static int luv_new_idle(lua_State* L) {
 
 static void luv_idle_cb(uv_idle_t* handle) {
   lua_State* L = luv_state(handle->loop);
-  luv_handle_t* data = handle->data;
+  luv_handle_t* data = (luv_handle_t*)handle->data;
   luv_call_callback(L, data, LUV_IDLE, 0);
 }
 
 static int luv_idle_start(lua_State* L) {
   uv_idle_t* handle = luv_check_idle(L, 1);
   int ret;
-  luv_check_callback(L, handle->data, LUV_IDLE, 2);
+  luv_check_callback(L, (luv_handle_t *)handle->data, LUV_IDLE, 2);
   ret = uv_idle_start(handle, luv_idle_cb);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);

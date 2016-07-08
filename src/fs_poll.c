@@ -18,13 +18,13 @@
 #include "luv.h"
 
 static uv_fs_poll_t* luv_check_fs_poll(lua_State* L, int index) {
-  uv_fs_poll_t* handle = luv_checkudata(L, index, "uv_fs_poll");
+  uv_fs_poll_t* handle = (uv_fs_poll_t*)luv_checkudata(L, index, "uv_fs_poll");
   luaL_argcheck(L, handle->type == UV_FS_POLL && handle->data, index, "Expected uv_fs_poll_t");
   return handle;
 }
 
 static int luv_new_fs_poll(lua_State* L) {
-  uv_fs_poll_t* handle = luv_newuserdata(L, sizeof(*handle));
+  uv_fs_poll_t* handle = (uv_fs_poll_t*)luv_newuserdata(L, sizeof(*handle));
   int ret = uv_fs_poll_init(luv_loop(L), handle);
   if (ret < 0) {
     lua_pop(L, 1);
@@ -56,7 +56,7 @@ static void luv_fs_poll_cb(uv_fs_poll_t* handle, int status, const uv_stat_t* pr
     lua_pushnil(L);
   }
 
-  luv_call_callback(L, handle->data, LUV_FS_POLL, 3);
+  luv_call_callback(L, (luv_handle_t*)handle->data, LUV_FS_POLL, 3);
 }
 
 static int luv_fs_poll_start(lua_State* L) {
@@ -64,7 +64,7 @@ static int luv_fs_poll_start(lua_State* L) {
   const char* path = luaL_checkstring(L, 2);
   unsigned int interval = luaL_checkinteger(L, 3);
   int ret;
-  luv_check_callback(L, handle->data, LUV_FS_POLL, 4);
+  luv_check_callback(L, (luv_handle_t*)handle->data, LUV_FS_POLL, 4);
   ret = uv_fs_poll_start(handle, luv_fs_poll_cb, path, interval);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
