@@ -520,8 +520,5 @@ LUALIB_API int luaopen_luv (lua_State *L) {
   luaL_newlib(L, luv_functions);
   luv_constants(L);
   lua_setfield(L, -2, "constants");
-
-  lua_pushvalue(L, -1);
-  lua_setglobal(L, "uv");
   return 1;
 }
