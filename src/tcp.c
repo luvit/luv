@@ -23,6 +23,7 @@ static uv_tcp_t* luv_check_tcp(lua_State* L, int index) {
 }
 
 static int luv_new_tcp(lua_State* L) {
+  lua_settop(L, 1);
   uv_tcp_t* handle = (uv_tcp_t*)luv_newuserdata(L, sizeof(*handle));
   int ret;
   if (lua_isnoneornil(L, 1)) {
