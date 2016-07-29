@@ -106,9 +106,7 @@ static void luv_cleanup_handle(lua_State* L, luv_handle_t* data) {
   luaL_unref(L, LUA_REGISTRYINDEX, data->ref);
   luaL_unref(L, LUA_REGISTRYINDEX, data->callbacks[0]);
   luaL_unref(L, LUA_REGISTRYINDEX, data->callbacks[1]);
-  if (data->extra)
-    free(data->extra);
-  free(data);
+  // The actual memory will be freed in the generic handle __gc hook
 }
 
 static void luv_find_handle(lua_State* L, luv_handle_t* data) {
