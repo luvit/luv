@@ -61,7 +61,7 @@ static void luv_call_callback(lua_State* L, luv_handle_t* data, luv_callback_id 
 /* Push a userdata on the stack from a handle */
 static void luv_find_handle(lua_State* L, luv_handle_t* data);
 
-/* Recursivly free the luv_handle and all event handlers */
-static void luv_cleanup_handle(lua_State* L, luv_handle_t* data);
+/* Unref the handle from the lua world, allowing it to GC */
+static void luv_unref_handle(lua_State* L, luv_handle_t* data);
 
 #endif
