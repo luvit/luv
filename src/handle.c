@@ -92,7 +92,7 @@ static int luv_close(lua_State* L) {
 }
 
 static void luv_handle_free(uv_handle_t* handle) {
-  luv_handle_t* data = handle->data;
+  luv_handle_t* data = (luv_handle_t*)handle->data;
   if (data) {
     free(data->extra);
     free(data);
