@@ -179,13 +179,14 @@ static const char* luv_thread_dumped(lua_State* L, int idx, size_t* l) {
     const char* buff = NULL;
     int top = lua_gettop(L);
     luaL_Buffer b;
+    int test_lua_dump;
     luaL_checktype(L, idx, LUA_TFUNCTION);
     lua_pushvalue(L, idx);
     luaL_buffinit(L, &b);
 #if LUA_VERSION_NUM>=503
-    int test_lua_dump = (lua_dump(L, thread_dump, &b, 1) == 0);
+    test_lua_dump = (lua_dump(L, thread_dump, &b, 1) == 0);
 #else
-    int test_lua_dump = (lua_dump(L, thread_dump, &b) == 0);
+    test_lua_dump = (lua_dump(L, thread_dump, &b) == 0);
 #endif
     if (test_lua_dump) {
       luaL_pushresult(&b);
