@@ -12,7 +12,6 @@ SET(LUA_DIR ${CMAKE_CURRENT_LIST_DIR}/lua CACHE PATH "location of lua sources")
 
 SET(CMAKE_REQUIRED_INCLUDES
   ${LUA_DIR}
-  ${LUA_DIR}/src
   ${CMAKE_CURRENT_BINARY_DIR}
 )
 
@@ -56,40 +55,40 @@ endif ()
 
 ## SOURCES
 SET(SRC_LUALIB
-  ${LUA_DIR}/src/lbaselib.c
-  ${LUA_DIR}/src/lcorolib.c
-  ${LUA_DIR}/src/ldblib.c
-  ${LUA_DIR}/src/liolib.c
-  ${LUA_DIR}/src/lmathlib.c
-  ${LUA_DIR}/src/loadlib.c
-  ${LUA_DIR}/src/loslib.c
-  ${LUA_DIR}/src/lstrlib.c
-  ${LUA_DIR}/src/ltablib.c
-  ${LUA_DIR}/src/lutf8lib.c)
+  ${LUA_DIR}/lbaselib.c
+  ${LUA_DIR}/lcorolib.c
+  ${LUA_DIR}/ldblib.c
+  ${LUA_DIR}/liolib.c
+  ${LUA_DIR}/lmathlib.c
+  ${LUA_DIR}/loadlib.c
+  ${LUA_DIR}/loslib.c
+  ${LUA_DIR}/lstrlib.c
+  ${LUA_DIR}/ltablib.c
+  ${LUA_DIR}/lutf8lib.c)
 
 SET(SRC_LUACORE
-  ${LUA_DIR}/src/lauxlib.c
-  ${LUA_DIR}/src/lapi.c
-  ${LUA_DIR}/src/lcode.c
-  ${LUA_DIR}/src/lctype.c
-  ${LUA_DIR}/src/ldebug.c
-  ${LUA_DIR}/src/ldo.c
-  ${LUA_DIR}/src/ldump.c
-  ${LUA_DIR}/src/lfunc.c
-  ${LUA_DIR}/src/lgc.c
-  ${LUA_DIR}/src/linit.c
-  ${LUA_DIR}/src/llex.c
-  ${LUA_DIR}/src/lmem.c
-  ${LUA_DIR}/src/lobject.c
-  ${LUA_DIR}/src/lopcodes.c
-  ${LUA_DIR}/src/lparser.c
-  ${LUA_DIR}/src/lstate.c
-  ${LUA_DIR}/src/lstring.c
-  ${LUA_DIR}/src/ltable.c
-  ${LUA_DIR}/src/ltm.c
-  ${LUA_DIR}/src/lundump.c
-  ${LUA_DIR}/src/lvm.c
-  ${LUA_DIR}/src/lzio.c
+  ${LUA_DIR}/lauxlib.c
+  ${LUA_DIR}/lapi.c
+  ${LUA_DIR}/lcode.c
+  ${LUA_DIR}/lctype.c
+  ${LUA_DIR}/ldebug.c
+  ${LUA_DIR}/ldo.c
+  ${LUA_DIR}/ldump.c
+  ${LUA_DIR}/lfunc.c
+  ${LUA_DIR}/lgc.c
+  ${LUA_DIR}/linit.c
+  ${LUA_DIR}/llex.c
+  ${LUA_DIR}/lmem.c
+  ${LUA_DIR}/lobject.c
+  ${LUA_DIR}/lopcodes.c
+  ${LUA_DIR}/lparser.c
+  ${LUA_DIR}/lstate.c
+  ${LUA_DIR}/lstring.c
+  ${LUA_DIR}/ltable.c
+  ${LUA_DIR}/ltm.c
+  ${LUA_DIR}/lundump.c
+  ${LUA_DIR}/lvm.c
+  ${LUA_DIR}/lzio.c
   ${SRC_LUALIB})
 
 ## GENERATE
@@ -113,7 +112,7 @@ ENDIF()
 target_link_libraries (lualib ${LIBS} )
 set_target_properties (lualib PROPERTIES OUTPUT_NAME "lua53")
 
-add_executable(lua ${LUA_DIR}/src/lua.c)
+add_executable(lua ${LUA_DIR}/lua.c)
 IF(WIN32)
   target_link_libraries(lua lualib)
 ELSE()
