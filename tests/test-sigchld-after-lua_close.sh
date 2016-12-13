@@ -5,7 +5,7 @@
 
 # This test modifies one of the examples to skip libuv process cleanup,
 # purposely making it leave SIGCHLD signal handler.
-# 
+#
 patch -p1 << "EOF"
 diff --git a/examples/talking-to-children.lua b/examples/talking-to-children.lua
 index 10a53ef..6c6c53f 100644
@@ -27,10 +27,10 @@ EOF
 (
 cd deps/lua
 patch -p1 << "EOF"
-diff --git a/src/lua.c b/src/lua.c
+diff --git a/lua.c b/lua.c
 index 7a47582..4dc19d5 100644
---- a/src/lua.c
-+++ b/src/lua.c
+--- a/lua.c
++++ b/lua.c
 @@ -608,6 +608,7 @@ int main (int argc, char **argv) {
    result = lua_toboolean(L, -1);  /* get result */
    report(L, status);
