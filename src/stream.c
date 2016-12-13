@@ -24,8 +24,10 @@ static void luv_check_buf(lua_State *L, int idx, uv_buf_t *pbuf) {
 
 static uv_stream_t* luv_check_stream(lua_State* L, int index) {
   int isStream;
+  void *udata;
   uv_stream_t* handle;
-  if (!(handle = *(uv_stream_t**) lua_touserdata(L, index))) { goto fail; }
+  if (!(udata = lua_touserdata(L, index))) { goto fail; }
+  if (!(handle = *(uv_stream_t**) udata)) { goto fail; }
   if (!handle->data) { goto fail; }
   lua_getfield(L, LUA_REGISTRYINDEX, "uv_stream");
   lua_getmetatable(L, index < 0 ? index - 1 : index);
