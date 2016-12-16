@@ -18,7 +18,14 @@
 
 static luv_handle_t* luv_setup_handle(lua_State* L) {
   luv_handle_t* data;
-  const uv_handle_t* handle = *(uv_handle_t**)lua_touserdata(L, -1);
+  const uv_handle_t* handle;
+  void *udata;
+
+  if (!(udata = lua_touserdata(L, -1))) {
+    luaL_error(L, "NULL userdata");
+    return NULL;
+  }
+  handle = *(uv_handle_t**)udata;
   luaL_checktype(L, -1, LUA_TUSERDATA);
 
   data = (luv_handle_t*)malloc(sizeof(*data));
