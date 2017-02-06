@@ -62,8 +62,12 @@ static int luv_backend_timeout(lua_State* L) {
 }
 
 static int luv_now(lua_State* L) {
-  uint64_t now = uv_now(luv_loop(L));
-  lua_pushinteger(L, now);
+  uint64_t now;
+  uv_loop_t *loop = luv_loop(L);
+  uv_update_time(loop);
+  now = uv_now(loop);
+  if (now <= 0xfffffff) lua_pushinteger(L, now);
+  else lua_pushnumber(L, now);
   return 1;
 }
 
