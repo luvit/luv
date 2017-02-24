@@ -68,6 +68,7 @@ build = {
         ['luv'] = {
           libraries = {
             nil;
+            'User32';
             'psapi';
             'iphlpapi';
             'userenv';

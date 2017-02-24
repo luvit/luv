@@ -41,8 +41,11 @@ typedef struct {
   luv_val_t argv[LUV_THREAD_MAXNUM_ARG];
 } luv_thread_arg_t;
 
-static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int top, int flag);
-static int luv_thread_arg_push(lua_State* L, const luv_thread_arg_t* args);
-static void luv_thread_arg_clear(luv_thread_arg_t* args);
+//LUV flags thread support userdata handle
+#define LUVF_THREAD_UHANDLE 1    
+
+static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int top, int flags);
+static int luv_thread_arg_push(lua_State* L, const luv_thread_arg_t* args, int flags);
+static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags);
 
 #endif //LUV_LTHREADPOOL_H
