@@ -103,13 +103,15 @@ static void luv_work_cb(uv_work_t* req)
 
   if (lua_isfunction(L, -1))
   {
-    int i = luv_thread_arg_push(L, &work->arg);
+    int i = luv_thread_arg_push(L, &work->arg, 0);
     if (lua_pcall(L, i, LUA_MULTRET, errfunc)) {
       fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
       lua_pop(L, 1);
-      luv_thread_arg_clear(&work->arg);
+      luv_thread_arg_clear(NULL, &work->arg, 0);
     }
     else {
+      luv_thread_arg_clear(NULL, &work->arg, 0);
+      //clear in main threads, luv_after_work_cb
       i = luv_thread_arg_set(L, &work->arg, top + 2, lua_gettop(L), 0);
       lua_pop(L, i);
     }
@@ -117,7 +119,7 @@ static void luv_work_cb(uv_work_t* req)
     fprintf(stderr, "Uncaught Error: %s can't be work entry\n", 
       lua_typename(L, lua_type(L,-1)));
     lua_pop(L, 1);
-    luv_thread_arg_clear(&work->arg);
+    luv_thread_arg_clear(NULL, &work->arg, 0);
   }
 
   /* banlance stack of vm */
@@ -136,7 +138,7 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
   errfunc = lua_gettop(L);
 
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->after_work_cb);
-  i = luv_thread_arg_push(L, &work->arg);
+  i = luv_thread_arg_push(L, &work->arg, 0);
   if (lua_pcall(L, i, 0, errfunc))
   {
     fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
@@ -149,7 +151,7 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
   lua_pushnil(L);
   lua_rawset(L, LUA_REGISTRYINDEX);
 
-  luv_thread_arg_clear(&work->arg);
+  luv_thread_arg_clear(NULL, &work->arg, 0);
   free(work);
 }
 
@@ -164,7 +166,7 @@ static void async_cb(uv_async_t *handle)
   errfunc = lua_gettop(L);
 
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->async_cb);
-  i = luv_thread_arg_push(L, &work->arg);
+  i = luv_thread_arg_push(L, &work->arg, 0);
   if (lua_pcall(L, i, 0, errfunc))
   {
     fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
@@ -210,7 +212,7 @@ static int luv_queue_work(lua_State* L) {
   luv_work_t* work = (luv_work_t*)malloc(sizeof(*work));
   int ret;
 
-  luv_thread_arg_set(L, &work->arg, 2, top, 0);
+  luv_thread_arg_set(L, &work->arg, 2, top, 0); //clear in sub threads,luv_work_cb, 
   work->ctx = ctx;
   work->work.data = work;
   ret = uv_queue_work(luv_loop(L), &work->work, luv_work_cb, luv_after_work_cb);
