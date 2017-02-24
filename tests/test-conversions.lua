@@ -4,7 +4,7 @@ return require('lib/tap')(function (test)
       assert(string.format("%x", 29913653248) == "6f6fe2000")
       assert(string.format("%x", 32207650816) == "77fb9c000")
     else
-      print('skiped')
+      print('skipped')
     end
   end)
 end)
