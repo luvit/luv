@@ -14,7 +14,7 @@ return require('lib/tap')(function (test)
     local args = {500, 'string', nil, false, 5, "helloworld",async}
     local unpack = unpack or table.unpack
     uv.new_thread(function(num,s,null,bool,five,hw,asy)
-	  local uv = require'luv'
+      local uv = require'luv'
       assert(type(num) == "number")
       assert(type(s) == "string")
       assert(null == nil)

@@ -62,17 +62,24 @@ static int luv_work_ctx_tostring(lua_State* L)
 
 static void luv_work_cb(uv_work_t* req)
 {
+  int top, errfunc;
+
   luv_work_t* work = (luv_work_t*)req->data;
   luv_work_ctx_t* ctx = work->ctx;
   lua_State *L = (lua_State *)uv_key_get(&L_key);
-  int top;
+
   if (L == NULL) {
     /* vm reuse in threadpool */
     L = acquire_vm_cb();
     uv_key_set(&L_key, L);
   }
-
   top = lua_gettop(L);
+
+  /* push debug function */
+  lua_pushcfunction(L, traceback);
+  errfunc = lua_gettop(L);
+
+  /* push lua function */
   lua_pushlstring(L, ctx->code, ctx->len);
   lua_rawget(L, LUA_REGISTRYINDEX);
   if (lua_isnil(L, -1))
@@ -97,32 +104,47 @@ static void luv_work_cb(uv_work_t* req)
   if (lua_isfunction(L, -1))
   {
     int i = luv_thread_arg_push(L, &work->arg);
-    if (lua_pcall(L, i, LUA_MULTRET, 0)) {
+    if (lua_pcall(L, i, LUA_MULTRET, errfunc)) {
       fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
+      lua_pop(L, 1);
+      luv_thread_arg_clear(&work->arg);
     }
-    luv_thread_arg_clear(&work->arg);
-    luv_thread_arg_set(L, &work->arg, top + 1, lua_gettop(L), 0);
-    lua_settop(L, top);
+    else {
+      i = luv_thread_arg_set(L, &work->arg, top + 2, lua_gettop(L), 0);
+      lua_pop(L, i);
+    }
   } else {
     fprintf(stderr, "Uncaught Error: %s can't be work entry\n", 
       lua_typename(L, lua_type(L,-1)));
+    lua_pop(L, 1);
+    luv_thread_arg_clear(&work->arg);
   }
+
+  /* banlance stack of vm */
+  lua_pop(L, 1);
+  assert(top == lua_gettop(L));
 }
 
 static void luv_after_work_cb(uv_work_t* req, int status) {
   luv_work_t* work = (luv_work_t*)req->data;
   luv_work_ctx_t* ctx = work->ctx;
   lua_State*L = ctx->L;
-  int i;
+  int i, errfunc;
   (void)status;
+
+  lua_pushcfunction(L, traceback);
+  errfunc = lua_gettop(L);
+
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->after_work_cb);
   i = luv_thread_arg_push(L, &work->arg);
-  if (lua_pcall(L, i, 0, 0))
+  if (lua_pcall(L, i, 0, errfunc))
   {
     fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
+    lua_pop(L, 1);
   }
+  lua_pop(L, 1);
 
-  //ref down to ctx 
+  //ref down to ctx, up in luv_queue_work()
   lua_pushlightuserdata(L, work);
   lua_pushnil(L);
   lua_rawset(L, LUA_REGISTRYINDEX);
@@ -136,13 +158,19 @@ static void async_cb(uv_async_t *handle)
   luv_work_t* work = (luv_work_t*)handle->data;
   luv_work_ctx_t* ctx = work->ctx;
   lua_State*L = ctx->L;
-  int i;
+  int i, errfunc;
+
+  lua_pushcfunction(L, traceback);
+  errfunc = lua_gettop(L);
+
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->async_cb);
   i = luv_thread_arg_push(L, &work->arg);
-  if (lua_pcall(L, i, 0, 0))
+  if (lua_pcall(L, i, 0, errfunc))
   {
     fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
+    lua_pop(L, 1);
   }
+  lua_pop(L, 1);
 }
 
 static int luv_new_work(lua_State* L) {
