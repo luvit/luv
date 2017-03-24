@@ -87,7 +87,7 @@ static void luv_call_callback(lua_State* L, luv_handle_t* data, luv_callback_id 
     lua_pop(L, nargs);
   }
   else {
-    int errfunc = 0;
+    int errfunc, ret;
 
     // Get the traceback function in case of error
     lua_pushcfunction(L, traceback);
@@ -104,10 +104,23 @@ static void luv_call_callback(lua_State* L, luv_handle_t* data, luv_callback_id 
       lua_insert(L, -1 - nargs);
     }
 
-    if (lua_pcall(L, nargs, 0, errfunc)) {
-      fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
+    ret = lua_pcall(L, nargs, 0, errfunc);
+    switch (ret) {
+    case 0:
+      break;
+    case LUA_ERRMEM:
+      fprintf(stderr, "System Error: %s\n", lua_tostring(L, -1));
       exit(-1);
+      break;
+    case LUA_ERRRUN:
+    case LUA_ERRSYNTAX:
+    case LUA_ERRERR:
+    default:
+      fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
+      lua_pop(L, 1);
+      break;
     }
+
     // Remove the traceback function
     lua_pop(L, 1);
   }

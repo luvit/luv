@@ -76,27 +76,24 @@ static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int
     {
       const char* p = lua_tolstring(L, i, &arg->val.str.len);
       arg->val.str.base = (const char*)malloc(arg->val.str.len);
-      if (arg->val.str.base == NULL)
-      {
-        perror("out of memory");
-        return 0;
-      }
-      memcpy((void*)arg->val.str.base, p, arg->val.str.len);
+      if (arg->val.str.base == NULL) {
+        arg->val.str.len = 0;
+        fprintf(stderr, "out of memory");
+      }else
+        memcpy((void*)arg->val.str.base, p, arg->val.str.len);
       break;
     }
     case LUA_TUSERDATA:
-      if (flags & LUVF_THREAD_UHANDLE){
-        assert(L);
+      if (flags & LUVF_THREAD_UHANDLE) {
         arg->val.userdata = luv_check_handle(L, i);
         break;
       }
-      else
-        assert(L == NULL);
 
     default:
       fprintf(stderr, "Error: thread arg not support type '%s' at %d",
         lua_typename(L, arg->type), i);
-      exit(-1);
+      arg->val.str.base = NULL;
+      arg->val.str.len = 0;
       break;
     }
     i++;
@@ -263,19 +260,32 @@ static void luv_thread_cb(void* varg) {
 
   //push lua function, thread entry
   if (luaL_loadbuffer(L, thd->code, thd->len, "=thread") == 0) {
-
+    int i, ret;
+    
     //push parameter for real thread function
-    int i = luv_thread_arg_push(L, &thd->arg, LUVF_THREAD_UHANDLE);
+    i = luv_thread_arg_push(L, &thd->arg, LUVF_THREAD_UHANDLE);
     assert(i == thd->arg.argc);
 
-    if (lua_pcall(L, thd->arg.argc, 0, 0)) {
-      fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
-      //pop errmsg
+    ret = lua_pcall(L, thd->arg.argc, 0, errfunc);
+    switch (ret) {
+    case LUA_OK:
+      break;
+    case LUA_ERRMEM:
+      fprintf(stderr, "System Error in thread: %s\n", lua_tostring(L, -1));
       lua_pop(L, 1);
+      break;
+    case LUA_ERRRUN:
+    case LUA_ERRSYNTAX:
+    case LUA_ERRERR:
+    default:
+      fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
+      lua_pop(L, 1);
+      break;
     }
+
     luv_thread_arg_clear(L, &thd->arg, LUVF_THREAD_UHANDLE);
   } else {
-    fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
+    fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
     //pop errmsg
     lua_pop(L, 1);
   }
