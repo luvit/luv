@@ -15,7 +15,6 @@
 *
 */
 #include "luv.h"
-
 #include "lthreadpool.h"
 
 typedef struct {
@@ -89,7 +88,7 @@ static void luv_work_cb(uv_work_t* req)
     lua_pushlstring(L, ctx->code, ctx->len);
     if (luaL_loadbuffer(L, ctx->code, ctx->len, "=pool") != 0)
     {
-      fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
+      fprintf(stderr, "Uncaught Error in work callback: %s\n", lua_tostring(L, -1));
       lua_pop(L, 2);
 
       lua_pushnil(L);
@@ -104,16 +103,29 @@ static void luv_work_cb(uv_work_t* req)
   if (lua_isfunction(L, -1))
   {
     int i = luv_thread_arg_push(L, &work->arg, 0);
-    if (lua_pcall(L, i, LUA_MULTRET, errfunc)) {
-      fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
-      lua_pop(L, 1);
-      luv_thread_arg_clear(NULL, &work->arg, 0);
-    }
-    else {
+    int ret = lua_pcall(L, i, LUA_MULTRET, errfunc);
+    switch (ret) {
+    case LUA_OK:
       luv_thread_arg_clear(NULL, &work->arg, 0);
       //clear in main threads, luv_after_work_cb
       i = luv_thread_arg_set(L, &work->arg, top + 2, lua_gettop(L), 0);
       lua_pop(L, i);
+      break;
+    case LUA_ERRMEM:
+      fprintf(stderr, "System Error in work callback: %s\n", lua_tostring(L, -1));
+      lua_pop(L, 1);
+      release_vm_cb(L);
+      uv_key_set(&L_key, NULL);
+      L = NULL;
+      break;
+    case LUA_ERRRUN:
+    case LUA_ERRSYNTAX:
+    case LUA_ERRERR:
+    default:
+      fprintf(stderr, "Uncaught Error in work callback: %s\n", lua_tostring(L, -1));
+      lua_pop(L, 1);
+      luv_thread_arg_clear(NULL, &work->arg, 0);
+      break;
     }
   } else {
     fprintf(stderr, "Uncaught Error: %s can't be work entry\n", 
@@ -123,15 +135,17 @@ static void luv_work_cb(uv_work_t* req)
   }
 
   /* banlance stack of vm */
-  lua_pop(L, 1);
-  assert(top == lua_gettop(L));
+  if (L) {
+    lua_pop(L, 1);
+    assert(top == lua_gettop(L));
+  }
 }
 
 static void luv_after_work_cb(uv_work_t* req, int status) {
   luv_work_t* work = (luv_work_t*)req->data;
   luv_work_ctx_t* ctx = work->ctx;
   lua_State*L = ctx->L;
-  int i, errfunc;
+  int i, errfunc, ret;
   (void)status;
 
   lua_pushcfunction(L, traceback);
@@ -139,10 +153,21 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
 
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->after_work_cb);
   i = luv_thread_arg_push(L, &work->arg, 0);
-  if (lua_pcall(L, i, 0, errfunc))
-  {
-    fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
+  ret = lua_pcall(L, i, 0, errfunc);
+  switch (ret) {
+  case LUA_OK:
+    break;
+  case LUA_ERRMEM:
+    fprintf(stderr, "System Error in after work callback: %s\n", lua_tostring(L, -1));
+    exit(-1);
+    break;
+  case LUA_ERRRUN:
+  case LUA_ERRSYNTAX:
+  case LUA_ERRERR:
+  default:
+    fprintf(stderr, "Uncaught Error in after work callback: %s\n", lua_tostring(L, -1));
     lua_pop(L, 1);
+    break;
   }
   lua_pop(L, 1);
 
@@ -160,17 +185,28 @@ static void async_cb(uv_async_t *handle)
   luv_work_t* work = (luv_work_t*)handle->data;
   luv_work_ctx_t* ctx = work->ctx;
   lua_State*L = ctx->L;
-  int i, errfunc;
+  int i, errfunc, ret;
 
   lua_pushcfunction(L, traceback);
   errfunc = lua_gettop(L);
 
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->async_cb);
   i = luv_thread_arg_push(L, &work->arg, 0);
-  if (lua_pcall(L, i, 0, errfunc))
-  {
-    fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
+  ret = lua_pcall(L, i, 0, errfunc);
+  switch (ret) {
+  case LUA_OK:
+    break;
+  case LUA_ERRMEM:
+    fprintf(stderr, "System Error in async callback: %s\n", lua_tostring(L, -1));
+    exit(-1);
+    break;
+  case LUA_ERRRUN:
+  case LUA_ERRSYNTAX:
+  case LUA_ERRERR:
+  default:
+    fprintf(stderr, "Uncaught Error in async callback: %s\n", lua_tostring(L, -1));
     lua_pop(L, 1);
+    break;
   }
   lua_pop(L, 1);
 }

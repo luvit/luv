@@ -41,6 +41,11 @@ typedef struct {
   luv_val_t argv[LUV_THREAD_MAXNUM_ARG];
 } luv_thread_arg_t;
 
+//luajit miss LUA_OK
+#ifndef LUA_OK
+#define LUA_OK 0
+#endif
+
 //LUV flags thread support userdata handle
 #define LUVF_THREAD_UHANDLE 1    
 
