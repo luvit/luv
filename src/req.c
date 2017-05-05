@@ -45,8 +45,7 @@ static int luv_cancel(lua_State* L) {
   uv_req_t* req = (uv_req_t*)luv_check_req(L, 1);
   int ret = uv_cancel(req);
   if (ret < 0) return luv_error(L, ret);
-  luv_cleanup_req(L, (luv_req_t*)req->data);
-  req->data = NULL;
+  // Cleanup occurs when callbacks are ran with UV_ECANCELED status.
   lua_pushinteger(L, ret);
   return 1;
 }
