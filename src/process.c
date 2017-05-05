@@ -47,6 +47,29 @@ static void luv_clean_options(uv_process_options_t* options) {
   free(options->env);
 }
 
+// iterates over the tbl to find the max integer
+// key of the table that is >= 1. If any key is
+// NOT an integer, simply call lua_rawlen().
+static int sparse_rawlen(lua_State* L, int tbl) {
+  int len = 0;
+  tbl = lua_absindex(L, tbl);
+
+  lua_pushnil(L);
+  while (lua_next(L, -2)) {
+    if (lua_type(L, -2) == LUA_TNUMBER) {
+      int idx = lua_tonumber(L, -2);
+      if (floor(idx) == idx && idx >= 1) {
+        if (idx > len) len = idx;
+        lua_pop(L, 1);
+        continue;
+      }
+    }
+    lua_pop(L, 2);
+    return lua_rawlen(L, tbl);
+  }
+  return len;
+}
+
 static int luv_spawn(lua_State* L) {
   uv_process_t* handle;
   uv_process_options_t options;
@@ -92,7 +115,7 @@ static int luv_spawn(lua_State* L) {
   // get the stdio list
   lua_getfield(L, 2, "stdio");
   if (lua_type(L, -1) == LUA_TTABLE) {
-    options.stdio_count = len = lua_rawlen(L, -1);
+    options.stdio_count = len = sparse_rawlen(L, -1);
     options.stdio = (uv_stdio_container_t*)malloc(len * sizeof(*options.stdio));
     if (!options.stdio) {
       luv_clean_options(&options);
