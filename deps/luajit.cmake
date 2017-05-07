@@ -61,6 +61,8 @@ ENDIF()
 CHECK_TYPE_SIZE("void*" SIZEOF_VOID_P)
 IF(SIZEOF_VOID_P EQUAL 8)
   ADD_DEFINITIONS(-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE)
+ELSE()
+  ADD_DEFINITIONS(-D__PIC__)
 ENDIF()
 
 if ( WIN32 AND NOT CYGWIN )
@@ -272,6 +274,7 @@ SET(SRC_LJCORE
   ${LUAJIT_DIR}/src/lj_clib.c
   ${LUAJIT_DIR}/src/lj_cparse.c
   ${LUAJIT_DIR}/src/lj_lib.c
+  ${LUAJIT_DIR}/src/lj_vmmath.c
   ${LUAJIT_DIR}/src/lj_alloc.c
   ${LUAJIT_DIR}/src/lj_vmmath.c
   ${LUAJIT_DIR}/src/lib_aux.c
