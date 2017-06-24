@@ -352,7 +352,6 @@ static int luv_setgid(lua_State* L){
   return 0;
 }
 
-#ifndef _WIN32
 static int luv_print_all_handles(lua_State* L){
   uv_print_all_handles(luv_loop(L), stderr);
   return 0;
@@ -363,5 +362,54 @@ static int luv_print_active_handles(lua_State* L){
   return 0;
 }
 #endif
+
+#if LUV_UV_VERSION_GEQ(1, 12, 0)
+static int luv_os_getenv(lua_State* L) {
+  const char* name = luaL_checkstring(L, 1);
+  size_t size = luaL_optinteger(L, 2, LUAL_BUFFERSIZE);
+  char *buff = malloc(size);
+  int ret = uv_os_getenv(name, buff, &size);
+  if (ret == 0) {
+    lua_pushlstring(L, buff, size);
+    ret = 1;
+  } else
+    ret = luv_error(L, ret);
+  free(buff);
+  return ret;
+}
+
+static int luv_os_setenv(lua_State* L) {
+  const char* name = luaL_checkstring(L, 1);
+  const char* value = luaL_checkstring(L, 2);
+  int ret = uv_os_setenv(name, value);
+  if (ret == 0)
+    return luv_error(L, ret);
+  else
+    lua_pushboolean(L, 1);
+  return 1;
+}
+
+static int luv_os_unsetenv(lua_State* L) {
+  const char* name = luaL_checkstring(L, 1);
+  int ret = uv_os_unsetenv(name);
+  if (ret == 0)
+    return luv_error(L, ret);
+  else
+    lua_pushboolean(L, 1);
+  return 1;
+}
+
+static int luv_os_gethostname(lua_State* L) {
+  char hostname[PATH_MAX];
+  size_t size = sizeof(hostname);
+  int ret = uv_os_gethostname(hostname, &size);
+  if (ret == 0) {
+    lua_pushlstring(L, hostname, size);
+    ret = 1;
+  }
+  else
+    ret = luv_error(L, ret);
+  return ret;
+}
 
 #endif

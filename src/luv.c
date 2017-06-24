@@ -106,6 +106,9 @@ static const luaL_Reg luv_functions[] = {
   // signal.c
   {"new_signal", luv_new_signal},
   {"signal_start", luv_signal_start},
+#if LUV_UV_VERSION_GEQ(1, 12, 0)
+  {"signal_start_oneshot", luv_signal_start_oneshot},
+#endif
   {"signal_stop", luv_signal_stop},
 
   // process.c
@@ -251,6 +254,12 @@ static const luaL_Reg luv_functions[] = {
   {"print_all_handles", luv_print_all_handles},
   {"print_active_handles", luv_print_active_handles},
 #endif
+#if LUV_UV_VERSION_GEQ(1, 12, 0)
+  {"os_getenv", luv_os_getenv},
+  {"os_setenv", luv_os_setenv},
+  {"os_unsetenv", luv_os_unsetenv},
+  {"os_gethostname", luv_os_gethostname},
+#endif
 
   // thread.c
   {"new_thread", luv_new_thread},
@@ -262,6 +271,11 @@ static const luaL_Reg luv_functions[] = {
   // work.c
   {"new_work", luv_new_work},
   {"queue_work", luv_queue_work},
+
+  // util.c
+#if LUV_UV_VERSION_GEQ(1, 10, 0)
+  {"translate_sys_error", luv_translate_sys_error},
+#endif
 
   {NULL, NULL}
 };
