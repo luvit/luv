@@ -21,6 +21,8 @@ os:
   - osx
 
 before_install:
+  - which cmake
+  - cmake --version
   - git submodule update --init --recursive
   - git submodule update --recursive
 
