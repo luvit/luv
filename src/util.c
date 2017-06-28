@@ -54,3 +54,16 @@ static void luv_status(lua_State* L, int status) {
     lua_pushnil(L);
   }
 }
+
+#if LUV_UV_VERSION_GEQ(1, 10, 0)
+static int luv_translate_sys_error(lua_State* L) {
+  int status = luaL_checkinteger(L, 1);
+  status = uv_translate_sys_error(status);
+  if (status < 0) {
+    luv_error(L, status);
+    lua_remove(L, -3);
+    return 2;
+  }
+  return 0;
+}
+#endif

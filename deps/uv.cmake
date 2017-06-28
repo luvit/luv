@@ -61,30 +61,31 @@ if(WIN32)
     ${LIBUVDIR}/src/win/async.c
     ${LIBUVDIR}/src/win/atomicops-inl.h
     ${LIBUVDIR}/src/win/core.c
+    ${LIBUVDIR}/src/win/detect-wakeup.c
     ${LIBUVDIR}/src/win/dl.c
     ${LIBUVDIR}/src/win/error.c
-    ${LIBUVDIR}/src/win/fs.c
     ${LIBUVDIR}/src/win/fs-event.c
+    ${LIBUVDIR}/src/win/fs.c
     ${LIBUVDIR}/src/win/getaddrinfo.c
     ${LIBUVDIR}/src/win/getnameinfo.c
-    ${LIBUVDIR}/src/win/handle.c
     ${LIBUVDIR}/src/win/handle-inl.h
+    ${LIBUVDIR}/src/win/handle.c
     ${LIBUVDIR}/src/win/internal.h
     ${LIBUVDIR}/src/win/loop-watcher.c
     ${LIBUVDIR}/src/win/pipe.c
-    ${LIBUVDIR}/src/win/thread.c
     ${LIBUVDIR}/src/win/poll.c
-    ${LIBUVDIR}/src/win/process.c
     ${LIBUVDIR}/src/win/process-stdio.c
-    ${LIBUVDIR}/src/win/req.c
+    ${LIBUVDIR}/src/win/process.c
     ${LIBUVDIR}/src/win/req-inl.h
+    ${LIBUVDIR}/src/win/req.c
     ${LIBUVDIR}/src/win/signal.c
     ${LIBUVDIR}/src/win/snprintf.c
-    ${LIBUVDIR}/src/win/stream.c
     ${LIBUVDIR}/src/win/stream-inl.h
+    ${LIBUVDIR}/src/win/stream.c
     ${LIBUVDIR}/src/win/tcp.c
-    ${LIBUVDIR}/src/win/tty.c
+    ${LIBUVDIR}/src/win/thread.c
     ${LIBUVDIR}/src/win/timer.c
+    ${LIBUVDIR}/src/win/tty.c
     ${LIBUVDIR}/src/win/udp.c
     ${LIBUVDIR}/src/win/util.c
     ${LIBUVDIR}/src/win/winapi.c
@@ -98,7 +99,6 @@ else()
     ${LIBUVDIR}/include/uv-unix.h
     ${LIBUVDIR}/include/uv-linux.h
     ${LIBUVDIR}/include/uv-sunos.h
-    ${LIBUVDIR}/include/uv-darwin.h
     ${LIBUVDIR}/include/uv-bsd.h
     ${LIBUVDIR}/include/uv-aix.h
     ${LIBUVDIR}/src/unix/async.c
@@ -109,11 +109,12 @@ else()
     ${LIBUVDIR}/src/unix/getaddrinfo.c
     ${LIBUVDIR}/src/unix/getnameinfo.c
     ${LIBUVDIR}/src/unix/internal.h
-    ${LIBUVDIR}/src/unix/loop.c
     ${LIBUVDIR}/src/unix/loop-watcher.c
+    ${LIBUVDIR}/src/unix/loop.c
     ${LIBUVDIR}/src/unix/pipe.c
     ${LIBUVDIR}/src/unix/poll.c
     ${LIBUVDIR}/src/unix/process.c
+    ${LIBUVDIR}/src/unix/proctitle.c
     ${LIBUVDIR}/src/unix/signal.c
     ${LIBUVDIR}/src/unix/spinlock.h
     ${LIBUVDIR}/src/unix/stream.c
@@ -123,11 +124,6 @@ else()
     ${LIBUVDIR}/src/unix/tty.c
     ${LIBUVDIR}/src/unix/udp.c
   )
-  if(APPLE)
-    set(SOURCES ${SOURCES}
-      ${LIBUVDIR}/src/unix/pthread-barrier.c
-    )
-  endif()
 endif()
 
 check_type_size("void*" SIZEOF_VOID_P)
@@ -162,6 +158,9 @@ if("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
     ${LIBUVDIR}/src/unix/linux-inotify.c
     ${LIBUVDIR}/src/unix/linux-syscalls.c
     ${LIBUVDIR}/src/unix/linux-syscalls.h
+    ${LIBUVDIR}/src/unix/procfs-exepath.c   
+    ${LIBUVDIR}/src/unix/sysinfo-loadavg.c
+    ${LIBUVDIR}/src/unix/sysinfo-memory.c    
   )
 endif()
 
@@ -182,10 +181,12 @@ if(APPLE)
     -D=_DARWIN_USE_64_BIT_INODE
   )
   set(SOURCES ${SOURCES}
-    ${LIBUVDIR}/src/unix/proctitle.c
+    ${LIBUVDIR}/include/uv-darwin.h
+    ${LIBUVDIR}/src/unix/bsd-ifaddrs.c
     ${LIBUVDIR}/src/unix/darwin.c
-    ${LIBUVDIR}/src/unix/fsevents.c
     ${LIBUVDIR}/src/unix/darwin-proctitle.c
+    ${LIBUVDIR}/src/unix/fsevents.c
+    ${LIBUVDIR}/src/unix/pthread-barrier.c
     ${LIBUVDIR}/src/unix/kqueue.c
   )
 endif()
