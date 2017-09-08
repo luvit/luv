@@ -158,9 +158,9 @@ if("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
     ${LIBUVDIR}/src/unix/linux-inotify.c
     ${LIBUVDIR}/src/unix/linux-syscalls.c
     ${LIBUVDIR}/src/unix/linux-syscalls.h
-    ${LIBUVDIR}/src/unix/procfs-exepath.c   
+    ${LIBUVDIR}/src/unix/procfs-exepath.c
     ${LIBUVDIR}/src/unix/sysinfo-loadavg.c
-    ${LIBUVDIR}/src/unix/sysinfo-memory.c    
+    ${LIBUVDIR}/src/unix/sysinfo-memory.c
   )
 endif()
 
@@ -186,7 +186,6 @@ if(APPLE)
     ${LIBUVDIR}/src/unix/darwin.c
     ${LIBUVDIR}/src/unix/darwin-proctitle.c
     ${LIBUVDIR}/src/unix/fsevents.c
-    ${LIBUVDIR}/src/unix/pthread-barrier.c
     ${LIBUVDIR}/src/unix/kqueue.c
   )
 endif()
