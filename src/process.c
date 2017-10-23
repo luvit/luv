@@ -15,6 +15,7 @@
  *
  */
 #include "luv.h"
+#include <math.h>
 
 static int luv_disable_stdio_inheritance(lua_State* L) {
   (void)L;
