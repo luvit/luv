@@ -411,5 +411,37 @@ static int luv_os_gethostname(lua_State* L) {
     ret = luv_error(L, ret);
   return ret;
 }
+#endif
 
+#if LUV_UV_VERSION_GEQ(1, 16, 0)
+static int luv_if_indextoname(lua_State* L) {
+  /* 40 bytes address, 16 bytes device name, plus reserve. */
+  char scoped_addr[128];
+  size_t scoped_addr_len = sizeof(scoped_addr);
+  unsigned int ifindex = (unsigned int)luaL_checkinteger(L, 1);
+
+  int ret = uv_if_indextoname(ifindex - 1, scoped_addr, &scoped_addr_len);
+  if (ret == 0) {
+    lua_pushlstring(L, scoped_addr, scoped_addr_len);
+    ret = 1;
+  }
+  else
+    ret = luv_error(L, ret);
+  return ret;
+}
+
+static int luv_if_indextoiid(lua_State* L) {
+  char interface_id[UV_IF_NAMESIZE];
+  size_t interface_id_len = sizeof(interface_id);
+  unsigned int ifindex = (unsigned int)luaL_checkinteger(L, 1);
+
+  int ret = uv_if_indextoiid(ifindex - 1, interface_id, &interface_id_len);
+  if (ret == 0) {
+    lua_pushlstring(L, interface_id, interface_id_len);
+    ret = 1;
+  }
+  else
+    ret = luv_error(L, ret);
+  return ret;
+}
 #endif

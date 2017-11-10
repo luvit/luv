@@ -263,6 +263,10 @@ static const luaL_Reg luv_functions[] = {
   {"os_unsetenv", luv_os_unsetenv},
   {"os_gethostname", luv_os_gethostname},
 #endif
+#if LUV_UV_VERSION_GEQ(1, 16, 0)
+  {"if_indextoname", luv_if_indextoname},
+  {"if_indextoiid", luv_if_indextoiid},
+#endif
 
   // thread.c
   {"new_thread", luv_new_thread},
