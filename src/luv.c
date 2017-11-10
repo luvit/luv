@@ -266,6 +266,7 @@ static const luaL_Reg luv_functions[] = {
 #if LUV_UV_VERSION_GEQ(1, 16, 0)
   {"if_indextoname", luv_if_indextoname},
   {"if_indextoiid", luv_if_indextoiid},
+  {"os_getppid", luv_os_getppid }, 
 #endif
 
   // thread.c

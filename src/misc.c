@@ -444,4 +444,9 @@ static int luv_if_indextoiid(lua_State* L) {
     ret = luv_error(L, ret);
   return ret;
 }
+
+static int luv_os_getppid(lua_State* L) {
+  lua_pushnumber(L, uv_os_getppid());
+  return 1;
+}
 #endif
