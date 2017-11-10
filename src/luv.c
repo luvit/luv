@@ -217,6 +217,9 @@ static const luaL_Reg luv_functions[] = {
   {"fs_realpath", luv_fs_realpath},
   {"fs_chown", luv_fs_chown},
   {"fs_fchown", luv_fs_fchown},
+#if LUV_UV_VERSION_GEQ(1, 14, 0)
+  {"fs_copyfile", luv_fs_copyfile },
+#endif
 
   // dns.c
   {"getaddrinfo", luv_getaddrinfo},

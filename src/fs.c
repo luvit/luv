@@ -612,3 +612,15 @@ static int luv_fs_fchown(lua_State* L) {
   req->data = luv_setup_req(L, ref);
   FS_CALL(fchown, req, file, uid, gid);
 }
+
+#if LUV_UV_VERSION_GEQ(1, 14, 0)
+static int luv_fs_copyfile(lua_State*L) {
+  const char* path = luaL_checkstring(L, 1);
+  const char* new_path = luaL_checkstring(L, 2);
+  int flags = luaL_checkinteger(L, 3);
+  int ref = luv_check_continuation(L, 4);
+  uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
+  req->data = luv_setup_req(L, ref);
+  FS_CALL(copyfile, req, path, new_path, flags);
+}
+#endif
