@@ -1,18 +1,18 @@
 return require('lib/tap')(function (test)
-  test("basic tcp server and client", function (print, p, expect, uv)
+  test("basic tcp server and client (ipv4)", function (print, p, expect, uv)
     local server = uv.new_tcp()
-    uv.tcp_bind(server, "::", 0)
-    uv.listen(server, 128, expect(function (err)
+    assert(uv.tcp_bind(server, "127.0.0.1", 0))
+    assert(uv.listen(server, 128, expect(function (err)
       p("server on connection", server)
       assert(not err, err)
       uv.close(server)
-    end))
+    end)))
 
     local address = uv.tcp_getsockname(server)
     p{server=server,address=address}
 
     local client = uv.new_tcp()
-    local req = uv.tcp_connect(client, "::1", address.port, expect(function (err)
+    local req = assert(uv.tcp_connect(client, "127.0.0.1", address.port, expect(function (err)
       p("client on connect", client, err)
       assert(not err, err)
       uv.shutdown(client, expect(function (err)
@@ -22,7 +22,39 @@ return require('lib/tap')(function (test)
           p("client on close", client)
         end))
       end))
-    end))
+    end)))
+    p{client=client,req=req}
+  end)
+
+  test("basic tcp server and client (ipv6)", function (print, p, expect, uv)
+    local server = uv.new_tcp()
+    local _, err = uv.tcp_bind(server, "::1", 0)
+    if err then
+      p("ipv6 unavailable", err)
+      uv.close(server)
+      return
+    end
+    assert(uv.listen(server, 128, expect(function (err)
+      p("server on connection", server)
+      assert(not err, err)
+      uv.close(server)
+    end)))
+
+    local address = uv.tcp_getsockname(server)
+    p{server=server,address=address}
+
+    local client = uv.new_tcp()
+    local req = assert(uv.tcp_connect(client, "::1", address.port, expect(function (err)
+      p("client on connect", client, err)
+      assert(not err, err)
+      uv.shutdown(client, expect(function (err)
+        p("client on shutdown", client, err)
+        assert(not err, err)
+        uv.close(client, expect(function ()
+          p("client on close", client)
+        end))
+      end))
+    end)))
     p{client=client,req=req}
   end)
 
