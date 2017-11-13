@@ -217,6 +217,9 @@ static const luaL_Reg luv_functions[] = {
   {"fs_realpath", luv_fs_realpath},
   {"fs_chown", luv_fs_chown},
   {"fs_fchown", luv_fs_fchown},
+#if LUV_UV_VERSION_GEQ(1, 14, 0)
+  {"fs_copyfile", luv_fs_copyfile },
+#endif
 
   // dns.c
   {"getaddrinfo", luv_getaddrinfo},
@@ -259,6 +262,11 @@ static const luaL_Reg luv_functions[] = {
   {"os_setenv", luv_os_setenv},
   {"os_unsetenv", luv_os_unsetenv},
   {"os_gethostname", luv_os_gethostname},
+#endif
+#if LUV_UV_VERSION_GEQ(1, 16, 0)
+  {"if_indextoname", luv_if_indextoname},
+  {"if_indextoiid", luv_if_indextoiid},
+  {"os_getppid", luv_os_getppid }, 
 #endif
 
   // thread.c
