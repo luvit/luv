@@ -450,3 +450,10 @@ static int luv_os_getppid(lua_State* L) {
   return 1;
 }
 #endif
+
+#if LUV_UV_VERSION_GEQ(1, 18, 0)
+static int luv_os_getpid(lua_State* L) {
+  lua_pushnumber(L, uv_os_getpid());
+  return 1;
+}
+#endif
