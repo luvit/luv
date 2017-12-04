@@ -210,7 +210,7 @@ static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf
 
   // err
   if (nread < 0) {
-    luv_status(L, nread); // TODO: I think luv_push_status_nil(L, nread) would be better name => remove branching
+    luv_status(L, nread);
   }
   else {
     lua_pushnil(L);
