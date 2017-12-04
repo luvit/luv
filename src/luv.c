@@ -268,6 +268,9 @@ static const luaL_Reg luv_functions[] = {
   {"if_indextoiid", luv_if_indextoiid},
   {"os_getppid", luv_os_getppid }, 
 #endif
+#if LUV_UV_VERSION_GEQ(1, 18, 0)
+  {"os_getpid", luv_os_getpid },
+#endif
 
   // thread.c
   {"new_thread", luv_new_thread},
