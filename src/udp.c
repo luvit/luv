@@ -228,6 +228,9 @@ static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf
   else if (nread > 0) {
     lua_pushlstring(L, buf->base, nread);
   }
+  else {
+    lua_pushnil(L);
+  }
   if (buf) free(buf->base);
 
   // address
