@@ -93,7 +93,7 @@ static void luv_check_buf(lua_State *L, int idx, uv_buf_t *pbuf);
 static uv_buf_t* luv_prep_bufs(lua_State* L, int index, size_t *count);
 
 /* from tcp.c */
-static void parse_sockaddr(lua_State* L, struct sockaddr_storage* address, int addrlen);
+static void parse_sockaddr(lua_State* L, struct sockaddr_storage* address);
 static void luv_connect_cb(uv_connect_t* req, int status);
 
 /* From fs.c */
