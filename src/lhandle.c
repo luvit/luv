@@ -64,11 +64,11 @@ static int luv_is_callable(lua_State* L, int index) {
 }
 
 static void luv_check_callable(lua_State* L, int index) {
+  const char *msg;
+  const char *typearg;  /* name for the type of the actual argument */
   if (luv_is_callable(L, index))
     return;
 
-  const char *msg;
-  const char *typearg;  /* name for the type of the actual argument */
   if (luaL_getmetafield(L, index, "__name") == LUA_TSTRING)
     typearg = lua_tostring(L, -1);  /* use the given type name */
   else if (lua_type(L, index) == LUA_TLIGHTUSERDATA)
