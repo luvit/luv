@@ -176,12 +176,18 @@ static int luv_udp_send(lua_State* L) {
   ref = luv_check_continuation(L, 5);
   req = (uv_udp_send_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
+  
   ret = uv_udp_send(req, handle, &buf, 1, (struct sockaddr*)&addr, luv_udp_send_cb);
   if (ret < 0) {
     luv_cleanup_req(L, (luv_req_t*)req->data);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
+  
+  lua_pushvalue(L, 2);
+  ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+  lua_pop(L, 1);
+  
   return 1;
 
 }
