@@ -411,7 +411,7 @@ static const luaL_Reg luv_tty_methods[] = {
 static const luaL_Reg luv_udp_methods[] = {
   {"open", luv_udp_open},
   {"bind", luv_udp_bind},
-  {"bindgetsockname", luv_udp_getsockname},
+  {"getsockname", luv_udp_getsockname},
   {"set_membership", luv_udp_set_membership},
   {"set_multicast_loop", luv_udp_set_multicast_loop},
   {"set_multicast_ttl", luv_udp_set_multicast_ttl},
