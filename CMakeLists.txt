@@ -77,7 +77,7 @@ if (LUA)
     NAMES luajit libluajit
     PATHS ${LUA_LIBDIR}
     NO_DEFAULT_PATH)
-  ELSEIF(LUA_EXEC_NAME STREQUAL "lua")
+  ELSEIF(LUA_EXEC_NAME MATCHES "lua.*")
     FIND_LIBRARY(LUA_LIBRARIES
       NAMES lua lua53 lua52 lua51 liblua liblua53 liblua52 liblua51
       PATHS ${LUA_LIBDIR}
