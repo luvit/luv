@@ -199,6 +199,7 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
     case UV_FS_FCHOWN:
     case UV_FS_UTIME:
     case UV_FS_FUTIME:
+    case UV_FS_COPYFILE:
       lua_pushboolean(L, 1);
       return 1;
 
@@ -617,9 +618,26 @@ static int luv_fs_fchown(lua_State* L) {
 static int luv_fs_copyfile(lua_State*L) {
   const char* path = luaL_checkstring(L, 1);
   const char* new_path = luaL_checkstring(L, 2);
-  int flags = luaL_checkinteger(L, 3);
-  int ref = luv_check_continuation(L, 4);
-  uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
+  int flags = 0, ref;
+  uv_fs_t* req;
+  if (lua_type(L, 3) == LUA_TTABLE) {
+    lua_getfield(L, 3, "excl");
+    if (lua_toboolean(L, -1)) flags |= UV_FS_COPYFILE_EXCL;
+    lua_pop(L, 1);
+#if LUV_UV_VERSION_GEQ(1, 20, 0)
+    lua_getfield(L, 3, "ficlone");
+    if (lua_toboolean(L, -1)) flags |= UV_FS_COPYFILE_FICLONE;
+    lua_pop(L, 1);
+    lua_getfield(L, 3, "ficlone_force");
+    if (lua_toboolean(L, -1)) flags |= UV_FS_COPYFILE_FICLONE_FORCE;
+    lua_pop(L, 1);
+#endif
+  }
+  else if (lua_type(L, 3) == LUA_TNUMBER) {
+    flags = lua_tointeger(L, 3);
+  }
+  ref = luv_check_continuation(L, 4);
+  req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
   FS_CALL(copyfile, req, path, new_path, flags);
 }

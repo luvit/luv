@@ -87,4 +87,15 @@ return require('lib/tap')(function (test)
     end)))
   end)
 
+  test("fs.copyfile", function (print, p, expect, uv)
+    local path = "_test_"
+    local path2 = "_test2_"
+    local fd = assert(uv.fs_open(path, "w", 438))
+    uv.fs_write(fd, "Hello World\n", -1)
+    uv.fs_close(fd)
+    assert(uv.fs_copyfile(path, path2))
+    assert(uv.fs_unlink(path))
+    assert(uv.fs_unlink(path2))
+  end)
+
 end)
