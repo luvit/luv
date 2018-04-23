@@ -39,6 +39,18 @@ static int luv_new_udp(lua_State* L) {
   return 1;
 }
 
+static int luv_udp_get_send_queue_size(lua_State* L) {
+  uv_udp_t* handle = luv_check_udp(L, 1);
+  lua_pushinteger(L, handle->send_queue_size);
+  return 1;
+}
+
+static int luv_udp_get_send_queue_count(lua_State* L) {
+  uv_udp_t* handle = luv_check_udp(L, 1);
+  lua_pushinteger(L, handle->send_queue_count);
+  return 1;
+}
+
 static int luv_udp_open(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   uv_os_sock_t sock = luaL_checkinteger(L, 2);
@@ -176,18 +188,18 @@ static int luv_udp_send(lua_State* L) {
   ref = luv_check_continuation(L, 5);
   req = (uv_udp_send_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
-  
+
   ret = uv_udp_send(req, handle, &buf, 1, (struct sockaddr*)&addr, luv_udp_send_cb);
   if (ret < 0) {
     luv_cleanup_req(L, (luv_req_t*)req->data);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
-  
+
   lua_pushvalue(L, 2);
   ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
   lua_pop(L, 1);
-  
+
   return 1;
 
 }

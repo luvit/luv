@@ -161,6 +161,8 @@ static const luaL_Reg luv_functions[] = {
 
   // udp.c
   {"new_udp", luv_new_udp},
+  {"udp_get_send_queue_size", luv_udp_get_send_queue_size},
+  {"udp_get_send_queue_count", luv_udp_get_send_queue_count},
   {"udp_open", luv_udp_open},
   {"udp_bind", luv_udp_bind},
   {"udp_getsockname", luv_udp_getsockname},
@@ -266,7 +268,7 @@ static const luaL_Reg luv_functions[] = {
 #if LUV_UV_VERSION_GEQ(1, 16, 0)
   {"if_indextoname", luv_if_indextoname},
   {"if_indextoiid", luv_if_indextoiid},
-  {"os_getppid", luv_os_getppid }, 
+  {"os_getppid", luv_os_getppid },
 #endif
 #if LUV_UV_VERSION_GEQ(1, 18, 0)
   {"os_getpid", luv_os_getpid },
@@ -409,6 +411,8 @@ static const luaL_Reg luv_tty_methods[] = {
 };
 
 static const luaL_Reg luv_udp_methods[] = {
+  {"get_send_queue_size", luv_udp_get_send_queue_size},
+  {"get_send_queue_count", luv_udp_get_send_queue_count},
   {"open", luv_udp_open},
   {"bind", luv_udp_bind},
   {"getsockname", luv_udp_getsockname},
