@@ -51,7 +51,7 @@
 #endif
 
 #if (LUA_VERSION_NUM != 503)
-#include "../deps/lua-compat-5.3/c-api/compat-5.3.h"
+#include "c-api/compat-5.3.h"
 #endif
 
 /* There is a 1-1 relation between a lua_State and a uv_loop_t
