@@ -15,7 +15,7 @@ local hare_id = uv.new_thread(function(step,...)
     end
     while (step>0) do 
         step = step - 1
-        uv.sleep(math.random(1000))
+        sleep(math.random(1000))
         print("Hare ran another step")
     end
     print("Hare done running!")
