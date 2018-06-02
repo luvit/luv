@@ -21,7 +21,7 @@ return require('lib/tap')(function (test)
     }, expect(function (err, res)
       assert(not err, err)
       p(res, #res)
-      assert(#res == 1)
+      assert(#res > 0)
     end)))
   end)
 
