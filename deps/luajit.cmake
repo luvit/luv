@@ -92,6 +92,10 @@ if ( LUA_USE_LIBM )
   list ( APPEND LIBS m )
 endif ()
 
+if ( CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
+  list ( APPEND LIBS pthread c++abi )
+endif ()
+
 ## SOURCES
 MACRO(LJ_TEST_ARCH stuff)
   CHECK_C_SOURCE_COMPILES("

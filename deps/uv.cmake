@@ -114,7 +114,6 @@ else()
     ${LIBUVDIR}/src/unix/pipe.c
     ${LIBUVDIR}/src/unix/poll.c
     ${LIBUVDIR}/src/unix/process.c
-    ${LIBUVDIR}/src/unix/proctitle.c
     ${LIBUVDIR}/src/unix/signal.c
     ${LIBUVDIR}/src/unix/spinlock.h
     ${LIBUVDIR}/src/unix/stream.c
@@ -181,6 +180,7 @@ if(APPLE)
     -D=_DARWIN_USE_64_BIT_INODE
   )
   set(SOURCES ${SOURCES}
+    ${LIBUVDIR}/src/unix/proctitle.c
     ${LIBUVDIR}/include/uv-darwin.h
     ${LIBUVDIR}/src/unix/bsd-ifaddrs.c
     ${LIBUVDIR}/src/unix/darwin.c
