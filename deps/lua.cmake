@@ -124,7 +124,9 @@ MACRO(LUA_add_custom_commands luajit_target)
   SET(target_srcs "")
   FOREACH(file ${ARGN})
     IF(${file} MATCHES ".*\\.lua$")
-      set(file "${CMAKE_CURRENT_SOURCE_DIR}/${file}")
+      if(NOT file MATCHES "^/")
+        set(file "${CMAKE_CURRENT_SOURCE_DIR}/${file}")
+      endif()
       set(source_file ${file})
       string(LENGTH ${CMAKE_SOURCE_DIR} _luajit_source_dir_length)
       string(LENGTH ${file} _luajit_file_length)
@@ -139,7 +141,7 @@ MACRO(LUA_add_custom_commands luajit_target)
         MAIN_DEPENDENCY ${source_file}
         DEPENDS lua
         COMMAND lua
-	ARGS "${LUA_DIR}/../luac.lua"
+        ARGS "${LUA_DIR}/../luac.lua"
           ${source_file}
           ${generated_file}
         COMMENT "Building Lua ${source_file}: ${generated_file}"

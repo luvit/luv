@@ -225,7 +225,7 @@ SET(SRC_LJLIB
   ${LUAJIT_DIR}/src/lib_ffi.c
 )
 
-SET(SRC_LIBAUX 
+SET(SRC_LIBAUX
   ${LUAJIT_DIR}/src/lib_aux.c
   ${LUAJIT_DIR}/src/lib_init.c
 )
@@ -313,7 +313,9 @@ MACRO(LUAJIT_add_custom_commands luajit_target)
   SET(target_srcs "")
   FOREACH(file ${ARGN})
     IF(${file} MATCHES ".*\\.lua$")
-      set(file "${CMAKE_CURRENT_SOURCE_DIR}/${file}")
+      if(NOT file MATCHES "^/")
+        set(file "${CMAKE_CURRENT_SOURCE_DIR}/${file}")
+      endif()
       set(source_file ${file})
       string(LENGTH ${CMAKE_SOURCE_DIR} _luajit_source_dir_length)
       string(LENGTH ${file} _luajit_file_length)
