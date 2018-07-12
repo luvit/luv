@@ -54,6 +54,10 @@
 #include "c-api/compat-5.3.h"
 #endif
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+#endif
 /* There is a 1-1 relation between a lua_State and a uv_loop_t
    These helpers will give you one if you have the other
    These are exposed for extensions built with luv
@@ -99,4 +103,7 @@ typedef lua_State* (*luv_acquire_vm)();
 typedef void (*luv_release_vm)(lua_State* L);
 LUALIB_API void luv_set_thread_cb(luv_acquire_vm acquire, luv_release_vm release);
 
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 #endif
