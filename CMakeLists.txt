@@ -19,6 +19,20 @@ if (MINGW)
   add_definitions(-D_WIN32_WINNT=0x0600)
 endif (MINGW)
 
+if (WIN32)
+  # replace /MD to /MT to avoid link msvcr*.dll
+  # this needs to be before add_subdirectory calls so that they inherit the modified flags
+  set(CompilerFlags
+    CMAKE_C_FLAGS
+    CMAKE_C_FLAGS_DEBUG
+    CMAKE_C_FLAGS_MINSIZEREL
+    CMAKE_C_FLAGS_RELWITHDEBINFO
+    CMAKE_C_FLAGS_RELEASE)
+  foreach(CompilerFlag ${CompilerFlags})
+    string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
+  endforeach()
+endif ()
+
 if (NOT WITH_LUA_ENGINE)
   set(WITH_LUA_ENGINE "LuaJIT"
     CACHE STRING "Link to LuaJIT or PUC Lua" FORCE)
@@ -162,16 +176,6 @@ if(WIN32)
       endif (LUA_BUILD_TYPE STREQUAL System)
     endif (USE_LUAJIT)
   endif (LUA)
-  # replace /MD to /MT to avoid link msvcr*.dll
-  set(CompilerFlags
-    CMAKE_C_FLAGS
-    CMAKE_C_FLAGS_DEBUG
-    CMAKE_C_FLAGS_MINSIZEREL
-    CMAKE_C_FLAGS_RELWITHDEBINFO
-    CMAKE_C_FLAGS_RELEASE)
-  foreach(CompilerFlag ${CompilerFlags})
-    string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
-  endforeach()
 elseif("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
   target_link_libraries(luv ${LIBUV_LIBRARIES} rt)
 else()
