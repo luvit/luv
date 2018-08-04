@@ -33,7 +33,7 @@ script:
   - luarocks remove luv
   # Test the alternate rockspec
   - mkdir build/lib
-  - cp build/libuv.a build/lib
+  - cp build/deps/libuv/libuv_a.a build/lib/libuv.a
   - cp -a deps/libuv/include build
   - luarocks make rockspecs/$(ls rockspecs) LIBUV_DIR=build
   - test $PWD = `lua -e "print(require'luv'.cwd())"`
