@@ -457,3 +457,34 @@ static int luv_os_getpid(lua_State* L) {
   return 1;
 }
 #endif
+
+#if LUV_UV_VERSION_GEQ(1, 23, 0)
+static int luv_os_getpriority(lua_State* L) {
+  int priority;
+  uv_pid_t pid = luaL_checkinteger(L, 1);
+  int ret = uv_os_getpriority(pid, &priority);
+  if (ret == 0) {
+    lua_pushnumber(L, priority);
+    ret = 1;
+  }
+  else {
+    ret = luv_error(L, ret);
+  }
+  return ret;
+}
+#endif
+
+#if LUV_UV_VERSION_GEQ(1, 23, 0)
+static int luv_os_setpriority(lua_State* L) {
+  uv_pid_t pid = luaL_checkinteger(L, 1);
+  int priority= luaL_checkinteger(L, 2);
+  int ret = uv_os_setpriority(pid, priority);
+  if (ret == 0) {
+    lua_pushboolean(L, 1);
+    ret = 1;
+  }
+  else
+    ret = luv_error(L, ret);
+  return ret;
+}
+#endif

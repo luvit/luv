@@ -273,6 +273,10 @@ static const luaL_Reg luv_functions[] = {
 #if LUV_UV_VERSION_GEQ(1, 18, 0)
   {"os_getpid", luv_os_getpid },
 #endif
+#if LUV_UV_VERSION_GEQ(1, 23, 0)
+  {"os_getpriority", luv_os_getpriority },
+  {"os_setpriority", luv_os_setpriority },
+#endif
 
   // thread.c
   {"new_thread", luv_new_thread},
