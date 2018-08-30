@@ -12,7 +12,7 @@ cp rockspecs/luv-scm-0.rockspec rockspecs/luv-${version}.rockspec
 script="/^version/s@\"[^\"]\\+\"@\"${version}\"@"
 sed -e "${script}" -i luv-${version}.rockspec
 sed -e "${script}" -i rockspecs/luv-${version}.rockspec
-script="s@git://github.com/luvit/luv.git@https://github.com/luvit/luv/releases/download/'..version..'/luv-'..version..'.tar.gz@"
+script="s@git://github.com/luvit/luv.git@https://github.com/squeek502/luv/releases/download/'..version..'/luv-'..version..'.tar.gz@"
 sed -e "${script}" -i luv-${version}.rockspec
 sed -e "${script}" -i rockspecs/luv-${version}.rockspec
 
