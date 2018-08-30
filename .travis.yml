@@ -24,6 +24,7 @@ before_install:
   - git submodule update --init --recursive
   - git submodule update --recursive
   - source .ci/setenv_lua.sh
+  - lua -e "print(package.path)"
 
 script:
   - if [ "x$PROCESS_CLEANUP_TEST" = "x" ]; then make && make test; else ./tests/test-sigchld-after-lua_close.sh; fi
@@ -42,10 +43,11 @@ jobs:
   include:
     - stage: deploy
       if: tag IS present
-      env: WITH_LUA_ENGINE=Lua LUA=lua5.3
+      env: WITH_LUA_ENGINE=LuaJIT LUA=luajit2.1
       script: skip
       before_deploy:
         - .ci/make_rockspec.sh $TRAVIS_TAG
+        - lua -e "print(package.path)"
       deploy:
         provider: releases
         api_key: $GITHUB_OAUTH_TOKEN
@@ -56,8 +58,6 @@ jobs:
           tags: true
       after_deploy:
         - luarocks install lua-cjson # required for luarocks upload
+        - lua -e "print(package.path)"
+        - lua -e "print(require('cjson'))"
         - luarocks upload luv-$TRAVIS_TAG.rockspec --api-key=$LUAROCKS_API_KEY --force
-
-notifications:
-  email: true
-  irc: "irc.freenode.org#luvit"
