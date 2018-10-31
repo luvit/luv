@@ -50,10 +50,6 @@
 #define MAX_TITLE_LENGTH (8192)
 #endif
 
-#if (LUA_VERSION_NUM != 503)
-#include "c-api/compat-5.3.h"
-#endif
-
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
