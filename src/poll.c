@@ -48,7 +48,8 @@ static int luv_new_socket_poll(lua_State* L) {
 
 // These are the same order as uv_run_mode which also starts at 0
 static const char *const luv_pollevents[] = {
-  "r", "w", "rw", "d", "rd", "wd", "rwd", NULL
+  "r", "w", "rw", "d", "rd", "wd", "rwd",
+  "p", "rp", "wp", "rwp", "dp", "rdp", "wdp", "rwdp", NULL
 };
 
 static void luv_poll_cb(uv_poll_t* handle, int status, int events) {
@@ -72,6 +73,14 @@ static void luv_poll_cb(uv_poll_t* handle, int status, int events) {
     case UV_READABLE|UV_DISCONNECT: evtstr = "rd"; break;
     case UV_WRITABLE|UV_DISCONNECT: evtstr = "wd"; break;
     case UV_READABLE|UV_WRITABLE|UV_DISCONNECT: evtstr = "rwd"; break;
+    case UV_PRIORITIZED: evtstr = "p"; break;
+    case UV_READABLE|UV_PRIORITIZED: evtstr = "rp"; break;
+    case UV_WRITABLE|UV_PRIORITIZED: evtstr = "wp"; break;
+    case UV_READABLE|UV_WRITABLE|UV_PRIORITIZED: evtstr = "rwp"; break;
+    case UV_DISCONNECT|UV_PRIORITIZED: evtstr = "dp"; break;
+    case UV_READABLE|UV_DISCONNECT|UV_PRIORITIZED: evtstr = "rdp"; break;
+    case UV_WRITABLE|UV_DISCONNECT|UV_PRIORITIZED: evtstr = "wdp"; break;
+    case UV_READABLE|UV_WRITABLE|UV_DISCONNECT|UV_PRIORITIZED: evtstr = "rwdp"; break;
     default: evtstr = ""; break;
   }
   lua_pushstring(L, evtstr);
@@ -90,6 +99,14 @@ static int luv_poll_start(lua_State* L) {
     case 4: events = UV_READABLE|UV_DISCONNECT; break;
     case 5: events = UV_WRITABLE|UV_DISCONNECT; break;
     case 6: events = UV_READABLE|UV_WRITABLE|UV_DISCONNECT; break;
+    case 7: events = UV_PRIORITIZED; break;
+    case 8: events = UV_READABLE|UV_PRIORITIZED; break;
+    case 9: events = UV_WRITABLE|UV_PRIORITIZED; break;
+    case 10: events = UV_READABLE|UV_WRITABLE|UV_PRIORITIZED; break;
+    case 11: events = UV_DISCONNECT|UV_PRIORITIZED; break;
+    case 12: events = UV_READABLE|UV_DISCONNECT|UV_PRIORITIZED; break;
+    case 13: events = UV_WRITABLE|UV_DISCONNECT|UV_PRIORITIZED; break;
+    case 14: events = UV_READABLE|UV_WRITABLE|UV_DISCONNECT|UV_PRIORITIZED; break;
     default: events = 0; /* unreachable */
   }
   luv_check_callback(L, (luv_handle_t*)handle->data, LUV_POLL, 3);
