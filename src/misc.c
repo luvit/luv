@@ -488,3 +488,27 @@ static int luv_os_setpriority(lua_State* L) {
   return ret;
 }
 #endif
+
+#if LUV_UV_VERSION_GEQ(1, 25, 0)
+static int luv_os_uname(lua_State* L) {
+  uv_utsname_t uname;
+
+  int ret = uv_os_uname(&uname);
+  if (ret == 0) {
+    lua_newtable(L);
+    lua_pushstring(L, uname.sysname);
+    lua_setfield(L, -2, "sysname");
+    lua_pushstring(L, uname.release);
+    lua_setfield(L, -2, "release");
+    lua_pushstring(L, uname.version);
+    lua_setfield(L, -2, "version");
+    lua_pushstring(L, uname.machine);
+    lua_setfield(L, -2, "machine");
+    ret = 1;
+  }
+  else
+    ret = luv_error(L, ret);
+  return ret;
+}
+#endif
+

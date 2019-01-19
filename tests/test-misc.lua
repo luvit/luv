@@ -92,4 +92,14 @@ return require('lib/tap')(function (test)
     assert(uv.getpid())
   end)
 
+  test("uv.os_uname", function(print, p, expect, uv)
+    local version = 0x10000 + 25*0x100 + 0
+    if uv.version() >= version then
+      local uname = assert(uv.os_uname())
+      p(uname)
+    else
+      print("skipped")
+    end
+  end)
+
 end)
