@@ -400,7 +400,11 @@ static int luv_os_unsetenv(lua_State* L) {
 }
 
 static int luv_os_gethostname(lua_State* L) {
+#if LUV_UV_VERSION_GEQ(1, 26, 0)
+  char hostname[UV_MAXHOSTNAMESIZE];
+#else
   char hostname[PATH_MAX];
+#endif
   size_t size = sizeof(hostname);
   int ret = uv_os_gethostname(hostname, &size);
   if (ret == 0) {

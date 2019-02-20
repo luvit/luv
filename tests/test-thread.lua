@@ -44,4 +44,26 @@ return require('lib/tap')(function (test)
     assert(elapsed >= delay, "elapsed should be at least delay ")
   end)
 
+  test("test thread create with options table", function(print, p, expect, uv)
+    local delay = 1000
+    local before = os.time()
+    local args = {delay, 'string', nil, false, 5, "helloworld"}
+    local unpack = unpack or table.unpack
+    uv.new_thread({stack_size=0}, function(delay,s,null,bool,five,hw)
+      assert(type(delay) == "number")
+      assert(type(s) == "string")
+      assert(null == nil)
+      assert(bool == false)
+      assert(five == 5)
+      assert(hw == 'helloworld')
+      require('luv').sleep(delay)
+    end, unpack(args)):join()
+    local elapsed = (os.time() - before) * 1000
+    p({
+      delay = delay,
+      elapsed = elapsed
+    })
+    assert(elapsed >= 1000, "elapsed should be at least delay ")
+  end)
+
 end)
