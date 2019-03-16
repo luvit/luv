@@ -171,25 +171,63 @@ static void luv_udp_send_cb(uv_udp_send_t* req, int status) {
   req->data = NULL;
 }
 
+static struct sockaddr* luv_check_addr(lua_State *L, struct sockaddr_storage* addr, int hostidx, int portidx) {
+  const char* host;
+  int port;
+#if LUV_UV_VERSION_GEQ(1, 27, 0)
+  int host_type, port_type;
+  host_type = lua_type(L, hostidx);
+  port_type = lua_type(L, portidx);
+  if (host_type == LUA_TNIL && port_type == LUA_TNIL) {
+    return NULL;
+  }
+  host = lua_tostring(L, hostidx);
+  port = lua_tointeger(L, portidx);
+  if (host_type == LUA_TSTRING && port_type == LUA_TNUMBER) {
+    if (uv_ip4_addr(host, port, (struct sockaddr_in*)addr) &&
+        uv_ip6_addr(host, port, (struct sockaddr_in6*)addr)) {
+      luaL_error(L, "Invalid IP address or port [%s:%d]", host, port);
+      return NULL;
+    }
+    return (struct sockaddr*)addr;
+  }
+  else {
+    if (host_type == LUA_TNIL || port_type == LUA_TNIL) {
+      luaL_argerror(L, host_type == LUA_TNIL ? portidx : hostidx,
+        "Both host and port must be nil if one is nil");
+    }
+    luaL_argcheck(L, host_type == LUA_TNIL || host_type == LUA_TSTRING, hostidx,
+      "Host must be string or nil");
+    luaL_argcheck(L, port_type == LUA_TNIL || port_type == LUA_TNUMBER, portidx,
+      "Port must be number or nil");
+  }
+#else
+  host = luaL_checkstring(L, hostidx);
+  port = luaL_checkinteger(L, portidx);
+  if (uv_ip4_addr(host, port, (struct sockaddr_in*)addr) &&
+      uv_ip6_addr(host, port, (struct sockaddr_in6*)addr)) {
+    luaL_error(L, "Invalid IP address or port [%s:%d]", host, port);
+    return NULL;
+  }
+  return (struct sockaddr*)addr;
+#endif
+}
+
 static int luv_udp_send(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   uv_udp_send_t* req;
   uv_buf_t buf;
-  int ret, port, ref;
-  const char* host;
+  int ret, ref;
   struct sockaddr_storage addr;
+  struct sockaddr* addr_ptr;
+
   luv_check_buf(L, 2, &buf);
-  host = luaL_checkstring(L, 3);
-  port = luaL_checkinteger(L, 4);
-  if (uv_ip4_addr(host, port, (struct sockaddr_in*)&addr) &&
-      uv_ip6_addr(host, port, (struct sockaddr_in6*)&addr)) {
-    return luaL_error(L, "Invalid IP address or port [%s:%d]", host, port);
-  }
+  addr_ptr = luv_check_addr(L, &addr, 3, 4);
   ref = luv_check_continuation(L, 5);
   req = (uv_udp_send_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ref);
 
-  ret = uv_udp_send(req, handle, &buf, 1, (struct sockaddr*)&addr, luv_udp_send_cb);
+  ret = uv_udp_send(req, handle, &buf, 1, addr_ptr, luv_udp_send_cb);
   if (ret < 0) {
     luv_cleanup_req(L, (luv_req_t*)req->data);
     lua_pop(L, 1);
@@ -200,24 +238,19 @@ static int luv_udp_send(lua_State* L) {
   ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
   lua_pop(L, 1);
 
+  lua_pushinteger(L, ret);
   return 1;
-
 }
 
 static int luv_udp_try_send(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   uv_buf_t buf;
-  int ret, port;
-  const char* host;
+  int ret;
   struct sockaddr_storage addr;
+  struct sockaddr* addr_ptr;
   luv_check_buf(L, 2, &buf);
-  host = luaL_checkstring(L, 3);
-  port = luaL_checkinteger(L, 4);
-  if (uv_ip4_addr(host, port, (struct sockaddr_in*)&addr) &&
-      uv_ip6_addr(host, port, (struct sockaddr_in6*)&addr)) {
-    return luaL_error(L, "Invalid IP address or port [%s:%d]", host, port);
-  }
-  ret = uv_udp_try_send(handle, &buf, 1, (struct sockaddr*)&addr);
+  addr_ptr = luv_check_addr(L, &addr, 3, 4);
+  ret = uv_udp_try_send(handle, &buf, 1, addr_ptr);
   if (ret < 0) return luv_error(L, ret);
   lua_pushinteger(L, ret);
   return 1;
@@ -290,3 +323,25 @@ static int luv_udp_recv_stop(lua_State* L) {
   lua_pushinteger(L, ret);
   return 1;
 }
+
+#if LUV_UV_VERSION_GEQ(1, 27, 0)
+static int luv_udp_connect(lua_State* L) {
+  uv_udp_t* handle = luv_check_udp(L, 1);
+  struct sockaddr_storage addr;
+  struct sockaddr* addr_ptr = luv_check_addr(L, &addr, 2, 3);
+  int ret = uv_udp_connect(handle, addr_ptr);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}
+
+static int luv_udp_getpeername(lua_State* L) {
+  uv_udp_t* handle = luv_check_udp(L, 1);
+  struct sockaddr_storage address;
+  int addrlen = sizeof(address);
+  int ret = uv_udp_getpeername(handle, (struct sockaddr*)&address, &addrlen);
+  if (ret < 0) return luv_error(L, ret);
+  parse_sockaddr(L, &address);
+  return 1;
+}
+#endif
