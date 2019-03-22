@@ -179,6 +179,10 @@ static const luaL_Reg luv_functions[] = {
   {"udp_try_send", luv_udp_try_send},
   {"udp_recv_start", luv_udp_recv_start},
   {"udp_recv_stop", luv_udp_recv_stop},
+#if LUV_UV_VERSION_GEQ(1, 27, 0)
+  {"udp_connect", luv_udp_connect},
+  {"udp_getpeername", luv_udp_getpeername},
+#endif
 
   // fs_event.c
   {"new_fs_event", luv_new_fs_event},
@@ -436,6 +440,10 @@ static const luaL_Reg luv_udp_methods[] = {
   {"try_send", luv_udp_try_send},
   {"recv_start", luv_udp_recv_start},
   {"recv_stop", luv_udp_recv_stop},
+#if LUV_UV_VERSION_GEQ(1, 27, 0)
+  {"connect", luv_udp_connect},
+  {"getpeername", luv_udp_getpeername},
+#endif
   {NULL, NULL}
 };
 
