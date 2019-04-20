@@ -516,3 +516,24 @@ static int luv_os_uname(lua_State* L) {
 }
 #endif
 
+#if LUV_UV_VERSION_GEQ(1, 28, 0)
+static int luv_gettimeofday(lua_State* L) {
+  uv_timeval64_t tv = { 0 };
+
+  int ret = uv_gettimeofday(&tv);
+  if (ret == 0)
+  {
+#if defined(__LP64__)
+    lua_pushinteger(L, tv.tv_sec);
+#else
+    lua_pushnumber(L, tv.tv_sec);
+#endif
+    lua_pushinteger(L, tv.tv_usec);
+    return 2;
+  }
+  else
+    ret = luv_error(L, ret);
+  return ret;
+}
+#endif
+

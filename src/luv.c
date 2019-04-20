@@ -287,6 +287,9 @@ static const luaL_Reg luv_functions[] = {
 #if LUV_UV_VERSION_GEQ(1, 25, 0)
   {"os_uname", luv_os_uname},
 #endif
+#if LUV_UV_VERSION_GEQ(1, 28, 0)
+  {"gettimeofday", luv_gettimeofday},
+#endif
 
   // thread.c
   {"new_thread", luv_new_thread},
