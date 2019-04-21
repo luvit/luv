@@ -95,6 +95,33 @@ static void luv_push_stats_table(lua_State* L, const uv_stat_t* s) {
   }
 }
 
+static int luv_push_dirent(lua_State* L, const uv_dirent_t* ent, int table) {
+  const char* type;
+  if (table) {
+    lua_newtable(L);
+  }
+  lua_pushstring(L, ent->name);
+  if (table) {
+    lua_setfield(L, -2, "name");
+  }
+  switch (ent->type) {
+    case UV_DIRENT_UNKNOWN: return 1;
+    case UV_DIRENT_FILE:    type = "file"; break;
+    case UV_DIRENT_DIR:     type = "directory"; break;
+    case UV_DIRENT_LINK:    type = "link"; break;
+    case UV_DIRENT_FIFO:    type = "fifo"; break;
+    case UV_DIRENT_SOCKET:  type = "socket"; break;
+    case UV_DIRENT_CHAR:    type = "char"; break;
+    case UV_DIRENT_BLOCK:   type = "block"; break;
+    default:                type = "unknown"; break;
+  }
+  lua_pushstring(L, type);
+  if (table)
+    lua_setfield(L, -2, "type");
+
+  return table ? 1 : 2;
+}
+
 static int luv_check_flags(lua_State* L, int index) {
   const char* string;
   if (lua_isnumber(L, index)) {
@@ -233,6 +260,45 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
       lua_rawgeti(L, LUA_REGISTRYINDEX, data->req_ref);
       return 1;
 
+#if LUV_UV_VERSION_GEQ(1, 28, 0)
+    case UV_FS_OPENDIR:
+    {
+      int nentries;
+      uv_dir_t* dir = (uv_dir_t*)req->ptr;
+
+      lua_rawgeti(L, LUA_REGISTRYINDEX, data->data_ref);
+      nentries = luaL_checkinteger(L, -1);
+      lua_pop(L, 1);
+      luaL_unref(L, LUA_REGISTRYINDEX, data->data_ref);
+      data->data_ref = LUA_NOREF;
+
+      dir->dirents = malloc(sizeof(uv_dirent_t)*nentries);
+      dir->nentries = nentries;
+
+      lua_rawgeti(L, LUA_REGISTRYINDEX, data->req_ref);
+      return 1;
+    }
+    case UV_FS_READDIR:
+    {
+      if(req->result > 0) {
+        size_t i;
+        uv_dir_t *dir = (uv_dir_t*)req->ptr;
+        lua_newtable(L);
+        for(i=0; i<req->result; i++)
+        {
+          luv_push_dirent(L, dir->dirents+i, 1);
+          lua_rawseti(L, -2, i+1);
+        }
+      } else
+        lua_pushnil(L);
+
+      return 1;
+    }
+    case UV_FS_CLOSEDIR:
+      lua_pushboolean(L, 1);
+      return 1;
+#endif
+
     default:
       lua_pushnil(L);
       lua_pushfstring(L, "UNKNOWN FS TYPE %d\n", req->fs_type);
@@ -240,6 +306,23 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
   }
 
 }
+
+#if LUV_UV_VERSION_GEQ(1, 28, 0)
+#define LUV_FS_CLEANUP_REQ                      \
+  if (req->fs_type != UV_FS_SCANDIR &&          \
+      req->fs_type != UV_FS_OPENDIR) {          \
+    luv_cleanup_req(L, (luv_req_t*)req->data);  \
+    req->data = NULL;                           \
+    uv_fs_req_cleanup(req);                     \
+  }
+#else
+#define LUV_FS_CLEANUP_REQ                      \
+  if (req->fs_type != UV_FS_SCANDIR) {          \
+    luv_cleanup_req(L, (luv_req_t*)req->data);  \
+    req->data = NULL;                           \
+    uv_fs_req_cleanup(req);                     \
+  }
+#endif
 
 static void luv_fs_cb(uv_fs_t* req) {
   lua_State* L = luv_state(req->loop);
@@ -257,40 +340,36 @@ static void luv_fs_cb(uv_fs_t* req) {
     nargs++;
   }
   luv_fulfill_req(L, (luv_req_t*)req->data, nargs);
-  if (req->fs_type != UV_FS_SCANDIR) {
-    luv_cleanup_req(L, (luv_req_t*)req->data);
-    req->data = NULL;
-    uv_fs_req_cleanup(req);
-  }
+  LUV_FS_CLEANUP_REQ
 }
 
 #define FS_CALL(func, req, ...) {                         \
   int ret, sync;                                          \
-  luv_req_t* data = (luv_req_t*)req->data;                            \
+  luv_req_t* data = (luv_req_t*)req->data;                \
   sync = data->callback_ref == LUA_NOREF;                 \
   ret = uv_fs_##func(luv_loop(L), req, __VA_ARGS__,       \
                      sync ? NULL : luv_fs_cb);            \
   if (req->fs_type != UV_FS_ACCESS && ret < 0) {          \
     lua_pushnil(L);                                       \
     if (req->path) {                                      \
-      lua_pushfstring(L, "%s: %s: %s", uv_err_name(req->result), uv_strerror(req->result), req->path); \
+      lua_pushfstring(L, "%s: %s: %s",                    \
+          uv_err_name(req->result),                       \
+          uv_strerror(req->result), req->path);           \
     }                                                     \
     else {                                                \
-      lua_pushfstring(L, "%s: %s", uv_err_name(req->result), uv_strerror(req->result)); \
+      lua_pushfstring(L, "%s: %s",                        \
+          uv_err_name(req->result),                       \
+          uv_strerror(req->result));                      \
     }                                                     \
     lua_pushstring(L, uv_err_name(req->result));          \
-    luv_cleanup_req(L, (luv_req_t*)req->data);                        \
+    luv_cleanup_req(L, (luv_req_t*)req->data);            \
     req->data = NULL;                                     \
     uv_fs_req_cleanup(req);                               \
     return 3;                                             \
   }                                                       \
   if (sync) {                                             \
     int nargs = push_fs_result(L, req);                   \
-    if (req->fs_type != UV_FS_SCANDIR) {                  \
-      luv_cleanup_req(L, (luv_req_t*)req->data);                      \
-      req->data = NULL;                                   \
-      uv_fs_req_cleanup(req);                             \
-    }                                                     \
+    LUV_FS_CLEANUP_REQ                                    \
     return nargs;                                         \
   }                                                       \
   lua_rawgeti(L, LUA_REGISTRYINDEX, data->req_ref);       \
@@ -409,7 +488,6 @@ static int luv_fs_scandir_next(lua_State* L) {
   uv_fs_t* req = luv_check_fs(L, 1);
   uv_dirent_t ent;
   int ret = uv_fs_scandir_next(req, &ent);
-  const char* type;
   if (ret == UV_EOF) {
     luv_cleanup_req(L, (luv_req_t*)req->data);
     req->data = NULL;
@@ -417,20 +495,7 @@ static int luv_fs_scandir_next(lua_State* L) {
     return 0;
   }
   if (ret < 0) return luv_error(L, ret);
-  lua_pushstring(L, ent.name);
-  switch (ent.type) {
-    case UV_DIRENT_UNKNOWN: return 1;
-    case UV_DIRENT_FILE:    type = "file"; break;
-    case UV_DIRENT_DIR:     type = "directory"; break;
-    case UV_DIRENT_LINK:    type = "link"; break;
-    case UV_DIRENT_FIFO:    type = "fifo"; break;
-    case UV_DIRENT_SOCKET:  type = "socket"; break;
-    case UV_DIRENT_CHAR:    type = "char"; break;
-    case UV_DIRENT_BLOCK:   type = "block"; break;
-    default:                type = "unknown"; break;
-  }
-  lua_pushstring(L, type);
-  return 2;
+  return luv_push_dirent(L, &ent, 0);
 }
 
 static int luv_fs_stat(lua_State* L) {
@@ -642,3 +707,50 @@ static int luv_fs_copyfile(lua_State*L) {
   FS_CALL(copyfile, req, path, new_path, flags);
 }
 #endif
+
+#if LUV_UV_VERSION_GEQ(1, 28, 0)
+static uv_dir_t* luv_check_dir(lua_State* L, int idx) {
+  uv_fs_t* req = (uv_fs_t*)luaL_checkudata(L, idx, "uv_req");
+  luaL_argcheck(L, req->fs_type == UV_FS_OPENDIR, idx,
+      "Expected uv_fs_t returned by fs_opendir");
+  return (uv_dir_t*)req->ptr;
+}
+
+static int luv_fs_opendir(lua_State* L) {
+  const char* path = luaL_checkstring(L, 1);
+  int ref = luv_check_continuation(L, 2);
+  size_t nentries = luaL_optinteger(L, 3, 1);
+  uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
+  req->data = luv_setup_req(L, ref);
+
+  //make data_ref to nentries
+  lua_pushinteger(L, nentries);
+  ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+  FS_CALL(opendir, req, path);
+}
+
+static int luv_fs_readdir(lua_State* L) {
+  uv_fs_t *req;
+  uv_dir_t* dir = luv_check_dir(L, 1);
+  int ref = luv_check_continuation(L, 2);
+
+  req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
+  req->data = luv_setup_req(L, ref);
+  FS_CALL(readdir, req, dir);
+}
+
+static int luv_fs_closedir(lua_State* L) {
+  uv_dir_t* dir = luv_check_dir(L, 1);
+  int ref = luv_check_continuation(L, 2);
+  uv_fs_t *req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
+  if(dir->dirents != NULL) {
+    free(dir->dirents);
+    dir->dirents = NULL;
+  }
+  dir->nentries = 0;
+  req->data = luv_setup_req(L, ref);
+  FS_CALL(closedir, req, dir);
+}
+#endif
+

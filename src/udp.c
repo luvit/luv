@@ -200,6 +200,7 @@ static struct sockaddr* luv_check_addr(lua_State *L, struct sockaddr_storage* ad
       "Host must be string or nil");
     luaL_argcheck(L, port_type == LUA_TNIL || port_type == LUA_TNUMBER, portidx,
       "Port must be number or nil");
+    return NULL;
   }
 #else
   host = luaL_checkstring(L, hostidx);

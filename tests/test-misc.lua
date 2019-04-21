@@ -102,4 +102,19 @@ return require('lib/tap')(function (test)
     end
   end)
 
+  test("uv.gettimeofday", function(print, p, expect, uv)
+    local version = 0x10000 + 28*0x100 + 0
+    if uv.version() >= version then
+      local now = os.time()
+      local sec, usec = assert(uv.gettimeofday())
+      print('        os.time', now)
+      print('uv.gettimeofday',string.format("%f",sec+usec/10^9))
+      assert(sec >= now)
+      assert(type(sec)=='number')
+      assert(type(usec)=='number')
+    else
+      print("skipped")
+    end
+  end)
+
 end)

@@ -229,6 +229,11 @@ static const luaL_Reg luv_functions[] = {
 #if LUV_UV_VERSION_GEQ(1, 14, 0)
   {"fs_copyfile", luv_fs_copyfile },
 #endif
+#if LUV_UV_VERSION_GEQ(1, 28, 0)
+  {"fs_opendir", luv_fs_opendir},
+  {"fs_readdir", luv_fs_readdir},
+  {"fs_closedir", luv_fs_closedir},
+#endif
 
   // dns.c
   {"getaddrinfo", luv_getaddrinfo},
@@ -286,6 +291,9 @@ static const luaL_Reg luv_functions[] = {
 #endif
 #if LUV_UV_VERSION_GEQ(1, 25, 0)
   {"os_uname", luv_os_uname},
+#endif
+#if LUV_UV_VERSION_GEQ(1, 28, 0)
+  {"gettimeofday", luv_gettimeofday},
 #endif
 
   // thread.c

@@ -98,4 +98,59 @@ return require('lib/tap')(function (test)
     assert(uv.fs_unlink(path2))
   end)
 
+  test("fs.{open,read,close}dir sync one entry", function(print, p, expect, uv)
+    local version = 0x10000 + 28*0x100 + 0
+    if uv.version() >= version then
+      local dir = assert(uv.fs_opendir('.'))
+      repeat
+        local dirent = uv.fs_readdir(dir)
+        if dirent then
+          assert(#dirent==1)
+          p(dirent)
+        end
+      until not dirent
+      assert(uv.fs_closedir(dir)==true)
+    else
+      print("skipped")
+    end
+  end)
+
+  test("fs.{open,read,close}dir sync more entry", function(print, p, expect, uv)
+    local version = 0x10000 + 28*0x100 + 0
+    if uv.version() >= version then
+      local dir = assert(uv.fs_opendir('.', nil, 50))
+      repeat
+        local dirent = uv.fs_readdir(dir)
+        if dirent then p(dirent) end
+      until not dirent
+      assert(uv.fs_closedir(dir)==true)
+    else
+      print("skipped")
+    end
+  end)
+
+  test("fs.{open,read,close}dir with more entry", function(print, p, expect, uv)
+    local version = 0x10000 + 28*0x100 + 0
+    if uv.version() >= version then
+
+      local function opendir_cb(err, dir)
+        assert(not err)
+        local function readdir_cb(err, dirs)
+          assert(not err)
+          if dirs then
+            p(dirs)
+            uv.fs_readdir(dir, readdir_cb)
+          else
+            assert(uv.fs_closedir(dir)==true)
+          end
+        end
+
+        uv.fs_readdir(dir, readdir_cb)
+      end
+
+      assert(uv.fs_opendir('.', opendir_cb, 50))
+    else
+      print("skipped")
+    end
+  end)
 end)
