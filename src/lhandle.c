@@ -86,7 +86,7 @@ static void luv_check_callback(lua_State* L, luv_handle_t* data, luv_callback_id
   data->callbacks[id] = luaL_ref(L, LUA_REGISTRYINDEX);
 }
 
-static int traceback (lua_State *L) {
+static int traceback (lua_State* L) {
   if (!lua_isstring(L, 1))  /* 'message' not a string? */
     return 1;  /* keep it intact */
   lua_pushglobaltable(L);

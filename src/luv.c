@@ -528,7 +528,7 @@ static void walk_cb(uv_handle_t *handle, void *arg)
   }
 }
 
-static int loop_gc(lua_State *L) {
+static int loop_gc(lua_State* L) {
   uv_loop_t* loop = luv_loop(L);
   // Call uv_close on every active handle
   uv_walk(loop, walk_cb, NULL);
@@ -539,7 +539,7 @@ static int loop_gc(lua_State *L) {
   return 0;
 }
 
-LUALIB_API int luaopen_luv (lua_State *L) {
+LUALIB_API int luaopen_luv (lua_State* L) {
 
   uv_loop_t* loop;
   int ret;

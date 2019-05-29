@@ -42,7 +42,7 @@ static luv_work_ctx_t* luv_check_work_ctx(lua_State* L, int index)
   return ctx;
 }
 
-static int luv_work_ctx_gc(lua_State *L)
+static int luv_work_ctx_gc(lua_State* L)
 {
   luv_work_ctx_t* ctx = luv_check_work_ctx(L, 1);
   free(ctx->code);
@@ -65,7 +65,7 @@ static void luv_work_cb(uv_work_t* req)
 
   luv_work_t* work = (luv_work_t*)req->data;
   luv_work_ctx_t* ctx = work->ctx;
-  lua_State *L = (lua_State *)uv_key_get(&L_key);
+  lua_State* L = (lua_State*)uv_key_get(&L_key);
 
   if (L == NULL) {
     /* vm reuse in threadpool */
@@ -144,7 +144,7 @@ static void luv_work_cb(uv_work_t* req)
 static void luv_after_work_cb(uv_work_t* req, int status) {
   luv_work_t* work = (luv_work_t*)req->data;
   luv_work_ctx_t* ctx = work->ctx;
-  lua_State*L = ctx->L;
+  lua_State* L = ctx->L;
   int i, errfunc, ret;
   (void)status;
 

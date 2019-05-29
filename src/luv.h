@@ -68,7 +68,7 @@ LUALIB_API uv_loop_t* luv_loop(lua_State* L);
    This can be called multiple times in a process as long
    as you use a different lua_State and thread for each.
 */
-LUALIB_API int luaopen_luv (lua_State *L);
+LUALIB_API int luaopen_luv (lua_State* L);
 
 #include "util.h"
 #include "lhandle.h"
@@ -77,7 +77,7 @@ LUALIB_API int luaopen_luv (lua_State *L);
 /* From stream.c */
 static uv_stream_t* luv_check_stream(lua_State* L, int index);
 static void luv_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);
-static void luv_check_buf(lua_State *L, int idx, uv_buf_t *pbuf);
+static void luv_check_buf(lua_State* L, int idx, uv_buf_t *pbuf);
 static uv_buf_t* luv_prep_bufs(lua_State* L, int index, size_t *count);
 
 /* from tcp.c */

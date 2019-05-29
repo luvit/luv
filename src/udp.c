@@ -171,7 +171,7 @@ static void luv_udp_send_cb(uv_udp_send_t* req, int status) {
   req->data = NULL;
 }
 
-static struct sockaddr* luv_check_addr(lua_State *L, struct sockaddr_storage* addr, int hostidx, int portidx) {
+static struct sockaddr* luv_check_addr(lua_State* L, struct sockaddr_storage* addr, int hostidx, int portidx) {
   const char* host;
   int port;
 #if LUV_UV_VERSION_GEQ(1, 27, 0)

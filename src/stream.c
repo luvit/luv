@@ -16,7 +16,7 @@
  */
 #include "luv.h"
 
-static void luv_check_buf(lua_State *L, int idx, uv_buf_t *pbuf) {
+static void luv_check_buf(lua_State* L, int idx, uv_buf_t *pbuf) {
     size_t len;
     pbuf->base = (char*)luaL_checklstring(L, idx, &len);
     pbuf->len = len;

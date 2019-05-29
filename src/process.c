@@ -38,7 +38,7 @@ static void exit_cb(uv_process_t* handle, int64_t exit_status, int term_signal) 
 }
 
 static void luv_spawn_close_cb(uv_handle_t* handle) {
-  lua_State *L = luv_state(handle->loop);
+  lua_State* L = luv_state(handle->loop);
   luv_unref_handle(L, (luv_handle_t*)handle->data);
 }
 

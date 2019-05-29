@@ -257,7 +257,7 @@ static void luv_thread_cb(void* varg) {
   //push lua function, thread entry
   if (luaL_loadbuffer(L, thd->code, thd->len, "=thread") == 0) {
     int i, ret;
-    
+
     //push parameter for real thread function
     i = luv_thread_arg_push(L, &thd->arg, LUVF_THREAD_UHANDLE);
     assert(i == thd->arg.argc);
