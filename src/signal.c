@@ -34,8 +34,8 @@ static int luv_new_signal(lua_State* L) {
 }
 
 static void luv_signal_cb(uv_signal_t* handle, int signum) {
-  lua_State* L = luv_state(handle->loop);
   luv_handle_t* data = (luv_handle_t*)handle->data;
+  lua_State* L = data->L;
   lua_pushstring(L, luv_sig_num_to_string(signum));
   luv_call_callback(L, data, LUV_SIGNAL, 1);
 }

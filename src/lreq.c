@@ -41,6 +41,7 @@ static luv_req_t* luv_setup_req(lua_State* L, int callback_ref) {
   data->req_ref = luaL_ref(L, LUA_REGISTRYINDEX);
   data->callback_ref = callback_ref;
   data->data_ref = LUA_NOREF;
+  data->L = L;
   data->data = NULL;
 
   return data;
