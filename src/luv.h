@@ -54,21 +54,28 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
 #endif
+
 /* There is a 1-1 relation between a lua_State and a uv_loop_t
    These helpers will give you one if you have the other
    These are exposed for extensions built with luv
    This allows luv to be used in multithreaded applications.
 */
 LUALIB_API lua_State* luv_state(uv_loop_t* loop);
-/* All libuv callbacks will lua_call directly from this root-per-thread state
-*/
+
+/* All libuv callbacks will lua_call directly from this root-per-thread state */
 LUALIB_API uv_loop_t* luv_loop(lua_State* L);
+
+/* Set an extern uv_loop_t in a lua_State
+   This must be called before luaopen_luv, luaopen_luv don't init an inner loop
+   When loop is NULL, will clear previous extern loop
+*/
+LUALIB_API void luv_set_loop(lua_State* L, uv_loop_t* loop);
 
 /* This is the main hook to load the library.
    This can be called multiple times in a process as long
    as you use a different lua_State and thread for each.
 */
-LUALIB_API int luaopen_luv (lua_State *L);
+LUALIB_API int luaopen_luv (lua_State* L);
 
 #include "util.h"
 #include "lhandle.h"
@@ -77,7 +84,7 @@ LUALIB_API int luaopen_luv (lua_State *L);
 /* From stream.c */
 static uv_stream_t* luv_check_stream(lua_State* L, int index);
 static void luv_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);
-static void luv_check_buf(lua_State *L, int idx, uv_buf_t *pbuf);
+static void luv_check_buf(lua_State* L, int idx, uv_buf_t *pbuf);
 static uv_buf_t* luv_prep_bufs(lua_State* L, int index, size_t *count);
 
 /* from tcp.c */

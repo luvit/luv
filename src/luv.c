@@ -510,14 +510,34 @@ LUALIB_API lua_State* luv_state(uv_loop_t* loop) {
   return (lua_State*)loop->data;
 }
 
-// TODO: find out if storing this somehow in an upvalue is faster
+static const char* luv_loop_key = "uv_loop";
+
 LUALIB_API uv_loop_t* luv_loop(lua_State* L) {
   uv_loop_t* loop;
-  lua_pushstring(L, "uv_loop");
+  lua_pushlightuserdata(L, (void*)luv_loop_key);
   lua_rawget(L, LUA_REGISTRYINDEX);
-  loop = (uv_loop_t*)lua_touserdata(L, -1);
+  if (lua_isnil(L, -1))
+    loop = NULL;
+  else
+    loop = *(uv_loop_t**)lua_touserdata(L, -1);
   lua_pop(L, 1);
   return loop;
+}
+
+LUALIB_API void luv_set_loop(lua_State* L, uv_loop_t* loop) {
+  if (loop==NULL) {
+    lua_pushlightuserdata(L, (void*)luv_loop_key);
+    lua_pushnil(L);
+    lua_rawset(L, LUA_REGISTRYINDEX);
+  } else {
+    if (loop->data!=NULL) {
+      luaL_error(L, "uv_loop_t already attach a data");
+    }
+
+    lua_pushlightuserdata(L, (void*)luv_loop_key);
+    *((uv_loop_t**)lua_newuserdata(L, sizeof(uv_loop_t**))) = loop;
+    lua_rawset(L, LUA_REGISTRYINDEX);
+  }
 }
 
 static void walk_cb(uv_handle_t *handle, void *arg)
@@ -528,7 +548,7 @@ static void walk_cb(uv_handle_t *handle, void *arg)
   }
 }
 
-static int loop_gc(lua_State *L) {
+static int loop_gc(lua_State* L) {
   uv_loop_t* loop = luv_loop(L);
   // Call uv_close on every active handle
   uv_walk(loop, walk_cb, NULL);
@@ -539,30 +559,37 @@ static int loop_gc(lua_State *L) {
   return 0;
 }
 
-LUALIB_API int luaopen_luv (lua_State *L) {
+LUALIB_API int luaopen_luv (lua_State* L) {
+  uv_loop_t* loop = luv_loop(L);
 
-  uv_loop_t* loop;
-  int ret;
+  // loop is NULL, luv need to create an inner loop
+  if (loop==NULL) {
+    int ret;
+    void* p;
 
-  // Setup the uv_loop meta table for a proper __gc
-  luaL_newmetatable(L, "uv_loop.meta");
-  lua_pushstring(L, "__gc");
-  lua_pushcfunction(L, loop_gc);
-  lua_settable(L, -3);
+    // Setup the uv_loop meta table for a proper __gc
+    luaL_newmetatable(L, "uv_loop.meta");
+    lua_pushstring(L, "__gc");
+    lua_pushcfunction(L, loop_gc);
+    lua_settable(L, -3);
 
-  loop = (uv_loop_t*)lua_newuserdata(L, sizeof(*loop));
-  ret = uv_loop_init(loop);
-  if (ret < 0) {
-    return luaL_error(L, "%s: %s\n", uv_err_name(ret), uv_strerror(ret));
+    // Push luv_loop_key as key for registry table
+    lua_pushlightuserdata(L, (void*)luv_loop_key);
+    // userdata content is: pointer of loop, and followed by loop
+    p = lua_newuserdata(L, sizeof(uv_loop_t*) + sizeof(uv_loop_t));
+    loop = (uv_loop_t*)((char*)p + sizeof(uv_loop_t*));
+    *((uv_loop_t**)p) = loop;
+    // setup the metatable for __gc
+    luaL_getmetatable(L, "uv_loop.meta");
+    lua_setmetatable(L, -2);
+    // rawset registry
+    lua_rawset(L, LUA_REGISTRYINDEX);
+
+    ret = uv_loop_init(loop);
+    if (ret < 0) {
+      return luaL_error(L, "%s: %s\n", uv_err_name(ret), uv_strerror(ret));
+    }
   }
-  // setup the metatable for __gc
-  luaL_getmetatable(L, "uv_loop.meta");
-  lua_setmetatable(L, -2);
-  // Tell the state how to find the loop.
-  lua_pushstring(L, "uv_loop");
-  lua_insert(L, -2);
-  lua_rawset(L, LUA_REGISTRYINDEX);
-  lua_pop(L, 1);
 
   // Tell the loop how to find the state.
   loop->data = L;
