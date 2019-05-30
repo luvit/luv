@@ -23,6 +23,7 @@ typedef struct {
   int req_ref; /* ref for uv_req_t's userdata */
   int callback_ref; /* ref for callback */
   int data_ref; /* ref for write data */
+  lua_State* L;
   void* data; /* extra data */
 } luv_req_t;
 

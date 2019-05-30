@@ -506,10 +506,6 @@ static void luv_handle_init(lua_State* L) {
   lua_setfield(L, LUA_REGISTRYINDEX, "uv_stream");
 }
 
-LUALIB_API lua_State* luv_state(uv_loop_t* loop) {
-  return (lua_State*)loop->data;
-}
-
 static const char* luv_loop_key = "uv_loop";
 
 LUALIB_API uv_loop_t* luv_loop(lua_State* L) {
@@ -530,10 +526,6 @@ LUALIB_API void luv_set_loop(lua_State* L, uv_loop_t* loop) {
     lua_pushnil(L);
     lua_rawset(L, LUA_REGISTRYINDEX);
   } else {
-    if (loop->data!=NULL) {
-      luaL_error(L, "uv_loop_t already attach a data");
-    }
-
     lua_pushlightuserdata(L, (void*)luv_loop_key);
     *((uv_loop_t**)lua_newuserdata(L, sizeof(uv_loop_t**))) = loop;
     lua_rawset(L, LUA_REGISTRYINDEX);
@@ -590,9 +582,6 @@ LUALIB_API int luaopen_luv (lua_State* L) {
       return luaL_error(L, "%s: %s\n", uv_err_name(ret), uv_strerror(ret));
     }
   }
-
-  // Tell the loop how to find the state.
-  loop->data = L;
 
   luv_req_init(L);
   luv_handle_init(L);
