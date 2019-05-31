@@ -19,6 +19,11 @@
 #include "c-api/compat-5.3.h"
 #endif
 #include "luv.h"
+
+#if defined(__aarch64__)
+#define lua_pushlightuserdata(L, P)  lua_pushinteger((L), (lua_Integer)(P))
+#endif
+
 #include "util.c"
 #include "lhandle.c"
 #include "lreq.c"

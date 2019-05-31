@@ -34,7 +34,7 @@ deps/luajit/src:
 	git submodule update --init deps/luajit
 
 build/Makefile: deps/libuv/include deps/luajit/src
-	cmake -H. -Bbuild ${CMAKE_OPTIONS} 
+	cmake -H. -Bbuild ${CMAKE_OPTIONS}
 
 luv: build/Makefile
 	cmake --build build --config Debug
