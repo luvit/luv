@@ -34,7 +34,7 @@ build = {
     ['luv'] = {
       sources = {'src/luv.c'},
       libraries = {'uv'},
-      incdirs = {"$(LIBUV_INCDIR)","$(LUA_COMPAT52_DIR)","deps/lua-compat-5.3"},
+      incdirs = {"$(LIBUV_INCDIR)","$(LUA_COMPAT53_DIR)","deps/lua-compat-5.3"},
       libdirs = {"$(LIBUV_LIBDIR)"}
     }
   };
