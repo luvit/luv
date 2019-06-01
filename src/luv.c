@@ -567,6 +567,8 @@ static void walk_cb(uv_handle_t *handle, void *arg)
 
 static int loop_gc(lua_State *L) {
   uv_loop_t* loop = luv_loop(L);
+  if (loop==NULL)
+    return 0;
   // Call uv_close on every active handle
   uv_walk(loop, walk_cb, NULL);
   // Run the event loop until all handles are successfully closed

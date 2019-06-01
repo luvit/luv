@@ -19,6 +19,7 @@
 static int luv_loop_close(lua_State* L) {
   int ret = uv_loop_close(luv_loop(L));
   if (ret < 0) return luv_error(L, ret);
+  luv_set_loop(L, NULL);
   lua_pushinteger(L, ret);
   return 1;
 }
