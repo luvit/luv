@@ -40,7 +40,7 @@ build_script:
   - mkdir build\lib
   - cp build\deps\libuv\Release\uv_a.lib build\lib\uv.lib
   - cp -a deps\libuv\include build
-  - ps: luarocks make rockspecs\$(ls rockspecs) LIBUV_DIR=build CFLAGS="/nologo /MT /O2"
+  - ps: luarocks make rockspecs\$(ls rockspecs) LIBUV_DIR=build LUA_COMPAT53_INCDIR=deps/lua-compat-5.3 CFLAGS="/nologo /MT /O2"
   - ps: if("$(Get-Location)" -eq $(lua -e "print(require'luv'.cwd())")) { "LuaRocks test OK" } else { "LuaRocks test failed"; exit 1 }
   - luarocks remove luv
 
