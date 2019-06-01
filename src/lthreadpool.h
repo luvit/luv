@@ -47,10 +47,12 @@ typedef struct {
 #endif
 
 //LUV flags thread support userdata handle
-#define LUVF_THREAD_UHANDLE 1    
+#define LUVF_THREAD_UHANDLE 1
 
+#ifdef LUV_SOURCE
 static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int top, int flags);
 static int luv_thread_arg_push(lua_State* L, const luv_thread_arg_t* args, int flags);
 static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags);
+#endif
 
 #endif //LUV_LTHREADPOOL_H

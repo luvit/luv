@@ -18,6 +18,7 @@
 #if (LUA_VERSION_NUM != 503)
 #include "c-api/compat-5.3.h"
 #endif
+#define LUV_SOURCE
 #include "luv.h"
 #include "util.c"
 #include "lhandle.c"
