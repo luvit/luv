@@ -22,18 +22,20 @@
 #define LUV_THREAD_MAXNUM_ARG 9
 
 typedef struct {
-  /* only support LUA_TNIL, LUA_TBOOLEAN, LUA_TLIGHTUSERDATA, LUA_TNUMBER, LUA_TSTRING*/
+  // support basic lua type LUA_TNIL, LUA_TBOOLEAN, LUA_TNUMBER, LUA_TSTRING
+  // and support uv_handle_t userdata
   int type;
   union
   {
     lua_Number num;
     int boolean;
-    void* userdata;
+    void* userdata;   // luv private scope uv_handle_t
     struct {
       const char* base;
       size_t len;
     } str;
   } val;
+  int ref;            // ref of uv_handle_t
 } luv_val_t;
 
 typedef struct {
@@ -51,7 +53,7 @@ typedef struct {
 
 #ifdef LUV_SOURCE
 static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int top, int flags);
-static int luv_thread_arg_push(lua_State* L, const luv_thread_arg_t* args, int flags);
+static int luv_thread_arg_push(lua_State* L, luv_thread_arg_t* args, int flags);
 static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags);
 #endif
 
