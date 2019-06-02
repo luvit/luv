@@ -109,7 +109,6 @@ return require('lib/tap')(function (test)
       local sec, usec = assert(uv.gettimeofday())
       print('        os.time', now)
       print('uv.gettimeofday',string.format("%f",sec+usec/10^9))
-      assert(sec >= now)
       assert(type(sec)=='number')
       assert(type(usec)=='number')
     else
