@@ -74,9 +74,10 @@ static int luv_is_closing(lua_State* L) {
 }
 
 static void luv_close_cb(uv_handle_t* handle) {
-  lua_State* L = luv_state(handle->loop);
+  lua_State* L;
   luv_handle_t* data = (luv_handle_t*)handle->data;
   if (!data) return;
+  L = data->L;
   luv_call_callback(L, data, LUV_CLOSED, 0);
   luv_unref_handle(L, data);
 }

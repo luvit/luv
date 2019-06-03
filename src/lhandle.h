@@ -42,6 +42,7 @@
 typedef struct {
   int ref;
   int callbacks[2];
+  lua_State* L;
   void* extra;
 } luv_handle_t;
 

@@ -32,7 +32,7 @@ typedef struct {
   luv_work_ctx_t* ctx;
 
   luv_thread_arg_t arg;
-  int ref;
+  int ref;            /* ref to luv_work_ctx_t, which create a new uv_work_t*/
 } luv_work_t;
 
 static uv_key_t L_key;
@@ -129,7 +129,7 @@ static void luv_work_cb(uv_work_t* req)
       break;
     }
   } else {
-    fprintf(stderr, "Uncaught Error: %s can't be work entry\n", 
+    fprintf(stderr, "Uncaught Error: %s can't be work entry\n",
       lua_typename(L, lua_type(L,-1)));
     lua_pop(L, 1);
     luv_thread_arg_clear(NULL, &work->arg, 0);
