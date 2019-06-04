@@ -45,6 +45,7 @@ typedef struct {
   void* extra;
 } luv_handle_t;
 
+#ifdef LUV_SOURCE
 /* Setup the handle at the top of the stack */
 static luv_handle_t* luv_setup_handle(lua_State* L);
 
@@ -69,5 +70,6 @@ static void luv_find_handle(lua_State* L, luv_handle_t* data);
 
 /* Unref the handle from the lua world, allowing it to GC */
 static void luv_unref_handle(lua_State* L, luv_handle_t* data);
+#endif
 
 #endif

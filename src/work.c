@@ -23,7 +23,7 @@ typedef struct {
   size_t len;
 
   uv_async_t async;
-  int async_cb;       /* ref, run in main, call when async message received, NYI */
+  int async_cb;       /* ref, run in main, call when async message received */
   int after_work_cb;  /* ref, run in main ,call after work cb*/
 } luv_work_ctx_t;
 
@@ -32,6 +32,7 @@ typedef struct {
   luv_work_ctx_t* ctx;
 
   luv_thread_arg_t arg;
+  int ref;
 } luv_work_t;
 
 static uv_key_t L_key;
@@ -84,7 +85,7 @@ static void luv_work_cb(uv_work_t* req)
   if (lua_isnil(L, -1))
   {
     lua_pop(L, 1);
-    
+
     lua_pushlstring(L, ctx->code, ctx->len);
     if (luaL_loadbuffer(L, ctx->code, ctx->len, "=pool") != 0)
     {
@@ -172,9 +173,8 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
   lua_pop(L, 1);
 
   //ref down to ctx, up in luv_queue_work()
-  lua_pushlightuserdata(L, work);
-  lua_pushnil(L);
-  lua_rawset(L, LUA_REGISTRYINDEX);
+  luaL_unref(L, LUA_REGISTRYINDEX, work->ref);
+  work->ref = LUA_NOREF;
 
   luv_thread_arg_clear(NULL, &work->arg, 0);
   free(work);
@@ -248,7 +248,7 @@ static int luv_queue_work(lua_State* L) {
   luv_work_t* work = (luv_work_t*)malloc(sizeof(*work));
   int ret;
 
-  luv_thread_arg_set(L, &work->arg, 2, top, 0); //clear in sub threads,luv_work_cb, 
+  luv_thread_arg_set(L, &work->arg, 2, top, 0); //clear in sub threads,luv_work_cb
   work->ctx = ctx;
   work->work.data = work;
   ret = uv_queue_work(luv_loop(L), &work->work, luv_work_cb, luv_after_work_cb);
@@ -257,10 +257,9 @@ static int luv_queue_work(lua_State* L) {
     return luv_error(L, ret);
   }
 
-  //ref up to ctx 
-  lua_pushlightuserdata(L, work);
+  //ref up to ctx
   lua_pushvalue(L, 1);
-  lua_rawset(L, LUA_REGISTRYINDEX);
+  work->ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
   lua_pushboolean(L, 1);
   return 1;
