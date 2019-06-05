@@ -1,6 +1,7 @@
 @echo off
 
-set VS=12
+set VS=14
+if "%configuration%"=="2017" (set VS=15)
 if "%configuration%"=="2015" (set VS=14)
 if "%configuration%"=="2013" (set VS=12)
 
