@@ -508,18 +508,53 @@ static void luv_handle_init(lua_State* L) {
   lua_setfield(L, LUA_REGISTRYINDEX, "uv_stream");
 }
 
-LUALIB_API lua_State* luv_state(uv_loop_t* loop) {
-  return (lua_State*)loop->data;
+// TODO: see if we can avoid using a string key for this to increase performance
+static const char* luv_loop_key = "luv_loop";
+static const char* luv_state_key = "luv_main_thread";
+
+// Get main thread, ensure coroutines works
+// Only called when luv setup uv_handle_t or uv_req_t
+LUALIB_API lua_State* luv_state(lua_State* L) {
+  lua_State* lstate;
+  lua_pushstring(L, luv_state_key);
+  lua_rawget(L, LUA_REGISTRYINDEX);
+  lstate = lua_tothread(L, -1);
+  lua_pop(L, 1);
+  if (lstate==NULL) {
+    luaL_error(L, "cannot get main thread");
+  }
+  return lstate;
 }
 
-// TODO: find out if storing this somehow in an upvalue is faster
+// Called when luv init uv_handle_t
 LUALIB_API uv_loop_t* luv_loop(lua_State* L) {
   uv_loop_t* loop;
-  lua_pushstring(L, "uv_loop");
+  lua_pushstring(L, luv_loop_key);
   lua_rawget(L, LUA_REGISTRYINDEX);
-  loop = (uv_loop_t*)lua_touserdata(L, -1);
+  if (lua_isnil(L, -1))
+    loop = NULL;
+  else
+    loop = *(uv_loop_t**)lua_touserdata(L, -1);
   lua_pop(L, 1);
   return loop;
+}
+
+// Set an extran loop, before luaopen_luv
+LUALIB_API void luv_set_loop(lua_State* L, uv_loop_t* loop) {
+  if (loop==NULL) {
+    lua_pushstring(L, luv_loop_key);
+    lua_pushnil(L);
+    lua_rawset(L, LUA_REGISTRYINDEX);
+  } else {
+    lua_pushstring(L, luv_loop_key);
+    *((uv_loop_t**)lua_newuserdata(L, sizeof(uv_loop_t**))) = loop;
+    lua_rawset(L, LUA_REGISTRYINDEX);
+
+    // Push main thread with luv_state_key in registry table
+    lua_pushstring(L, luv_state_key);
+    lua_pushthread(L);
+    lua_rawset(L, LUA_REGISTRYINDEX);
+  }
 }
 
 static void walk_cb(uv_handle_t *handle, void *arg)
@@ -532,6 +567,8 @@ static void walk_cb(uv_handle_t *handle, void *arg)
 
 static int loop_gc(lua_State *L) {
   uv_loop_t* loop = luv_loop(L);
+  if (loop==NULL)
+    return 0;
   // Call uv_close on every active handle
   uv_walk(loop, walk_cb, NULL);
   // Run the event loop until all handles are successfully closed
@@ -541,33 +578,43 @@ static int loop_gc(lua_State *L) {
   return 0;
 }
 
-LUALIB_API int luaopen_luv (lua_State *L) {
+LUALIB_API int luaopen_luv (lua_State* L) {
+  uv_loop_t* loop = luv_loop(L);
 
-  uv_loop_t* loop;
-  int ret;
+  // loop is NULL, luv need to create an inner loop
+  if (loop==NULL) {
+    int ret;
+    void* p;
 
-  // Setup the uv_loop meta table for a proper __gc
-  luaL_newmetatable(L, "uv_loop.meta");
-  lua_pushstring(L, "__gc");
-  lua_pushcfunction(L, loop_gc);
-  lua_settable(L, -3);
+    // Setup the uv_loop meta table for a proper __gc
+    luaL_newmetatable(L, "uv_loop.meta");
+    lua_pushstring(L, "__gc");
+    lua_pushcfunction(L, loop_gc);
+    lua_settable(L, -3);
+    lua_pop(L, 1);
 
-  loop = (uv_loop_t*)lua_newuserdata(L, sizeof(*loop));
-  ret = uv_loop_init(loop);
-  if (ret < 0) {
-    return luaL_error(L, "%s: %s\n", uv_err_name(ret), uv_strerror(ret));
+    // Push luv_loop_key as key for registry table
+    lua_pushstring(L, luv_loop_key);
+    // userdata content is: pointer of loop, and followed by loop
+    p = lua_newuserdata(L, sizeof(uv_loop_t*) + sizeof(uv_loop_t));
+    loop = (uv_loop_t*)((char*)p + sizeof(uv_loop_t*));
+    *((uv_loop_t**)p) = loop;
+    // setup the metatable for __gc
+    luaL_getmetatable(L, "uv_loop.meta");
+    lua_setmetatable(L, -2);
+    // rawset registry
+    lua_rawset(L, LUA_REGISTRYINDEX);
+
+    // Push main thread with luv_state_key in registry table
+    lua_pushstring(L, luv_state_key);
+    lua_pushthread(L);
+    lua_rawset(L, LUA_REGISTRYINDEX);
+
+    ret = uv_loop_init(loop);
+    if (ret < 0) {
+      return luaL_error(L, "%s: %s\n", uv_err_name(ret), uv_strerror(ret));
+    }
   }
-  // setup the metatable for __gc
-  luaL_getmetatable(L, "uv_loop.meta");
-  lua_setmetatable(L, -2);
-  // Tell the state how to find the loop.
-  lua_pushstring(L, "uv_loop");
-  lua_insert(L, -2);
-  lua_rawset(L, LUA_REGISTRYINDEX);
-  lua_pop(L, 1);
-
-  // Tell the loop how to find the state.
-  loop->data = L;
 
   luv_req_init(L);
   luv_handle_init(L);

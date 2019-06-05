@@ -53,8 +53,8 @@ static const char *const luv_pollevents[] = {
 };
 
 static void luv_poll_cb(uv_poll_t* handle, int status, int events) {
-  lua_State* L = luv_state(handle->loop);
   luv_handle_t* data = (luv_handle_t*)handle->data;
+  lua_State* L = data->L;
   const char* evtstr;
 
   if (status < 0) {

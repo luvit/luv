@@ -17,6 +17,7 @@
 #include "lhandle.h"
 
 static luv_handle_t* luv_setup_handle(lua_State* L) {
+  lua_State* luvL = luv_state(L);
   luv_handle_t* data;
   const uv_handle_t* handle;
   void *udata;
@@ -49,6 +50,7 @@ static luv_handle_t* luv_setup_handle(lua_State* L) {
   data->ref = luaL_ref(L, LUA_REGISTRYINDEX);
   data->callbacks[0] = LUA_NOREF;
   data->callbacks[1] = LUA_NOREF;
+  data->L = luvL;
   data->extra = NULL;
   return data;
 }
