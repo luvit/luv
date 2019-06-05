@@ -64,5 +64,3 @@ print("done")
 
 uv.walk(uv.close)
 uv.run()
-uv.loop_close()
-

@@ -19,4 +19,3 @@ server:listen(128, function (err)
 end)
 
 uv.run('default')
-uv.loop_close()

@@ -11,4 +11,3 @@ end)
 
 print("Idling...")
 uv.run('default')
-uv.loop_close()

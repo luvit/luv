@@ -18,13 +18,11 @@ for i=1,#arg do
                 uv.fs_event_getpath(fse)))
             for k,v in pairs(status) do
                 print(k,v)
-            end                
+            end
             print('file changed:'..(fname and fname or ''))
         end
     end))
-    
+
 end
 
 uv.run('default')
-uv.loop_close()
-

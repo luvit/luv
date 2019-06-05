@@ -19,7 +19,7 @@ uv.fs_open(fname, 'w+', tonumber('644', 8), function(err,fd)
     else
         local fpipe = uv.new_pipe(false)
         uv.pipe_open(fpipe, fd)
-    
+
         uv.read_start(stdin, function(err,chunk)
             if err then
                 print('Read error: '..err)
@@ -32,4 +32,3 @@ uv.fs_open(fname, 'w+', tonumber('644', 8), function(err,fd)
 end)
 
 uv.run('default')
-uv.loop_close()
