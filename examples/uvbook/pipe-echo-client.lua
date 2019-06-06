@@ -21,4 +21,3 @@ end)
 print("CTRL-C to break")
 
 uv.run("default")
-uv.loop_close()

@@ -10,7 +10,7 @@ uv.fs_open(fname, 'r', tonumber('644', 8), function(err,fd)
         local stat = uv.fs_fstat(fd)
         local off = 0
         local block = 10
-        
+
         local function on_read(err,chunk)
             if(err) then
                 print("Read error: "..err);
@@ -34,4 +34,3 @@ end)
 
 
 uv.run('default')
-uv.loop_close()

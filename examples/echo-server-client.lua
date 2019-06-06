@@ -65,4 +65,3 @@ uv.run()
 -- Close any stray handles when done
 uv.walk(uv.close)
 uv.run()
-uv.loop_close()

@@ -81,8 +81,10 @@ each thread has it's own lua state with corresponsding own uv loop.
 
 ### `uv.loop_close()`
 
-Closes all internal loop resources. This function must only be called once the
-loop has finished its execution or it will raise a UV_EBUSY error.
+Closes all internal loop resources. In normal execution, the loop will
+automatically be closed when it is garbage collected by Lua, so it is not
+necessary to explicitly call `loop_close`. This function must only be called
+once the loop has finished its execution or it will raise a UV_EBUSY error.
 
 ### `uv.run([mode])`
 
