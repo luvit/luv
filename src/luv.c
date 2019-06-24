@@ -510,6 +510,7 @@ static void luv_handle_init(lua_State* L) {
 
 // TODO: see if we can avoid using a string key for this to increase performance
 static const char* luv_loop_key = "luv_loop";
+static const char* luv_cb_hook_key = "luv_cb_hook";
 static const char* luv_state_key = "luv_main_thread";
 
 // Get main thread, ensure coroutines works
@@ -553,6 +554,31 @@ LUALIB_API void luv_set_loop(lua_State* L, uv_loop_t* loop) {
     // Push main thread with luv_state_key in registry table
     lua_pushstring(L, luv_state_key);
     lua_pushthread(L);
+    lua_rawset(L, LUA_REGISTRYINDEX);
+  }
+}
+
+static luv_cb_hook_t luv_cb_hook(lua_State* L) {
+  luv_cb_hook_t hook;
+  lua_pushstring(L, luv_cb_hook_key);
+  lua_rawget(L, LUA_REGISTRYINDEX);
+  if (lua_isnil(L, -1))
+    hook = NULL;
+  else
+    hook = *(luv_cb_hook_t*)lua_touserdata(L, -1);
+  lua_pop(L, 1);
+  return hook;
+}
+
+// Set an external event report function.
+LUALIB_API void luv_set_cb_hook(lua_State* L, luv_cb_hook_t hook) {
+  if (hook==NULL) {
+    lua_pushstring(L, luv_cb_hook_key);
+    lua_pushnil(L);
+    lua_rawset(L, LUA_REGISTRYINDEX);
+  } else {
+    lua_pushstring(L, luv_cb_hook_key);
+    *((luv_cb_hook_t*)lua_newuserdata(L, sizeof(luv_cb_hook_t))) = hook;
     lua_rawset(L, LUA_REGISTRYINDEX);
   }
 }

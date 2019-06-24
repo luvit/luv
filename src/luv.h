@@ -69,6 +69,9 @@ LUALIB_API uv_loop_t* luv_loop(lua_State* L);
 */
 LUALIB_API void luv_set_loop(lua_State* L, uv_loop_t* loop);
 
+typedef void (*luv_cb_hook_t)(lua_State *L, int nargs);
+LUALIB_API void luv_set_cb_hook(lua_State* L, luv_cb_hook_t hook);
+
 /* This is the main hook to load the library.
    This can be called multiple times in a process as long
    as you use a different lua_State and thread for each.
@@ -80,6 +83,9 @@ LUALIB_API int luaopen_luv (lua_State *L);
 #include "lreq.h"
 
 #ifdef LUV_SOURCE
+
+static luv_cb_hook_t luv_cb_hook(lua_State* L);
+
 /* From stream.c */
 static uv_stream_t* luv_check_stream(lua_State* L, int index);
 static void luv_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);

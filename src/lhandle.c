@@ -116,15 +116,20 @@ static void luv_call_callback(lua_State* L, luv_handle_t* data, luv_callback_id 
   }
   else {
     int errfunc, ret;
+    luv_cb_hook_t hook = luv_cb_hook(L);
 
-    // Get the traceback function in case of error
-    lua_pushcfunction(L, traceback);
-    errfunc = lua_gettop(L);
-    // And insert it before the args if there are any.
-    if (nargs) {
-      lua_insert(L, -1 - nargs);
-      errfunc -= nargs;
+    if (hook == NULL) {
+      // Get the traceback function in case of error
+      lua_pushcfunction(L, traceback);
+      errfunc = lua_gettop(L);
+
+      // And insert it before the args if there are any.
+      if (nargs) {
+        lua_insert(L, -1 - nargs);
+        errfunc -= nargs;
+      }
     }
+
     // Get the callback
     lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
     // And insert it before the args if there are any.
@@ -132,25 +137,29 @@ static void luv_call_callback(lua_State* L, luv_handle_t* data, luv_callback_id 
       lua_insert(L, -1 - nargs);
     }
 
-    ret = lua_pcall(L, nargs, 0, errfunc);
-    switch (ret) {
-    case 0:
-      break;
-    case LUA_ERRMEM:
-      fprintf(stderr, "System Error: %s\n", lua_tostring(L, -1));
-      exit(-1);
-      break;
-    case LUA_ERRRUN:
-    case LUA_ERRSYNTAX:
-    case LUA_ERRERR:
-    default:
-      fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
-      lua_pop(L, 1);
-      break;
-    }
+    if (hook) {
+      (*hook)(L, nargs);
+    } else {
+      ret = lua_pcall(L, nargs, 0, errfunc);
+      switch (ret) {
+      case 0:
+        break;
+      case LUA_ERRMEM:
+        fprintf(stderr, "System Error: %s\n", lua_tostring(L, -1));
+        exit(-1);
+        break;
+      case LUA_ERRRUN:
+      case LUA_ERRSYNTAX:
+      case LUA_ERRERR:
+      default:
+        fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
+        lua_pop(L, 1);
+        break;
+      }
 
-    // Remove the traceback function
-    lua_pop(L, 1);
+      // Remove the traceback function
+      lua_pop(L, 1);
+    }
   }
 }
 
