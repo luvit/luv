@@ -19,6 +19,11 @@ return require('lib/tap')(function (test)
       socktype = "stream",
       family = "inet",
     }, expect(function (err, res)
+      -- allow failure when offline
+      if err == "EAI_AGAIN" then
+        print(err, "skipping")
+        return
+      end
       assert(not err, err)
       p(res, #res)
       assert(#res > 0)
@@ -32,6 +37,11 @@ return require('lib/tap')(function (test)
         socktype = "stream",
         family = "inet6",
       }, expect(function (err, res)
+        -- allow failure when offline
+        if err == "EAI_AGAIN" then
+          print(err, "skipping")
+          return
+        end
         assert(not err, err)
         p(res, #res)
         assert(#res == 1)
@@ -43,6 +53,11 @@ return require('lib/tap')(function (test)
     assert(uv.getaddrinfo("luvit.io", nil, {
       socktype = "stream",
     }, expect(function (err, res)
+      -- allow failure when offline
+      if err == "EAI_AGAIN" then
+        print(err, "skipping")
+        return
+      end
       assert(not err, err)
       p(res, #res)
       assert(#res > 0)
@@ -51,6 +66,11 @@ return require('lib/tap')(function (test)
 
   test("Get all adresses for luvit.io", function (print, p, expect, uv)
     assert(uv.getaddrinfo("luvit.io", nil, nil, expect(function (err, res)
+      -- allow failure when offline
+      if err == "EAI_AGAIN" then
+        print(err, "skipping")
+        return
+      end
       assert(not err, err)
       p(res, #res)
       assert(#res > 0)
@@ -61,6 +81,11 @@ return require('lib/tap')(function (test)
     assert(uv.getnameinfo({
       family = "inet",
     }, expect(function (err, hostname, service)
+      -- allow failure when offline
+      if err == "EAI_AGAIN" then
+        print(err, "skipping")
+        return
+      end
       p{err=err,hostname=hostname,service=service}
       assert(not err, err)
       assert(hostname)
@@ -69,9 +94,14 @@ return require('lib/tap')(function (test)
   end)
 
   test("Lookup local ipv4 address sync", function (print, p, expect, uv)
-    local hostname, service = assert(uv.getnameinfo({
+    local hostname, service, err = uv.getnameinfo({
       family = "inet",
-    }))
+    })
+    -- allow failure when offline
+    if err == "EAI_AGAIN" then
+      print(err, "skipping")
+      return
+    end
     p{hostname=hostname,service=service}
     assert(hostname)
     assert(service)
