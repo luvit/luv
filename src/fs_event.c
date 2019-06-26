@@ -24,19 +24,20 @@ static uv_fs_event_t* luv_check_fs_event(lua_State* L, int index) {
 }
 
 static int luv_new_fs_event(lua_State* L) {
+  luv_ctx_t* ctx = luv_context(L);
   uv_fs_event_t* handle = (uv_fs_event_t*)luv_newuserdata(L, sizeof(*handle));
-  int ret = uv_fs_event_init(luv_loop(L), handle);
+  int ret = uv_fs_event_init(ctx->loop, handle);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
-  handle->data = luv_setup_handle(L);
+  handle->data = luv_setup_handle(L, ctx);
   return 1;
 }
 
 static void luv_fs_event_cb(uv_fs_event_t* handle, const char* filename, int events, int status) {
   luv_handle_t* data = (luv_handle_t*)handle->data;
-  lua_State* L = data->L;
+  lua_State* L = data->ctx->L;
 
   // err
   luv_status(L, status);

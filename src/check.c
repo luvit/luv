@@ -23,19 +23,20 @@ static uv_check_t* luv_check_check(lua_State* L, int index) {
 }
 
 static int luv_new_check(lua_State* L) {
+  luv_ctx_t* ctx = luv_context(L);
   uv_check_t* handle = (uv_check_t*)luv_newuserdata(L, sizeof(*handle));
-  int ret = uv_check_init(luv_loop(L), handle);
+  int ret = uv_check_init(ctx->loop, handle);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
-  handle->data = luv_setup_handle(L);
+  handle->data = luv_setup_handle(L, ctx);
   return 1;
 }
 
 static void luv_check_cb(uv_check_t* handle) {
   luv_handle_t* data = (luv_handle_t*)handle->data;
-  lua_State* L = data->L;
+  lua_State* L = data->ctx->L;
   luv_call_callback(L, data, LUV_CHECK, 0);
 }
 

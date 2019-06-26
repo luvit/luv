@@ -62,7 +62,7 @@ static void luv_pushaddrinfo(lua_State* L, struct addrinfo* res) {
 
 static void luv_getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res) {
   luv_req_t* data = (luv_req_t*)req->data;
-  lua_State* L = data->L;
+  lua_State* L = data->ctx->L;
   int nargs;
 
   if (status < 0) {
@@ -88,6 +88,7 @@ static int luv_getaddrinfo(lua_State* L) {
   struct addrinfo hints_s;
   struct addrinfo* hints = &hints_s;
   int ret, ref;
+  luv_ctx_t* ctx = luv_context(L);
   if (lua_isnoneornil(L, 1)) node = NULL;
   else node = luaL_checkstring(L, 1);
   if (lua_isnoneornil(L, 2)) service = NULL;
@@ -188,9 +189,9 @@ static int luv_getaddrinfo(lua_State* L) {
 
   ref = luv_check_continuation(L, 4);
   req = (uv_getaddrinfo_t*)lua_newuserdata(L, sizeof(*req));
-  req->data = luv_setup_req(L, ref);
+  req->data = luv_setup_req(L, ctx, ref);
 
-  ret = uv_getaddrinfo(luv_loop(L), req, ref == LUA_NOREF ? NULL : luv_getaddrinfo_cb, node, service, hints);
+  ret = uv_getaddrinfo(ctx->loop, req, ref == LUA_NOREF ? NULL : luv_getaddrinfo_cb, node, service, hints);
   if (ret < 0) {
     luv_cleanup_req(L, (luv_req_t*)req->data);
     lua_pop(L, 1);
@@ -208,7 +209,7 @@ static int luv_getaddrinfo(lua_State* L) {
 
 static void luv_getnameinfo_cb(uv_getnameinfo_t* req, int status, const char* hostname, const char* service) {
   luv_req_t* data = (luv_req_t*)req->data;
-  lua_State* L = data->L;
+  lua_State* L = data->ctx->L;
   int nargs;
 
   if (status < 0) {
@@ -233,6 +234,7 @@ static int luv_getnameinfo(lua_State* L) {
   const char* ip = NULL;
   int flags = 0;
   int ret, ref, port = 0;
+  luv_ctx_t* ctx = luv_context(L);
 
   luaL_checktype(L, 1, LUA_TTABLE);
   memset(&addr, 0, sizeof(addr));
@@ -283,9 +285,9 @@ static int luv_getnameinfo(lua_State* L) {
   ref = luv_check_continuation(L, 2);
 
   req = (uv_getnameinfo_t*)lua_newuserdata(L, sizeof(*req));
-  req->data = luv_setup_req(L, ref);
+  req->data = luv_setup_req(L, ctx, ref);
 
-  ret = uv_getnameinfo(luv_loop(L), req, ref == LUA_NOREF ? NULL : luv_getnameinfo_cb, (struct sockaddr*)&addr, flags);
+  ret = uv_getnameinfo(ctx->loop, req, ref == LUA_NOREF ? NULL : luv_getnameinfo_cb, (struct sockaddr*)&addr, flags);
   if (ret < 0) {
     luv_cleanup_req(L, (luv_req_t*)req->data);
     lua_pop(L, 1);

@@ -23,19 +23,20 @@ static uv_udp_t* luv_check_udp(lua_State* L, int index) {
 }
 
 static int luv_new_udp(lua_State* L) {
+  luv_ctx_t* ctx = luv_context(L);
   uv_udp_t* handle = (uv_udp_t*)luv_newuserdata(L, sizeof(*handle));
   int ret;
   if (lua_isnoneornil(L, 1)) {
-    ret = uv_udp_init(luv_loop(L), handle);
+    ret = uv_udp_init(ctx->loop, handle);
   }
   else {
-    ret = uv_udp_init_ex(luv_loop(L), handle, lua_tointeger(L, 1));
+    ret = uv_udp_init_ex(ctx->loop, handle, lua_tointeger(L, 1));
   }
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
-  handle->data = luv_setup_handle(L);
+  handle->data = luv_setup_handle(L, ctx);
   return 1;
 }
 
@@ -165,7 +166,7 @@ static int luv_udp_set_ttl(lua_State* L) {
 
 static void luv_udp_send_cb(uv_udp_send_t* req, int status) {
   luv_req_t* data = (luv_req_t*)req->data;
-  lua_State* L = data->L;
+  lua_State* L = data->ctx->L;
   luv_status(L, status);
   luv_fulfill_req(L, (luv_req_t*)req->data, 1);
   luv_cleanup_req(L, (luv_req_t*)req->data);
@@ -222,12 +223,13 @@ static int luv_udp_send(lua_State* L) {
   int ret, ref;
   struct sockaddr_storage addr;
   struct sockaddr* addr_ptr;
+  luv_handle_t* lhandle = handle->data;
 
   luv_check_buf(L, 2, &buf);
   addr_ptr = luv_check_addr(L, &addr, 3, 4);
   ref = luv_check_continuation(L, 5);
   req = (uv_udp_send_t*)lua_newuserdata(L, sizeof(*req));
-  req->data = luv_setup_req(L, ref);
+  req->data = luv_setup_req(L, lhandle->ctx, ref);
 
   ret = uv_udp_send(req, handle, &buf, 1, addr_ptr, luv_udp_send_cb);
   if (ret < 0) {
@@ -260,7 +262,7 @@ static int luv_udp_try_send(lua_State* L) {
 
 static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags) {
   luv_handle_t* data = (luv_handle_t*)handle->data;
-  lua_State* L = data->L;
+  lua_State* L = data->ctx->L;
 
   // err
   if (nread < 0) {

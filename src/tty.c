@@ -25,16 +25,17 @@ static uv_tty_t* luv_check_tty(lua_State* L, int index) {
 static int luv_new_tty(lua_State* L) {
   int readable, ret;
   uv_tty_t* handle;
+  luv_ctx_t* ctx = luv_context(L);
   uv_file fd = luaL_checkinteger(L, 1);
   luaL_checktype(L, 2, LUA_TBOOLEAN);
   readable = lua_toboolean(L, 2);
   handle = (uv_tty_t*)luv_newuserdata(L, sizeof(*handle));
-  ret = uv_tty_init(luv_loop(L), handle, fd, readable);
+  ret = uv_tty_init(ctx->loop, handle, fd, readable);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
-  handle->data = luv_setup_handle(L);
+  handle->data = luv_setup_handle(L, ctx);
   return 1;
 }
 

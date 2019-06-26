@@ -23,19 +23,20 @@ static uv_signal_t* luv_check_signal(lua_State* L, int index) {
 }
 
 static int luv_new_signal(lua_State* L) {
+  luv_ctx_t* ctx = luv_context(L);
   uv_signal_t* handle = (uv_signal_t*)luv_newuserdata(L, sizeof(*handle));
-  int ret = uv_signal_init(luv_loop(L), handle);
+  int ret = uv_signal_init(ctx->loop, handle);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
-  handle->data = luv_setup_handle(L);
+  handle->data = luv_setup_handle(L, ctx);
   return 1;
 }
 
 static void luv_signal_cb(uv_signal_t* handle, int signum) {
   luv_handle_t* data = (luv_handle_t*)handle->data;
-  lua_State* L = data->L;
+  lua_State* L = data->ctx->L;
   lua_pushstring(L, luv_sig_num_to_string(signum));
   luv_call_callback(L, data, LUV_SIGNAL, 1);
 }

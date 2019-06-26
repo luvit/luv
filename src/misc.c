@@ -353,12 +353,14 @@ static int luv_setgid(lua_State* L){
 }
 
 static int luv_print_all_handles(lua_State* L){
-  uv_print_all_handles(luv_loop(L), stderr);
+  luv_ctx_t* ctx = luv_context(L);
+  uv_print_all_handles(ctx->loop, stderr);
   return 0;
 }
 
 static int luv_print_active_handles(lua_State* L){
-  uv_print_active_handles(luv_loop(L), stderr);
+  luv_ctx_t* ctx = luv_context(L);
+  uv_print_active_handles(ctx->loop, stderr);
   return 0;
 }
 #endif
