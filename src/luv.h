@@ -111,6 +111,7 @@ LUALIB_API int luaopen_luv (lua_State *L);
 #include "lreq.h"
 
 #ifdef LUV_SOURCE
+static int luv_cfpcall(lua_State* L, int nargs, int nresult);
 /* From stream.c */
 static uv_stream_t* luv_check_stream(lua_State* L, int index);
 static void luv_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);

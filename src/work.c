@@ -145,32 +145,14 @@ static void luv_work_cb(uv_work_t* req)
 static void luv_after_work_cb(uv_work_t* req, int status) {
   luv_work_t* work = (luv_work_t*)req->data;
   luv_work_ctx_t* ctx = work->ctx;
-  lua_State*L = ctx->L;
-  int i, errfunc, ret;
-  (void)status;
+  lua_State* L = ctx->L;
+  int i;
 
-  lua_pushcfunction(L, luv_traceback);
-  errfunc = lua_gettop(L);
+  (void)status;
 
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->after_work_cb);
   i = luv_thread_arg_push(L, &work->arg, 0);
-  ret = lua_pcall(L, i, 0, errfunc);
-  switch (ret) {
-  case LUA_OK:
-    break;
-  case LUA_ERRMEM:
-    fprintf(stderr, "System Error in after work callback: %s\n", lua_tostring(L, -1));
-    exit(-1);
-    break;
-  case LUA_ERRRUN:
-  case LUA_ERRSYNTAX:
-  case LUA_ERRERR:
-  default:
-    fprintf(stderr, "Uncaught Error in after work callback: %s\n", lua_tostring(L, -1));
-    lua_pop(L, 1);
-    break;
-  }
-  lua_pop(L, 1);
+  luv_cfpcall(L, i, 0);
 
   //ref down to ctx, up in luv_queue_work()
   luaL_unref(L, LUA_REGISTRYINDEX, work->ref);
@@ -184,31 +166,13 @@ static void async_cb(uv_async_t *handle)
 {
   luv_work_t* work = (luv_work_t*)handle->data;
   luv_work_ctx_t* ctx = work->ctx;
-  lua_State*L = ctx->L;
-  int i, errfunc, ret;
-
-  lua_pushcfunction(L, luv_traceback);
-  errfunc = lua_gettop(L);
+  lua_State* L = ctx->L;
+  int i;
 
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->async_cb);
   i = luv_thread_arg_push(L, &work->arg, 0);
-  ret = lua_pcall(L, i, 0, errfunc);
-  switch (ret) {
-  case LUA_OK:
-    break;
-  case LUA_ERRMEM:
-    fprintf(stderr, "System Error in async callback: %s\n", lua_tostring(L, -1));
-    exit(-1);
-    break;
-  case LUA_ERRRUN:
-  case LUA_ERRSYNTAX:
-  case LUA_ERRERR:
-  default:
-    fprintf(stderr, "Uncaught Error in async callback: %s\n", lua_tostring(L, -1));
-    lua_pop(L, 1);
-    break;
-  }
-  lua_pop(L, 1);
+
+  luv_cfpcall(L, i, 0);
 }
 
 static int luv_new_work(lua_State* L) {
