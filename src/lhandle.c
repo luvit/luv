@@ -122,7 +122,7 @@ static void luv_call_callback(lua_State* L, luv_handle_t* data, luv_callback_id 
       lua_insert(L, -1 - nargs);
     }
 
-    ctx->pcall(L, nargs, 0);
+    ctx->pcall(L, nargs, 0, 0);
   }
 }
 

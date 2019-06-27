@@ -241,7 +241,7 @@ static void luv_thread_cb(void* varg) {
     //push parameter for real thread function
     int i = luv_thread_arg_push(L, &thd->arg, LUVF_THREAD_UHANDLE);
 
-    luv_cfpcall(L, i, 0);
+    luv_cfpcall(L, i, 0, 0);
     luv_thread_arg_clear(L, &thd->arg, LUVF_THREAD_UHANDLE);
   } else {
     fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));

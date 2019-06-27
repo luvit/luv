@@ -55,18 +55,30 @@
 #pragma clang diagnostic ignored "-Wunused-function"
 #endif
 
+// luv flags to control luv_CFpcall routine
+#define LUVF_CALLBACK_NOEXIT       0x01       // Don't exit when LUA_ERRMEM
+#define LUVF_CALLBACK_NOTRACEBACK  0x02       // Don't traceback when error
+#define LUVF_CALLBACK_NOERRMSG     0x04       // Don't output err message
+
 /* Prototype of external callback routine.
  * The caller and the implementer exchanges data by the lua vm stack.
  * The caller push a lua function and nargs values onto the stack, then call it.
  * The implementer remove nargs(argument)+1(function) values from vm stack,
  * push all returned values by lua function onto the stack, and return an
- * integer as result code. If the result is not -1, that means the number of
+ * integer as result code. If the result >= 0, that means the number of
  * values leave on the stack, or the callback routine error, nothing leave on
- * the stack.
+ * the stack, -result is the error value returned by lua_pcall.
+ *
+ * When LUVF_CALLBACK_NOEXIT is set, the implementer should not exit.
+ * When LUVF_CALLBACK_NOTRACEBACK is set, the implementer will not do traceback.
+ *
  * Need to notice that the implementer must balance the lua vm stack, and maybe
  * exit when memory allocation error.
  */
-typedef int (*luv_CFpcall) (lua_State* L, int nargs, int nresults);
+typedef int (*luv_CFpcall) (lua_State* L, int nargs, int nresults, int flags);
+
+/* Default implemention of event callback */
+LUALIB_API int luv_cfpcall(lua_State* L, int nargs, int nresult, int flags);
 
 typedef struct {
   uv_loop_t*   loop;        /* main loop */
@@ -111,7 +123,6 @@ LUALIB_API int luaopen_luv (lua_State *L);
 #include "lreq.h"
 
 #ifdef LUV_SOURCE
-static int luv_cfpcall(lua_State* L, int nargs, int nresult);
 /* From stream.c */
 static uv_stream_t* luv_check_stream(lua_State* L, int index);
 static void luv_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);

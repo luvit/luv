@@ -511,39 +511,53 @@ static void luv_handle_init(lua_State* L) {
 // Call lua function, will pop nargs values from top of vm stack and push some
 // values according to nresults. When error occurs, it will print error message
 // to stderr, and memory allocation error will cause exit.
-static int luv_cfpcall(lua_State* L, int nargs, int nresult) {
-  int ret, errfunc;
+LUALIB_API int luv_cfpcall(lua_State* L, int nargs, int nresult, int flags) {
+  int ret, top, errfunc;
 
   // Get the traceback function in case of error
-  lua_pushcfunction(L, luv_traceback);
-  errfunc = lua_gettop(L);
-  // And insert it before the function and args
-  lua_insert(L, -2 - nargs);
-  errfunc -= (nargs+1);
+  if ((flags & (LUVF_CALLBACK_NOTRACEBACK|LUVF_CALLBACK_NOERRMSG) ) == 0)
+  {
+    lua_pushcfunction(L, luv_traceback);
+    errfunc = lua_gettop(L);
+    // And insert it before the function and args
+    lua_insert(L, -2 - nargs);
+    errfunc -= (nargs+1);
+  }else
+    errfunc = 0;
+  top  = lua_gettop(L);
 
   ret = lua_pcall(L, nargs, nresult, errfunc);
   switch (ret) {
   case LUA_OK:
     break;
   case LUA_ERRMEM:
-    fprintf(stderr, "System Error: %s\n", lua_tostring(L, -1));
-    exit(-1);
+    if ((flags & LUVF_CALLBACK_NOERRMSG) == 0)
+      fprintf(stderr, "System Error: %s\n", lua_tostring(L, -1));
+    if ((flags & LUVF_CALLBACK_NOEXIT) == 0)
+      exit(-1);
+    lua_pop(L, 1);
+    ret = -ret;
     break;
   case LUA_ERRRUN:
   case LUA_ERRSYNTAX:
   case LUA_ERRERR:
   default:
-    fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
+    if ((flags & LUVF_CALLBACK_NOERRMSG) == 0)
+      fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
     lua_pop(L, 1);
+    ret = -ret;
     break;
   }
-  lua_remove(L, errfunc);
+  if ((flags & (LUVF_CALLBACK_NOTRACEBACK|LUVF_CALLBACK_NOERRMSG) ) == 0)
+  {
+    lua_remove(L, errfunc);
+  }
   if (ret == LUA_OK) {
     if(nresult == LUA_MULTRET)
-      nresult = lua_gettop(L) - errfunc + 1;
+      nresult = lua_gettop(L) - top + nargs + 1;
     return nresult;
   }
-  return -1;
+  return ret;
 }
 
 // TODO: see if we can avoid using a string key for this to increase performance
