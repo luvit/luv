@@ -76,7 +76,7 @@ static void luv_work_cb(uv_work_t* req)
   top = lua_gettop(L);
 
   /* push debug function */
-  lua_pushcfunction(L, traceback);
+  lua_pushcfunction(L, luv_traceback);
   errfunc = lua_gettop(L);
 
   /* push lua function */
@@ -149,7 +149,7 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
   int i, errfunc, ret;
   (void)status;
 
-  lua_pushcfunction(L, traceback);
+  lua_pushcfunction(L, luv_traceback);
   errfunc = lua_gettop(L);
 
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->after_work_cb);
@@ -187,7 +187,7 @@ static void async_cb(uv_async_t *handle)
   lua_State*L = ctx->L;
   int i, errfunc, ret;
 
-  lua_pushcfunction(L, traceback);
+  lua_pushcfunction(L, luv_traceback);
   errfunc = lua_gettop(L);
 
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->async_cb);

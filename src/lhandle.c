@@ -87,7 +87,7 @@ static void luv_check_callback(lua_State* L, luv_handle_t* data, luv_callback_id
   data->callbacks[id] = luaL_ref(L, LUA_REGISTRYINDEX);
 }
 
-static int traceback (lua_State *L) {
+static int luv_traceback (lua_State *L) {
   if (!lua_isstring(L, 1))  /* 'message' not a string? */
     return 1;  /* keep it intact */
   lua_pushglobaltable(L);
@@ -109,21 +109,12 @@ static int traceback (lua_State *L) {
 }
 
 static void luv_call_callback(lua_State* L, luv_handle_t* data, luv_callback_id id, int nargs) {
+  luv_ctx_t* ctx = data->ctx;
   int ref = data->callbacks[id];
   if (ref == LUA_NOREF) {
     lua_pop(L, nargs);
   }
   else {
-    int errfunc, ret;
-
-    // Get the traceback function in case of error
-    lua_pushcfunction(L, traceback);
-    errfunc = lua_gettop(L);
-    // And insert it before the args if there are any.
-    if (nargs) {
-      lua_insert(L, -1 - nargs);
-      errfunc -= nargs;
-    }
     // Get the callback
     lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
     // And insert it before the args if there are any.
@@ -131,25 +122,7 @@ static void luv_call_callback(lua_State* L, luv_handle_t* data, luv_callback_id 
       lua_insert(L, -1 - nargs);
     }
 
-    ret = lua_pcall(L, nargs, 0, errfunc);
-    switch (ret) {
-    case 0:
-      break;
-    case LUA_ERRMEM:
-      fprintf(stderr, "System Error: %s\n", lua_tostring(L, -1));
-      exit(-1);
-      break;
-    case LUA_ERRRUN:
-    case LUA_ERRSYNTAX:
-    case LUA_ERRERR:
-    default:
-      fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
-      lua_pop(L, 1);
-      break;
-    }
-
-    // Remove the traceback function
-    lua_pop(L, 1);
+    ctx->pcall(L, nargs, 0);
   }
 }
 

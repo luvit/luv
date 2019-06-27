@@ -239,7 +239,7 @@ static void luv_thread_cb(void* varg) {
   top = lua_gettop(L);
 
   //push traceback
-  lua_pushcfunction(L, traceback);
+  lua_pushcfunction(L, luv_traceback);
   errfunc = lua_gettop(L);
 
   //push lua function, thread entry

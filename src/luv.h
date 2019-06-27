@@ -55,9 +55,23 @@
 #pragma clang diagnostic ignored "-Wunused-function"
 #endif
 
+/* Prototype of external callback routine.
+ * The caller and the implementer exchanges data by the lua vm stack.
+ * The caller push a lua function and nargs values onto the stack, then call it.
+ * The implementer remove nargs(argument)+1(function) values from vm stack,
+ * push all returned values by lua function onto the stack, and return an
+ * integer as result code. If the result is not -1, that means the number of
+ * values leave on the stack, or the callback routine error, nothing leave on
+ * the stack.
+ * Need to notice that the implementer must balance the lua vm stack, and maybe
+ * exit when memory allocation error.
+ */
+typedef int (*luv_CFpcall) (lua_State* L, int nargs, int nresults);
+
 typedef struct {
   uv_loop_t*   loop;        /* main loop */
   lua_State*   L;           /* main thread,ensure coroutines works */
+  luv_CFpcall  pcall;       /* luv event callback function in protected mode */
 
   void* extra;              /* extra data */
 } luv_ctx_t;
@@ -82,6 +96,10 @@ LUALIB_API luv_ctx_t* luv_context(lua_State* L);
 */
 LUALIB_API void luv_set_loop(lua_State* L, uv_loop_t* loop);
 
+/* Set or clear an external c routine for luv event callback
+   This must be called before luaopen_luv, so luv doesn't init an own routine
+*/
+LUALIB_API void luv_set_callback(lua_State* L, luv_CFpcall pcall);
 /* This is the main hook to load the library.
    This can be called multiple times in a process as long
    as you use a different lua_State and thread for each.
