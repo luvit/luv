@@ -54,15 +54,28 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
 #endif
+
+typedef struct {
+  uv_loop_t*   loop;        /* main loop */
+  lua_State*   L;           /* main thread,ensure coroutines works */
+
+  void* extra;              /* extra data */
+} luv_ctx_t;
+
+/* This is combined of old luv_state() and luv_loop() c apis, they are replaced
+ * with macro to this API */
+LUALIB_API luv_ctx_t* luv_context(lua_State* L);
+
 /* There is a 1-1 relation between a lua_State and a uv_loop_t
    These helpers will give you one if you have the other
    These are exposed for extensions built with luv
    This allows luv to be used in multithreaded applications.
 */
-LUALIB_API lua_State* luv_state(lua_State* L);
+#define luv_state(L) (luv_context(L)->L)
+
 /* All libuv callbacks will lua_call directly from this root-per-thread state
 */
-LUALIB_API uv_loop_t* luv_loop(lua_State* L);
+#define luv_loop(L)  (luv_context(L)->loop)
 
 /* Set or clear an external uv_loop_t in a lua_State
    This must be called before luaopen_luv, so luv doesn't init an own loop

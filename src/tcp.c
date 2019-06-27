@@ -25,19 +25,20 @@ static uv_tcp_t* luv_check_tcp(lua_State* L, int index) {
 static int luv_new_tcp(lua_State* L) {
   uv_tcp_t* handle;
   int ret;
+  luv_ctx_t* ctx = luv_context(L);
   lua_settop(L, 1);
   handle = (uv_tcp_t*)luv_newuserdata(L, sizeof(*handle));
   if (lua_isnoneornil(L, 1)) {
-    ret = uv_tcp_init(luv_loop(L), handle);
+    ret = uv_tcp_init(ctx->loop, handle);
   }
   else {
-    ret = uv_tcp_init_ex(luv_loop(L), handle, lua_tointeger(L, 1));
+    ret = uv_tcp_init_ex(ctx->loop, handle, lua_tointeger(L, 1));
   }
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
-  handle->data = luv_setup_handle(L);
+  handle->data = luv_setup_handle(L, ctx);
   return 1;
 }
 
@@ -154,7 +155,7 @@ static int luv_tcp_getpeername(lua_State* L) {
 
 static void luv_connect_cb(uv_connect_t* req, int status) {
   luv_req_t* data = (luv_req_t*)req->data;
-  lua_State* L = data->L;
+  lua_State* L = data->ctx->L;
   luv_status(L, status);
   luv_fulfill_req(L, (luv_req_t*)req->data, 1);
   luv_cleanup_req(L, (luv_req_t*)req->data);
@@ -174,6 +175,7 @@ static int luv_tcp_connect(lua_State* L) {
   struct sockaddr_storage addr;
   uv_connect_t* req;
   int ret, ref;
+  luv_handle_t* lhandle = handle->data;
   if (uv_ip4_addr(host, port, (struct sockaddr_in*)&addr) &&
       uv_ip6_addr(host, port, (struct sockaddr_in6*)&addr)) {
     return luaL_error(L, "Invalid IP address or port [%s:%d]", host, port);
@@ -181,7 +183,7 @@ static int luv_tcp_connect(lua_State* L) {
   ref = luv_check_continuation(L, 4);
 
   req = (uv_connect_t*)lua_newuserdata(L, sizeof(*req));
-  req->data = luv_setup_req(L, ref);
+  req->data = luv_setup_req(L, lhandle->ctx, ref);
   ret = uv_tcp_connect(req, handle, (struct sockaddr*)&addr, luv_connect_cb);
   if (ret < 0) {
     luv_cleanup_req(L, (luv_req_t*)req->data);
