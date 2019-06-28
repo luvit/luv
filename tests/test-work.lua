@@ -13,6 +13,7 @@ return require('lib/tap')(function (test)
         end,
         function(n,r,id, s)
             assert(n*n==r)
+            assert(#s==4096)
             if step < count then
                 _uv.queue_work(ctx,n,s)
                 step = step + 1

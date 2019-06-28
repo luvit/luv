@@ -231,42 +231,17 @@ static int luv_thread_tostring(lua_State* L)
 }
 
 static void luv_thread_cb(void* varg) {
-  int top, errfunc;
-
   //acquire vm and get top
   luv_thread_t* thd = (luv_thread_t*)varg;
   lua_State* L = acquire_vm_cb();
-  top = lua_gettop(L);
-
-  //push traceback
-  lua_pushcfunction(L, traceback);
-  errfunc = lua_gettop(L);
+  int top = lua_gettop(L);
 
   //push lua function, thread entry
   if (luaL_loadbuffer(L, thd->code, thd->len, "=thread") == 0) {
-    int i, ret;
-
     //push parameter for real thread function
-    i = luv_thread_arg_push(L, &thd->arg, LUVF_THREAD_UHANDLE);
-    assert(i == thd->arg.argc);
+    int i = luv_thread_arg_push(L, &thd->arg, LUVF_THREAD_UHANDLE);
 
-    ret = lua_pcall(L, thd->arg.argc, 0, errfunc);
-    switch (ret) {
-    case LUA_OK:
-      break;
-    case LUA_ERRMEM:
-      fprintf(stderr, "System Error in thread: %s\n", lua_tostring(L, -1));
-      lua_pop(L, 1);
-      break;
-    case LUA_ERRRUN:
-    case LUA_ERRSYNTAX:
-    case LUA_ERRERR:
-    default:
-      fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
-      lua_pop(L, 1);
-      break;
-    }
-
+    luv_cfpcall(L, i, 0, 0);
     luv_thread_arg_clear(L, &thd->arg, LUVF_THREAD_UHANDLE);
   } else {
     fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));
@@ -275,7 +250,6 @@ static void luv_thread_cb(void* varg) {
   }
 
   //balance stack of traceback
-  lua_pop(L, 1);
   assert(top == lua_gettop(L));
   release_vm_cb(L);
 }

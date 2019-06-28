@@ -81,9 +81,9 @@ static void luv_walk_cb(uv_handle_t* handle, void* arg) {
   // Most invalid values are large and refs are small, 0x1000000 is arbitrary.
   assert(data && data->ref < 0x1000000);
 
-  lua_pushvalue(L, 1);      // Copy the function
-  luv_find_handle(L, data); // Get the userdata
-  lua_call(L, 1, 0);        // Call the function
+  lua_pushvalue(L, 1);           // Copy the function
+  luv_find_handle(L, data);      // Get the userdata
+  data->ctx->pcall(L, 1, 0, 0);  // Call the function
 }
 
 static int luv_walk(lua_State* L) {

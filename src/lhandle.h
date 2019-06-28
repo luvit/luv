@@ -47,6 +47,9 @@ typedef struct {
 } luv_handle_t;
 
 #ifdef LUV_SOURCE
+/* Traceback for lua_pcall */
+static int luv_traceback (lua_State *L);
+
 /* Setup the handle at the top of the stack */
 static luv_handle_t* luv_setup_handle(lua_State* L, luv_ctx_t* ctx);
 

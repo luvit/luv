@@ -508,6 +508,58 @@ static void luv_handle_init(lua_State* L) {
   lua_setfield(L, LUA_REGISTRYINDEX, "uv_stream");
 }
 
+// Call lua function, will pop nargs values from top of vm stack and push some
+// values according to nresults. When error occurs, it will print error message
+// to stderr, and memory allocation error will cause exit.
+LUALIB_API int luv_cfpcall(lua_State* L, int nargs, int nresult, int flags) {
+  int ret, top, errfunc;
+
+  // Get the traceback function in case of error
+  if ((flags & (LUVF_CALLBACK_NOTRACEBACK|LUVF_CALLBACK_NOERRMSG) ) == 0)
+  {
+    lua_pushcfunction(L, luv_traceback);
+    errfunc = lua_gettop(L);
+    // And insert it before the function and args
+    lua_insert(L, -2 - nargs);
+    errfunc -= (nargs+1);
+  }else
+    errfunc = 0;
+  top  = lua_gettop(L);
+
+  ret = lua_pcall(L, nargs, nresult, errfunc);
+  switch (ret) {
+  case LUA_OK:
+    break;
+  case LUA_ERRMEM:
+    if ((flags & LUVF_CALLBACK_NOERRMSG) == 0)
+      fprintf(stderr, "System Error: %s\n", lua_tostring(L, -1));
+    if ((flags & LUVF_CALLBACK_NOEXIT) == 0)
+      exit(-1);
+    lua_pop(L, 1);
+    ret = -ret;
+    break;
+  case LUA_ERRRUN:
+  case LUA_ERRSYNTAX:
+  case LUA_ERRERR:
+  default:
+    if ((flags & LUVF_CALLBACK_NOERRMSG) == 0)
+      fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
+    lua_pop(L, 1);
+    ret = -ret;
+    break;
+  }
+  if ((flags & (LUVF_CALLBACK_NOTRACEBACK|LUVF_CALLBACK_NOERRMSG) ) == 0)
+  {
+    lua_remove(L, errfunc);
+  }
+  if (ret == LUA_OK) {
+    if(nresult == LUA_MULTRET)
+      nresult = lua_gettop(L) - top + nargs + 1;
+    return nresult;
+  }
+  return ret;
+}
+
 // TODO: see if we can avoid using a string key for this to increase performance
 static const char* luv_ctx_key = "luv_context";
 
@@ -535,6 +587,12 @@ LUALIB_API void luv_set_loop(lua_State* L, uv_loop_t* loop) {
 
   ctx->loop = loop;
   ctx->L = L;
+}
+
+// Set an external event callback routine, before luaopen_luv
+LUALIB_API void luv_set_callback(lua_State* L, luv_CFpcall pcall) {
+  luv_ctx_t* ctx = luv_context(L);
+  ctx->pcall = pcall;
 }
 
 static void walk_cb(uv_handle_t *handle, void *arg)
@@ -591,6 +649,10 @@ LUALIB_API int luaopen_luv (lua_State* L) {
     if (ret < 0) {
       return luaL_error(L, "%s: %s\n", uv_err_name(ret), uv_strerror(ret));
     }
+  }
+  // pcall is NULL, luv use default callback routine
+  if (ctx->pcall==NULL) {
+    ctx->pcall = luv_cfpcall;
   }
 
   luv_req_init(L);
