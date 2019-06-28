@@ -226,7 +226,7 @@ static int luv_thread_gc(lua_State* L) {
 static int luv_thread_tostring(lua_State* L)
 {
   luv_thread_t* thd = luv_check_thread(L, 1);
-  lua_pushfstring(L, "uv_thread_t: %p", thd->handle);
+  lua_pushfstring(L, "uv_thread_t: %p", (void*)thd->handle);
   return 1;
 }
 
@@ -234,7 +234,6 @@ static void luv_thread_cb(void* varg) {
   //acquire vm and get top
   luv_thread_t* thd = (luv_thread_t*)varg;
   lua_State* L = acquire_vm_cb();
-  int top = lua_gettop(L);
 
   //push lua function, thread entry
   if (luaL_loadbuffer(L, thd->code, thd->len, "=thread") == 0) {
@@ -249,8 +248,6 @@ static void luv_thread_cb(void* varg) {
     lua_pop(L, 1);
   }
 
-  //balance stack of traceback
-  assert(top == lua_gettop(L));
   release_vm_cb(L);
 }
 
