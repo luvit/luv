@@ -227,5 +227,5 @@ static void luv_work_init(lua_State* L) {
   lua_setfield(L, -2, "__index");
   lua_pop(L, 1);
 
-  uv_once(&L_init, luv_thread_key_init);;
+  uv_once(&L_init, luv_thread_key_init);
 }
