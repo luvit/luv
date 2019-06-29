@@ -36,6 +36,7 @@ typedef struct {
 } luv_work_t;
 
 static uv_key_t L_key;
+static uv_once_t L_init = UV_ONCE_INIT;
 
 static luv_work_ctx_t* luv_check_work_ctx(lua_State* L, int index)
 {
@@ -211,7 +212,10 @@ static const luaL_Reg luv_work_ctx_methods[] = {
   {NULL, NULL}
 };
 
-static int key_inited = 0;
+static void luv_thread_key_init() {
+  uv_key_create(&L_key);
+}
+
 static void luv_work_init(lua_State* L) {
   luaL_newmetatable(L, "luv_work_ctx");
   lua_pushcfunction(L, luv_work_ctx_tostring);
@@ -223,8 +227,5 @@ static void luv_work_init(lua_State* L) {
   lua_setfield(L, -2, "__index");
   lua_pop(L, 1);
 
-  if (key_inited==0) {
-    key_inited = 1;
-    uv_key_create(&L_key);
-  }
+  uv_once(&L_init, luv_thread_key_init);
 }
