@@ -201,6 +201,14 @@ if (CMAKE_INSTALL_PREFIX)
     LIBRARY DESTINATION "${INSTALL_LIB_DIR}"
   )
   if (NOT BUILD_MODULE)
+    if(UNIX)
+      set(prefix ${CMAKE_INSTALL_PREFIX})
+      set(includedir ${INSTALL_INC_DIR})
+      set(libdir ${INSTALL_LIB_DIR})
+      configure_file(libluv.pc.in ${CMAKE_CURRENT_BINARY_DIR}/libluv.pc @ONLY)
+      install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libluv.pc
+        DESTINATION ${INSTALL_LIB_DIR}/pkgconfig)
+    endif()
     install(
       FILES src/luv.h src/util.h src/lhandle.h src/lreq.h
       DESTINATION "${INSTALL_INC_DIR}"

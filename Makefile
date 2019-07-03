@@ -43,6 +43,9 @@ luv: build/Makefile
 	cmake --build build --config Debug
 	ln -sf build/luv.so
 
+install: luv
+	make -C build install
+
 clean:
 	rm -rf build luv.so
 
