@@ -240,6 +240,18 @@ static int luv_spawn(lua_State* L) {
     options.flags |= UV_PROCESS_WINDOWS_HIDE;
   }
   lua_pop(L, 1);
+#if LUV_UV_VERSION_GEQ(1, 24, 0)
+  lua_getfield(L, 2, "hide_console");
+  if (lua_toboolean(L, -1)) {
+    options.flags |= UV_PROCESS_WINDOWS_HIDE_CONSOLE;
+  }
+  lua_pop(L, 1);
+  lua_getfield(L, 2, "hide_gui");
+  if (lua_toboolean(L, -1)) {
+    options.flags |= UV_PROCESS_WINDOWS_HIDE_GUI;
+  }
+  lua_pop(L, 1);
+#endif
 
   handle = (uv_process_t*)luv_newuserdata(L, sizeof(*handle));
   handle->type = UV_PROCESS;
