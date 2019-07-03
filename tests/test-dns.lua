@@ -1,15 +1,32 @@
 return require('lib/tap')(function (test)
 
+  local function errorAllowed(err)
+    -- allowed errors  from gnulib's test-getaddrinfo.c
+    return err == "EAI_AGAIN" -- offline/no network connection
+      or err == "EAI_NONAME"  -- IRIX returns this for "https"
+      or err == "EAI_SERVICE" -- Solaris returns this for "http"/"https"
+      or err == "EAI_NODATA"  -- AIX returns this for "https"
+  end
+
   test("Get all local http addresses", function (print, p, expect, uv)
     assert(uv.getaddrinfo(nil, "http", nil, expect(function (err, res)
-      p(res, #res)
+      if errorAllowed(err) then
+        print(err, "skipping")
+        return
+      end
       assert(not err, err)
+      p(res, #res)
       assert(res[1].port == 80)
     end)))
   end)
 
   test("Get all local http addresses sync", function (print, p, expect, uv)
-    local res = assert(uv.getaddrinfo(nil, "http"))
+    local res, errstr, err = uv.getaddrinfo(nil, "http")
+    if errorAllowed(err) then
+      print(err, "skipping")
+      return
+    end
+    assert(res, errstr)
     p(res, #res)
     assert(res[1].port == 80)
   end)
@@ -19,8 +36,7 @@ return require('lib/tap')(function (test)
       socktype = "stream",
       family = "inet",
     }, expect(function (err, res)
-      -- allow failure when offline
-      if err == "EAI_AGAIN" then
+      if errorAllowed(err) then
         print(err, "skipping")
         return
       end
@@ -37,8 +53,7 @@ return require('lib/tap')(function (test)
         socktype = "stream",
         family = "inet6",
       }, expect(function (err, res)
-        -- allow failure when offline
-        if err == "EAI_AGAIN" then
+        if errorAllowed(err) then
           print(err, "skipping")
           return
         end
@@ -53,8 +68,7 @@ return require('lib/tap')(function (test)
     assert(uv.getaddrinfo("luvit.io", nil, {
       socktype = "stream",
     }, expect(function (err, res)
-      -- allow failure when offline
-      if err == "EAI_AGAIN" then
+      if errorAllowed(err) then
         print(err, "skipping")
         return
       end
@@ -66,8 +80,7 @@ return require('lib/tap')(function (test)
 
   test("Get all adresses for luvit.io", function (print, p, expect, uv)
     assert(uv.getaddrinfo("luvit.io", nil, nil, expect(function (err, res)
-      -- allow failure when offline
-      if err == "EAI_AGAIN" then
+      if errorAllowed(err) then
         print(err, "skipping")
         return
       end
@@ -81,8 +94,7 @@ return require('lib/tap')(function (test)
     assert(uv.getnameinfo({
       family = "inet",
     }, expect(function (err, hostname, service)
-      -- allow failure when offline
-      if err == "EAI_AGAIN" then
+      if errorAllowed(err) then
         print(err, "skipping")
         return
       end
@@ -97,8 +109,7 @@ return require('lib/tap')(function (test)
     local hostname, service, err = uv.getnameinfo({
       family = "inet",
     })
-    -- allow failure when offline
-    if err == "EAI_AGAIN" then
+    if errorAllowed(err) then
       print(err, "skipping")
       return
     end
