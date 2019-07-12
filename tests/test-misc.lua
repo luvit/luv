@@ -20,8 +20,12 @@ return require('lib/tap')(function (test)
   test("memory size", function (print, p, expect, uv)
     local rss = uv.resident_set_memory()
     local total = uv.get_total_memory()
+    local constrained = nil
+    if uv.get_constrained_memory then
+      constrained = uv.get_constrained_memory()
+    end
     local free = uv.get_free_memory()
-    p{rss=rss,total=total,free=free}
+    p{rss=rss,total=total,free=free, constrained=constrained}
     assert(rss < total)
   end)
 
