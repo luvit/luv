@@ -25,6 +25,15 @@ CMAKE_OPTIONS += \
 	-DLUA_BUILD_TYPE=$(LUA_BUILD_TYPE) \
 	-DLUA_COMPAT53_DIR=$(LUA_COMPAT53_DIR)
 
+ifeq ($(MAKE),mingw32-make)
+CMAKE_OPTIONS += -G"MinGW Makefiles"
+LUV_EXT ?= .dll
+LUV_CP  ?= cp -f
+endif
+
+LUV_EXT ?= .so
+LUV_CP  ?= ln -sf
+
 all: luv
 
 deps/libuv/include:
@@ -41,10 +50,10 @@ build/Makefile: deps/libuv/include deps/luajit/src deps/lua-compat-5.3/c-api
 
 luv: build/Makefile
 	cmake --build build --config Debug
-	ln -sf build/luv.so
+	$(LUV_CP) build/luv$(LUV_EXT) luv$(LUV_EXT)
 
 install: luv
-	make -C build install
+	$(MAKE) -C build install
 
 clean:
 	rm -rf build luv.so
@@ -61,3 +70,5 @@ publish-luarocks:
 	github-release upload --user luvit --repo luv --tag ${LUV_TAG} \
 	  --file luv-${LUV_TAG}.tar.gz --name luv-${LUV_TAG}.tar.gz
 	luarocks upload luv-${LUV_TAG}.rockspec --api-key=${LUAROCKS_TOKEN}
+
+# vim: ts=8 sw=8 noet tw=79 fen fdm=marker
