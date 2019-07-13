@@ -300,6 +300,13 @@ static int luv_os_get_passwd(lua_State* L) {
   return 1;
 }
 
+#if LUV_UV_VERSION_GEQ(1, 29, 0)
+static int luv_get_constrained_memory(lua_State* L) {
+  lua_pushnumber(L, uv_get_constrained_memory());
+  return 1;
+}
+#endif
+
 static int luv_get_total_memory(lua_State* L) {
   lua_pushnumber(L, uv_get_total_memory());
   return 1;

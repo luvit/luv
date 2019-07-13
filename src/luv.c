@@ -250,6 +250,9 @@ static const luaL_Reg luv_functions[] = {
   {"cwd", luv_cwd},
   {"exepath", luv_exepath},
   {"get_process_title", luv_get_process_title},
+#if LUV_UV_VERSION_GEQ(1, 29, 0)
+  {"get_constrained_memory", luv_get_constrained_memory},
+#endif
   {"get_total_memory", luv_get_total_memory},
   {"get_free_memory", luv_get_free_memory},
   {"getpid", luv_getpid},
