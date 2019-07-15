@@ -97,7 +97,7 @@ LUALIB_API luv_ctx_t* luv_context(lua_State* L);
    These are exposed for extensions built with luv
    This allows luv to be used in multithreaded applications.
 */
-#define luv_state(L) (luv_context(L)->L)
+#define luv_state(S) (luv_context(S)->L)
 
 /* All libuv callbacks will lua_call directly from this root-per-thread state
 */
