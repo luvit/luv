@@ -584,6 +584,14 @@ LUALIB_API luv_ctx_t* luv_context(lua_State* L) {
   return ctx;
 }
 
+LUALIB_API lua_State* luv_state(lua_State* L) {
+  return luv_context(L)->L;
+}
+
+LUALIB_API uv_loop_t* luv_loop(lua_State* L) {
+  return luv_context(L)->loop;
+}
+
 // Set an external loop, before luaopen_luv
 LUALIB_API void luv_set_loop(lua_State* L, uv_loop_t* loop) {
   luv_ctx_t* ctx = luv_context(L);

@@ -88,30 +88,29 @@ typedef struct {
   void* extra;              /* extra data */
 } luv_ctx_t;
 
-/* This is combined of old luv_state() and luv_loop() c apis, they are replaced
- * with macro to this API */
+/* Retrieve all the luv context from a lua_State */
 LUALIB_API luv_ctx_t* luv_context(lua_State* L);
 
-/* There is a 1-1 relation between a lua_State and a uv_loop_t
-   These helpers will give you one if you have the other
-   These are exposed for extensions built with luv
-   This allows luv to be used in multithreaded applications.
-*/
-#define luv_state(S) (luv_context(S)->L)
+/* Retrieve the main thread of the given lua_State */
+LUALIB_API lua_State* luv_state(lua_State* L);
 
-/* All libuv callbacks will lua_call directly from this root-per-thread state
+/* Retrieve the uv_loop_t set for the given lua_State
+   Note: Each lua_State can have a custom uv_loop_t
 */
-#define luv_loop(L)  (luv_context(L)->loop)
+LUALIB_API uv_loop_t* luv_loop(lua_State* L);
 
 /* Set or clear an external uv_loop_t in a lua_State
-   This must be called before luaopen_luv, so luv doesn't init an own loop
+   When using a custom/external loop, this must be called before luaopen_luv
+   (otherwise luv will create and use its own loop)
 */
 LUALIB_API void luv_set_loop(lua_State* L, uv_loop_t* loop);
 
 /* Set or clear an external c routine for luv event callback
-   This must be called before luaopen_luv, so luv doesn't init an own routine
+   When using a custom/external function, this must be called before luaopen_luv
+   (otherwise luv will use the default callback function: luv_cfpcall)
 */
 LUALIB_API void luv_set_callback(lua_State* L, luv_CFpcall pcall);
+
 /* This is the main hook to load the library.
    This can be called multiple times in a process as long
    as you use a different lua_State and thread for each.
