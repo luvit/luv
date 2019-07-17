@@ -164,9 +164,9 @@ if not exist "%LR_ROOT%" (
 
 	cd downloads\luarocks-%LUAROCKS_VER%-win32
 	if "%Configuration%"=="MinGW" (
-		call install.bat /LUA %LUA_DIR% /Q /LV %LUA_SHORTV% /P "%LUAROCKS_INSTALL%" /TREE "%LR_SYSTREE%" /MW
+		call install.bat /LUA %LUA_DIR% /Q /LV %LUA_SHORTV% /P "%LUAROCKS_INSTALL%" /TREE "%LR_SYSTREE%" /CONFIG "%LUAROCKS_INSTALL%" /MW
 	) else (
-		call install.bat /LUA %LUA_DIR% /Q /LV %LUA_SHORTV% /P "%LUAROCKS_INSTALL%" /TREE "%LR_SYSTREE%"
+		call install.bat /LUA %LUA_DIR% /Q /LV %LUA_SHORTV% /P "%LUAROCKS_INSTALL%" /TREE "%LR_SYSTREE%" /CONFIG "%LUAROCKS_INSTALL%"
 	)
 
 	:: Configures LuaRocks to instruct CMake the correct generator to use. Else, CMake will pick the highest

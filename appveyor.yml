@@ -42,6 +42,7 @@ build_script:
   - call .ci\set_compiler_env.bat
   - call .ci\install.bat
   - luarocks make
+  - luarocks show luv
   - ps: if("$(Get-Location)" -eq $(lua -e "print(require'luv'.cwd())")) { "LuaRocks test OK" } else { "LuaRocks test failed"; exit 1 }
   - luarocks remove luv
     # Test the alternate rockspec
