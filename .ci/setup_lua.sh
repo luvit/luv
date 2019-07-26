@@ -91,27 +91,24 @@ curl --silent --location "http://luarocks.org/releases/$LUAROCKS_BASE.tar.gz" | 
 
 cd "$LUAROCKS_BASE"
 
-configure_args=("--prefix=$LR_HOME_DIR")
+configure_args=("--prefix=$LR_HOME_DIR" "--with-lua=$LUA_HOME_DIR")
 
 if [ "${LUA#luajit}" != "$LUA" ]; then
   # LuaJIT
   if [ "${LUAROCKS#2.}" != "${LUAROCKS}" ]; then
     configure_args+=('--lua-suffix=jit')
+    if [ "$LUA" = luajit ]; then
+      luajit_ver=2.0
+    else
+      luajit_ver=${LUA#luajit}
+    fi
+    configure_args+=("--with-lua-include=$LUA_HOME_DIR/include/luajit-${luajit_ver}")
   else
     configure_args+=('--with-lua-interpreter=luajit')
   fi
-
-  if [ "$LUA" = luajit ]; then
-    luajit_ver=2.0
-  else
-    luajit_ver=${LUA#luajit}
-  fi
-  configure_args+=("--with-lua-include=$LUA_HOME_DIR/include/luajit-${luajit_ver}")
-
-  ./configure "${configure_args[@]}"
-else
-  ./configure --with-lua="$LUA_HOME_DIR" --prefix="$LR_HOME_DIR"
 fi
+
+./configure "${configure_args[@]}"
 
 make build && make install
 
