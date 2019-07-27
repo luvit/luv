@@ -14,6 +14,11 @@ env:
   matrix:
     - WITH_LUA_ENGINE=Lua LUA=lua5.3
     - WITH_LUA_ENGINE=LuaJIT LUA=luajit2.1
+
+    # LuaRocks 3.1.3
+    - LUAROCKS=3.1.3 WITH_LUA_ENGINE=Lua LUA=lua5.3
+    - LUAROCKS=3.1.3 WITH_LUA_ENGINE=LuaJIT LUA=luajit2.1
+
     - PROCESS_CLEANUP_TEST=1 LUA=lua5.2
 
 os:

@@ -7,11 +7,19 @@ configuration:
 
 # Test with the latest Lua and LuaJIT versions
 environment:
-  LUAROCKS_VER: 2.3.0
   matrix:
-  - LUA_VER: 5.3.2
-    NOCOMPAT: true  # with compatibility flags disabled.
-  - LJ_VER: 2.1
+    # LuaRocks 3.1.3
+    - LUA_VER: 5.3.2
+      NOCOMPAT: true  # with compatibility flags disabled.
+      LUAROCKS_VER: 3.1.3
+    - LJ_VER: 2.1
+      LUAROCKS_VER: 3.1.3
+
+    - LUA_VER: 5.3.2
+      NOCOMPAT: true  # with compatibility flags disabled.
+      LUAROCKS_VER: 2.3.0
+    - LJ_VER: 2.1
+      LUAROCKS_VER: 2.3.0
 
 platform:
   - x86
@@ -34,6 +42,7 @@ build_script:
   - call .ci\set_compiler_env.bat
   - call .ci\install.bat
   - luarocks make
+  - luarocks show luv
   - ps: if("$(Get-Location)" -eq $(lua -e "print(require'luv'.cwd())")) { "LuaRocks test OK" } else { "LuaRocks test failed"; exit 1 }
   - luarocks remove luv
     # Test the alternate rockspec
