@@ -1,3 +1,5 @@
 path_classifiers:
-  library:
-    - exclude: deps
+  deps:
+    - "deps/**"
+queries:
+  - exclude: deps
