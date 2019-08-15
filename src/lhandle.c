@@ -54,32 +54,6 @@ static luv_handle_t* luv_setup_handle(lua_State* L, luv_ctx_t* ctx) {
   return data;
 }
 
-static int luv_is_callable(lua_State* L, int index) {
-  if (luaL_getmetafield(L, index, "__call") != LUA_TNIL) {
-    // getmetatable(x).__call must be a function for x() to work
-    int callable = lua_isfunction(L, -1);
-    lua_pop(L, 1);
-    return callable;
-  }
-  return lua_isfunction(L, index);
-}
-
-static void luv_check_callable(lua_State* L, int index) {
-  const char *msg;
-  const char *typearg;  /* name for the type of the actual argument */
-  if (luv_is_callable(L, index))
-    return;
-
-  if (luaL_getmetafield(L, index, "__name") == LUA_TSTRING)
-    typearg = lua_tostring(L, -1);  /* use the given type name */
-  else if (lua_type(L, index) == LUA_TLIGHTUSERDATA)
-    typearg = "light userdata";  /* special name for messages */
-  else
-    typearg = luaL_typename(L, index);  /* standard name */
-  msg = lua_pushfstring(L, "function or callable table expected, got %s", typearg);
-  luaL_argerror(L, index, msg);
-}
-
 static void luv_check_callback(lua_State* L, luv_handle_t* data, luv_callback_id id, int index) {
   luv_check_callable(L, index);
   luaL_unref(L, LUA_REGISTRYINDEX, data->callbacks[id]);

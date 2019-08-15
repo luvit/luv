@@ -19,7 +19,7 @@
 
 static int luv_check_continuation(lua_State* L, int index) {
   if (lua_isnoneornil(L, index)) return LUA_NOREF;
-  luaL_checktype(L, index, LUA_TFUNCTION);
+  luv_check_callable(L, index);
   lua_pushvalue(L, index);
   return luaL_ref(L, LUA_REGISTRYINDEX);
 }

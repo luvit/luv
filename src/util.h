@@ -30,6 +30,12 @@ void luv_stack_dump(lua_State* L, const char* name);
 #ifdef LUV_SOURCE
 static int luv_error(lua_State* L, int ret);
 static void luv_status(lua_State* L, int status);
+
+/* Return true if the object is a function or a callable table */
+static int luv_is_callable(lua_State* L, int index);
+
+/* Check if the argument is callable and throw an error if it's not */
+static void luv_check_callable(lua_State* L, int index);
 #endif
 
 #endif
