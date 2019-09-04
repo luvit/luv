@@ -19,7 +19,7 @@ sed -e "${script}" -i rockspecs/luv-${version}.rockspec
 # .tar.gz
 rm -rf luv-${version}
 mkdir -p luv-${version}/deps
-cp -r src cmake CMakeLists.txt LICENSE.txt README.md docs.md luv-${version}/
+cp -r src cmake CMakeLists.txt LICENSE.txt README.md docs.md libluv.pc.in luv-${version}/
 cp -r deps/libuv deps/lua-compat-5.3 deps/*.cmake deps/lua_one.c luv-${version}/deps/
 COPYFILE_DISABLE=true tar -czvf luv-${version}.tar.gz luv-${version}
 rm -rf luv-${version}
