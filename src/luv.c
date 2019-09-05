@@ -15,6 +15,7 @@
  *
  */
 
+#include <lua.h>
 #if (LUA_VERSION_NUM != 503)
 #include "c-api/compat-5.3.h"
 #endif
