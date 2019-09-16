@@ -156,13 +156,15 @@ return require('lib/tap')(function (test)
 
   test("fs.statfs sync", function (print, p, expect, uv)
     local stat = assert(uv.fs_statfs("."))
-    assert(stat.size)
+    p(stat)
+    assert(stat.bavail>0)
   end)
 
   test("fs.statfs async", function (print, p, expect, uv)
     assert(uv.fs_statfs(".", expect(function (err, stat)
       assert(not err, err)
-      assert(stat.size)
+      p(stat)
+      assert(stat.bavail>0)
     end)))
   end)
 

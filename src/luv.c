@@ -147,6 +147,9 @@ static const luaL_Reg luv_functions[] = {
   {"tcp_getsockname", luv_tcp_getsockname},
   {"tcp_connect", luv_tcp_connect},
   {"tcp_write_queue_size", luv_write_queue_size},
+#if LUV_UV_VERSION_GEQ(1, 32, 0)
+  {"tcp_close_reset", luv_tcp_close_reset},
+#endif
 
   // pipe.c
   {"new_pipe", luv_new_pipe},
@@ -237,7 +240,7 @@ static const luaL_Reg luv_functions[] = {
   {"fs_readdir", luv_fs_readdir},
   {"fs_closedir", luv_fs_closedir},
 #endif
-#if LUV_UV_VERSION_GEQ(1, 28, 0)
+#if LUV_UV_VERSION_GEQ(1, 31, 0)
   {"fs_statfs", luv_fs_statfs},
 #endif
 
@@ -426,6 +429,9 @@ static const luaL_Reg luv_tcp_methods[] = {
   {"getsockname", luv_tcp_getsockname},
   {"connect", luv_tcp_connect},
   {"write_queue_size", luv_write_queue_size},
+#if LUV_UV_VERSION_GEQ(1, 32, 0)
+  {"close_reset", luv_tcp_close_reset},
+#endif
   {NULL, NULL}
 };
 
