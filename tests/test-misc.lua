@@ -120,4 +120,16 @@ return require('lib/tap')(function (test)
     end
   end)
 
+  test("uv.os_environ", function(print, p, expect, uv)
+    local name, name2 = "LUV_TEST_FOO", "LUV_TEST_FOO2";
+    local value, value2 = "123456789", ""
+
+    uv.os_setenv(name, value)
+    uv.os_setenv(name2, value2)
+
+    local env = uv.os_environ();
+    assert(env[name]==value)
+    assert(env[name2]==value2)
+  end)
+
 end)

@@ -546,3 +546,22 @@ static int luv_gettimeofday(lua_State* L) {
 }
 #endif
 
+#if LUV_UV_VERSION_GEQ(1, 31, 0)
+static int luv_os_environ(lua_State* L) {
+  int i, ret, envcount;
+  uv_env_item_t* envitems;
+  ret = uv_os_environ(&envitems, &envcount);
+  if (ret==0) {
+    lua_newtable(L);
+    for(i=0; i<envcount; i++) {
+      lua_pushstring(L, envitems[i].name);
+      lua_pushstring(L, envitems[i].value);
+      lua_rawset(L, -3);
+    }
+    uv_os_free_environ(envitems, envcount);
+    return 1;
+  }
+  return luv_error(L, ret);
+}
+#endif
+
