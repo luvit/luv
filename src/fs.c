@@ -239,6 +239,9 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
     case UV_FS_STAT:
     case UV_FS_LSTAT:
     case UV_FS_FSTAT:
+#if LUV_UV_VERSION_GEQ(1, 31, 0)
+    case UV_FS_STATFS:
+#endif
       luv_push_stats_table(L, &req->statbuf);
       return 1;
 
@@ -784,6 +787,17 @@ static int luv_fs_closedir(lua_State* L) {
   dir->nentries = 0;
   req->data = luv_setup_req(L, ctx, ref);
   FS_CALL(closedir, req, dir);
+}
+#endif
+
+#if LUV_UV_VERSION_GEQ(1, 31, 0)
+static int luv_fs_statfs(lua_State* L) {
+  luv_ctx_t* ctx = luv_context(L);
+  const char* path = luaL_checkstring(L, 1);
+  int ref = luv_check_continuation(L, 2);
+  uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
+  req->data = luv_setup_req(L, ctx, ref);
+  FS_CALL(statfs, req, path);
 }
 #endif
 

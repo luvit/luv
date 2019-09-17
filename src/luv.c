@@ -237,6 +237,9 @@ static const luaL_Reg luv_functions[] = {
   {"fs_readdir", luv_fs_readdir},
   {"fs_closedir", luv_fs_closedir},
 #endif
+#if LUV_UV_VERSION_GEQ(1, 28, 0)
+  {"fs_statfs", luv_fs_statfs},
+#endif
 
   // dns.c
   {"getaddrinfo", luv_getaddrinfo},
