@@ -188,6 +188,33 @@ static int luv_check_amode(lua_State* L, int index) {
   return mode;
 }
 
+#if LUV_UV_VERSION_GEQ(1, 31, 0)
+static void luv_push_statfs_table(lua_State* L, const uv_statfs_t* s) {
+  int i;
+  lua_createtable(L, 0, 8);
+  lua_pushinteger(L, s->f_type);
+  lua_setfield(L, -2, "type");
+  lua_pushinteger(L, s->f_bsize);
+  lua_setfield(L, -2, "bsize");
+  lua_pushinteger(L, s->f_blocks);
+  lua_setfield(L, -2, "blocks");
+  lua_pushinteger(L, s->f_bfree);
+  lua_setfield(L, -2, "bfree");
+  lua_pushinteger(L, s->f_bavail);
+  lua_setfield(L, -2, "bavail");
+  lua_pushinteger(L, s->f_files);
+  lua_setfield(L, -2, "files");
+  lua_pushinteger(L, s->f_ffree);
+  lua_setfield(L, -2, "ffree");
+  lua_createtable(L, 4, 0);
+  for(i=0; i<4; i++) {
+    lua_pushinteger(L, s->f_spare[i]);
+    lua_rawseti(L, -2, i+1);
+  }
+  lua_setfield(L, -2, "spare");
+};
+#endif
+
 /* Processes a result and pushes the data onto the stack
    returns the number of items pushed */
 static int push_fs_result(lua_State* L, uv_fs_t* req) {
@@ -241,6 +268,12 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
     case UV_FS_FSTAT:
       luv_push_stats_table(L, &req->statbuf);
       return 1;
+
+#if LUV_UV_VERSION_GEQ(1, 31, 0)
+    case UV_FS_STATFS:
+      luv_push_statfs_table(L, req->ptr);
+      return 1;
+#endif
 
     case UV_FS_MKDTEMP:
       lua_pushstring(L, req->path);
@@ -784,6 +817,17 @@ static int luv_fs_closedir(lua_State* L) {
   dir->nentries = 0;
   req->data = luv_setup_req(L, ctx, ref);
   FS_CALL(closedir, req, dir);
+}
+#endif
+
+#if LUV_UV_VERSION_GEQ(1, 31, 0)
+static int luv_fs_statfs(lua_State* L) {
+  luv_ctx_t* ctx = luv_context(L);
+  const char* path = luaL_checkstring(L, 1);
+  int ref = luv_check_continuation(L, 2);
+  uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
+  req->data = luv_setup_req(L, ctx, ref);
+  FS_CALL(statfs, req, path);
 }
 #endif
 

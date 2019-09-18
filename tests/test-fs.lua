@@ -153,4 +153,34 @@ return require('lib/tap')(function (test)
       print("skipped")
     end
   end)
+
+  test("fs.statfs sync", function (print, p, expect, uv)
+    local stat = assert(uv.fs_statfs("."))
+    p(stat)
+    assert(stat.bavail>0)
+  end)
+
+  test("fs.statfs async", function (print, p, expect, uv)
+    assert(uv.fs_statfs(".", expect(function (err, stat)
+      assert(not err, err)
+      p(stat)
+      assert(stat.bavail>0)
+    end)))
+  end)
+
+  test("fs.statfs sync error", function (print, p, expect, uv)
+    local stat, err, code = uv.fs_statfs("BAD_FILE!")
+    p{err=err,code=code,stat=stat}
+    assert(not stat)
+    assert(err)
+    assert(code == "ENOENT")
+  end)
+
+  test("fs.statfs async error", function (print, p, expect, uv)
+    assert(uv.fs_statfs("BAD_FILE@", expect(function (err, stat)
+      p{err=err,stat=stat}
+      assert(err)
+      assert(not stat)
+    end)))
+  end)
 end)

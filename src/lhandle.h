@@ -37,6 +37,7 @@
 #define LUV_RECV 1
 #define LUV_FS_EVENT 1
 #define LUV_FS_POLL 1
+#define LUV_RESET 1
 
 /* Ref for userdata and event callbacks */
 typedef struct {
