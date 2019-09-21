@@ -660,11 +660,13 @@ LUALIB_API int luaopen_luv (lua_State* L) {
 
     lua_pushstring(L, "_loop");
     loop = (uv_loop_t*)lua_newuserdata(L, sizeof(*loop));
-    lua_rawset(L, -3);  // ref to loop, avoid __gc early
-
-    // setup the metatable for __gc
+    // setup the userdata's metatable for __gc
     luaL_getmetatable(L, "uv_loop.meta");
     lua_setmetatable(L, -2);
+    // create a ref to loop, avoid __gc early
+    // this puts the loop userdata into the _loop key
+    // in the returned luv table
+    lua_rawset(L, -3);
 
     ctx->loop = loop;
     ctx->L = L;
