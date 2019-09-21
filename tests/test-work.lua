@@ -20,6 +20,8 @@ return require('lib/tap')(function (test)
                 if (step % 100==0) then
                     p(string.format('run %d%%', math.floor(step*100/count)))
                 end
+            else
+              ctx = nil
             end
         end    --after work, in loop thread
     )
