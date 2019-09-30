@@ -325,7 +325,6 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
         }
       } else
         lua_pushnil(L);
-      uv_fs_req_cleanup(req);
 
       return 1;
     }
@@ -340,19 +339,6 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
       return 2;
   }
 
-}
-
-static void luv_fs_cleanup_req(lua_State* L, uv_fs_t* req, luv_req_t* data) {
-#if LUV_UV_VERSION_GEQ(1, 28, 0)
-  if (req->fs_type == UV_FS_READDIR) {
-    luv_cleanup_req(L, data);
-  } else
-#endif
-  if(req->fs_type != UV_FS_SCANDIR) {
-    luv_cleanup_req(L, data);
-    req->data = NULL;
-    uv_fs_req_cleanup(req);
-  }
 }
 
 static void luv_fs_cb(uv_fs_t* req) {
@@ -371,8 +357,18 @@ static void luv_fs_cb(uv_fs_t* req) {
     lua_insert(L, -nargs - 1);
     nargs++;
   }
-  luv_fulfill_req(L, data, nargs);
-  luv_fs_cleanup_req(L, req, data);
+  if (req->fs_type == UV_FS_SCANDIR) {
+    luv_fulfill_req(L, data, nargs);
+  }
+  else {
+    // cleanup the uv_fs_t before the callback is called to avoid
+    // a race condition when fs_close is called from within
+    // a fs_readdir callback, see https://github.com/luvit/luv/issues/384
+    uv_fs_req_cleanup(req);
+    req->data = NULL;
+    luv_fulfill_req(L, data, nargs);
+    luv_cleanup_req(L, data);
+  }
 }
 
 #define FS_CALL(func, req, ...) {                         \
@@ -401,7 +397,11 @@ static void luv_fs_cb(uv_fs_t* req) {
   }                                                       \
   if (sync) {                                             \
     int nargs = push_fs_result(L, req);                   \
-    luv_fs_cleanup_req(L, req, data);                     \
+    if(req->fs_type != UV_FS_SCANDIR) {                   \
+      luv_cleanup_req(L, data);                           \
+      req->data = NULL;                                   \
+      uv_fs_req_cleanup(req);                             \
+    }                                                     \
     return nargs;                                         \
   }                                                       \
   lua_rawgeti(L, LUA_REGISTRYINDEX, data->req_ref);       \
