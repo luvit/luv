@@ -479,6 +479,25 @@ static const luaL_Reg luv_signal_methods[] = {
   {NULL, NULL}
 };
 
+#if LUV_UV_VERSION_GEQ(1, 28, 0)
+static const luaL_Reg luv_dir_methods[] = {
+  {"readdir", luv_fs_readdir},
+  {"closedir", luv_fs_closedir},
+  {NULL, NULL}
+};
+
+static void luv_dir_init(lua_State* L) {
+  luaL_newmetatable(L, "uv_dir");
+  lua_pushcfunction(L, luv_fs_dir_tostring);
+  lua_setfield(L, -2, "__tostring");
+  lua_pushcfunction(L, luv_fs_dir_gc);
+  lua_setfield(L, -2, "__gc");
+  luaL_newlib(L, luv_dir_methods);
+  lua_setfield(L, -2, "__index");
+  lua_pop(L, 1);
+}
+#endif
+
 static void luv_handle_init(lua_State* L) {
 
   lua_newtable(L);
@@ -683,6 +702,9 @@ LUALIB_API int luaopen_luv (lua_State* L) {
 
   luv_req_init(L);
   luv_handle_init(L);
+#if LUV_UV_VERSION_GEQ(1, 28, 0)
+  luv_dir_init(L);
+#endif
   luv_thread_init(L);
   luv_work_init(L);
 

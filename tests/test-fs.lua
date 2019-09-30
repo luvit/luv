@@ -98,6 +98,45 @@ return require('lib/tap')(function (test)
     assert(uv.fs_unlink(path2))
   end)
 
+  test("fs.{open,read,close}dir object sync #1", function(print, p, expect, uv)
+    local version = 0x10000 + 28*0x100 + 0
+    if uv.version() >= version then
+      local dir = assert(uv.fs_opendir('.'))
+      repeat
+        local dirent = dir:readdir()
+        if dirent then
+          assert(#dirent==1)
+          p(dirent)
+        end
+      until not dirent
+      assert(dir:closedir()==true)
+    else
+      print("skipped")
+    end
+  end)
+
+  test("fs.{open,read,close}dir object sync #2", function(print, p, expect, uv)
+    local version = 0x10000 + 28*0x100 + 0
+    if uv.version() >= version then
+      local dir = assert(uv.fs_opendir('.'))
+      repeat
+        local dirent = dir:readdir()
+        if dirent then
+          assert(#dirent==1)
+          p(dirent)
+        end
+      until not dirent
+      dir:closedir(function(err, state)
+        assert(err==nil)
+        assert(state==true)
+        assert(tostring(dir):match("^uv_dir_t"))
+        print(dir, 'closed')
+      end)
+    else
+      print("skipped")
+    end
+  end)
+
   test("fs.{open,read,close}dir sync one entry", function(print, p, expect, uv)
     local version = 0x10000 + 28*0x100 + 0
     if uv.version() >= version then
