@@ -392,9 +392,9 @@ static int luv_os_setenv(lua_State* L) {
   const char* value = luaL_checkstring(L, 2);
   int ret = uv_os_setenv(name, value);
   if (ret == 0)
-    return luv_error(L, ret);
-  else
     lua_pushboolean(L, 1);
+  else
+    return luv_error(L, ret);
   return 1;
 }
 
@@ -402,9 +402,9 @@ static int luv_os_unsetenv(lua_State* L) {
   const char* name = luaL_checkstring(L, 1);
   int ret = uv_os_unsetenv(name);
   if (ret == 0)
-    return luv_error(L, ret);
-  else
     lua_pushboolean(L, 1);
+  else
+    return luv_error(L, ret);
   return 1;
 }
 
