@@ -40,6 +40,7 @@ void luv_stack_dump(lua_State* L, const char* name) {
 }
 
 static int luv_error(lua_State* L, int status) {
+  assert(status < 0);
   lua_pushnil(L);
   lua_pushfstring(L, "%s: %s", uv_err_name(status), uv_strerror(status));
   lua_pushstring(L, uv_err_name(status));
