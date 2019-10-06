@@ -104,7 +104,9 @@ local function run()
   uv.walk(uv.close)
   uv.run()
 
-  os.exit(-failed)
+  if failed ~= 0 then
+    os.exit(-failed)
+  end
 end
 
 local single = true
