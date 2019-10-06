@@ -1,16 +1,6 @@
 return require('lib/tap')(function (test)
 
-  local isWindows =  _G.isWindows
-  -- needed to make test-process able to run on its own
-  if isWindows == nil then
-    if _G.jit and _G.jit.os then
-      -- Luajit provides explicit platform detection
-      isWindows = _G.jit.os == "Windows"
-    else
-      -- Normal lua will only have \ for path separator on windows.
-      isWindows = package.config:find("\\") and true or false
-    end
-  end
+  local isWindows = require('lib/utils').isWindows
 
   test("test disable_stdio_inheritance", function (print, p, expect, uv)
     uv.disable_stdio_inheritance()
