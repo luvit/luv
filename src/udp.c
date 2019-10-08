@@ -24,13 +24,14 @@ static uv_udp_t* luv_check_udp(lua_State* L, int index) {
 
 static int luv_new_udp(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
+  lua_settop(L, 1);
   uv_udp_t* handle = (uv_udp_t*)luv_newuserdata(L, sizeof(*handle));
   int ret;
   if (lua_isnoneornil(L, 1)) {
     ret = uv_udp_init(ctx->loop, handle);
   }
   else {
-    ret = uv_udp_init_ex(ctx->loop, handle, lua_tointeger(L, 1));
+    ret = uv_udp_init_ex(ctx->loop, handle, luaL_checkinteger(L, 1));
   }
   if (ret < 0) {
     lua_pop(L, 1);
