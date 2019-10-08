@@ -32,7 +32,7 @@ static int luv_new_tcp(lua_State* L) {
     ret = uv_tcp_init(ctx->loop, handle);
   }
   else {
-    ret = uv_tcp_init_ex(ctx->loop, handle, lua_tointeger(L, 1));
+    ret = uv_tcp_init_ex(ctx->loop, handle, luaL_checkinteger(L, 1));
   }
   if (ret < 0) {
     lua_pop(L, 1);

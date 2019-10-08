@@ -260,13 +260,6 @@ static int luv_new_thread(lua_State* L) {
 #if LUV_UV_VERSION_GEQ(1, 26, 0)
   uv_thread_options_t options;
   options.flags = UV_THREAD_NO_FLAGS;
-#endif
-  thread = (luv_thread_t*)lua_newuserdata(L, sizeof(*thread));
-  memset(thread, 0, sizeof(*thread));
-  luaL_getmetatable(L, "uv_thread");
-  lua_setmetatable(L, -2);
-
-#if LUV_UV_VERSION_GEQ(1, 26, 0)
   if (lua_type(L, 1) == LUA_TTABLE)
   {
     cbidx++;
@@ -287,6 +280,11 @@ static int luv_new_thread(lua_State* L) {
 #endif
 
   buff = luv_thread_dumped(L, cbidx, &len);
+
+  thread = (luv_thread_t*)lua_newuserdata(L, sizeof(*thread));
+  memset(thread, 0, sizeof(*thread));
+  luaL_getmetatable(L, "uv_thread");
+  lua_setmetatable(L, -2);
 
   //clear in luv_thread_gc or in child threads
   thread->argc = luv_thread_arg_set(L, &thread->arg, cbidx+1, lua_gettop(L) - 1, LUVF_THREAD_UHANDLE);

@@ -253,6 +253,10 @@ static int luv_spawn(lua_State* L) {
   lua_pop(L, 1);
 #endif
 
+  // this will fill the 3rd argument with nil if it doesn't exist so that
+  // the uv_process_t userdata doesn't get treated as the 3rd argument
+  lua_settop(L, 3);
+
   handle = (uv_process_t*)luv_newuserdata(L, sizeof(*handle));
   handle->type = UV_PROCESS;
   handle->data = luv_setup_handle(L, ctx);
