@@ -12,6 +12,14 @@ else
   usecolors = false
 end
 
+if _G.jit and _G.jit.os then
+  -- Luajit provides explicit platform detection
+  utils.isWindows = _G.jit.os == "Windows"
+else
+  -- Normal lua will only have \ for path separator on windows.
+  utils.isWindows = package.config:find("\\") and true or false
+end
+
 local colors = {
   black   = "0;30",
   red     = "0;31",

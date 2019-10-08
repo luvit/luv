@@ -1,6 +1,6 @@
 return require('lib/tap')(function (test)
 
-  local isWindows =  _G.isWindows
+  local isWindows = require('lib/utils').isWindows
 
   test("test disable_stdio_inheritance", function (print, p, expect, uv)
     uv.disable_stdio_inheritance()

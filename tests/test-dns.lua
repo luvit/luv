@@ -1,5 +1,7 @@
 return require('lib/tap')(function (test)
 
+  local isWindows = require('lib/utils').isWindows
+
   local function errorAllowed(err)
     -- allowed errors  from gnulib's test-getaddrinfo.c
     return err == "EAI_AGAIN" -- offline/no network connection
@@ -47,7 +49,7 @@ return require('lib/tap')(function (test)
   end)
 
   -- FIXME: this test always fails on AppVeyor for some reason
-  if _G.isWindows and not os.getenv'APPVEYOR' then
+  if isWindows and not os.getenv'APPVEYOR' then
     test("Get only ipv6 tcp adresses for luvit.io", function (print, p, expect, uv)
       assert(uv.getaddrinfo("luvit.io", nil, {
         socktype = "stream",
