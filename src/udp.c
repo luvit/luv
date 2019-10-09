@@ -31,7 +31,21 @@ static int luv_new_udp(lua_State* L) {
     ret = uv_udp_init(ctx->loop, handle);
   }
   else {
-    ret = uv_udp_init_ex(ctx->loop, handle, luaL_checkinteger(L, 1));
+    unsigned int flags;
+    if (lua_isnumber(L, 1)) {
+      flags = lua_tointeger(L, 1);
+    }
+    else if (lua_isstring(L, 1)) {
+      const char* family = lua_tostring(L, 1);
+      flags = luv_af_string_to_num(family);
+      if (!flags) {
+        luaL_argerror(L, 1, lua_pushfstring(L, "invalid or unknown address family: '%s'", family));
+      }
+    }
+    else {
+      luaL_argerror(L, 1, "expected string or integer");
+    }
+    ret = uv_udp_init_ex(ctx->loop, handle, flags);
   }
   if (ret < 0) {
     lua_pop(L, 1);
