@@ -3,10 +3,10 @@ local child_code = string.dump(function ()
   local signal = uv.new_signal()
   uv.ref(signal)
   uv.signal_start(signal, "sigint", function ()
+    print("sigint")
     uv.unref(signal)
   end)
   uv.run()
-  os.exit(7)
 end)
 
 return require('lib/tap')(function (test)
@@ -16,17 +16,24 @@ return require('lib/tap')(function (test)
   test("Catch SIGINT", function (print, p, expect, uv)
     local child, pid
     local input = uv.new_pipe(false)
+    local output = uv.new_pipe(false)
     child, pid = assert(uv.spawn(uv.exepath(), {
       args = {"-"},
-      -- cwd = uv.cwd(),
-      stdio = {input,1,2}
+      stdio = {input,output,2}
     }, expect(function (code, signal)
       p("exit", {pid=pid,code=code,signal=signal})
-      assert(code == 7)
       assert(signal == 0)
       uv.close(input)
+      uv.close(output)
       uv.close(child)
     end)))
+    uv.read_start(output, expect(function(err, chunk)
+      assert(not err, err)
+      if chunk then
+        p(chunk)
+        assert(chunk=="sigint\n")
+      end
+    end, 2))
     uv.write(input, child_code)
     uv.shutdown(input)
     local timer = uv.new_timer()
