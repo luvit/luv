@@ -58,7 +58,5 @@ static int luv_async_send(lua_State* L) {
 
   luv_thread_arg_set(L, arg, 2, lua_gettop(L), 0);
   ret = uv_async_send(handle);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }

@@ -293,16 +293,12 @@ static int luv_process_kill(lua_State* L) {
   uv_process_t* handle = luv_check_process(L, 1);
   int signum = luv_parse_signal(L, 2);
   int ret = uv_process_kill(handle, signum);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_kill(lua_State* L) {
   int pid = luaL_checkinteger(L, 1);
   int signum = luv_parse_signal(L, 2);
   int ret = uv_kill(pid, signum);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }

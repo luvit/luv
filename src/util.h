@@ -28,7 +28,8 @@
 void luv_stack_dump(lua_State* L, const char* name);
 
 #ifdef LUV_SOURCE
-static int luv_error(lua_State* L, int ret);
+static int luv_error(lua_State* L, int status);
+static int luv_result(lua_State* L, int status);
 static void luv_status(lua_State* L, int status);
 
 /* Return true if the object is a function or a callable table */

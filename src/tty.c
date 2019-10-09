@@ -43,16 +43,12 @@ static int luv_tty_set_mode(lua_State* L) {
   uv_tty_t* handle = luv_check_tty(L, 1);
   int mode = luaL_checkinteger(L, 2);
   int ret = uv_tty_set_mode(handle, mode);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_tty_reset_mode(lua_State* L) {
   int ret = uv_tty_reset_mode();
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_tty_get_winsize(lua_State* L) {

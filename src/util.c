@@ -47,6 +47,12 @@ static int luv_error(lua_State* L, int status) {
   return 3;
 }
 
+static int luv_result(lua_State* L, int status) {
+  if (status < 0) return luv_error(L, status);
+  lua_pushinteger(L, status);
+  return 1;
+}
+
 static void luv_status(lua_State* L, int status) {
   if (status < 0) {
     lua_pushstring(L, uv_err_name(status));

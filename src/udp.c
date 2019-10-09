@@ -71,9 +71,7 @@ static int luv_udp_open(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   uv_os_sock_t sock = luaL_checkinteger(L, 2);
   int ret = uv_udp_open(handle, sock);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_udp_bind(lua_State* L) {
@@ -97,9 +95,7 @@ static int luv_udp_bind(lua_State* L) {
     lua_pop(L, 1);
   }
   ret = uv_udp_bind(handle, (struct sockaddr*)&addr, flags);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_udp_getsockname(lua_State* L) {
@@ -123,9 +119,7 @@ static int luv_udp_set_membership(lua_State* L) {
   const char* interface_addr = luaL_checkstring(L, 3);
   uv_membership membership = (uv_membership)luaL_checkoption(L, 4, NULL, luv_membership_opts);
   int ret = uv_udp_set_membership(handle, multicast_addr, interface_addr, membership);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_udp_set_multicast_loop(lua_State* L) {
@@ -134,9 +128,7 @@ static int luv_udp_set_multicast_loop(lua_State* L) {
   luaL_checktype(L, 2, LUA_TBOOLEAN);
   on = lua_toboolean(L, 2);
   ret = uv_udp_set_multicast_loop(handle, on);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_udp_set_multicast_ttl(lua_State* L) {
@@ -144,18 +136,14 @@ static int luv_udp_set_multicast_ttl(lua_State* L) {
   int ttl, ret;
   ttl = luaL_checkinteger(L, 2);
   ret = uv_udp_set_multicast_ttl(handle, ttl);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_udp_set_multicast_interface(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   const char* interface_addr = luaL_checkstring(L, 2);
   int ret = uv_udp_set_multicast_interface(handle, interface_addr);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_udp_set_broadcast(lua_State* L) {
@@ -164,9 +152,7 @@ static int luv_udp_set_broadcast(lua_State* L) {
   luaL_checktype(L, 2, LUA_TBOOLEAN);
   on = lua_toboolean(L, 2);
   ret =uv_udp_set_broadcast(handle, on);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_udp_set_ttl(lua_State* L) {
@@ -174,9 +160,7 @@ static int luv_udp_set_ttl(lua_State* L) {
   int ttl, ret;
   ttl = luaL_checknumber(L, 2);
   ret = uv_udp_set_ttl(handle, ttl);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static void luv_udp_send_cb(uv_udp_send_t* req, int status) {
@@ -270,9 +254,7 @@ static int luv_udp_try_send(lua_State* L) {
   luv_check_buf(L, 2, &buf);
   addr_ptr = luv_check_addr(L, &addr, 3, 4);
   ret = uv_udp_try_send(handle, &buf, 1, addr_ptr);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags) {
@@ -331,17 +313,13 @@ static int luv_udp_recv_start(lua_State* L) {
   // in Libuv <= 1.23.0, uv_udp_recv_start will return untranslated error codes on Windows
   ret = uv_translate_sys_error(ret);
 #endif
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_udp_recv_stop(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   int ret = uv_udp_recv_stop(handle);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 #if LUV_UV_VERSION_GEQ(1, 27, 0)
@@ -350,9 +328,7 @@ static int luv_udp_connect(lua_State* L) {
   struct sockaddr_storage addr;
   struct sockaddr* addr_ptr = luv_check_addr(L, &addr, 2, 3);
   int ret = uv_udp_connect(handle, addr_ptr);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_udp_getpeername(lua_State* L) {

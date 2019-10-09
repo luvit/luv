@@ -160,9 +160,7 @@ static int luv_send_buffer_size(lua_State* L) {
     return 1;
   } else { // set
     ret = uv_send_buffer_size(handle, &value);
-    if (ret < 0) return luv_error(L, ret);
-    lua_pushinteger(L, ret);
-    return 1;
+    return luv_result(L, ret);
   }
 }
 
@@ -177,9 +175,7 @@ static int luv_recv_buffer_size(lua_State* L) {
     return 1;
   } else { // set
     ret = uv_recv_buffer_size(handle, &value);
-    if (ret < 0) return luv_error(L, ret);
-    lua_pushinteger(L, ret);
-    return 1;
+    return luv_result(L, ret);
   }
 }
 
