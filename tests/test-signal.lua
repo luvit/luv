@@ -32,8 +32,9 @@ return require('lib/tap')(function (test)
       if chunk then
         p(chunk)
         assert(chunk=="sigint\n")
+        uv.read_stop(output)
       end
-    end, 2))
+    end, 1))
     uv.write(input, child_code)
     uv.shutdown(input)
     local timer = uv.new_timer()
