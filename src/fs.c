@@ -206,12 +206,6 @@ static void luv_push_statfs_table(lua_State* L, const uv_statfs_t* s) {
   lua_setfield(L, -2, "files");
   lua_pushinteger(L, s->f_ffree);
   lua_setfield(L, -2, "ffree");
-  lua_createtable(L, 4, 0);
-  for(i=0; i<4; i++) {
-    lua_pushinteger(L, s->f_spare[i]);
-    lua_rawseti(L, -2, i+1);
-  }
-  lua_setfield(L, -2, "spare");
 };
 #endif
 
