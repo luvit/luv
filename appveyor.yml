@@ -10,7 +10,7 @@ platform:
 # Lua, LuaJIT, Luarocks versions
 environment:
   matrix:
-    - DEPS: true
+    - FROM_DEPS: true
 
     - LUA_VER: 5.3.2
       NOCOMPAT: true  # with compatibility flags disabled.
@@ -49,10 +49,25 @@ cache:
 install:
   - git submodule update --init
 
-build_script:
+for:
+-
+  matrix:
+    only:
+      - FROM_DEPS: true
+
+  build_script:
   - msvcbuild.bat
   - luajit.exe tests\run.lua
-  # Test rock installation
+
+  artifacts:
+    - path: luv.dll
+    - path: luajit.exe
+-
+  matrix:
+    except:
+      - FROM_DEPS: true
+
+  build_script:
   - call .ci\set_compiler_env.bat
   - call .ci\install.bat
   - luarocks make
@@ -66,7 +81,3 @@ build_script:
   - ps: luarocks make rockspecs\$(ls rockspecs) LIBUV_DIR=build LUA_COMPAT53_INCDIR=deps/lua-compat-5.3 CFLAGS="/nologo /MT /O2"
   - ps: if("$(Get-Location)" -eq $(lua -e "print(require'luv'.cwd())")) { "LuaRocks test OK" } else { "LuaRocks test failed"; exit 1 }
   - luarocks remove luv
-
-artifacts:
-  - path: luv.dll
-  - path: luajit.exe
