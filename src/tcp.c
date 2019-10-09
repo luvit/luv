@@ -32,7 +32,7 @@ static int luv_new_tcp(lua_State* L) {
     ret = uv_tcp_init(ctx->loop, handle);
   }
   else {
-    unsigned int flags;
+    unsigned int flags = AF_UNSPEC;
     if (lua_isnumber(L, 1)) {
       flags = lua_tointeger(L, 1);
     }
