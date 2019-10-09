@@ -1,11 +1,10 @@
 os: Visual Studio 2015
 
-# Test with the latest two releases of MSVC
+# MSVC versions
 configuration:
   - 2015
-  - 2013
 
-# Test with the latest Lua and LuaJIT versions
+# Lua, LuaJIT, Luarocks versions
 environment:
   matrix:
     # LuaRocks 3.1.3
