@@ -151,34 +151,36 @@ static int luv_has_ref(lua_State* L) {
 
 static int luv_send_buffer_size(lua_State* L) {
   uv_handle_t* handle = luv_check_handle(L, 1);
-  int value;
+  int value = luaL_optinteger(L, 2, 0);
   int ret;
-  if (lua_isnoneornil(L, 2)) {
-    value = 0;
+  if (value == 0) { // get
+    ret = uv_send_buffer_size(handle, &value);
+    if (ret < 0) return luv_error(L, ret);
+    lua_pushinteger(L, value);
+    return 1;
+  } else { // set
+    ret = uv_send_buffer_size(handle, &value);
+    if (ret < 0) return luv_error(L, ret);
+    lua_pushinteger(L, ret);
+    return 1;
   }
-  else {
-    value = luaL_checkinteger(L, 2);
-  }
-  ret = uv_send_buffer_size(handle, &value);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
 }
 
 static int luv_recv_buffer_size(lua_State* L) {
   uv_handle_t* handle = luv_check_handle(L, 1);
-  int value;
+  int value = luaL_optinteger(L, 2, 0);
   int ret;
-  if (lua_isnoneornil(L, 2)) {
-    value = 0;
+  if (value == 0) { // get
+    ret = uv_recv_buffer_size(handle, &value);
+    if (ret < 0) return luv_error(L, ret);
+    lua_pushinteger(L, value);
+    return 1;
+  } else { // set
+    ret = uv_recv_buffer_size(handle, &value);
+    if (ret < 0) return luv_error(L, ret);
+    lua_pushinteger(L, ret);
+    return 1;
   }
-  else {
-    value = luaL_checkinteger(L, 2);
-  }
-  ret = uv_recv_buffer_size(handle, &value);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
 }
 
 static int luv_fileno(lua_State* L) {
