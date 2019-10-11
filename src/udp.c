@@ -255,7 +255,7 @@ static int luv_udp_try_send(lua_State* L) {
   addr_ptr = luv_check_addr(L, &addr, 3, 4);
   err_or_num_bytes = uv_udp_try_send(handle, &buf, 1, addr_ptr);
   if (err_or_num_bytes < 0) return luv_error(L, err_or_num_bytes);
-  lua_pushinteger(err_or_num_bytes);
+  lua_pushinteger(L, err_or_num_bytes);
   return 1;
 }
 
