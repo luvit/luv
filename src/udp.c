@@ -248,13 +248,15 @@ static int luv_udp_send(lua_State* L) {
 static int luv_udp_try_send(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   uv_buf_t buf;
-  int ret;
+  int err_or_num_bytes;
   struct sockaddr_storage addr;
   struct sockaddr* addr_ptr;
   luv_check_buf(L, 2, &buf);
   addr_ptr = luv_check_addr(L, &addr, 3, 4);
-  ret = uv_udp_try_send(handle, &buf, 1, addr_ptr);
-  return luv_result(L, ret);
+  err_or_num_bytes = uv_udp_try_send(handle, &buf, 1, addr_ptr);
+  if (err_or_num_bytes < 0) return luv_error(L, err_or_num_bytes);
+  lua_pushinteger(err_or_num_bytes);
+  return 1;
 }
 
 static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags) {
