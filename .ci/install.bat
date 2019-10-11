@@ -184,7 +184,6 @@ if not exist "%LR_ROOT%" (
 
 		set CMAKE_GENERATOR=!MSVS_GENERATORS[%APPVEYOR_BUILD_WORKER_IMAGE:~14,4%]!
 		if "%platform%" EQU "x64" (set CMAKE_GENERATOR=!CMAKE_GENERATOR! Win64)
-		echo !CMAKE_GENERATOR!
 
 		echo cmake_generator = "!CMAKE_GENERATOR!" >> %LUAROCKS_INSTALL%\config-%LUA_SHORTV%.lua
 	)
@@ -203,7 +202,6 @@ set LUA_CPATH=%LR_SYSTREE%\lib\lua\%LUA_SHORTV%\?.dll;.\?.dll
 
 call luarocks --version || call :die "Error with LuaRocks installation"
 call luarocks list
-call luarocks config cmake_generator
 
 
 if not exist "%LR_EXTERNAL%" (
