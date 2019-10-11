@@ -51,8 +51,11 @@ static int luv_stop(lua_State* L) {
 
 static int luv_backend_fd(lua_State* L) {
   int ret = uv_backend_fd(luv_loop(L));
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
+  // -1 is returned when there is no backend fd (like on Windows)
+  if (ret == -1)
+    lua_pushnil(L);
+  else
+    lua_pushinteger(L, ret);
   return 1;
 }
 
