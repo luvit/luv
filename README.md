@@ -163,7 +163,7 @@ This will build luv as a module library. Module libraries are plugins that are
 not linked into other targets.
 
 #### Build with PUC Lua 5.3
-By default luv is linked with LuaJIT 2.0.4. If you rather like to link luv
+By default luv is linked with LuaJIT 2.1.0-beta3. If you rather like to link luv
 with PUC Lua 5.3 you can run make with:
 
 ```
