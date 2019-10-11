@@ -183,7 +183,10 @@ if not exist "%LR_ROOT%" (
 		set MSVS_GENERATORS[2019]=Visual Studio 16 2019
 
 		set CMAKE_GENERATOR=!MSVS_GENERATORS[%APPVEYOR_BUILD_WORKER_IMAGE:~14,4%]!
-		if "%platform%" EQU "x64" (set CMAKE_GENERATOR=!CMAKE_GENERATOR! Win64)
+		:: Starting with MSVC 2019, CMake uses -A option to specify arch rather than Win64 suffix
+		if %APPVEYOR_BUILD_WORKER_IMAGE:~14,4% leq 2017 (
+			if "%platform%" EQU "x64" (set CMAKE_GENERATOR=!CMAKE_GENERATOR! Win64)
+		)
 
 		echo cmake_generator = "!CMAKE_GENERATOR!" >> %LUAROCKS_INSTALL%\config-%LUA_SHORTV%.lua
 	)
