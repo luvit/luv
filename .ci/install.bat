@@ -203,6 +203,7 @@ set LUA_CPATH=%LR_SYSTREE%\lib\lua\%LUA_SHORTV%\?.dll;.\?.dll
 
 call luarocks --version || call :die "Error with LuaRocks installation"
 call luarocks list
+call luarocks config cmake_generator
 
 
 if not exist "%LR_EXTERNAL%" (
