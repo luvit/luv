@@ -77,18 +77,14 @@ static int luv_listen(lua_State* L) {
   int ret;
   luv_check_callback(L, (luv_handle_t*)handle->data, LUV_CONNECTION, 3);
   ret = uv_listen(handle, backlog, luv_connection_cb);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_accept(lua_State* L) {
   uv_stream_t* server = luv_check_stream(L, 1);
   uv_stream_t* client = luv_check_stream(L, 2);
   int ret = uv_accept(server, client);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static void luv_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
@@ -128,17 +124,13 @@ static int luv_read_start(lua_State* L) {
   int ret;
   luv_check_callback(L, (luv_handle_t*)handle->data, LUV_READ, 2);
   ret = uv_read_start(handle, luv_alloc_cb, luv_read_cb);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_read_stop(lua_State* L) {
   uv_stream_t* handle = luv_check_stream(L, 1);
   int ret = uv_read_stop(handle);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static void luv_write_cb(uv_write_t* req, int status) {
@@ -231,23 +223,23 @@ static int luv_write2(lua_State* L) {
 
 static int luv_try_write(lua_State* L) {
   uv_stream_t* handle = luv_check_stream(L, 1);
-  int ret;
+  int err_or_num_bytes;
   if (lua_istable(L, 2)) {
     size_t count;
     uv_buf_t *bufs = luv_prep_bufs(L, 2, &count);
-    ret = uv_try_write(handle, bufs, count);
+    err_or_num_bytes = uv_try_write(handle, bufs, count);
     free(bufs);
   }
   else if (lua_isstring(L, 2)) {
     uv_buf_t buf;
     luv_check_buf(L, 2, &buf);
-    ret = uv_try_write(handle, &buf, 1);
+    err_or_num_bytes = uv_try_write(handle, &buf, 1);
   }
   else {
     return luaL_argerror(L, 2, "data must be string or table of strings");
   }
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
+  if (err_or_num_bytes < 0) return luv_error(L, err_or_num_bytes);
+  lua_pushinteger(L, err_or_num_bytes);
   return 1;
 }
 
@@ -269,7 +261,5 @@ static int luv_stream_set_blocking(lua_State* L) {
   luaL_checktype(L, 2, LUA_TBOOLEAN);
   blocking = lua_toboolean(L, 2);
   ret = uv_stream_set_blocking(handle, blocking);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }

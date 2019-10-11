@@ -42,18 +42,14 @@ static int luv_pipe_open(lua_State* L) {
   uv_pipe_t* handle = luv_check_pipe(L, 1);
   uv_file file = luaL_checkinteger(L, 2);
   int ret = uv_pipe_open(handle, file);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_pipe_bind(lua_State* L) {
   uv_pipe_t* handle = luv_check_pipe(L, 1);
   const char* name = luaL_checkstring(L, 2);
   int ret = uv_pipe_bind(handle, name);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_pipe_connect(lua_State* L) {

@@ -53,9 +53,7 @@ static int luv_get_process_title(lua_State* L) {
 static int luv_set_process_title(lua_State* L) {
   const char* title = luaL_checkstring(L, 1);
   int ret = uv_set_process_title(title);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_resident_set_memory(lua_State* L) {
@@ -248,9 +246,7 @@ static int luv_cwd(lua_State* L) {
 
 static int luv_chdir(lua_State* L) {
   int ret = uv_chdir(luaL_checkstring(L, 1));
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_os_tmpdir(lua_State* L) {

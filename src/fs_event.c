@@ -75,17 +75,13 @@ static int luv_fs_event_start(lua_State* L) {
   lua_pop(L, 1);
   luv_check_callback(L, (luv_handle_t*)handle->data, LUV_FS_EVENT, 4);
   ret = uv_fs_event_start(handle, luv_fs_event_cb, path, flags);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_fs_event_stop(lua_State* L) {
   uv_fs_event_t* handle = luv_check_fs_event(L, 1);
   int ret = uv_fs_event_stop(handle);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_fs_event_getpath(lua_State* L) {

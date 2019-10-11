@@ -68,17 +68,13 @@ static int luv_fs_poll_start(lua_State* L) {
   int ret;
   luv_check_callback(L, (luv_handle_t*)handle->data, LUV_FS_POLL, 4);
   ret = uv_fs_poll_start(handle, luv_fs_poll_cb, path, interval);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_fs_poll_stop(lua_State* L) {
   uv_fs_poll_t* handle = luv_check_fs_poll(L, 1);
   int ret = uv_fs_poll_stop(handle);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_fs_poll_getpath(lua_State* L) {

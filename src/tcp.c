@@ -60,9 +60,7 @@ static int luv_tcp_open(lua_State* L) {
   uv_tcp_t* handle = luv_check_tcp(L, 1);
   uv_os_sock_t sock = luaL_checkinteger(L, 2);
   int ret = uv_tcp_open(handle, sock);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_tcp_nodelay(lua_State* L) {
@@ -71,9 +69,7 @@ static int luv_tcp_nodelay(lua_State* L) {
   luaL_checktype(L, 2, LUA_TBOOLEAN);
   enable = lua_toboolean(L, 2);
   ret = uv_tcp_nodelay(handle, enable);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_tcp_keepalive(lua_State* L) {
@@ -86,9 +82,7 @@ static int luv_tcp_keepalive(lua_State* L) {
     delay = luaL_checkinteger(L, 3);
   }
   ret = uv_tcp_keepalive(handle, enable, delay);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_tcp_simultaneous_accepts(lua_State* L) {
@@ -97,9 +91,7 @@ static int luv_tcp_simultaneous_accepts(lua_State* L) {
   luaL_checktype(L, 2, LUA_TBOOLEAN);
   enable = lua_toboolean(L, 2);
   ret = uv_tcp_simultaneous_accepts(handle, enable);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_tcp_bind(lua_State* L) {
@@ -119,9 +111,7 @@ static int luv_tcp_bind(lua_State* L) {
     lua_pop(L, 1);
   }
   ret = uv_tcp_bind(handle, (struct sockaddr*)&addr, flags);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static void parse_sockaddr(lua_State* L, struct sockaddr_storage* address) {

@@ -49,25 +49,19 @@ static int luv_timer_start(lua_State* L) {
   repeat = luaL_checkinteger(L, 3);
   luv_check_callback(L, (luv_handle_t*)handle->data, LUV_TIMEOUT, 4);
   ret = uv_timer_start(handle, luv_timer_cb, timeout, repeat);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_timer_stop(lua_State* L) {
   uv_timer_t* handle = luv_check_timer(L, 1);
   int ret = uv_timer_stop(handle);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_timer_again(lua_State* L) {
   uv_timer_t* handle = luv_check_timer(L, 1);
   int ret = uv_timer_again(handle);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_timer_set_repeat(lua_State* L) {

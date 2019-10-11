@@ -113,15 +113,11 @@ static int luv_poll_start(lua_State* L) {
   }
   luv_check_callback(L, (luv_handle_t*)handle->data, LUV_POLL, 3);
   ret = uv_poll_start(handle, events, luv_poll_cb);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_poll_stop(lua_State* L) {
   uv_poll_t* handle = luv_check_poll(L, 1);
   int ret = uv_poll_stop(handle);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }

@@ -45,16 +45,12 @@ static int luv_idle_start(lua_State* L) {
   int ret;
   luv_check_callback(L, (luv_handle_t *)handle->data, LUV_IDLE, 2);
   ret = uv_idle_start(handle, luv_idle_cb);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 
 static int luv_idle_stop(lua_State* L) {
   uv_idle_t* handle = luv_check_idle(L, 1);
   int ret = uv_idle_stop(handle);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+  return luv_result(L, ret);
 }
 

@@ -28,13 +28,21 @@
 void luv_stack_dump(lua_State* L, const char* name);
 
 #ifdef LUV_SOURCE
-static int luv_error(lua_State* L, int ret);
+// Push a Libuv error code onto the Lua stack
+static int luv_error(lua_State* L, int status);
+
+// Common error handling pattern for binding uv functions that only return success/error.
+// If the binding returns a value other than success/error, this function should not be used.
+static int luv_result(lua_State* L, int status);
+
+// Push the error name onto the stack if status is an error code,
+// or push nil onto the stack if it's not an error code
 static void luv_status(lua_State* L, int status);
 
-/* Return true if the object is a function or a callable table */
+// Return true if the object is a function or a callable table
 static int luv_is_callable(lua_State* L, int index);
 
-/* Check if the argument is callable and throw an error if it's not */
+// Check if the argument is callable and throw an error if it's not
 static void luv_check_callable(lua_State* L, int index);
 #endif
 
