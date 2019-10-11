@@ -9,7 +9,7 @@ platform:
 
 environment:
   matrix:
-    - FROM_DEPS: true
+    #- FROM_DEPS: true
     # LuaRocks 3.x
     - LUA_VER: 5.3.2
       NOCOMPAT: true  # with compatibility flags disabled.
