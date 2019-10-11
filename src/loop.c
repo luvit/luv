@@ -18,9 +18,10 @@
 
 static int luv_loop_close(lua_State* L) {
   int ret = uv_loop_close(luv_loop(L));
-  int num_results = luv_result(L, ret);
+  if (ret < 0) return luv_error(L, ret);
   luv_set_loop(L, NULL);
-  return num_results;
+  lua_pushinteger(L, ret);
+  return 1;
 }
 
 // These are the same order as uv_run_mode which also starts at 0
