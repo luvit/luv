@@ -1,4 +1,4 @@
-pseudo# LibUV in Lua
+# LibUV in Lua
 
 The [luv][] project provides access to the multi-platform support library
 [libuv][] in Lua code. It was primarily developed for the [luvit][] project as
@@ -53,7 +53,7 @@ documented below where they exist.
 ## Contents
 
 This documentation is mostly a retelling of the [libuv API documentation][]
-within the context of luv's Lua API, with Low-level implementation details and
+within the context of luv's Lua API, with low-level implementation details and
 unexposed C functions and types omitted.
 
 - [Error handling][]
@@ -289,9 +289,9 @@ Returns `true` if the handle is closing or closed, `false` otherwise.
 **Note**: This function should only be used between the initialization of the
 handle and the arrival of the close callback.
 
-### `uv.close(handle, callback)`
+### `uv.close(handle, [callback])`
 
-> method form `handle:close(callback)`
+> method form `handle:close([callback])`
 
 Request handle to be closed. `callback` will be called asynchronously after this
 call. This MUST be called on each handle before memory is released.
@@ -339,7 +339,7 @@ See [Reference counting][].
 
 ### `uv.send_buffer_size(handle, [size])`
 
-> method form `handle:send_buffer_size(size)`
+> method form `handle:send_buffer_size([size])`
 
 Gets or sets the size of the send buffer that the operating system uses for the
 socket.
@@ -359,7 +359,7 @@ original set value.
 
 ### `uv.recv_buffer_size(handle, [size])`
 
-> method form `handle:recv_buffer_size(size)`
+> method form `handle:recv_buffer_size([size])`
 
 Gets or sets the size of the receive buffer that the operating system uses for
 the socket.
@@ -422,7 +422,7 @@ Timer handles are used to schedule callbacks to be called in the future.
 Creates and initializes a new `uv_timer_t`. Returns the Lua userdata wrapping
 it.
 
-**Returns:** `userdata : uv_timer_t` or `fail`
+**Returns:** `uv_timer_t userdata` or `fail`
 
 ```lua
 -- Creating a simple setTimeout wrapper
@@ -485,6 +485,8 @@ timeout. If the timer has never been started before it raises `EINVAL`.
 
 ### `uv.timer_set_repeat(timer, repeat)`
 
+> method form `timer:set_repeat(repeat)`
+
 Set the repeat interval value in milliseconds. The timer will be scheduled to
 run on the given interval, regardless of the callback execution duration, and
 will follow normal timer semantics in the case of a time-slice overrun.
@@ -497,6 +499,8 @@ possible.
 **Returns:** Nothing.
 
 ### `uv.timer_get_repeat(timer)`
+
+> method form `timer:get_repeat()`
 
 Get the timer repeat value.
 
@@ -523,7 +527,7 @@ end)
 Creates and initializes a new `uv_prepare_t`. Returns the Lua userdata wrapping
 it.
 
-**Returns:** `userdata : uv_prepare_t` or `fail`
+**Returns:** `uv_prepare_t userdata` or `fail`
 
 ### `uv.prepare_start(prepare, callback)`
 
@@ -562,7 +566,7 @@ end)
 Creates and initializes a new `uv_check_t`. Returns the Lua userdata wrapping
 it.
 
-**Returns:** `userdata : uv_check_t` or `fail`
+**Returns:** `uv_check_t userdata` or `fail`
 
 ### `uv.check_start(check, callback)`
 
@@ -608,7 +612,7 @@ end)
 Creates and initializes a new `uv_idle_t`. Returns the Lua userdata wrapping
 it.
 
-**Returns:** `userdata : uv_idle_t` or `fail`
+**Returns:** `uv_idle_t userdata` or `fail`
 
 ### `uv.idle_start(idle, callback)`
 
@@ -650,7 +654,7 @@ async:send()
 Creates and initializes a new `uv_async_t`. Returns the Lua userdata wrapping
 it. A `nil` callback is allowed.
 
-**Returns:** `userdata : uv_async_t` or `fail`
+**Returns:** `uv_async_t userdata` or `fail`
 
 **Note**: Unlike other handle initialization functions, this immediately starts
 the handle.
@@ -709,7 +713,7 @@ Initialize the handle using a file descriptor.
 
 The file descriptor is set to non-blocking mode.
 
-**Returns:** `userdata : uv_poll_t` or `fail`
+**Returns:** `uv_poll_t userdata` or `fail`
 
 ### `uv.new_socket_poll(fd)`
 
@@ -718,11 +722,11 @@ Initialize the handle using a socket descriptor. On Unix this is identical to
 
 The socket is set to non-blocking mode.
 
-**Returns:** `userdata : uv_poll_t` or `fail`
+**Returns:** `uv_poll_t userdata` or `fail`
 
-### `uv.poll_start(poll, [events], callback)`
+### `uv.poll_start(poll, events, callback)`
 
-> method form `poll:start([events], callback)`
+> method form `poll:start(events, callback)`
 
 > optional `events` defaults to `"rw"`
 
@@ -806,7 +810,7 @@ end)
 Creates and initializes a new `uv_signal_t`. Returns the Lua userdata wrapping
 it.
 
-**Returns:** `userdata : uv_signal_t` or `fail`
+**Returns:** `uv_signal_t userdata` or `fail`
 
 ### `uv.signal_start(signal, signum, callback)`
 
@@ -983,7 +987,7 @@ in the form of [`uv_tcp_t`][], [`uv_pipe_t`][] and [`uv_tty_t`][].
 Shutdown the outgoing (write) side of a duplex stream. It waits for pending
 write requests to complete. The callback is called after shutdown is complete.
 
-**Returns:** `userdata : uv_shutdown_t` or `fail`
+**Returns:** `uv_shutdown_t userdata` or `fail`
 
 ### `uv.listen(stream, backlog, callback)`
 
@@ -1062,14 +1066,16 @@ in, the C backend will use writev to send all strings in a single system call.
 
 The optional `callback` is for knowing when the write is complete.
 
-**Returns:** `userdata : uv_write_t` or `fail`
+**Returns:** `uv_write_t userdata` or `fail`
 
-### `uv.write2(stream, data, send_handle, callback)`
+### `uv.write2(stream, data, send_handle, [callback])`
+
+> method form `stream:write2(data, send_handle, [callback])`
 
 Extended write function for sending handles over a pipe. The pipe must be
 initialized with `ipc` option `true`.
 
-**Returns:** `userdata : uv_write_t` or `fail`
+**Returns:** `uv_write_t userdata` or `fail`
 
 **Note:** `send_handle` must be a TCP socket or pipe, which is a server or a
 connection (listening or connected state). Bound sockets or pipes will be
@@ -1133,7 +1139,7 @@ TCP handles are used to represent both TCP streams and servers.
 
 Creates and initializes a new `uv_tcp_t`. Returns the Lua userdata wrapping it.
 
-**Returns:** `userdata : uv_tcp_t` or `fail`
+**Returns:** `uv_tcp_t userdata` or `fail`
 
 ### `uv.tcp_open(tcp, sock)`
 
@@ -1178,7 +1184,7 @@ in multi-process setups.
 
 ### `uv.tcp_bind(tcp, host, port, [flags])`
 
-> method form `tcp:bind(host, port)`
+> method form `tcp:bind(host, port, [flags])`
 
 Bind the handle to an host and port. `host` should be an IP address and
 not a domain name. Any `flags` are set with a table with field `ipv6only`
@@ -1227,7 +1233,7 @@ Establish an IPv4 or IPv6 TCP connection.
 The callback is made when the connection has been established or when a
 connection error happened.
 
-**Returns:** `userdata : uv_connect_t` or `fail`
+**Returns:** `uv_connect_t userdata` or `fail`
 
 ```lua
 local client = uv.new_tcp()
@@ -1280,7 +1286,7 @@ Creates and initializes a new `uv_pipe_t`. Returns the Lua userdata wrapping
 it. The `ipc` argument is a boolean to indicate if this pipe will be used for
 handle passing between processes.
 
-**Returns:** `userdata : uv_pipe_t` or `fail`
+**Returns:** `uv_pipe_t userdata` or `fail`
 
 ### `uv.pipe_open(file)`
 
@@ -1303,11 +1309,11 @@ typically between 92 and 108 bytes.
 
 ### `uv.pipe_connect(pipe, name, [callback])`
 
-> method form `pipe:connect(name, callback)`
+> method form `pipe:connect(name, [callback])`
 
 Connect to the Unix domain socket or the named pipe.
 
-**Returns:** `userdata : uv_connect_t` or `fail`
+**Returns:** `uv_connect_t userdata` or `fail`
 
 **Note**: Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes,
 typically between 92 and 108 bytes.
@@ -1330,6 +1336,8 @@ connected.
 **Returns:** `string` or `fail`
 
 ### `uv.pipe_pending_instances(pipe, count)`
+
+> method form `pipe:pending_instances(count)`
 
 Set the number of pending pipe instance handles when the pipe server is waiting
 for connections.
@@ -1398,7 +1406,7 @@ processes that share the tty.
 
 This function is not thread safe on systems that don’t support ioctl TIOCGPTN or TIOCPTYGNAME, for instance OpenBSD and Solaris.
 
-**Returns:** `userdata : uv_tty_t` or `fail`
+**Returns:** `uv_tty_t userdata` or `fail`
 
 **Note:** If reopening the TTY fails, libuv falls back to blocking writes.
 
@@ -1450,7 +1458,7 @@ it. The actual socket is created lazily. At the moment, the lower 8 bits of the
 `flags` parameter are used as the socket domain. A socket will be created for
 the given domain.
 
-**Returns:** `userdata : uv_udp_t` or `fail`
+**Returns:** `uv_udp_t userdata` or `fail`
 
 ### `uv.udp_get_send_queue_size()`
 
@@ -1586,7 +1594,7 @@ Send data over the UDP socket. If the socket has not previously been bound
 with `uv.udp_bind()` it will be bound to `0.0.0.0` (the "all interfaces" IPv4
 address) and a random port number.
 
-**Returns:** `userdata : uv_udp_send_t` or `fail`
+**Returns:** `uv_udp_send_t userdata` or `fail`
 
 ### `uv.udp_try_send(udp, data, host, port)`
 
@@ -1615,7 +1623,7 @@ Stop listening for incoming datagrams.
 
 **Returns:** `0` or `fail`
 
-### `uv.udp_connect(host, port)`
+### `uv.udp_connect(udp, host, port)`
 
 > method form `udp:connect(host, port)`
 
@@ -1642,7 +1650,7 @@ handle uses the best backend for the job on each platform.
 Creates and initializes a new `uv_fs_event_t`. Returns the Lua userdata wrapping
 it.
 
-**Returns:** `userdata : uv_fs_event_t` or `fail`
+**Returns:** `uv_fs_event_t userdata` or `fail`
 
 ### `uv.fs_event_start(fs_event, path, flags, callback)`
 
@@ -1664,7 +1672,7 @@ Stop the handle, the callback will no longer be called.
 
 ### `uv.fs_event_getpath()`
 
-> method form `fs_event:get_path()`
+> method form `fs_event:getpath()`
 
 Get the path being monitored by the handle.
 
@@ -1685,7 +1693,7 @@ they can work on file systems where fs event handles can't.
 Creates and initializes a new `uv_fs_poll_t`. Returns the Lua userdata wrapping
 it.
 
-**Returns:** `userdata : uv_fs_poll_t` or `fail`
+**Returns:** `uv_fs_poll_t userdata` or `fail`
 
 ### `uv.fs_poll_start(fs_poll, path, interval)`
 
@@ -1790,7 +1798,7 @@ Equivalent to `rmdir(2)`.
 Equivalent to `scandir(3)`, with a slightly different API. Returns a handle that
 the user can pass to `uv.fs_scandir_next()`.
 
-**Returns:** `userdata : uv_fs_t`
+**Returns:** `uv_fs_t userdata`
 
 ### `uv.fs_scandir_next(fs)`
 
@@ -1952,7 +1960,7 @@ Copies a file from path to new_path.
 Opens path as a directory stream. Returns a handle that the user can pass to
 `uv.fs_scandir_next()`.
 
-**Returns:** `userdata : uv_dir_t`
+**Returns:** `uv_dir_t userdata`
 
 ### `uv.fs_readdir(dir, [callback])`
 
@@ -2009,7 +2017,7 @@ work:queue(1, 2)
 Creates and initializes a new `luv_work_ctx_t` (not `uv_work_t`). Returns the
 Lua userdata wrapping it.
 
-**Returns:** `userdata : luv_work_ctx_t`
+**Returns:** `luv_work_ctx_t userdata`
 
 ### `uv.queue_work(work_ctx, ...)`
 
@@ -2071,7 +2079,7 @@ a Lua function or a Lua function dumped to a string. Additional arguments `...`
 are passed to the `entry` function and an optional `options` table may be
 provided. Currently accepted `option` fields are `stack_size`.
 
-**Returns:** `userdata : luv_thread_t` or `fail`
+**Returns:** `luv_thread_t userdata` or `fail`
 
 ### `uv.thread_equal()`
 
