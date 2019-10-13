@@ -76,6 +76,7 @@ for:
   - luarocks make
   - luarocks show luv
   - ps: if("$(Get-Location)" -eq $(lua -e "print(require'luv'.cwd())")) { "LuaRocks test OK" } else { "LuaRocks test failed"; exit 1 }
+  - lua tests\run.lua
   - luarocks remove luv
     # Test the alternate rockspec
   - mkdir build\lib
