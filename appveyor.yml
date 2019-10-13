@@ -1,31 +1,47 @@
-os: Visual Studio 2015
-
-# MSVC versions
-configuration:
-  - 2015
-
-# Lua, LuaJIT, Luarocks versions
-environment:
-  matrix:
-    # LuaRocks 3.1.3
-    - LUA_VER: 5.3.2
-      NOCOMPAT: true  # with compatibility flags disabled.
-      LUAROCKS_VER: 3.1.3
-    - LJ_VER: 2.1
-      LUAROCKS_VER: 3.1.3
-
-    - LUA_VER: 5.3.2
-      NOCOMPAT: true  # with compatibility flags disabled.
-      LUAROCKS_VER: 2.3.0
-    - LJ_VER: 2.1
-      LUAROCKS_VER: 2.3.0
+image:
+  - Visual Studio 2015
+  - Visual Studio 2017
+  - Visual Studio 2019
 
 platform:
   - x86
   - x64
 
+environment:
+  matrix:
+    - FROM_DEPS: true
+
+    # LuaRocks 3.x
+    - LUA_VER: 5.3.2
+      NOCOMPAT: true  # with compatibility flags disabled.
+      LUAROCKS_VER: 3.1.3
+    - LJ_VER: 2.1
+      LUAROCKS_VER: 3.1.3
+
+    # LuaRocks 2.x
+    - LUA_VER: 5.3.2
+      NOCOMPAT: true  # with compatibility flags disabled.
+      LUAROCKS_VER: 2.3.0
+    - LJ_VER: 2.1
+      LUAROCKS_VER: 2.3.0
+
 matrix:
   fast_finish: true
+  exclude:
+    # Skip x86 for LuaRocks tests
+    - platform: x86
+      LUAROCKS_VER: 3.1.3
+    - platform: x86
+      LUAROCKS_VER: 2.3.0
+    # Only test LuaRocks with MSVC 2017
+    - image: Visual Studio 2015
+      LUAROCKS_VER: 3.1.3
+    - image: Visual Studio 2015
+      LUAROCKS_VER: 2.3.0
+    - image: Visual Studio 2019
+      LUAROCKS_VER: 3.1.3
+    - image: Visual Studio 2019
+      LUAROCKS_VER: 2.3.0
 
 cache:
   - c:\lua -> appveyor.yml
@@ -34,24 +50,38 @@ cache:
 install:
   - git submodule update --init
 
-build_script:
+for:
+-
+  # For testing building from git
+  matrix:
+    only:
+      - FROM_DEPS: true
+
+  build_script:
   - msvcbuild.bat
   - luajit.exe tests\run.lua
-  # Test rock installation
+
+  artifacts:
+    - path: luv.dll
+    - path: luajit.exe
+-
+  # For testing LuaRocks
+  matrix:
+    except:
+      - FROM_DEPS: true
+
+  build_script:
   - call .ci\set_compiler_env.bat
   - call .ci\install.bat
   - luarocks make
   - luarocks show luv
   - ps: if("$(Get-Location)" -eq $(lua -e "print(require'luv'.cwd())")) { "LuaRocks test OK" } else { "LuaRocks test failed"; exit 1 }
+  - lua tests\run.lua
   - luarocks remove luv
     # Test the alternate rockspec
   - mkdir build\lib
-  - cp build\deps\libuv\Release\uv_a.lib build\lib\uv.lib
+  - cp build.luarocks\deps\libuv\Release\uv_a.lib build\lib\uv.lib
   - cp -a deps\libuv\include build
   - ps: luarocks make rockspecs\$(ls rockspecs) LIBUV_DIR=build LUA_COMPAT53_INCDIR=deps/lua-compat-5.3 CFLAGS="/nologo /MT /O2"
   - ps: if("$(Get-Location)" -eq $(lua -e "print(require'luv'.cwd())")) { "LuaRocks test OK" } else { "LuaRocks test failed"; exit 1 }
   - luarocks remove luv
-
-artifacts:
-  - path: luv.dll
-  - path: luajit.exe
