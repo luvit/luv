@@ -135,6 +135,9 @@ static const luaL_Reg luv_functions[] = {
   {"is_readable", luv_is_readable},
   {"is_writable", luv_is_writable},
   {"stream_set_blocking", luv_stream_set_blocking},
+#if LUV_UV_VERSION_GEQ(1, 19, 0)
+  {"stream_get_write_queue_size", luv_stream_get_write_queue_size},
+#endif
 
   // tcp.c
   {"new_tcp", luv_new_tcp},
@@ -387,6 +390,9 @@ static const luaL_Reg luv_stream_methods[] = {
   {"is_readable", luv_is_readable},
   {"is_writable", luv_is_writable},
   {"set_blocking", luv_stream_set_blocking},
+#if LUV_UV_VERSION_GEQ(1, 19, 0)
+  {"get_write_queue_size", luv_stream_get_write_queue_size},
+#endif
   {NULL, NULL}
 };
 

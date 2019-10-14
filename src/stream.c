@@ -263,3 +263,11 @@ static int luv_stream_set_blocking(lua_State* L) {
   ret = uv_stream_set_blocking(handle, blocking);
   return luv_result(L, ret);
 }
+
+#if LUV_UV_VERSION_GEQ(1, 19, 0)
+static int luv_stream_get_write_queue_size(lua_State* L) {
+  uv_stream_t* handle = luv_check_stream(L, 1);
+  lua_pushinteger(L, uv_stream_get_write_queue_size(handle));
+  return 1;
+}
+#endif

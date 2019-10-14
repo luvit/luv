@@ -165,6 +165,7 @@ static void luv_connect_cb(uv_connect_t* req, int status) {
   req->data = NULL;
 }
 
+// deprecated by luv_stream_get_write_queue_size
 static int luv_write_queue_size(lua_State* L) {
   uv_tcp_t* handle = luv_check_tcp(L, 1);
   lua_pushinteger(L, handle->write_queue_size);
