@@ -213,11 +213,7 @@ static int luv_tcp_close_reset(lua_State* L) {
     luv_check_callback(L, (luv_handle_t*)handle->data, LUV_RESET, 2);
   }
   ret = uv_tcp_close_reset(handle, luv_close_reset_cb);
-  if (ret < 0) {
-    lua_pop(L, 1);
-    return luv_error(L, ret);
-  }
-  return 1;
+  return luv_result(L, ret);
 }
 #endif
 
