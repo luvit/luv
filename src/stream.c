@@ -42,8 +42,12 @@ static uv_stream_t* luv_check_stream(lua_State* L, int index) {
 static void luv_shutdown_cb(uv_shutdown_t* req, int status) {
   luv_req_t* data = (luv_req_t*)req->data;
   lua_State* L = data->ctx->L;
-  luv_status(L, status);
-  luv_fulfill_req(L, (luv_req_t*)req->data, 1);
+  // if the stream was closed (e.g. __gc'd) then the shutdown gets canceled
+  // and the callback shouldn't be run
+  if (status != UV_ECANCELED) {
+    luv_status(L, status);
+    luv_fulfill_req(L, (luv_req_t*)req->data, 1);
+  }
   luv_cleanup_req(L, (luv_req_t*)req->data);
   req->data = NULL;
 }
