@@ -190,7 +190,6 @@ static int luv_check_amode(lua_State* L, int index) {
 
 #if LUV_UV_VERSION_GEQ(1, 31, 0)
 static void luv_push_statfs_table(lua_State* L, const uv_statfs_t* s) {
-  int i;
   lua_createtable(L, 0, 8);
   lua_pushinteger(L, s->f_type);
   lua_setfield(L, -2, "type");
