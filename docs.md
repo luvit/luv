@@ -1257,7 +1257,7 @@ the SO_LINGER socket option with a linger interval of zero and then calling
 `uv.close()`. Due to some platform inconsistencies, mixing of `uv.shutdown()`
 and `uv.tcp_close_reset()` calls is not allowed.
 
-**Returns:** TODO
+**Returns:** `0` or `fail`
 
 ## `uv_pipe_t` — Pipe handle
 
