@@ -1218,7 +1218,7 @@ with fields `ip`, `family`, and `port`.
 **Returns:** `table` or `fail`
 - `ip` : `string`
 - `family` : `string`
-- `port` : `number`
+- `port` : `integer`
 
 ### `uv.tcp_getsockname(tcp)`
 
@@ -1230,7 +1230,7 @@ with fields `ip`, `family`, and `port`.
 **Returns:** `table` or `fail`
 - `ip` : `string`
 - `family` : `string`
-- `port` : `number`
+- `port` : `integer`
 
 ### `uv.tcp_connect(tcp, host, port, callback)`
 
@@ -1515,7 +1515,7 @@ fields `ip`, `family`, and `port`.
 **Returns:** `table` or `fail`
 - `ip` : `string`
 - `family` : `string`
-- `port` : `number`
+- `port` : `integer`
 
 ### `uv.udp_getpeername(udp)`
 
@@ -1527,7 +1527,7 @@ an address table with fields `ip`, `family`, and `port`.
 **Returns:** `table` or `fail`
 - `ip` : `string`
 - `family` : `string`
-- `port` : `number`
+- `port` : `integer`
 
 ### `uv.udp_set_membership(udp, multicast_addr, interface_addr, membership)`
 
