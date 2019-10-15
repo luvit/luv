@@ -1127,6 +1127,14 @@ when the blocking mode is changed after write requests have already been
 submitted. Therefore it is recommended to set the blocking mode immediately
 after opening or creating the stream.
 
+### `uv.stream_get_write_queue_size()`
+
+> method form `stream:get_write_queue_size()`
+
+Returns the stream's write queue size.
+
+**Returns:** `integer`
+
 ## `uv_tcp_t` — TCP handle
 
 [`uv_tcp_t`]: #uv_tcp_t--tcp-handle
@@ -1241,12 +1249,6 @@ client:connect("127.0.0.1", 8080, function (err)
   -- check error and carry on.
 end)
 ```
-
-### `uv.tcp_write_queue_size(tcp)`
-
-> method form `tcp:write_queue_size()`
-
-TODO
 
 ### `uv.tcp_close_reset()`
 
