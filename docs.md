@@ -1731,13 +1731,13 @@ operations.
 
 All file descriptors `fd` are integers.
 
-All functions take an optional `callback`. If the callback is omitted, the
-request is completed synchronously with values returned to the original caller.
-If a callback is provided, the request `uv_fs_t` is returned to the original
-caller and is asynchronously completed with results passed to the callback.
+If a `callback` is passed to functions that accept one, the request `uv_fs_t` is
+returned to the original caller and is asynchronously completed with results
+passed to the callback. If omitted, the request is completed synchronously with
+values returned to the original caller.
 
-All `mode`s are integers indicating access permissions. To use an octal
-representation, pass an explicit `tonumber` call such as `tonumber("0666", 8)`.
+All `mode`s are integers indicating access permissions in decimal format. To use
+an octal format, use a `tonumber`. For example: `tonumber("0666", 8)`.
 
 ### `uv.fs_close(fd, [callback])`
 
@@ -1805,6 +1805,9 @@ the user can pass to `uv.fs_scandir_next()`.
 Called on a `uv_fs_t` returned by `uv.fs_scandir()` to get the next directory
 entry data as a `name, type` pair. When there are no more entries, `nil` is
 returned.
+
+**Note:** This function only has a synchronous version. See `uv.fs_opendir` and
+its related functions for an asynchronous version.
 
 **Returns:** `string, string` or `nil` or `fail`
 
@@ -1955,19 +1958,25 @@ Copies a file from path to new_path.
 
 **Returns:** `boolean`
 
-### `uv.fs_opendir(path, [callback])`
+### `uv.fs_opendir(path, [callback], [entries])`
 
 Opens path as a directory stream. Returns a handle that the user can pass to
-`uv.fs_scandir_next()`.
+`uv.fs_readdir()`. The `entries` parameter defines the maximum number of entries
+that should be returned by each call to `uv.fs_readdir()`.
 
 **Returns:** `uv_dir_t userdata`
 
 ### `uv.fs_readdir(dir, [callback])`
 
 Iterates over the directory stream `uv_dir_t` returned by a successful
-`uv.fs_opendir()` call.
+`uv.fs_opendir()` call. A table of data tables is returned where the number
+of entries `n` is equal to or less than the `entries` parameter used in
+the associated `uv.fs_opendir()` call.
 
-**Returns:** TODO
+**Returns:** `table`
+- `[1, 2, 3, ..., n]` : `table`
+  - `name` : `string`
+  - `type` : `string`
 
 ### `uv.fs_closedir(dir, [callback])`
 
