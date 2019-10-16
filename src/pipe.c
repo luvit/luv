@@ -26,8 +26,11 @@ static int luv_new_pipe(lua_State* L) {
   uv_pipe_t* handle;
   int ipc, ret;
   luv_ctx_t* ctx = luv_context(L);
-  luaL_checktype(L, 1, LUA_TBOOLEAN);
-  ipc = lua_toboolean(L, 1);
+  if (lua_isboolean(L, 1)) {
+    ipc = lua_toboolean(L, 1);
+  } else {
+    luaL_argcheck(L, lua_isnoneornil(L, 1), 1, "Expected boolean or nil");
+  }
   handle = (uv_pipe_t*)luv_newuserdata(L, sizeof(*handle));
   ret = uv_pipe_init(ctx->loop, handle, ipc);
   if (ret < 0) {
