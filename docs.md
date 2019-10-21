@@ -247,7 +247,13 @@ end)
 
 [`uv_req_t`]: #uv_req_t--request-handle
 
-TODO
+`uv_req_t` is the base type for all libuv request types.
+
+### `uv.cancel(req)`
+
+Cancel a pending request. Fails if the request is executing or has finished
+executing. Only cancellation of `uv_fs_t`, `uv_getaddrinfo_t`,
+`uv_getnameinfo_t` and `uv_work_t` requests is currently supported.
 
 ## `uv_handle_t` — Base handle
 
