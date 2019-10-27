@@ -9,7 +9,7 @@ BUILD_SHARED_LIBS ?= OFF
 WITH_SHARED_LIBUV ?= OFF
 WITH_LUA_ENGINE ?= LuaJIT
 LUA_BUILD_TYPE ?= Static
-LUA_COMPAT53_DIR ?= deps/lua-compat-5.3
+LUA_COMPAT53_DIR ?= deps/lua-compat-5.3/c-api
 
 ifeq ($(WITH_LUA_ENGINE), LuaJIT)
   LUABIN=build/luajit
