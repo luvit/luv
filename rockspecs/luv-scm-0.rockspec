@@ -27,7 +27,7 @@ external_dependencies = {
     library = 'uv',
   },
   LUA_COMPAT53 = {
-    header = "c-api/compat-5.3.h"
+    header = "compat-5.3.h"
   }
 }
 

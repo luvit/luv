@@ -40,7 +40,7 @@ script:
   - mkdir build/lib
   - cp build/deps/libuv/libuv_a.a build/lib/libuv.a
   - cp -a deps/libuv/include build
-  - luarocks make rockspecs/$(ls rockspecs) LIBUV_DIR=build LUA_COMPAT53_INCDIR=deps/lua-compat-5.3
+  - luarocks make rockspecs/$(ls rockspecs) LIBUV_DIR=build LUA_COMPAT53_INCDIR=deps/lua-compat-5.3/c-api
   - test $PWD = `lua -e "print(require'luv'.cwd())"`
 
 jobs:
