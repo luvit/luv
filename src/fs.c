@@ -367,7 +367,9 @@ static void luv_fs_cb(uv_fs_t* req) {
   }
 }
 
-#define FS_CALL(func, req, ...) {                         \
+// handle the FS call but don't return, instead set the local
+// variable 'nargs' to the number of return values
+#define FS_CALL_NORETURN(func, req, ...) {                \
   int ret, sync;                                          \
   luv_req_t* data = (luv_req_t*)req->data;                \
   sync = data->callback_ref == LUA_NOREF;                 \
@@ -389,19 +391,26 @@ static void luv_fs_cb(uv_fs_t* req) {
     luv_cleanup_req(L, data);                             \
     req->data = NULL;                                     \
     uv_fs_req_cleanup(req);                               \
-    return 3;                                             \
+    nargs = 3;                                            \
   }                                                       \
-  if (sync) {                                             \
-    int nargs = push_fs_result(L, req);                   \
+  else if (sync) {                                        \
+    nargs = push_fs_result(L, req);                       \
     if(req->fs_type != UV_FS_SCANDIR) {                   \
       luv_cleanup_req(L, data);                           \
       req->data = NULL;                                   \
       uv_fs_req_cleanup(req);                             \
     }                                                     \
-    return nargs;                                         \
   }                                                       \
-  lua_rawgeti(L, LUA_REGISTRYINDEX, data->req_ref);       \
-  return 1;                                               \
+  else {                                                  \
+    lua_rawgeti(L, LUA_REGISTRYINDEX, data->req_ref);     \
+    nargs = 1;                                            \
+  }                                                       \
+}
+
+#define FS_CALL(func, req, ...) {                         \
+  int nargs;                                              \
+  FS_CALL_NORETURN(func, req, __VA_ARGS__)                \
+  return nargs;                                           \
 }
 
 static int luv_fs_close(lua_State* L) {
@@ -455,32 +464,16 @@ static int luv_fs_unlink(lua_State* L) {
 static int luv_fs_write(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
   uv_file file = luaL_checkinteger(L, 1);
-  uv_buf_t buf;
-  int64_t offset;
-  int ref;
-  uv_fs_t* req;
-  size_t count;
-  uv_buf_t *bufs = NULL;
-
-  if (lua_istable(L, 2)) {
-    bufs = luv_prep_bufs(L, 2, &count);
-    buf.base = NULL;
-  }
-  else if (lua_isstring(L, 2)) {
-    luv_check_buf(L, 2, &buf);
-    count = 1;
-  }
-  else {
-    return luaL_argerror(L, 2, "data must be string or table of strings");
-  }
-
-  offset = luaL_checkinteger(L, 3);
-  ref = luv_check_continuation(L, 4);
-  req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
+  int64_t offset = luaL_checkinteger(L, 3);
+  int ref = luv_check_continuation(L, 4);
+  uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ctx, ref);
-  req->ptr = buf.base;
-  ((luv_req_t*)req->data)->data = bufs;
-  FS_CALL(write, req, file, bufs ? bufs : &buf, count, offset);
+  size_t count;
+  uv_buf_t* bufs = luv_check_bufs(L, 2, &count, (luv_req_t*)req->data);
+  int nargs;
+  FS_CALL_NORETURN(write, req, file, bufs, count, offset);
+  free(bufs);
+  return nargs;
 }
 
 static int luv_fs_mkdir(lua_State* L) {

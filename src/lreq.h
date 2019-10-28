@@ -27,6 +27,9 @@ typedef struct {
   void* data; /* extra data */
 } luv_req_t;
 
+// This is an arbitrary value that we can assume will never be returned by luaL_ref
+#define LUV_REQ_MULTIREF (-0x1234)
+
 #ifdef LUV_SOURCE
 /* Used in the top of a setup function to check the arg
    and ref the callback to an integer.

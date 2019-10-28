@@ -125,8 +125,12 @@ LUALIB_API int luaopen_luv (lua_State *L);
 /* From stream.c */
 static uv_stream_t* luv_check_stream(lua_State* L, int index);
 static void luv_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);
-static void luv_check_buf(lua_State *L, int idx, uv_buf_t *pbuf);
+
+/* From misc.c */
+static void luv_prep_buf(lua_State *L, int idx, uv_buf_t *pbuf);
 static uv_buf_t* luv_prep_bufs(lua_State* L, int index, size_t *count);
+static uv_buf_t* luv_check_bufs(lua_State* L, int index, size_t *count, luv_req_t* req_data);
+static uv_buf_t* luv_check_bufs_noref(lua_State* L, int index, size_t *count);
 
 /* from tcp.c */
 static void parse_sockaddr(lua_State* L, struct sockaddr_storage* address);
