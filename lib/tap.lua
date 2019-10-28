@@ -105,7 +105,7 @@ local function run()
   uv.run()
 
   if failed ~= 0 then
-    os.exit(-failed)
+    os.exit(-failed, true)
   end
 end
 
