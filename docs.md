@@ -1149,9 +1149,11 @@ Returns the stream's write queue size.
 
 TCP handles are used to represent both TCP streams and servers.
 
-### `uv.new_tcp()`
+### `uv.new_tcp([flags])`
 
 Creates and initializes a new `uv_tcp_t`. Returns the Lua userdata wrapping it.
+Flags may be a family string: `"unix"`, `"inet"`, `"inet6"`, `"ipx"`,
+`"netlink"`, `"x25"`, `"ax25"`, `"atmpvc"`, `"appletalk"`, or `"packet"`.
 
 **Returns:** `uv_tcp_t userdata` or `fail`
 
@@ -1468,9 +1470,9 @@ UDP handles encapsulate UDP communication for both clients and servers.
 ### `uv.new_udp([flags])`
 
 Creates and initializes a new `uv_udp_t`. Returns the Lua userdata wrapping
-it. The actual socket is created lazily. At the moment, the lower 8 bits of the
-`flags` parameter are used as the socket domain. A socket will be created for
-the given domain.
+it. The actual socket is created lazily. Flags may be a family string:
+`"unix"`, `"inet"`, `"inet6"`, `"ipx"`, `"netlink"`, `"x25"`, `"ax25"`,
+`"atmpvc"`, `"appletalk"`, or `"packet"`.
 
 **Returns:** `uv_udp_t userdata` or `fail`
 
