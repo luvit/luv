@@ -466,12 +466,12 @@ static int luv_fs_write(lua_State* L) {
     bufs = luv_prep_bufs(L, 2, &count);
     buf.base = NULL;
   }
-  else if (lua_isstring(L, 2)) {
-    luv_check_buf(L, 2, &buf);
+  else if (luv_isstring_strict(L, 2)) {
+    luv_prep_buf(L, 2, &buf);
     count = 1;
   }
   else {
-    return luaL_argerror(L, 2, "data must be string or table of strings");
+    return luaL_argerror(L, 2, lua_pushfstring(L, "data must be string or table of strings, got %s", luaL_typename(L, 2)));
   }
 
   offset = luaL_checkinteger(L, 3);

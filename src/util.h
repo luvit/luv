@@ -44,6 +44,9 @@ static int luv_is_callable(lua_State* L, int index);
 
 // Check if the argument is callable and throw an error if it's not
 static void luv_check_callable(lua_State* L, int index);
+
+// lua_isstring checks for string or number, this checks specifically for string
+static int luv_isstring_strict(lua_State* L, int index);
 #endif
 
 #endif

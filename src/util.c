@@ -88,6 +88,10 @@ static void luv_check_callable(lua_State* L, int index) {
   luaL_argerror(L, index, msg);
 }
 
+static int luv_isstring_strict(lua_State* L, int index) {
+  return lua_type(L, index) == LUA_TSTRING;
+}
+
 #if LUV_UV_VERSION_GEQ(1, 10, 0)
 static int luv_translate_sys_error(lua_State* L) {
   int status = luaL_checkinteger(L, 1);
