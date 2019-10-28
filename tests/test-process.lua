@@ -9,9 +9,21 @@ return require('lib/tap')(function (test)
   test("process stdout", function (print, p, expect, uv)
     local stdout = uv.new_pipe(false)
 
+    local input = "Hello World"
+    local cmd, args, expectedOutput
+    if isWindows then
+      cmd = "cmd.exe"
+      args = {"/c", "echo "..input}
+      expectedOutput = input .. "\r\n"
+    else
+      cmd = "echo"
+      args = {input}
+      expectedOutput = input .. "\n"
+    end
+
     local handle, pid
-    handle, pid = uv.spawn(uv.exepath(), {
-      args = {"-e", "io.write 'Hello World'"},
+    handle, pid = uv.spawn(cmd, {
+      args = args,
       stdio = {nil, stdout},
     }, expect(function (code, signal)
       p("exit", {code=code, signal=signal})
@@ -26,24 +38,28 @@ return require('lib/tap')(function (test)
     uv.read_start(stdout, expect(function (err, chunk)
       p("stdout", {err=err,chunk=chunk})
       assert(not err, err)
-      assert(chunk == "Hello World")
+      assert(chunk == expectedOutput)
       uv.close(stdout)
     end))
 
   end)
 
-  local cmd, options, expect_status = 'sleep', { args = {1} }, 0
+  local longRunning = {}
   if isWindows then
-    cmd = "cmd.exe"
-    options.args = {"/c","pause"}
-    expect_status = 1
+    longRunning.cmd = "cmd.exe"
+    longRunning.options = { args = {"/c","pause"} }
+    longRunning.expect_status = 1
+  else
+    longRunning.cmd = 'sleep'
+    longRunning.options = { args = {1} }
+    longRunning.expect_status = 0
   end
 
   test("spawn and kill by pid", function (print, p, expect, uv)
     local handle, pid
-    handle, pid = uv.spawn(cmd, options, expect(function (status, signal)
+    handle, pid = uv.spawn(longRunning.cmd, longRunning.options, expect(function (status, signal)
       p("exit", handle, {status=status,signal=signal})
-      assert(status == expect_status)
+      assert(status == longRunning.expect_status)
       if isWindows then
         -- just call TerminateProcess, ref uv__kill in libuv/src/win/process.c
         assert(signal == 0)
@@ -58,9 +74,9 @@ return require('lib/tap')(function (test)
 
   test("spawn and kill by handle", function (print, p, expect, uv)
     local handle, pid
-    handle, pid = uv.spawn(cmd, options, expect(function (status, signal)
+    handle, pid = uv.spawn(longRunning.cmd, longRunning.options, expect(function (status, signal)
       p("exit", handle, {status=status,signal=signal})
-      assert(status == expect_status)
+      assert(status == longRunning.expect_status)
       assert(signal == 15)
       uv.close(handle)
     end))
@@ -81,9 +97,21 @@ return require('lib/tap')(function (test)
     local stdin = uv.new_pipe(false)
     local stdout = uv.new_pipe(false)
 
+    local input = "Hello World"
+    local cmd, args, expectedOutput
+    if isWindows then
+      cmd = "cmd.exe"
+      args = {"/c", "set /p output=&call echo %output%"}
+      expectedOutput = input .. "\r\n"
+    else
+      cmd = "cat"
+      args = {"-"}
+      expectedOutput = input
+    end
+
     local handle, pid
-    handle, pid = uv.spawn(uv.exepath(), {
-      args = {"-"},
+    handle, pid = uv.spawn(cmd, {
+      args = args,
       stdio = {stdin, stdout},
     }, expect(function (code, signal)
       p("exit", {code=code, signal=signal})
@@ -98,11 +126,11 @@ return require('lib/tap')(function (test)
     uv.read_start(stdout, expect(function (err, chunk)
       p("stdout", {err=err,chunk=chunk})
       assert(not err, err)
-      assert(chunk == "Hello World")
+      assert(chunk == expectedOutput)
       uv.close(stdout)
     end))
 
-    uv.write(stdin, "io.write('Hello World')")
+    uv.write(stdin, input)
     uv.shutdown(stdin, expect(function ()
       uv.close(stdin)
     end))
