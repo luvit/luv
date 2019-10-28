@@ -1256,6 +1256,12 @@ client:connect("127.0.0.1", 8080, function (err)
 end)
 ```
 
+### `uv.tcp_write_queue_size(tcp)`
+
+> method form `tcp:write_queue_size()`
+
+**Deprecated:** Please use `uv.stream_get_write_queue_size()` instead.
+
 ### `uv.tcp_close_reset()`
 
 > method form `tcp:close_reset()`
@@ -2234,11 +2240,7 @@ CPU found.
 
 ### `uv.getpid()`
 
-Returns the current process ID.
-
-**Returns:** `integer`
-
-**Note:** This is not a libuv function. See `uv.os_getpid()`.
+**Deprecated:** Please use `uv.os_getpid()` instead.
 
 ### `uv.getuid()`
 
