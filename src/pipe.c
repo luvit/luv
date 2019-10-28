@@ -25,8 +25,9 @@ static uv_pipe_t* luv_check_pipe(lua_State* L, int index) {
 static int luv_new_pipe(lua_State* L) {
   uv_pipe_t* handle;
   int ipc, ret;
+  ipc = 0;
   luv_ctx_t* ctx = luv_context(L);
-  if (lua_isboolean(L, 1)) {
+  if (lua_isboolean(L, 1) || lua_isnil(L, 1)) {
     ipc = lua_toboolean(L, 1);
   } else {
     luaL_argcheck(L, lua_isnoneornil(L, 1), 1, "Expected boolean or nil");
