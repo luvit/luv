@@ -100,3 +100,12 @@ static int luv_translate_sys_error(lua_State* L) {
   return 0;
 }
 #endif
+
+static int luv_optboolean(lua_State*L, int idx, int val) {
+  idx = lua_absindex(L, idx);
+  luaL_argcheck(L, lua_isboolean(L, idx) || lua_isnoneornil(L, idx), idx, "Expected boolean or nil");
+
+  if (lua_isboolean(L, idx))
+    val = lua_toboolean(L, idx);
+  return val;
+}
