@@ -75,6 +75,8 @@ jobs:
         - make
         - valgrind --error-exitcode=1 --leak-check=full ./build/lua tests/run.lua
     - name: bindings coverage
+      addons:
+        apt: # don't need cmake for this one
       os: linux
       script:
         - ./.ci/bindcov.sh
