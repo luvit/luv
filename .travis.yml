@@ -23,10 +23,6 @@ os:
   - linux
   - osx
 
-before_install:
-  - git submodule update --init --recursive
-  - git submodule update --recursive
-
 script:
   - make && make test
   # Setup LuaRocks
