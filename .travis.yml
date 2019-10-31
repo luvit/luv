@@ -39,7 +39,7 @@ script:
   - test $PWD = `lua -e "print(require'luv'.cwd())"`
 
 jobs:
-  #fast_finish: true
+  fast_finish: true
   include:
     - stage: check
       name: bindings coverage

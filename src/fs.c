@@ -479,7 +479,7 @@ static int luv_fs_write(lua_State* L) {
   req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ctx, ref);
   req->ptr = buf.base;
-  //((luv_req_t*)req->data)->data = bufs;
+  ((luv_req_t*)req->data)->data = bufs;
   FS_CALL(write, req, file, bufs ? bufs : &buf, count, offset);
 }
 
