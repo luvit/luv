@@ -66,7 +66,13 @@ static void luv_fulfill_req(lua_State* L, luv_req_t* data, int nargs) {
 static void luv_cleanup_req(lua_State* L, luv_req_t* data) {
   luaL_unref(L, LUA_REGISTRYINDEX, data->req_ref);
   luaL_unref(L, LUA_REGISTRYINDEX, data->callback_ref);
-  luaL_unref(L, LUA_REGISTRYINDEX, data->data_ref);
+  if (data->data_ref == LUV_REQ_MULTIREF) {
+    for (int i = 0; ((int*)(data->data))[i] != LUA_NOREF; i++) {
+      luaL_unref(L, LUA_REGISTRYINDEX, ((int*)(data->data))[i]);
+    }
+  }
+  else
+    luaL_unref(L, LUA_REGISTRYINDEX, data->data_ref);
   free(data->data);
   free(data);
 }

@@ -218,42 +218,37 @@ static struct sockaddr* luv_check_addr(lua_State *L, struct sockaddr_storage* ad
 static int luv_udp_send(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   uv_udp_send_t* req;
-  uv_buf_t buf;
   int ret, ref;
   struct sockaddr_storage addr;
   struct sockaddr* addr_ptr;
   luv_handle_t* lhandle = handle->data;
-
-  luv_check_buf(L, 2, &buf);
   addr_ptr = luv_check_addr(L, &addr, 3, 4);
   ref = luv_check_continuation(L, 5);
   req = (uv_udp_send_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, lhandle->ctx, ref);
-
-  ret = uv_udp_send(req, handle, &buf, 1, addr_ptr, luv_udp_send_cb);
+  size_t count;
+  uv_buf_t* bufs = luv_check_bufs(L, 2, &count, (luv_req_t*)req->data);
+  ret = uv_udp_send(req, handle, bufs, count, addr_ptr, luv_udp_send_cb);
+  free(bufs);
   if (ret < 0) {
     luv_cleanup_req(L, (luv_req_t*)req->data);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
-
-  lua_pushvalue(L, 2);
-  ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
-  lua_pop(L, 1);
-
   lua_pushinteger(L, ret);
   return 1;
 }
 
 static int luv_udp_try_send(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
-  uv_buf_t buf;
   int err_or_num_bytes;
   struct sockaddr_storage addr;
   struct sockaddr* addr_ptr;
-  luv_check_buf(L, 2, &buf);
+  size_t count;
+  uv_buf_t* bufs = luv_check_bufs_noref(L, 2, &count);
   addr_ptr = luv_check_addr(L, &addr, 3, 4);
-  err_or_num_bytes = uv_udp_try_send(handle, &buf, 1, addr_ptr);
+  err_or_num_bytes = uv_udp_try_send(handle, bufs, count, addr_ptr);
+  free(bufs);
   if (err_or_num_bytes < 0) return luv_error(L, err_or_num_bytes);
   lua_pushinteger(L, err_or_num_bytes);
   return 1;

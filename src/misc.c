@@ -42,6 +42,91 @@ static int luv_version_string(lua_State* L) {
  return 1;
 }
 
+// requires the value at idx to be a string or number
+static void luv_prep_buf(lua_State *L, int idx, uv_buf_t *pbuf) {
+  size_t len;
+  // note: if the value is a number, lua_tolstring converts the stack value to a string
+  pbuf->base = (char*)lua_tolstring(L, idx, &len);
+  pbuf->len = len;
+}
+
+// - number of buffers is stored in *count
+// - if refs is non-NULL, then *refs is set to a heap-allocated, LUA_NOREF-terminated array
+//   of ref integers (refs are to each string in the bufs)
+// returns: heap-allocated array of uv_buf_t
+static uv_buf_t* luv_prep_bufs(lua_State* L, int index, size_t *count, int **refs) {
+  uv_buf_t *bufs;
+  size_t i;
+  *count = lua_rawlen(L, index);
+  bufs = (uv_buf_t*)malloc(sizeof(uv_buf_t) * *count);
+  int *refs_array = NULL;
+  if (refs)
+    refs_array = (int*)malloc(sizeof(int) * (*count + 1));
+  for (i = 0; i < *count; ++i) {
+    lua_rawgeti(L, index, i + 1);
+    if (!lua_isstring(L, -1)) {
+      luaL_argerror(L, index, lua_pushfstring(L, "expected table of strings, found %s in the table", luaL_typename(L, -1)));
+      return NULL;
+    }
+    luv_prep_buf(L, -1, &bufs[i]);
+    if (refs) {
+      // push the string again to ref it, will be popped by luaL_ref
+      lua_pushvalue(L, -1);
+      refs_array[i] = luaL_ref(L, LUA_REGISTRYINDEX);
+    }
+    lua_pop(L, 1);
+  }
+  if (refs) {
+    // refs array is LUA_NOREF-terminated
+    refs_array[*count] = LUA_NOREF;
+    *refs = refs_array;
+  }
+  return bufs;
+}
+
+// Sets up a uv_bufs_t array to pass to write/send libuv functions that take a uv_buf_t*
+// - count: set to length of the returned uv_buf_t array
+// - req_data: refs to the strings used are stored in req_data->data/req_data->data_ref
+// returns: heap-allocated array of uv_buf_t
+static uv_buf_t* luv_check_bufs(lua_State* L, int index, size_t* count, luv_req_t* req_data) {
+  uv_buf_t* bufs = NULL;
+  if (lua_istable(L, index)) {
+    int* refs = NULL;
+    bufs = luv_prep_bufs(L, index, count, &refs);
+    req_data->data = refs;
+    req_data->data_ref = LUV_REQ_MULTIREF;
+  }
+  else if (lua_isstring(L, index)) {
+    *count = 1;
+    bufs = (uv_buf_t*)malloc(sizeof(uv_buf_t));
+    luv_prep_buf(L, index, bufs);
+    lua_pushvalue(L, index);
+    req_data->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+  }
+  else {
+    luaL_argerror(L, index, lua_pushfstring(L, "data must be string or table of strings, got %s", luaL_typename(L, index)));
+  }
+  return bufs;
+}
+
+// Like luv_check_bufs but does not ref the buf strings.
+// Only meant to be used for functions like luv_udp_try_send.
+static uv_buf_t* luv_check_bufs_noref(lua_State* L, int index, size_t* count) {
+  uv_buf_t* bufs = NULL;
+  if (lua_istable(L, index)) {
+    bufs = luv_prep_bufs(L, index, count, NULL);
+  }
+  else if (lua_isstring(L, index)) {
+    *count = 1;
+    bufs = (uv_buf_t*)malloc(sizeof(uv_buf_t));
+    luv_prep_buf(L, index, bufs);
+  }
+  else {
+    luaL_argerror(L, index, lua_pushfstring(L, "data must be string or table of strings, got %s", luaL_typename(L, index)));
+  }
+  return bufs;
+}
+
 static int luv_get_process_title(lua_State* L) {
   char title[MAX_TITLE_LENGTH];
   int ret = uv_get_process_title(title, MAX_TITLE_LENGTH);

@@ -25,6 +25,31 @@ return require('lib/tap')(function (test)
     p{client=client,req=req}
   end)
 
+  test("basic udp send from table", function (print, p, expect, uv)
+    local sendData = {"P", "I", "NG"}
+    local server = uv.new_udp()
+    assert(uv.udp_bind(server, "0.0.0.0", TEST_PORT))
+    assert(uv.udp_recv_start(server, expect(function (err, data, addr, flags)
+      p("server on recv", server, data, addr, flags)
+      assert(not err, err)
+      assert(data == table.concat(sendData))
+      uv.close(server, expect(function()
+        p("server on close", server)
+      end))
+    end)))
+    p{server=server}
+
+    local client = uv.new_udp()
+    local req = assert(uv.udp_send(client, sendData, "127.0.0.1", TEST_PORT, expect(function (err)
+      p("client on send", client, err)
+      assert(not err, err)
+      uv.close(client, expect(function()
+        p("client on close", client)
+      end))
+    end)))
+    p{client=client,req=req}
+  end)
+
   test("basic udp server and client (ipv6)", function (print, p, expect, uv)
     local server = uv.new_udp()
     local _, err = uv.udp_bind(server, "::1", TEST_PORT)
@@ -60,7 +85,7 @@ return require('lib/tap')(function (test)
       print("skipped, requires libuv >= 1.27.0")
       return
     end
-    
+
     local udp = uv.new_udp()
 
     local _, err = pcall(function() uv.udp_send(udp, "PING", 5, 5) end)
@@ -142,7 +167,7 @@ return require('lib/tap')(function (test)
       error("this send should fail")
     end)
     assert(err and err:sub(1,7) == "EISCONN", err)
-    
+
     assert(uv.udp_send(client, "PING", nil, nil, expect(function(err)
       assert(not err, err)
       uv.udp_connect(client, nil, nil)

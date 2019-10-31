@@ -38,6 +38,30 @@ return require('lib/tap')(function (test)
     uv.fs_unlink(path)
   end)
 
+  -- collect garbage after uv.fs_write but before the write callback
+  -- is called in order to potentially garbage collect the strings that
+  -- are being sent. See https://github.com/luvit/luv/issues/397
+  test("fs.write data refs", function (print, p, expect, uv)
+    local path = "_test_"
+    local fd = assert(uv.fs_open(path, "w+", tonumber("0666", 8)))
+    do
+      -- the number here gets coerced into a string
+      local t = {"with", 600, "lines"}
+      uv.fs_write(fd, t, -1, function()
+        local expectedContents = table.concat(t)
+        local stat = assert(uv.fs_fstat(fd))
+        assert(stat.size == #expectedContents)
+        local chunk = assert(uv.fs_read(fd, stat.size, 0))
+        assert(chunk == expectedContents)
+        assert(uv.fs_close(fd))
+        assert(uv.fs_unlink(path))
+      end)
+    end
+    local count = collectgarbage("count")
+    collectgarbage("collect")
+    assert(count - collectgarbage("count") > 0)
+  end)
+
   test("fs.stat sync", function (print, p, expect, uv)
     local stat = assert(uv.fs_stat("README.md"))
     assert(stat.size)
