@@ -1,3 +1,7 @@
+-- this is a primitive test for leaks that has been
+-- superseded by running better leak checking tools
+-- like Valgrind and LSAN/ASAN
+
 return require('lib/tap')(function (test)
 
   local function bench(uv, p, count, fn)
