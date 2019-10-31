@@ -104,7 +104,7 @@ static uv_buf_t* luv_check_bufs(lua_State* L, int index, size_t* count, luv_req_
     req_data->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
   }
   else {
-    return luaL_argerror(L, index, lua_pushfstring(L, "data must be string or table of strings, got %s", luaL_typename(L, index)));
+    luaL_argerror(L, index, lua_pushfstring(L, "data must be string or table of strings, got %s", luaL_typename(L, index)));
   }
   return bufs;
 }
@@ -122,7 +122,7 @@ static uv_buf_t* luv_check_bufs_noref(lua_State* L, int index, size_t* count) {
     luv_prep_buf(L, index, bufs);
   }
   else {
-    return luaL_argerror(L, index, lua_pushfstring(L, "data must be string or table of strings, got %s", luaL_typename(L, index)));
+    luaL_argerror(L, index, lua_pushfstring(L, "data must be string or table of strings, got %s", luaL_typename(L, index)));
   }
   return bufs;
 }
