@@ -26,10 +26,11 @@ os:
 before_install:
   - git submodule update --init --recursive
   - git submodule update --recursive
-  - source .ci/setenv_lua.sh
 
 script:
   - make && make test
+  # Setup LuaRocks
+  - source .ci/setenv_lua.sh
   # Test rock installation
   - luarocks make
   - test $PWD = `lua -e "print(require'luv'.cwd())"`
