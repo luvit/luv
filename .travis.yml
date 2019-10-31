@@ -65,6 +65,10 @@ jobs:
         - CMAKE_OPTIONS="-DCMAKE_C_FLAGS=-fsanitize=address,undefined" make && make test
     - name: valgrind
       os: linux
+      addons:
+        apt:
+          packages:
+            - valgrind
       env:
         - BUILD_TYPE=Debug
         - WITH_LUA_ENGINE=Lua
