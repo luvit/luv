@@ -40,16 +40,15 @@ script:
 
 jobs:
   fast_finish: true
-  allow_failures:
-    - name: process cleanup test
-      os: linux
-      env:
-        - WITH_LUA_ENGINE=Lua
-      script:
-        - ./tests/test-sigchld-after-lua_close.sh
   include:
     - stage: check
-      name: clang-asan
+      name: bindings coverage
+      addons:
+        apt: # don't need cmake for this one
+      os: linux
+      script:
+        - ./.ci/bindcov.sh
+    - name: clang-asan
       os: linux
       compiler: clang
       env:
@@ -74,12 +73,13 @@ jobs:
       script:
         - make
         - valgrind --error-exitcode=1 --leak-check=full ./build/lua tests/run.lua
-    - name: bindings coverage
-      addons:
-        apt: # don't need cmake for this one
+    - name: process cleanup test
       os: linux
+      env:
+        - WITH_LUA_ENGINE=Lua
       script:
-        - ./.ci/bindcov.sh
+        - ./tests/test-sigchld-after-lua_close.sh
+
     - stage: deploy
       if: tag IS present
       env: WITH_LUA_ENGINE=LuaJIT LUA=luajit2.1
