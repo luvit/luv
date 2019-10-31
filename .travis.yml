@@ -48,7 +48,7 @@ jobs:
       script:
         - ./tests/test-sigchld-after-lua_close.sh
   include:
-    - stage: sanity checks
+    - stage: check
       name: clang-asan
       os: linux
       compiler: clang
@@ -97,6 +97,11 @@ jobs:
       after_deploy:
         - luarocks install lua-cjson # required for luarocks upload
         - luarocks upload luv-$TRAVIS_TAG.rockspec --api-key=$LUAROCKS_API_KEY --force
+
+stages:
+  - check
+  - test
+  - deploy
 
 notifications:
   email: true
