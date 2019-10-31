@@ -128,7 +128,7 @@ static void luv_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* b
 
 /* From misc.c */
 static void luv_prep_buf(lua_State *L, int idx, uv_buf_t *pbuf);
-static uv_buf_t* luv_prep_bufs(lua_State* L, int index, size_t *count);
+static uv_buf_t* luv_prep_bufs(lua_State* L, int index, size_t *count, int **refs);
 static uv_buf_t* luv_check_bufs(lua_State* L, int index, size_t *count, luv_req_t* req_data);
 static uv_buf_t* luv_check_bufs_noref(lua_State* L, int index, size_t *count);
 
