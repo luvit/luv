@@ -67,6 +67,9 @@ jobs:
       os: linux
       addons:
         apt:
+          sources:
+            # Need a more up-to-date Valgrind to dodge https://bugs.kde.org/show_bug.cgi?id=381289
+            - sourceline: 'ppa:msulikowski/valgrind'
           packages:
             - valgrind
       env:
