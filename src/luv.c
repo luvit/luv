@@ -583,11 +583,12 @@ LUALIB_API int luv_cfpcall(lua_State* L, int nargs, int nresult, int flags) {
     ret = -ret;
     break;
   case LUA_ERRRUN:
-  case LUA_ERRSYNTAX:
   case LUA_ERRERR:
   default:
     if ((flags & LUVF_CALLBACK_NOERRMSG) == 0)
       fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
+    if ((flags & LUVF_CALLBACK_NOEXIT) == 0)
+      exit(-1);
     lua_pop(L, 1);
     ret = -ret;
     break;

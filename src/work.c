@@ -96,7 +96,7 @@ static void luv_work_cb(uv_work_t* req) {
 
   if (lua_isfunction(L, -1)) {
     int i = luv_thread_arg_push(L, &work->arg, 0);
-    i = luv_cfpcall(L, i, LUA_MULTRET, LUVF_CALLBACK_NOEXIT);
+    i = luv_cfpcall(L, i, LUA_MULTRET, 0);
     luv_thread_arg_clear(NULL, &work->arg, 0);
     if ( i>=0 ) {
       //clear in main threads, luv_after_work_cb
