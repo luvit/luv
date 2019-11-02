@@ -24,7 +24,7 @@ static uv_pipe_t* luv_check_pipe(lua_State* L, int index) {
 
 static int luv_new_pipe(lua_State* L) {
   uv_pipe_t* handle;
-  int ipc, ret;
+  int ipc = 0 , ret;
   luv_ctx_t* ctx = luv_context(L);
   ipc = luv_optboolean(L, 1, 0);
   handle = (uv_pipe_t*)luv_newuserdata(L, sizeof(*handle));
