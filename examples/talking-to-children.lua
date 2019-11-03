@@ -24,7 +24,10 @@ local function onread(err, chunk)
   end
 end
 
-local function onshutdown()
+local function onshutdown(err)
+  if err == "ECANCELED" then
+    return
+  end
   uv.close(handle, onclose)
 end
 
