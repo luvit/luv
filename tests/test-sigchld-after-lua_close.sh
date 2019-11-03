@@ -3,6 +3,8 @@
 # not done by "userspace".
 # Details: https://github.com/luvit/luv/issues/193
 
+set -e
+
 # This test modifies one of the examples to skip libuv process cleanup,
 # purposely making it leave SIGCHLD signal handler.
 #
