@@ -16,6 +16,9 @@
  */
 #include "luv.h"
 #include <math.h>
+#ifndef _WIN32
+#include <sys/wait.h>
+#endif
 
 static int luv_disable_stdio_inheritance(lua_State* L) {
   (void)L;
@@ -272,6 +275,16 @@ static int luv_spawn(lua_State* L) {
     /* The async callback is required here because luajit GC may reclaim the
      * luv handle before libuv is done closing it down.
      */
+#ifndef _WIN32
+    if(ret == UV_ENOENT || ret == UV_EACCES) {
+      /* verify the child is successfully cleaned up within libuv */
+      int err, status;
+      do
+        err = waitpid(handle->pid, &status, 0);
+      while (err == -1 && errno == EINTR);
+    }
+#endif
+
     uv_close((uv_handle_t*)handle, luv_spawn_close_cb);
     return luv_error(L, ret);
   }
