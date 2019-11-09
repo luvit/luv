@@ -145,6 +145,11 @@ return require('lib/tap')(function (test)
   end)
 
   test("tcp close reset client", function(print, p, expect, uv)
+    local version = 0x10000 + 32*0x100 + 0
+    if uv.version() < version then
+      print("skipped")
+      return
+    end
     local server = uv.new_tcp()
     assert(uv.tcp_bind(server, "127.0.0.1", 0))
     assert(uv.listen(server, 1, expect(function ()
@@ -187,6 +192,11 @@ return require('lib/tap')(function (test)
   end)
 
   test("tcp close reset after shutdown", function(print, p, expect, uv)
+    local version = 0x10000 + 32*0x100 + 0
+    if uv.version() < version then
+      print("skipped")
+      return
+    end
     local server = uv.new_tcp()
     assert(uv.tcp_bind(server, "127.0.0.1", 0))
     assert(uv.listen(server, 1, expect(function ()
@@ -228,6 +238,11 @@ return require('lib/tap')(function (test)
   end)
 
   test("tcp close reset accepted", function(print, p, expect, uv)
+    local version = 0x10000 + 32*0x100 + 0
+    if uv.version() < version then
+      print("skipped")
+      return
+    end
     local server = uv.new_tcp()
     assert(uv.tcp_bind(server, "127.0.0.1", 0))
     assert(uv.listen(server, 1, expect(function ()
@@ -267,6 +282,11 @@ return require('lib/tap')(function (test)
   end)
 
   test("tcp close reset accepted after shutdown", function(print, p, expect, uv)
+    local version = 0x10000 + 32*0x100 + 0
+    if uv.version() < version then
+      print("skipped")
+      return
+    end
     local server = uv.new_tcp()
     assert(uv.tcp_bind(server, "127.0.0.1", 0))
     assert(uv.listen(server, 1, expect(function ()
