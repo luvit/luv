@@ -16,7 +16,8 @@ This library makes libuv available to lua scripts.  It was made for the [luvit](
 
 The library can be used by multiple threads at once.  Each thread is assumed to load the library from a different `lua_State`.  Luv will create a unique `uv_loop_t` for each state.  You can't share uv handles between states/loops.
 
-The best docs currently are the [libuv docs](http://docs.libuv.org/) themselves.  Hopfully soon we'll have a copy locally tailored for lua.
+- [Luv docs](docs.md)
+- [Libuv docs](http://docs.libuv.org/)
 
 ```lua
 local uv = require('luv')
