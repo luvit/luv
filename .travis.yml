@@ -72,7 +72,7 @@ jobs:
         - WITH_LUA_ENGINE=Lua
       script:
         - make
-        - valgrind --error-exitcode=1 --leak-check=full ./build/lua tests/run.lua
+        - valgrind --error-exitcode=1 --leak-check=full --child-silent-after-fork=yes ./build/lua tests/run.lua
     - name: process cleanup test
       os: linux
       env:
