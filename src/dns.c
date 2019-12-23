@@ -26,7 +26,7 @@ static void luv_pushaddrinfo(lua_State* L, struct addrinfo* res) {
   char ip[INET6_ADDRSTRLEN];
   int port, i = 0;
   const char *addr;
-  struct addrinfo* curr = res;
+  struct addrinfo* curr;
   lua_newtable(L);
   for (curr = res; curr; curr = curr->ai_next) {
     if (curr->ai_family == AF_INET || curr->ai_family == AF_INET6) {
