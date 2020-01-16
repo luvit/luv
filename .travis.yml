@@ -11,6 +11,8 @@ addons:
 env:
   global:
     - LUAROCKS=2.3.0
+    # For LuaJIT 2.1, see https://github.com/LuaJIT/LuaJIT/commit/8961a92dd1607108760694af3486b4434602f8be
+    - MACOSX_DEPLOYMENT_TARGET=10.12
   matrix:
     - WITH_LUA_ENGINE=Lua LUA=lua5.3
     - WITH_LUA_ENGINE=LuaJIT LUA=luajit2.1
