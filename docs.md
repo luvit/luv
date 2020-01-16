@@ -2135,8 +2135,6 @@ Pauses the thread in which this is called for a number of milliseconds.
 
 **Returns:** Nothing.
 
-**Note:** This is not a libuv function.
-
 ## Miscellaneous utilities
 
 [Miscellaneous utilities]: #miscellaneous-utilities

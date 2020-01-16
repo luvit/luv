@@ -646,3 +646,17 @@ static int luv_os_environ(lua_State* L) {
 }
 #endif
 
+static int luv_sleep(lua_State* L) {
+  unsigned int msec = luaL_checkinteger(L, 1);
+#if LUV_UV_VERSION_GEQ(1, 34, 0)
+  uv_sleep(msec);
+#else
+#ifdef _WIN32
+  Sleep(msec);
+#else
+  usleep(msec * 1000);
+#endif
+#endif
+  return 0;
+}
+

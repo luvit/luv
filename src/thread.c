@@ -330,18 +330,6 @@ static int luv_thread_equal(lua_State* L) {
   return 1;
 }
 
-/* Pause the calling thread for a number of milliseconds. */
-static int luv_thread_sleep(lua_State* L) {
-#ifdef _WIN32
-  DWORD msec = luaL_checkinteger(L, 1);
-  Sleep(msec);
-#else
-  lua_Integer msec = luaL_checkinteger(L, 1);
-  usleep(msec * 1000);
-#endif
-  return 0;
-}
-
 static const luaL_Reg luv_thread_methods[] = {
   {"equal", luv_thread_equal},
   {"join", luv_thread_join},

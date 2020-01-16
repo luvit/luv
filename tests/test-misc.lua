@@ -132,4 +132,15 @@ return require('lib/tap')(function (test)
     assert(env[name2]==value2)
   end)
 
+  test("uv.sleep", function(print, p, expect, uv)
+    local val = 1000
+    local begin = uv.now()
+
+    uv.sleep(val)
+    uv.update_time()
+
+    local now = uv.now()
+    assert(now-begin >= val)
+  end)
+
 end)
