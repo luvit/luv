@@ -170,6 +170,10 @@ static const luaL_Reg luv_functions[] = {
   {"tty_set_mode", luv_tty_set_mode},
   {"tty_reset_mode", luv_tty_reset_mode},
   {"tty_get_winsize", luv_tty_get_winsize},
+#if LUV_UV_VERSION_GEQ(1, 33, 0)
+  {"tty_set_vterm_state", luv_tty_set_vterm_state},
+  {"tty_get_vterm_state", luv_tty_get_vterm_state},
+#endif
 
   // udp.c
   {"new_udp", luv_new_udp},
@@ -213,6 +217,9 @@ static const luaL_Reg luv_functions[] = {
   {"fs_write", luv_fs_write},
   {"fs_mkdir", luv_fs_mkdir},
   {"fs_mkdtemp", luv_fs_mkdtemp},
+#if LUV_UV_VERSION_GEQ(1, 34, 0)
+  {"fs_mkstemp", luv_fs_mkstemp},
+#endif
   {"fs_rmdir", luv_fs_rmdir},
   {"fs_scandir", luv_fs_scandir},
   {"fs_scandir_next", luv_fs_scandir_next},
@@ -316,13 +323,16 @@ static const luaL_Reg luv_functions[] = {
 #if LUV_UV_VERSION_GEQ(1, 31, 0)
   {"os_environ", luv_os_environ},
 #endif
+#if LUV_UV_VERSION_GEQ(1, 33, 0)
+  {"random", luv_random},
+#endif
+  {"sleep", luv_sleep},
 
   // thread.c
   {"new_thread", luv_new_thread},
   {"thread_equal", luv_thread_equal},
   {"thread_self", luv_thread_self},
   {"thread_join", luv_thread_join},
-  {"sleep", luv_thread_sleep},
 
   // work.c
   {"new_work", luv_new_work},

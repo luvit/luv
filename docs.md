@@ -1459,6 +1459,27 @@ Gets the current Window width and height.
 
 **Returns:** `integer, integer` or `fail`
 
+### `uv.tty_set_vterm_state(state)`
+
+Controls whether console virtual terminal sequences are processed by libuv or
+console. Useful in particular for enabling ConEmu support of ANSI X3.64 and
+Xterm 256 colors. Otherwise Windows10 consoles are usually detected
+automatically. State may be a family string: `"supported"` or `"unsupported"`.
+
+This function is only meaningful on Windows systems. On Unix it is silently
+ignored.
+
+**Returns:** none
+
+### `uv.tty_get_vterm_state()`
+
+Get the current state of whether console virtual terminal sequences are handled
+by libuv or the console. The return value is `"supported"` or `"unsupported"`.
+
+This function is not implemented on Unix, where it returns `ENOTSUP`.
+
+**Returns:** `string` or `fail`
+
 ## `uv_udp_t` — UDP handle
 
 [`uv_udp_t`]: #uv_udp_t--udp-handle
@@ -1803,6 +1824,12 @@ Equivalent to `mkdtemp(3)`.
 
 **Returns:** `string`
 
+### `uv.fs_mkstemp(template, [callback])`
+
+Equivalent to `mkstemp(3)`. Returns a temporary file handle and filename.
+
+**Returns:** `integer`, `string`
+
 ### `uv.fs_rmdir(path, [callback])`
 
 Equivalent to `rmdir(2)`.
@@ -2135,8 +2162,6 @@ Pauses the thread in which this is called for a number of milliseconds.
 
 **Returns:** Nothing.
 
-**Note:** This is not a libuv function.
-
 ## Miscellaneous utilities
 
 [Miscellaneous utilities]: #miscellaneous-utilities
@@ -2463,6 +2488,28 @@ Sets the scheduling priority of the process specified by `pid`. The `priority`
 range is between -20 (high priority) and 19 (low priority).
 
 **Returns:** `boolean` or `fail`
+
+### `uv.random(len, flags, [callback])`
+
+Fills a string of length `len` with cryptographically strong random bytes
+acquired from the system CSPRNG. `flags` is reserved for future extension
+and must currently be 0, nil, or an empty table.
+
+Short reads are not possible. When less than `len` random bytes are available,
+a non-zero error value is returned or passed to the callback. If the callback
+is omitted, this function is completed synchronously.
+
+The synchronous version may block indefinitely when not enough entropy is
+available. The asynchronous version may not ever finish when the system is
+low on entropy.
+
+**Returns (synchronous version):** `string` or `fail`
+
+**Returns (asynchronous version):** `0` or `fail`
+
+**Callback parameters (asynchronous version):** `function(err, randomBytes)`
+
+---
 
 [luv]: https://github.com/luvit/luv
 [luvit]: https://github.com/luvit/luvit

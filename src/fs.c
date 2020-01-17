@@ -274,6 +274,12 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
     case UV_FS_MKDTEMP:
       lua_pushstring(L, req->path);
       return 1;
+#if LUV_UV_VERSION_GEQ(1, 34, 0)
+    case UV_FS_MKSTEMP:
+      lua_pushinteger(L, req->result);
+      lua_pushstring(L, req->path);
+      return 2;
+#endif
 
     case UV_FS_READLINK:
     case UV_FS_REALPATH:
@@ -494,6 +500,17 @@ static int luv_fs_mkdtemp(lua_State* L) {
   req->data = luv_setup_req(L, ctx, ref);
   FS_CALL(mkdtemp, req, tpl);
 }
+
+#if LUV_UV_VERSION_GEQ(1, 34, 0)
+static int luv_fs_mkstemp(lua_State* L) {
+  luv_ctx_t* ctx = luv_context(L);
+  const char* tpl = luaL_checkstring(L, 1);
+  int ref = luv_check_continuation(L, 2);
+  uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
+  req->data = luv_setup_req(L, ctx, ref);
+  FS_CALL(mkstemp, req, tpl);
+}
+#endif
 
 static int luv_fs_rmdir(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
