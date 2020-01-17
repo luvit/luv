@@ -1459,6 +1459,27 @@ Gets the current Window width and height.
 
 **Returns:** `integer, integer` or `fail`
 
+### `uv.tty_set_vterm_state(state)`
+
+Controls whether console virtual terminal sequences are processed by libuv or
+console. Useful in particular for enabling ConEmu support of ANSI X3.64 and
+Xterm 256 colors. Otherwise Windows10 consoles are usually detected
+automatically. State may be a family string: `"supported"` or `"unsupported"`.
+
+This function is only meaningful on Windows systems. On Unix it is silently
+ignored.
+
+**Returns:** none
+
+### `uv.tty_get_vterm_state()`
+
+Get the current state of whether console virtual terminal sequences are handled
+by libuv or the console. The return value is `"supported"` or `"unsupported"`.
+
+This function is not implemented on Unix, where it returns `ENOTSUP`.
+
+**Returns:** `string` or `fail`
+
 ## `uv_udp_t` — UDP handle
 
 [`uv_udp_t`]: #uv_udp_t--udp-handle

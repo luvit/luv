@@ -170,6 +170,10 @@ static const luaL_Reg luv_functions[] = {
   {"tty_set_mode", luv_tty_set_mode},
   {"tty_reset_mode", luv_tty_reset_mode},
   {"tty_get_winsize", luv_tty_get_winsize},
+#if LUV_UV_VERSION_GEQ(1, 33, 0)
+  {"tty_set_vterm_state", luv_tty_set_vterm_state},
+  {"tty_get_vterm_state", luv_tty_get_vterm_state},
+#endif
 
   // udp.c
   {"new_udp", luv_new_udp},
