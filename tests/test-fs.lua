@@ -246,4 +246,36 @@ return require('lib/tap')(function (test)
       assert(not stat)
     end)))
   end)
+
+  test("fs.mkdtemp async", function(print, p, expect, uv)
+    local tp = "luvXXXXXX"
+    uv.fs_mkdtemp(tp, function(err, path)
+      assert(not err)
+      assert(path:match("^luv......"))
+      assert(uv.fs_rmdir(path))
+    end)
+  end)
+
+  test("fs.mkdtemp sync", function(print, p, expect, uv)
+    local tp = "luvXXXXXX"
+    local path, err, code = uv.fs_mkdtemp(tp)
+    assert(path:match("^luv......"))
+    assert(uv.fs_rmdir(path))
+  end)
+
+  test("fs.mkdtemp async error", function(print, p, expect, uv)
+    local tp = "luvXXXXXZ"
+    uv.fs_mkdtemp(tp, function(err, path)
+      assert(err:match("^EEXIST:") or err:match("^EINVAL:"))
+      assert(path==nil)
+    end)
+  end)
+
+  test("fs.mkdtemp sync error", function(print, p, expect, uv)
+    local tp = "luvXXXXXZ"
+    local path, err, code = uv.fs_mkdtemp(tp)
+    assert(path==nil)
+    assert(err:match("^EEXIST:") or err:match("^EINVAL:"))
+    assert(code=='EEXIST' or code=='EINVAL')
+  end)
 end)
