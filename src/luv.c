@@ -323,6 +323,9 @@ static const luaL_Reg luv_functions[] = {
 #if LUV_UV_VERSION_GEQ(1, 31, 0)
   {"os_environ", luv_os_environ},
 #endif
+#if LUV_UV_VERSION_GEQ(1, 33, 0)
+  {"random", luv_random},
+#endif
   {"sleep", luv_sleep},
 
   // thread.c

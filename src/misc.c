@@ -660,3 +660,77 @@ static int luv_sleep(lua_State* L) {
   return 0;
 }
 
+#if LUV_UV_VERSION_GEQ(1, 33, 0)
+static void luv_random_cb(uv_random_t* req, int status, void* buf, size_t buflen) {
+  luv_req_t* data = (luv_req_t*)req->data;
+  lua_State* L = data->ctx->L;
+  int nargs;
+
+  if (status < 0) {
+    luv_status(L, status);
+    nargs = 1;
+  }
+  else {
+    lua_pushnil(L);
+    lua_pushlstring(L, (const char*)buf, buflen);
+    nargs = 2;
+  }
+
+  luv_fulfill_req(L, (luv_req_t*)req->data, nargs);
+  luv_cleanup_req(L, (luv_req_t*)req->data);
+  req->data = NULL;
+}
+
+static int luv_random(lua_State* L) {
+  luv_ctx_t* ctx = luv_context(L);
+  size_t buflen = (size_t)luaL_checkinteger(L, 1);
+  // this is duplication of code in LibUV but since we need to try allocating the memory
+  // before calling uv_random, we need to do this check ahead-of-time
+  if (buflen > 0x7FFFFFFFu) {
+    return luv_error(L, UV_E2BIG);
+  }
+
+  // flags param can be nil, an integer, or a table
+  unsigned int flags = 0;
+  if (lua_type(L, 2) == LUA_TNUMBER || lua_isnoneornil(L, 2)) {
+    flags = (unsigned int)luaL_optinteger(L, 2, 0);
+  }
+  else if (lua_type(L, 2) == LUA_TTABLE) {
+    // this is for forwards-compatibility: if flags ever get added,
+    // we want to be able to take a table
+  }
+  else {
+    return luaL_argerror(L, 2, "expected nil, integer, or table");
+  }
+
+  int cb_ref = luv_check_continuation(L, 3);
+  int sync = cb_ref == LUA_NOREF;
+
+  void* buf = lua_newuserdata(L, buflen);
+  if (sync) {
+    // sync version doesn't need anything except buf, buflen, and flags
+    int ret = uv_random(NULL, NULL, buf, buflen, flags, NULL);
+    if (ret < 0) {
+      return luv_error(L, ret);
+    }
+    lua_pushlstring(L, (const char*)buf, buflen);
+    return 1;
+  }
+  else {
+    // ref buffer
+    int buf_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+    uv_random_t* req = (uv_random_t*)lua_newuserdata(L, sizeof(*req));
+    req->data = luv_setup_req(L, ctx, cb_ref);
+    ((luv_req_t*)req->data)->req_ref = buf_ref;
+
+    int ret = uv_random(ctx->loop, req, buf, buflen, flags, luv_random_cb);
+    if (ret < 0) {
+      luv_cleanup_req(L, (luv_req_t*)req->data);
+      lua_pop(L, 1);
+      return luv_error(L, ret);
+    }
+    return luv_result(L, ret);
+  }
+}
+#endif

@@ -2489,6 +2489,28 @@ range is between -20 (high priority) and 19 (low priority).
 
 **Returns:** `boolean` or `fail`
 
+### `uv.random(len, flags, [callback])`
+
+Fills a string of length `len` with cryptographically strong random bytes
+acquired from the system CSPRNG. `flags` is reserved for future extension
+and must currently be 0, nil, or an empty table.
+
+Short reads are not possible. When less than `len` random bytes are available,
+a non-zero error value is returned or passed to the callback. If the callback
+is omitted, this function is completed synchronously.
+
+The synchronous version may block indefinitely when not enough entropy is
+available. The asynchronous version may not ever finish when the system is
+low on entropy.
+
+**Returns (synchronous version):** `string` or `fail`
+
+**Returns (asynchronous version):** `0` or `fail`
+
+**Callback parameters (asynchronous version):** `function(err, randomBytes)`
+
+---
+
 [luv]: https://github.com/luvit/luv
 [luvit]: https://github.com/luvit/luvit
 [libuv]: https://github.com/libuv/libuv
