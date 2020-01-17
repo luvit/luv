@@ -278,4 +278,50 @@ return require('lib/tap')(function (test)
     assert(err:match("^EEXIST:") or err:match("^EINVAL:"))
     assert(code=='EEXIST' or code=='EINVAL')
   end)
+
+  test("fs.mkstemp async", function(print, p, expect, uv)
+    local tp = "luvXXXXXX"
+    uv.fs_mkstemp(tp, function(err, fd, path)
+      assert(not err)
+      assert(type(fd)=='number')
+      assert(path:match("^luv......"))
+      assert(uv.fs_close(fd))
+      assert(uv.fs_unlink(path))
+    end)
+  end)
+
+  test("fs.mkstemp sync", function(print, p, expect, uv)
+    local tp = "luvXXXXXX"
+    local content = "hello world!"
+    local fd, path = uv.fs_mkstemp(tp)
+    assert(type(fd)=='number')
+    assert(path:match("^luv......"))
+    uv.fs_write(fd, content, -1)
+    assert(uv.fs_close(fd))
+
+    fd = assert(uv.fs_open(path, "r", 438))
+    local stat = assert(uv.fs_fstat(fd))
+    local chunk = assert(uv.fs_read(fd, stat.size, 0))
+    assert(#chunk == stat.size)
+    assert(chunk==content)
+    assert(uv.fs_close(fd))
+    assert(uv.fs_unlink(path))
+  end)
+
+  test("fs.mkstemp async error", function(print, p, expect, uv)
+    local tp = "luvXXXXXZ"
+    uv.fs_mkstemp(tp, function(err, path, fd)
+      assert(err:match("^EINVAL:"))
+      assert(path==nil)
+      assert(fd==nil)
+    end)
+  end)
+
+  test("fs.mkstemp sync error", function(print, p, expect, uv)
+    local tp = "luvXXXXXZ"
+    local path, err, code = uv.fs_mkstemp(tp)
+    assert(path==nil)
+    assert(err:match("^EINVAL:"))
+    assert(code=='EINVAL')
+  end)
 end)

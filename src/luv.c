@@ -213,6 +213,9 @@ static const luaL_Reg luv_functions[] = {
   {"fs_write", luv_fs_write},
   {"fs_mkdir", luv_fs_mkdir},
   {"fs_mkdtemp", luv_fs_mkdtemp},
+#if LUV_UV_VERSION_GEQ(1, 34, 0)
+  {"fs_mkstemp", luv_fs_mkstemp},
+#endif
   {"fs_rmdir", luv_fs_rmdir},
   {"fs_scandir", luv_fs_scandir},
   {"fs_scandir_next", luv_fs_scandir_next},

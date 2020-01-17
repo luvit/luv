@@ -1803,6 +1803,12 @@ Equivalent to `mkdtemp(3)`.
 
 **Returns:** `string`
 
+### `uv.fs_mkstemp(template, [callback])`
+
+Equivalent to `mkstemp(3)`. Returns a temporary file handle and filename.
+
+**Returns:** `integer`, `string`
+
 ### `uv.fs_rmdir(path, [callback])`
 
 Equivalent to `rmdir(2)`.
