@@ -143,4 +143,34 @@ return require('lib/tap')(function (test)
     assert(now-begin >= val)
   end)
 
+  test("uv.random async", function(print, p, expect, uv)
+    local len = 256
+    assert(uv.random(len, {}, expect(function(err, randomBytes)
+      assert(not err)
+      assert(#randomBytes == len)
+      -- this matches the LibUV test
+      -- it can theoretically fail but its very unlikely
+      assert(randomBytes ~= string.rep("\0", len))
+    end)))
+  end)
+
+  test("uv.random sync", function(print, p, expect, uv)
+    local len = 256
+    local randomBytes = assert(uv.random(len))
+    assert(#randomBytes == len)
+    -- this matches the LibUV test
+    -- it can theoretically fail but its very unlikely
+    assert(randomBytes ~= string.rep("\0", len))
+  end)
+
+  test("uv.random errors", function(print, p, expect, uv)
+    -- invalid flag
+    local _, err = uv.random(0, -1)
+    assert(err:match("^EINVAL"))
+
+    -- invalid len
+    _, err = uv.random(-1)
+    assert(err:match("^E2BIG"))
+  end)
+
 end)
