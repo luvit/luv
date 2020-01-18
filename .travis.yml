@@ -86,6 +86,8 @@ jobs:
       env: WITH_LUA_ENGINE=LuaJIT LUA=luajit2.1
       script: skip
       before_deploy:
+        # Setup LuaRocks
+        - source .ci/setenv_lua.sh
         - .ci/make_rockspec.sh $TRAVIS_TAG
       deploy:
         provider: releases
