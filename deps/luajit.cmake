@@ -306,6 +306,15 @@ IF(WIN32)
 ELSE()
   IF(WITH_AMALG)
     add_executable(luajit ${LUAJIT_DIR}/src/luajit.c ${LUAJIT_DIR}/src/ljamalg.c ${DEPS})
+    # When using WITH_AMALG during a parallel build, its possible to run into
+    # false-positive "error: 'fold_hash' undeclared" compile errors due to a weird interaction
+    # when building two ljamalg.c at the same time.
+    #
+    # This adds a fake dependency from one to the other, forcing the build process to
+    # compile them sequentially rather than parallel.
+    #
+    # See https://github.com/torch/luajit-rocks/issues/39
+    add_dependencies(luajit luajit-5.1)
   ELSE()
     add_executable(luajit ${LUAJIT_DIR}/src/luajit.c ${SRC_LJCORE} ${DEPS})
   ENDIF()
