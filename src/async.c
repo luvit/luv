@@ -54,10 +54,10 @@ static int luv_new_async(lua_State* L) {
 static int luv_async_send(lua_State* L) {
   int ret;
   uv_async_t* handle = luv_check_async(L, 1);
-  ret = uv_async_send(handle);
   luv_thread_arg_t* arg = (luv_thread_arg_t *)((luv_handle_t*) handle->data)->extra;
 
   luv_thread_arg_set(L, arg, 2, lua_gettop(L), LUVF_THREAD_MODE_ASYNC|LUVF_THREAD_SIDE_CHILD);
+  ret = uv_async_send(handle);
   luv_thread_arg_clear(L, arg, LUVF_THREAD_SIDE_CHILD);
   return luv_result(L, ret);
 }
