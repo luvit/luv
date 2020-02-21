@@ -32,7 +32,8 @@ typedef struct {
   uv_work_t work;
   luv_work_ctx_t* ctx;
 
-  luv_thread_arg_t arg;
+  luv_thread_arg_t args;
+  luv_thread_arg_t rets;
   int ref;            /* ref to luv_work_ctx_t, which create a new uv_work_t*/
 } luv_work_t;
 
@@ -70,7 +71,7 @@ static int luv_work_ctx_tostring(lua_State* L) {
 static void luv_work_cb(uv_work_t* req) {
   luv_work_t* work = (luv_work_t*)req->data;
   luv_work_ctx_t* ctx = work->ctx;
-  lua_State *L = work->arg.L;
+  lua_State *L = work->args.L;
 
   int top = lua_gettop(L);
 
@@ -95,21 +96,22 @@ static void luv_work_cb(uv_work_t* req) {
   }
 
   if (lua_isfunction(L, -1)) {
-    int i = luv_thread_arg_push(L, &work->arg, 0);
+    int i = luv_thread_arg_push(L, &work->args, LUVF_THREAD_SIDE_CHILD);
     i = luv_cfpcall(L, i, LUA_MULTRET, 0);
-    luv_thread_arg_clear(NULL, &work->arg, 0);
+    luv_thread_arg_clear(L, &work->args, LUVF_THREAD_SIDE_CHILD);
     if ( i>=0 ) {
       //clear in main threads, luv_after_work_cb
-      i = luv_thread_arg_set(L, &work->arg, top + 1, lua_gettop(L), 0);
+      i = luv_thread_arg_set(L, &work->rets, top + 1, lua_gettop(L), LUVF_THREAD_SIDE_CHILD);
       lua_pop(L, i);  // pop all returned value
+      luv_thread_arg_clear(L, &work->rets, LUVF_THREAD_SIDE_CHILD);
     }
   } else {
     fprintf(stderr, "Uncaught Error: %s can't be work entry\n",
             lua_typename(L, lua_type(L,-1)));
     lua_pop(L, 1);
-    luv_thread_arg_clear(NULL, &work->arg, 0);
+    luv_thread_arg_clear(L, &work->args, LUVF_THREAD_SIDE_CHILD);
   }
-  work->arg.L = L;
+  work->args.L = L;
   if (top!=lua_gettop(L))
     luaL_error(L, "stack not balance in luv_work_cb, need %d but %d", top, lua_gettop(L));
 }
@@ -123,13 +125,13 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
   (void)status;
 
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->after_work_cb);
-  i = luv_thread_arg_push(L, &work->arg, 0);
+  i = luv_thread_arg_push(L, &work->rets, LUVF_THREAD_SIDE_MAIN);
   luv_cfpcall(L, i, 0, 0);
 
   //cache lua_State to reuse
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->pool_ref);
   i = lua_rawlen(L, -1);
-  *(lua_State**)lua_newuserdata(L, sizeof(lua_State*)) = work->arg.L;
+  *(lua_State**)lua_newuserdata(L, sizeof(lua_State*)) = work->args.L;
   lua_rawseti(L, -2, i+1);
   lua_pop(L, 1);
 
@@ -137,7 +139,8 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
   luaL_unref(L, LUA_REGISTRYINDEX, work->ref);
   work->ref = LUA_NOREF;
 
-  luv_thread_arg_clear(NULL, &work->arg, 0);
+  luv_thread_arg_clear(L, &work->args, LUVF_THREAD_SIDE_MAIN);
+  luv_thread_arg_clear(L, &work->rets, LUVF_THREAD_SIDE_MAIN);
   free(work);
 }
 
@@ -145,12 +148,9 @@ static void async_cb(uv_async_t *handle) {
   luv_work_t* work = (luv_work_t*)handle->data;
   luv_work_ctx_t* ctx = work->ctx;
   lua_State* L = ctx->L;
-  int i;
 
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->async_cb);
-  i = luv_thread_arg_push(L, &work->arg, 0);
-
-  luv_cfpcall(L, i, 0, 0);
+  luv_cfpcall(L, 0, 0, 0);
 }
 
 static int luv_new_work(lua_State* L) {
@@ -202,7 +202,7 @@ static int luv_queue_work(lua_State* L) {
   if (n > 0) {
     int i;
     lua_rawgeti(L, -1, 1);
-    work->arg.L = *(lua_State **)lua_touserdata(L, -1);
+    work->args.L = *(lua_State **)lua_touserdata(L, -1);
     lua_pop(L, 1);
     for(i=1; i<n; i++) {
       lua_rawgeti(L, -1, i+1);
@@ -212,10 +212,10 @@ static int luv_queue_work(lua_State* L) {
     lua_rawseti(L, -2, n);
   }
   else
-    work->arg.L = acquire_vm_cb();
+    work->args.L = acquire_vm_cb();
   lua_pop(L, 1);
 
-  luv_thread_arg_set(L, &work->arg, 2, top, 0); //clear in sub threads,luv_work_cb
+  luv_thread_arg_set(L, &work->args, 2, top, LUVF_THREAD_SIDE_MAIN); //clear in sub threads,luv_work_cb
   work->ctx = ctx;
   work->work.data = work;
   ret = uv_queue_work(luv_loop(L), &work->work, luv_work_cb, luv_after_work_cb);
