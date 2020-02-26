@@ -14,6 +14,7 @@ set(LUV_VERSION ${LUV_VERSION_MAJOR}.${LUV_VERSION_MINOR}.${LUV_VERSION_PATCH})
 option(BUILD_MODULE "Build as module" ON)
 option(BUILD_SHARED_LIBS "Build shared library" OFF)
 option(WITH_SHARED_LIBUV "Link to a shared libuv library instead of static linking" OFF)
+option(ALWAYS_INSTALL_HEADERS "Install headers regardless of build type" OFF)
 
 if (MINGW)
   add_definitions(-D_WIN32_WINNT=0x0600)
@@ -185,12 +186,12 @@ if (NOT LUA)
     else (WIN32)
       set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib/lua/${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}")
     endif (WIN32)
-  else (BUILD_MODULE)
+  else ()
     set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
       CACHE PATH "Installation directory for libraries")
-    set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include/luv"
-      CACHE PATH "Installation directory for headers")
-  endif (BUILD_MODULE)
+  endif ()
+  set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include/luv"
+    CACHE PATH "Installation directory for headers")
 endif ()
 
 if (CMAKE_INSTALL_PREFIX)
@@ -207,9 +208,11 @@ if (CMAKE_INSTALL_PREFIX)
       install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libluv.pc
         DESTINATION ${INSTALL_LIB_DIR}/pkgconfig)
     endif()
+  endif (NOT BUILD_MODULE)
+  if (NOT BUILD_MODULE OR ALWAYS_INSTALL_HEADERS)
     install(
       FILES src/luv.h src/util.h src/lhandle.h src/lreq.h
       DESTINATION "${INSTALL_INC_DIR}"
     )
-  endif (NOT BUILD_MODULE)
+  endif ()
 endif (CMAKE_INSTALL_PREFIX)
