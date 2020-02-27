@@ -131,13 +131,15 @@ endif (LUA)
 if (BUILD_MODULE)
   add_library(luv MODULE src/luv.c)
   set_target_properties(luv PROPERTIES PREFIX "")
-else (BUILD_MODULE)
-  add_library(luv src/luv.c)
-  if (BUILD_SHARED_LIBS)
-    set_target_properties(luv
-      PROPERTIES VERSION ${LUV_VERSION} SOVERSION ${LUV_VERSION_MAJOR})
-  endif (BUILD_SHARED_LIBS)
+  list(APPEND ACTIVE_TARGETS "luv")
 endif (BUILD_MODULE)
+if (BUILD_SHARED_LIBS)
+  add_library(libluv src/luv.c)
+  set_target_properties(libluv PROPERTIES PREFIX "")
+  set_target_properties(libluv
+    PROPERTIES VERSION ${LUV_VERSION} SOVERSION ${LUV_VERSION_MAJOR})
+  list(APPEND ACTIVE_TARGETS "libluv")
+endif (BUILD_SHARED_LIBS)
 
 if(APPLE)
   set(CMAKE_SHARED_MODULE_CREATE_C_FLAGS
@@ -159,57 +161,74 @@ include_directories(${LUA_COMPAT53_DIR}/c-api)
 
 if(WIN32)
   add_definitions(-DLUA_BUILD_AS_DLL -DLUA_LIB)
-  if (LUA)
-    target_link_libraries(luv ${LIBUV_LIBRARIES} ${LUA_LIBRARIES})
-  else (LUA)
-    if (USE_LUAJIT)
-      target_link_libraries(luv ${LIBUV_LIBRARIES} ${LUAJIT_LIBRARIES})
-    else (USE_LUAJIT)
-      if (LUA_BUILD_TYPE STREQUAL System)
-          target_link_libraries(luv ${LIBUV_LIBRARIES} ${LUA_LIBRARIES})
-      else (LUA_BUILD_TYPE STREQUAL System)
-          target_link_libraries(luv ${LIBUV_LIBRARIES} lualib)
-      endif (LUA_BUILD_TYPE STREQUAL System)
-    endif (USE_LUAJIT)
-  endif (LUA)
-elseif("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-  target_link_libraries(luv ${LIBUV_LIBRARIES} rt)
-else()
-  target_link_libraries(luv ${LIBUV_LIBRARIES})
 endif()
+
+foreach(TARGET_NAME ${ACTIVE_TARGETS})
+  if(WIN32)
+    if (LUA)
+      target_link_libraries(${TARGET_NAME} ${LIBUV_LIBRARIES} ${LUA_LIBRARIES})
+    else (LUA)
+      if (USE_LUAJIT)
+        target_link_libraries(${TARGET_NAME} ${LIBUV_LIBRARIES} ${LUAJIT_LIBRARIES})
+      else (USE_LUAJIT)
+        if (LUA_BUILD_TYPE STREQUAL System)
+            target_link_libraries(${TARGET_NAME} ${LIBUV_LIBRARIES} ${LUA_LIBRARIES})
+        else (LUA_BUILD_TYPE STREQUAL System)
+            target_link_libraries(${TARGET_NAME} ${LIBUV_LIBRARIES} lualib)
+        endif (LUA_BUILD_TYPE STREQUAL System)
+      endif (USE_LUAJIT)
+    endif (LUA)
+  elseif("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+    target_link_libraries(${TARGET_NAME} ${LIBUV_LIBRARIES} rt)
+  else()
+    target_link_libraries(${TARGET_NAME} ${LIBUV_LIBRARIES})
+  endif()
+endforeach()
 
 if (NOT LUA)
   if (BUILD_MODULE)
     if (WIN32)
-      set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib")
+      set(MODULE_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib")
     else (WIN32)
-      set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib/lua/${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}")
+      set(MODULE_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib/lua/${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}")
     endif (WIN32)
-  else (BUILD_MODULE)
-    set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
-      CACHE PATH "Installation directory for libraries")
-    set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include/luv"
-      CACHE PATH "Installation directory for headers")
   endif (BUILD_MODULE)
+  if (BUILD_SHARED_LIBS)
+    set(SHAREDLIBS_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
+      CACHE PATH "Installation directory for libraries")
+    set(SHAREDLIBS_INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include/luv"
+      CACHE PATH "Installation directory for headers")
+  endif (BUILD_SHARED_LIBS)
+else ()
+  # use paths from luaRocks
+  set(MODULE_INSTALL_LIB_DIR "${INSTALL_LIB_DIR}")
+  set(SHAREDLIBS_INSTALL_LIB_DIR "${INSTALL_LIB_DIR}")
+  set(SHAREDLIBS_INSTALL_INC_DIR "${INSTALL_INC_DIR}")
 endif ()
 
 if (CMAKE_INSTALL_PREFIX)
-  install(TARGETS luv
-    ARCHIVE DESTINATION "${INSTALL_LIB_DIR}"
-    LIBRARY DESTINATION "${INSTALL_LIB_DIR}"
-  )
-  if (NOT BUILD_MODULE)
+  if (BUILD_MODULE)
+    install(TARGETS luv
+      ARCHIVE DESTINATION "${MODULE_INSTALL_LIB_DIR}"
+      LIBRARY DESTINATION "${MODULE_INSTALL_LIB_DIR}"
+    )
+  endif (BUILD_MODULE)
+  if (BUILD_SHARED_LIBS)
+    install(TARGETS libluv
+      ARCHIVE DESTINATION "${SHAREDLIBS_INSTALL_LIB_DIR}"
+      LIBRARY DESTINATION "${SHAREDLIBS_INSTALL_LIB_DIR}"
+    )
     if(UNIX)
       set(prefix ${CMAKE_INSTALL_PREFIX})
-      set(includedir ${INSTALL_INC_DIR})
-      set(libdir ${INSTALL_LIB_DIR})
+      set(includedir ${SHAREDLIBS_INSTALL_INC_DIR})
+      set(libdir ${SHAREDLIBS_INSTALL_LIB_DIR})
       configure_file(libluv.pc.in ${CMAKE_CURRENT_BINARY_DIR}/libluv.pc @ONLY)
       install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libluv.pc
-        DESTINATION ${INSTALL_LIB_DIR}/pkgconfig)
+        DESTINATION ${SHAREDLIBS_INSTALL_LIB_DIR}/pkgconfig)
     endif()
     install(
       FILES src/luv.h src/util.h src/lhandle.h src/lreq.h
-      DESTINATION "${INSTALL_INC_DIR}"
+      DESTINATION "${SHAREDLIBS_INSTALL_INC_DIR}"
     )
-  endif (NOT BUILD_MODULE)
+  endif (BUILD_SHARED_LIBS)
 endif (CMAKE_INSTALL_PREFIX)
