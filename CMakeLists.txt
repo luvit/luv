@@ -216,6 +216,11 @@ if (NOT LUA)
     set(SHAREDLIBS_INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include/luv"
       CACHE PATH "Installation directory for headers")
   endif (BUILD_SHARED_LIBS)
+else ()
+  # use paths from luaRocks
+  set(MODULE_INSTALL_LIB_DIR "${INSTALL_LIB_DIR}")
+  set(SHAREDLIBS_INSTALL_LIB_DIR "${INSTALL_LIB_DIR}")
+  set(SHAREDLIBS_INSTALL_INC_DIR "${INSTALL_INC_DIR}")
 endif ()
 
 if (CMAKE_INSTALL_PREFIX)
