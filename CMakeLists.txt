@@ -12,6 +12,7 @@ set(LUV_VERSION_PATCH 2)
 set(LUV_VERSION ${LUV_VERSION_MAJOR}.${LUV_VERSION_MINOR}.${LUV_VERSION_PATCH})
 
 option(BUILD_MODULE "Build as module" ON)
+option(BUILD_STATIC_LIBS "Build static library" OFF)
 option(BUILD_SHARED_LIBS "Build shared library" OFF)
 option(WITH_SHARED_LIBUV "Link to a shared libuv library instead of static linking" OFF)
 
@@ -133,8 +134,13 @@ if (BUILD_MODULE)
   set_target_properties(luv PROPERTIES PREFIX "")
   list(APPEND ACTIVE_TARGETS "luv")
 endif (BUILD_MODULE)
+if (BUILD_STATIC_LIBS)
+  add_library(libluv_a STATIC src/luv.c)
+  set_target_properties(libluv_a PROPERTIES PREFIX "")
+  list(APPEND ACTIVE_TARGETS "libluv_a")
+endif (BUILD_STATIC_LIBS)
 if (BUILD_SHARED_LIBS)
-  add_library(libluv src/luv.c)
+  add_library(libluv SHARED src/luv.c)
   set_target_properties(libluv PROPERTIES PREFIX "")
   set_target_properties(libluv
     PROPERTIES VERSION ${LUV_VERSION} SOVERSION ${LUV_VERSION_MAJOR})
@@ -193,15 +199,23 @@ if (NOT LUA)
       set(MODULE_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib/lua/${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}")
     endif (WIN32)
   endif (BUILD_MODULE)
+  if (BUILD_STATIC_LIBS)
+    set(STATICLIBS_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
+      CACHE PATH "Installation directory for static libraries")
+    set(STATICLIBS_INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include/luv"
+      CACHE PATH "Installation directory for headers")
+  endif (BUILD_STATIC_LIBS)
   if (BUILD_SHARED_LIBS)
     set(SHAREDLIBS_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
-      CACHE PATH "Installation directory for libraries")
+      CACHE PATH "Installation directory for shared libraries")
     set(SHAREDLIBS_INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include/luv"
       CACHE PATH "Installation directory for headers")
   endif (BUILD_SHARED_LIBS)
 else ()
   # use paths from luaRocks
   set(MODULE_INSTALL_LIB_DIR "${INSTALL_LIB_DIR}")
+  set(STATICLIBS_INSTALL_LIB_DIR "${INSTALL_LIB_DIR}")
+  set(STATICLIBS_INSTALL_INC_DIR "${INSTALL_INC_DIR}")
   set(SHAREDLIBS_INSTALL_LIB_DIR "${INSTALL_LIB_DIR}")
   set(SHAREDLIBS_INSTALL_INC_DIR "${INSTALL_INC_DIR}")
 endif ()
@@ -213,6 +227,16 @@ if (CMAKE_INSTALL_PREFIX)
       LIBRARY DESTINATION "${MODULE_INSTALL_LIB_DIR}"
     )
   endif (BUILD_MODULE)
+  if (BUILD_STATIC_LIBS)
+    install(TARGETS libluv_a
+      ARCHIVE DESTINATION "${STATICLIBS_INSTALL_LIB_DIR}"
+      LIBRARY DESTINATION "${STATICLIBS_INSTALL_LIB_DIR}"
+    )
+    install(
+      FILES src/luv.h src/util.h src/lhandle.h src/lreq.h
+      DESTINATION "${STATICLIBS_INSTALL_INC_DIR}"
+    )
+  endif (BUILD_STATIC_LIBS)
   if (BUILD_SHARED_LIBS)
     install(TARGETS libluv
       ARCHIVE DESTINATION "${SHAREDLIBS_INSTALL_LIB_DIR}"
