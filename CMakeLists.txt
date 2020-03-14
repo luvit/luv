@@ -202,23 +202,27 @@ if (NOT LUA)
   if (BUILD_STATIC_LIBS)
     set(STATICLIBS_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
       CACHE PATH "Installation directory for static libraries")
-    set(STATICLIBS_INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include/luv"
-      CACHE PATH "Installation directory for headers")
   endif (BUILD_STATIC_LIBS)
   if (BUILD_SHARED_LIBS)
     set(SHAREDLIBS_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
       CACHE PATH "Installation directory for shared libraries")
-    set(SHAREDLIBS_INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include/luv"
-      CACHE PATH "Installation directory for headers")
   endif (BUILD_SHARED_LIBS)
 else ()
   # use paths from luaRocks
   set(MODULE_INSTALL_LIB_DIR "${INSTALL_LIB_DIR}")
   set(STATICLIBS_INSTALL_LIB_DIR "${INSTALL_LIB_DIR}")
-  set(STATICLIBS_INSTALL_INC_DIR "${INSTALL_INC_DIR}")
   set(SHAREDLIBS_INSTALL_LIB_DIR "${INSTALL_LIB_DIR}")
-  set(SHAREDLIBS_INSTALL_INC_DIR "${INSTALL_INC_DIR}")
 endif ()
+
+# header install paths are LuaRocks-agnostic, so just use CMAKE_INSTALL_PREFIX regardless
+if (BUILD_STATIC_LIBS)
+  set(STATICLIBS_INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include/luv"
+    CACHE PATH "Installation directory for headers")
+endif (BUILD_STATIC_LIBS)
+if (BUILD_SHARED_LIBS)
+  set(SHAREDLIBS_INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include/luv"
+    CACHE PATH "Installation directory for headers")
+endif (BUILD_SHARED_LIBS)
 
 if (CMAKE_INSTALL_PREFIX)
   if (BUILD_MODULE)
