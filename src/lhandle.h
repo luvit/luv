@@ -39,7 +39,7 @@
 #define LUV_FS_POLL 1
 #define LUV_RESET 1
 
-typedef int (*luv_handle_extra_gc) (void* ptr);
+typedef void (*luv_handle_extra_gc) (void* ptr);
 
 /* Ref for userdata and event callbacks */
 typedef struct {
