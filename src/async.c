@@ -45,6 +45,7 @@ static int luv_new_async(lua_State* L) {
   }
   data = luv_setup_handle(L, ctx);
   data->extra = (luv_thread_arg_t*)malloc(sizeof(luv_thread_arg_t));
+  data->extra_gc = free;
   memset(data->extra, 0, sizeof(luv_thread_arg_t));
   handle->data = data;
   luv_check_callback(L, (luv_handle_t*)handle->data, LUV_ASYNC, 1);
