@@ -51,6 +51,7 @@ static luv_handle_t* luv_setup_handle(lua_State* L, luv_ctx_t* ctx) {
   data->callbacks[1] = LUA_NOREF;
   data->ctx = ctx;
   data->extra = NULL;
+  data->extra_gc = NULL;
   return data;
 }
 

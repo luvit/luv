@@ -39,12 +39,15 @@
 #define LUV_FS_POLL 1
 #define LUV_RESET 1
 
+typedef int (*luv_handle_extra_gc) (void* ptr);
+
 /* Ref for userdata and event callbacks */
 typedef struct {
   int ref;
   int callbacks[2];
   luv_ctx_t* ctx;
   void* extra;
+  luv_handle_extra_gc extra_gc;
 } luv_handle_t;
 
 #ifdef LUV_SOURCE
