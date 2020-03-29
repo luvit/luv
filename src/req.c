@@ -14,7 +14,7 @@
  *  limitations under the License.
  *
  */
-#include "luv.h"
+#include "private.h"
 
 static uv_req_t* luv_check_req(lua_State* L, int index) {
   uv_req_t* req = (uv_req_t*)luaL_checkudata(L, index, "uv_req");

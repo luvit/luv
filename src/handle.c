@@ -14,7 +14,7 @@
  *  limitations under the License.
  *
  */
-#include "luv.h"
+#include "private.h"
 
 static void* luv_newuserdata(lua_State* L, size_t sz) {
   void* handle = malloc(sz);

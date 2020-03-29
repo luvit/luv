@@ -14,7 +14,7 @@
  *  limitations under the License.
  *
  */
-#include "luv.h"
+#include "private.h"
 
 static uv_prepare_t* luv_check_prepare(lua_State* L, int index) {
   uv_prepare_t* handle = (uv_prepare_t*)luv_checkudata(L, index, "uv_prepare");

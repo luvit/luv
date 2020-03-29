@@ -14,11 +14,7 @@
 *  limitations under the License.
 *
 */
-#include "luv.h"
-#include "lthreadpool.h"
-#if (LUA_VERSION_NUM != 503)
-#include "compat-5.3.h"
-#endif
+#include "private.h"
 
 typedef struct {
   uv_thread_t handle;
@@ -27,9 +23,6 @@ typedef struct {
   int argc;
   luv_thread_arg_t args;
 } luv_thread_t;
-
-static luv_acquire_vm acquire_vm_cb = NULL;
-static luv_release_vm release_vm_cb = NULL;
 
 static lua_State* luv_thread_acquire_vm() {
   lua_State* L = luaL_newstate();

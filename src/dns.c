@@ -15,7 +15,7 @@
  *
  */
 
-#include "luv.h"
+#include "private.h"
 #ifndef WIN32
 #include <sys/types.h>
 #include <sys/socket.h>

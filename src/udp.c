@@ -14,7 +14,7 @@
  *  limitations under the License.
  *
  */
-#include "luv.h"
+#include "private.h"
 
 static uv_udp_t* luv_check_udp(lua_State* L, int index) {
   uv_udp_t* handle = (uv_udp_t*)luv_checkudata(L, index, "uv_udp");

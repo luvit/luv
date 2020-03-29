@@ -14,7 +14,7 @@
  *  limitations under the License.
  *
  */
-#include "luv.h"
+#include "private.h"
 
 static int luv_loop_close(lua_State* L) {
   int ret = uv_loop_close(luv_loop(L));

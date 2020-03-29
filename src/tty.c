@@ -14,7 +14,7 @@
  *  limitations under the License.
  *
  */
-#include "luv.h"
+#include "private.h"
 
 static uv_tty_t* luv_check_tty(lua_State* L, int index) {
   uv_tty_t* handle = (uv_tty_t*)luv_checkudata(L, index, "uv_tty");

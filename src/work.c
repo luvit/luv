@@ -14,8 +14,7 @@
 *  limitations under the License.
 *
 */
-#include "luv.h"
-#include "lthreadpool.h"
+#include "private.h"
 
 typedef struct {
   lua_State* L;       /* vm in main */
