@@ -98,13 +98,13 @@ static void luv_work_cb(uv_work_t* req) {
   if (lua_isfunction(L, -1)) {
     int i = luv_thread_arg_push(L, &work->args, LUVF_THREAD_SIDE_CHILD);
     i = luv_cfpcall(L, i, LUA_MULTRET, 0);
-    luv_thread_arg_clear(L, &work->args, LUVF_THREAD_SIDE_CHILD);
     if ( i>=0 ) {
       //clear in main threads, luv_after_work_cb
       i = luv_thread_arg_set(L, &work->rets, top + 1, lua_gettop(L), LUVF_THREAD_SIDE_CHILD);
       lua_pop(L, i);  // pop all returned value
       luv_thread_arg_clear(L, &work->rets, LUVF_THREAD_SIDE_CHILD);
     }
+    luv_thread_arg_clear(L, &work->args, LUVF_THREAD_SIDE_CHILD);
   } else {
     fprintf(stderr, "Uncaught Error: %s can't be work entry\n",
             lua_typename(L, lua_type(L,-1)));
