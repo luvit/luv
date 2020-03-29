@@ -14,8 +14,7 @@
  *  limitations under the License.
  *
  */
-#include "luv.h"
-#include "lthreadpool.h"
+#include "private.h"
 
 static uv_async_t* luv_check_async(lua_State* L, int index) {
   uv_async_t* handle = (uv_async_t*)luv_checkudata(L, index, "uv_async");

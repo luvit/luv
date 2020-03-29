@@ -14,7 +14,7 @@
  *  limitations under the License.
  *
  */
-#include "luv.h"
+#include "private.h"
 
 void luv_stack_dump(lua_State* L, const char* name) {
   int i, l;

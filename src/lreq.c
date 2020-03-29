@@ -14,7 +14,7 @@
  *  limitations under the License.
  *
  */
-#include "lreq.h"
+#include "private.h"
 
 
 static int luv_check_continuation(lua_State* L, int index) {

@@ -15,7 +15,7 @@
  *
  */
 
-#include "luv.h"
+#include "private.h"
 
 static uv_fs_t* luv_check_fs(lua_State* L, int index) {
   uv_fs_t* req = (uv_fs_t*)luaL_checkudata(L, index, "uv_req");

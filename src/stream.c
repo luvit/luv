@@ -14,7 +14,7 @@
  *  limitations under the License.
  *
  */
-#include "luv.h"
+#include "private.h"
 
 static uv_stream_t* luv_check_stream(lua_State* L, int index) {
   int isStream;

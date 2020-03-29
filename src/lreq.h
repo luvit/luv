@@ -30,20 +30,4 @@ typedef struct {
 // This is an arbitrary value that we can assume will never be returned by luaL_ref
 #define LUV_REQ_MULTIREF (-0x1234)
 
-#ifdef LUV_SOURCE
-/* Used in the top of a setup function to check the arg
-   and ref the callback to an integer.
-*/
-static int luv_check_continuation(lua_State* L, int index);
-
-/* setup a luv_req_t.  The userdata is assumed to be at the
-   top of the stack.
-*/
-static luv_req_t* luv_setup_req(lua_State* L, luv_ctx_t* ctx, int ref);
-
-static void luv_fulfill_req(lua_State* L, luv_req_t* data, int nargs);
-
-static void luv_cleanup_req(lua_State* L, luv_req_t* data);
-#endif
-
 #endif

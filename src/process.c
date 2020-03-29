@@ -14,7 +14,7 @@
  *  limitations under the License.
  *
  */
-#include "luv.h"
+#include "private.h"
 #include <math.h>
 
 static int luv_disable_stdio_inheritance(lua_State* L) {
