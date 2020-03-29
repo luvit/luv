@@ -22,8 +22,6 @@ typedef struct {
   char* code;         /* thread entry code */
   size_t len;
 
-  uv_async_t async;
-  int async_cb;       /* ref, run in main, call when async message received */
   int after_work_cb;  /* ref, run in main ,call after work cb*/
   int pool_ref;       /* ref of lua_State cache array */
 } luv_work_ctx_t;
@@ -47,7 +45,6 @@ static int luv_work_ctx_gc(lua_State *L) {
   luv_work_ctx_t* ctx = luv_check_work_ctx(L, 1);
   free(ctx->code);
   luaL_unref(L, LUA_REGISTRYINDEX, ctx->after_work_cb);
-  luaL_unref(L, LUA_REGISTRYINDEX, ctx->async_cb);
 
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->pool_ref);
   n = lua_rawlen(L, -1);
@@ -98,13 +95,13 @@ static void luv_work_cb(uv_work_t* req) {
   if (lua_isfunction(L, -1)) {
     int i = luv_thread_arg_push(L, &work->args, LUVF_THREAD_SIDE_CHILD);
     i = luv_cfpcall(L, i, LUA_MULTRET, 0);
-    luv_thread_arg_clear(L, &work->args, LUVF_THREAD_SIDE_CHILD);
     if ( i>=0 ) {
       //clear in main threads, luv_after_work_cb
       i = luv_thread_arg_set(L, &work->rets, top + 1, lua_gettop(L), LUVF_THREAD_SIDE_CHILD);
       lua_pop(L, i);  // pop all returned value
       luv_thread_arg_clear(L, &work->rets, LUVF_THREAD_SIDE_CHILD);
     }
+    luv_thread_arg_clear(L, &work->args, LUVF_THREAD_SIDE_CHILD);
   } else {
     fprintf(stderr, "Uncaught Error: %s can't be work entry\n",
             lua_typename(L, lua_type(L,-1)));
@@ -149,7 +146,6 @@ static void async_cb(uv_async_t *handle) {
   luv_work_ctx_t* ctx = work->ctx;
   lua_State* L = ctx->L;
 
-  lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->async_cb);
   luv_cfpcall(L, 0, 0, 0);
 }
 
@@ -172,14 +168,7 @@ static int luv_new_work(lua_State* L) {
 
   lua_pushvalue(L, 2);
   ctx->after_work_cb = luaL_ref(L, LUA_REGISTRYINDEX);
-  if (lua_gettop(L) == 4)
-  {
-    lua_pushvalue(L, 3);
-    ctx->async_cb = luaL_ref(L, LUA_REGISTRYINDEX);
-    uv_async_init(luv_loop(L), &ctx->async, async_cb);
-  }
-  else
-    ctx->async_cb = LUA_REFNIL;
+
   ctx->L = L;
   luaL_getmetatable(L, "luv_work_ctx");
   lua_setmetatable(L, -2);

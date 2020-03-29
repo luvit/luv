@@ -9,7 +9,7 @@ return require('lib/tap')(function (test)
             local uv = require('luv')
             local t = uv.thread_self()
             uv.sleep(10)
-            return n,n*n, tostring(uv.thread_self()),s
+            return n, n*n, t, s
         end,
         function(n,r,id, s)
             assert(n*n==r)
@@ -47,5 +47,37 @@ return require('lib/tap')(function (test)
     _uv.queue_work(ctx,6,ls)
     _uv.queue_work(ctx,-2,ls)
     _uv.queue_work(ctx,-11,ls)
+  end)
+
+  test("test threadpool with async", function(print,p,expect,_uv)
+    local ctx, async
+    async = _uv.new_async(expect(function (a,b,c)
+      p('in async notify callback')
+      p(a,b,c)
+      assert(a=='a')
+      assert(b==true)
+      assert(c==250)
+    end))
+
+    ctx = _uv.new_work(
+      function(n, s, a)         --work,in threadpool
+          local uv = require('luv')
+          local t = tostring(uv.thread_self())
+          if a then
+            assert(uv.async_send(a,'a',true,250)==0)
+          end
+          uv.sleep(10)
+          return n, n*n, t, s
+      end,
+      function(n,r,id, s)       --after work, in loop thread
+          p(n, r, id, s)
+          assert(n*n==r)
+          if async then
+            _uv.close(async)
+          end
+          print(id, 'finish', s)
+      end
+    )
+    _uv.queue_work(ctx,2,'hello',async)
   end)
 end)
