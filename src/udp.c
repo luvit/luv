@@ -281,7 +281,15 @@ static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf
   else {
     lua_pushnil(L);
   }
+#if LUV_UV_VERSION_GEQ(1, 35, 0)
+  // UV_UDP_MMSG_CHUNK Indicates that the message was received by recvmmsg, so the buffer provided
+  // must not be freed by the recv_cb callback.
+  if (buf && !(flags & UV_UDP_MMSG_CHUNK)) {
+    free(buf->base);
+  }
+#else
   if (buf) free(buf->base);
+#endif
 
   // address
   if (addr) {
@@ -297,6 +305,12 @@ static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf
     lua_pushboolean(L, 1);
     lua_setfield(L, -2, "partial");
   }
+#if LUV_UV_VERSION_GEQ(1, 35, 0)
+  if (flags & UV_UDP_MMSG_CHUNK) {
+    lua_pushboolean(L, 1);
+    lua_setfield(L, -2, "mmsg_chunk");
+  }
+#endif
 
   luv_call_callback(L, (luv_handle_t*)handle->data, LUV_RECV, 4);
 }
