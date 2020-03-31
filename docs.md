@@ -50,11 +50,37 @@ as `server:bind(host, port)`. Note that the first argument `server` becomes the
 object and `tcp_` is removed from the function name. Method forms are
 documented below where they exist.
 
+### Synchronous vs Asynchronous Functions
+
+Functions that accept a callback are asynchronous. These functions may
+immediately return results to the caller to indicate their initial status, but
+their final execution is deferred until at least the next libuv loop iteration.
+After completion, their callbacks are executed with any results passed to it.
+
+Functions that do not accept a callback are synchronous. These functions
+immediately return their results to the caller.
+
+Some (generally FS and DNS) functions can behave either synchronously or
+asynchronously. If a callback is provided to these functions, they behave
+asynchronously; if no callback is provided, they behave synchronously.
+
+### Pseudo-Types
+
+Some unique types are defined. These are not actual types in Lua, but they are
+used here to facilitate documenting consistent behavior:
+- `fail`: an assertable `nil, string, string` tuple (see [Error handling][])
+- `callable`: a `function`; or a `table` or `userdata` with a `__call`
+  metamethod
+- `buffer`: a `string` or a sequential `table` of `string`s
+- `threadargs`: variable arguments (`...`) of type `nil`, `boolean`, `number`,
+  `string`, or `userdata`
+
 ## Contents
 
 This documentation is mostly a retelling of the [libuv API documentation][]
-within the context of luv's Lua API, with low-level implementation details and
-unexposed C functions and types omitted.
+within the context of luv's Lua API. Low-level implementation details and
+unexposed C functions and types are not documented here except for when they
+are relevant to behavior seen in the Lua module.
 
 - [Error handling][]
 - [Version checking][]
@@ -89,11 +115,13 @@ unexposed C functions and types omitted.
 In libuv, errors are negative numbered constants; however, these errors and the
 functions used to handle them are not exposed to luv users. Instead, if an
 internal error is encountered, the luv function will return to the caller an
-assertable `nil, err, name` tuple where `err` is a string with the format
-`{name}: {message}` where `{name}` is the error name provided internally by
-`uv_err_name` and `{message}` is a human readable error message provided
-internally by `uv_strerror`. For convenience, the `name` used to construct
-`err` is provided as a third argument.
+assertable `nil, err, name` tuple.
+
+- `nil` idiomatically indicates failure
+- `err` is a string with the format `{name}: {message}`
+  - `{name}` is the error name provided internally by `uv_err_name`
+  - `{message}` is a human-readable message provided internally by `uv_strerror`
+- `name` is the same string used to construct `err`
 
 This tuple is referred to below as the `fail` pseudo-type.
 
@@ -108,15 +136,15 @@ success, or sometimes nothing at all. These cases are documented below.
 ### `uv.version()`
 
 Returns the libuv version packed into a single integer. 8 bits are used for each
-component, with the patch number stored in the 8 least significant bits. E.g.
-for libuv 1.2.3 this would be 0x010203.
+component, with the patch number stored in the 8 least significant bits. For
+example, this would be 0x010203 in libuv 1.2.3.
 
 **Returns:** `integer`
 
 ### `uv.version_string()`
 
-Returns the libuv version number as a string. For non-release versions the
-version suffix is included.
+Returns the libuv version number as a string. For example, this would be "1.2.3"
+in libuv 1.2.3. For non-release versions, the version suffix is included.
 
 **Returns:** `string`
 
@@ -145,7 +173,8 @@ or it will return `EBUSY`.
 
 ### `uv.run([mode])`
 
-> optional `mode` defaults to `"default"`
+**Parameters:**
+- `mode`: `string` or `nil` (default: `"default"`)
 
 This function runs the event loop. It will act differently depending on the
 specified mode:
@@ -230,6 +259,10 @@ subjective but probably on the order of a millisecond or more.
 
 ### `uv.walk(callback)`
 
+**Parameters:**
+- `callback`: `callable`
+  - `handle`: `userdata` for sub-type of `uv_handle_t`
+
 Walk the list of handles: `callback` will be executed with each handle.
 
 **Returns:** Nothing.
@@ -251,9 +284,14 @@ end)
 
 ### `uv.cancel(req)`
 
+**Parameters:**
+- `req`: `userdata` for sub-type of `uv_req_t`
+
 Cancel a pending request. Fails if the request is executing or has finished
 executing. Only cancellation of `uv_fs_t`, `uv_getaddrinfo_t`,
 `uv_getnameinfo_t` and `uv_work_t` requests is currently supported.
+
+**Returns:** `0` or `fail`
 
 ## `uv_handle_t` — Base handle
 
@@ -265,6 +303,9 @@ defined here work with any handle type.
 ### `uv.is_active(handle)`
 
 > method form `handle:is_active()`
+
+**Parameters:**
+- `handle`: `userdata` for sub-type of `uv_handle_t`
 
 Returns `true` if the handle is active, `false` if it's inactive. What "active”
 means depends on the type of handle:
@@ -288,6 +329,9 @@ means depends on the type of handle:
 
 > method form `handle:is_closing()`
 
+**Parameters:**
+- `handle`: `userdata` for sub-type of `uv_handle_t`
+
 Returns `true` if the handle is closing or closed, `false` otherwise.
 
 **Returns:** `boolean` or `fail`
@@ -298,6 +342,10 @@ handle and the arrival of the close callback.
 ### `uv.close(handle, [callback])`
 
 > method form `handle:close([callback])`
+
+**Parameters:**
+- `handle`: `userdata` for sub-type of `uv_handle_t`
+- `callback`: `callable` or `nil`
 
 Request handle to be closed. `callback` will be called asynchronously after this
 call. This MUST be called on each handle before memory is released.
@@ -315,6 +363,9 @@ have their callbacks called asynchronously with `ECANCELED`.
 
 > method form `handle:ref()`
 
+**Parameters:**
+- `handle`: `userdata` for sub-type of `uv_handle_t`
+
 Reference the given handle. References are idempotent, that is, if a handle is
 already referenced calling this function again will have no effect.
 
@@ -325,6 +376,9 @@ See [Reference counting][].
 ### `uv.unref(handle)`
 
 > method form `handle:unref()`
+
+**Parameters:**
+- `handle`: `userdata` for sub-type of `uv_handle_t`
 
 Un-reference the given handle. References are idempotent, that is, if a handle
 is not referenced calling this function again will have no effect.
@@ -337,6 +391,9 @@ See [Reference counting][].
 
 > method form `handle:has_ref()`
 
+**Parameters:**
+- `handle`: `userdata` for sub-type of `uv_handle_t`
+
 Returns `true` if the handle referenced, `false` if not.
 
 **Returns:** `boolean` or `fail`
@@ -347,11 +404,14 @@ See [Reference counting][].
 
 > method form `handle:send_buffer_size([size])`
 
+**Parameters:**
+- `handle`: `userdata` for sub-type of `uv_handle_t`
+- `size`: `integer` or `nil` (default: `0`)
+
 Gets or sets the size of the send buffer that the operating system uses for the
 socket.
 
-If `size` is omitted, it will return the current send buffer size, otherwise it
-will use `size` to set the new send buffer size.
+If `size` is omitted (or `0`), this will return the current send buffer size; otherwise, this will use `size` to set the new send buffer size.
 
 This function works for TCP, pipe and UDP handles on Unix and for TCP and UDP
 handles on Windows.
@@ -367,11 +427,14 @@ original set value.
 
 > method form `handle:recv_buffer_size([size])`
 
+**Parameters:**
+- `handle`: `userdata` for sub-type of `uv_handle_t`
+- `size`: `integer` or `nil` (default: `0`)
+
 Gets or sets the size of the receive buffer that the operating system uses for
 the socket.
 
-If `size` is omitted, it will return the current receive buffer size, otherwise
-it will use `size` to set the new receive buffer size.
+If `size` is omitted (or `0`), this will return the current send buffer size; otherwise, this will use `size` to set the new send buffer size.
 
 This function works for TCP, pipe and UDP handles on Unix and for TCP and UDP
 handles on Windows.
@@ -386,6 +449,9 @@ original set value.
 ### `uv.fileno(handle)`
 
 > method form `handle:fileno()`
+
+**Parameters:**
+- `handle`: `userdata` for sub-type of `uv_handle_t`
 
 Gets the platform dependent file descriptor equivalent.
 
@@ -446,8 +512,6 @@ end
 local function setInterval(interval, callback)
   local timer = uv.new_timer()
   timer:start(interval, interval, function ()
-    timer:stop()
-    timer:close()
     callback()
   end)
   return timer
@@ -464,6 +528,12 @@ end
 
 > method form `timer:start(timeout, repeat, callback)`
 
+**Parameters:**
+- `timer`: `uv_timer_t userdata`
+- `timeout`: `integer`
+- `repeat`: `integer`
+- `callback`: `callable`
+
 Start the timer. `timeout` and `repeat` are in milliseconds.
 
 If `timeout` is zero, the callback fires on the next event loop iteration. If
@@ -476,6 +546,9 @@ then repeatedly after `repeat` milliseconds.
 
 > method form `timer:stop()`
 
+**Parameters:**
+- `timer`: `uv_timer_t userdata`
+
 Stop the timer, the callback will not be called anymore.
 
 **Returns:** `0` or `fail`
@@ -483,6 +556,9 @@ Stop the timer, the callback will not be called anymore.
 ### `uv.timer_again(timer)`
 
 > method form `timer:again()`
+
+**Parameters:**
+- `timer`: `uv_timer_t userdata`
 
 Stop the timer, and if it is repeating restart it using the repeat value as the
 timeout. If the timer has never been started before it raises `EINVAL`.
@@ -492,6 +568,10 @@ timeout. If the timer has never been started before it raises `EINVAL`.
 ### `uv.timer_set_repeat(timer, repeat)`
 
 > method form `timer:set_repeat(repeat)`
+
+**Parameters:**
+- `timer`: `uv_timer_t userdata`
+- `repeat`: `integer`
 
 Set the repeat interval value in milliseconds. The timer will be scheduled to
 run on the given interval, regardless of the callback execution duration, and
@@ -507,6 +587,9 @@ possible.
 ### `uv.timer_get_repeat(timer)`
 
 > method form `timer:get_repeat()`
+
+**Parameters:**
+- `timer`: `uv_timer_t userdata`
 
 Get the timer repeat value.
 
@@ -539,6 +622,10 @@ it.
 
 > method form `prepare:start(callback)`
 
+**Parameters:**
+- `prepare`: `uv_prepare_t userdata`
+- `callback`: `callable`
+
 Start the handle with the given callback.
 
 **Returns:** `0` or `fail`
@@ -546,6 +633,9 @@ Start the handle with the given callback.
 ### `uv.prepare_stop(prepare)`
 
 > method form `prepare:stop()`
+
+**Parameters:**
+- `prepare`: `uv_prepare_t userdata`
 
 Stop the handle, the callback will no longer be called.
 
@@ -578,6 +668,10 @@ it.
 
 > method form `check:start(callback)`
 
+**Parameters:**
+- `check`: `uv_check_t userdata`
+- `callback`: `callable`
+
 Start the handle with the given callback.
 
 **Returns:** `0` or `fail`
@@ -585,6 +679,9 @@ Start the handle with the given callback.
 ### `uv.check_stop(check)`
 
 > method form `check:stop()`
+
+**Parameters:**
+- `check`: `uv_check_t userdata`
 
 Stop the handle, the callback will no longer be called.
 
@@ -624,6 +721,10 @@ it.
 
 > method form `idle:start(callback)`
 
+**Parameters:**
+- `idle`: `uv_idle_t userdata`
+- `callback`: `callable`
+
 Start the handle with the given callback.
 
 **Returns:** `0` or `fail`
@@ -631,6 +732,9 @@ Start the handle with the given callback.
 ### `uv.idle_stop(check)`
 
 > method form `idle:stop()`
+
+**Parameters:**
+- `idle`: `uv_idle_t userdata`
 
 Stop the handle, the callback will no longer be called.
 
@@ -657,6 +761,10 @@ async:send()
 
 ### `uv.new_async([callback])`
 
+**Parameters:**
+- `callback`: `callable` or `nil`
+  - `...`: `threadargs` passed to/from `uv.async_send(async, ...)`
+
 Creates and initializes a new `uv_async_t`. Returns the Lua userdata wrapping
 it. A `nil` callback is allowed.
 
@@ -665,9 +773,13 @@ it. A `nil` callback is allowed.
 **Note**: Unlike other handle initialization functions, this immediately starts
 the handle.
 
-### `uv.async_send(async)`
+### `uv.async_send(async, ...)`
 
-> method form `async:send()`
+> method form `async:send(...)`
+
+**Parameters:**
+- `async`: `uv_async_t userdata`
+- `...`: `threadargs`
 
 Wakeup the event loop and call the async handle's callback.
 
@@ -710,10 +822,13 @@ active poll handle. This can cause the handle to report an error, but it might
 also start polling another socket. However the fd can be safely closed
 immediately after a call to `uv.poll_stop()` or `uv.close()`.
 
-**Note** On windows only sockets can be polled with poll handles. On Unix any
+**Note**: On windows only sockets can be polled with poll handles. On Unix any
 file descriptor that would be accepted by poll(2) can be used.
 
 ### `uv.new_poll(fd)`
+
+**Parameters:**
+- `fd`: `integer`
 
 Initialize the handle using a file descriptor.
 
@@ -722,6 +837,9 @@ The file descriptor is set to non-blocking mode.
 **Returns:** `uv_poll_t userdata` or `fail`
 
 ### `uv.new_socket_poll(fd)`
+
+**Parameters:**
+- `fd`: `integer`
 
 Initialize the handle using a socket descriptor. On Unix this is identical to
 `uv.new_poll()`. On windows it takes a SOCKET handle.
@@ -734,7 +852,12 @@ The socket is set to non-blocking mode.
 
 > method form `poll:start(events, callback)`
 
-> optional `events` defaults to `"rw"`
+**Parameters:**
+- `poll`: `uv_poll_t userdata`
+- `events`: `string` or `nil` (default: `"rw"`)
+- `callback`: `callable`
+  - `err`: `nil` or `string`
+  - `events`: `string` or `nil`
 
 Starts polling the file descriptor. `events` are: `"r"`, `"w"`, `"rw"`, `"d"`,
 `"rd"`, `"wd"`, `"rwd"`, `"p"`, `"rp"`, `"wp"`, `"rwp"`, `"dp"`, `"rdp"`,
@@ -755,6 +878,9 @@ Doing so will update the events mask that is being watched for.
 ### `uv.poll_stop(poll)`
 
 > method form `poll:stop()`
+
+**Parameters:**
+- `poll`: `uv_poll_t userdata`
 
 Stop polling the file descriptor, the callback will no longer be called.
 
@@ -822,13 +948,25 @@ it.
 
 > method form `signal:start(signum, callback)`
 
+**Parameters:**
+- `signal`: `uv_signal_t userdata`
+- `signum`: `integer` or `string`
+- `callback`: `callable`
+  - `signum`: `string`
+
 Start the handle with the given callback, watching for the given signal.
 
 **Returns:** `0` or `fail`
 
-### `uv.signal_start_oneshot()`
+### `uv.signal_start_oneshot(signal, signum, callback)`
 
 > method form `signal:start_oneshot(signum, callback)`
+
+**Parameters:**
+- `signal`: `uv_signal_t userdata`
+- `signum`: `integer` or `string`
+- `callback`: `callable`
+  - `signum`: `string`
 
 Same functionality as `uv.signal_start()` but the signal handler is reset the moment the signal is received.
 
@@ -837,6 +975,9 @@ Same functionality as `uv.signal_start()` but the signal handler is reset the mo
 ### `uv.signal_stop(signal)`
 
 > method form `signal:stop()`
+
+**Parameters:**
+- `signal`: `uv_signal_t userdata`
 
 Stop the handle, the callback will no longer be called.
 
@@ -866,7 +1007,14 @@ before the inherited file descriptors can be closed or duplicated.
 libuv can discover all file descriptors that were inherited. In general it does
 a better job on Windows than it does on Unix.
 
-### `uv.spawn(file, options, onexit)`
+### `uv.spawn(path, options, on_exit)`
+
+**Parameters:**
+- `path`: `string`
+- `options`: `table` (see below)
+- `on_exit`: `callable`
+  - `code`: `integer`
+  - `signal`: `integer`
 
 Initializes the process handle and starts the process. If the process is
 successfully spawned, this function will return the handle and pid of the child
@@ -877,61 +1025,64 @@ file to execute not existing, not having permissions to use the setuid or setgid
 specified, or not having enough memory to allocate for the new process.
 
 ```lua
-local stdout = uv.new_pipe(false)
-local stderr = uv.new_pipe(false)
-local stdin = uv.new_pipe(false)
+local stdin = uv.new_pipe()
+local stdout = uv.new_pipe()
+local stderr = uv.new_pipe()
 
-local handle, pid
+print("stdin", stdin)
+print("stdout", stdout)
+print("stderr", stderr)
 
-local function onexit(code, signal)
-  p("exit", {code=code,signal=signal})
-end
-
-local function onclose()
-  p("close")
-end
-
-local function onread(err, chunk)
-  assert(not err, err)
-  if (chunk) then
-    p("data", {data=chunk})
-  else
-    p("end")
-  end
-end
-
-local function onshutdown()
-  uv.close(handle, onclose)
-end
-
-handle, pid = uv.spawn("cat", {
+local handle, pid = uv.spawn("cat", {
   stdio = {stdin, stdout, stderr}
-}, onexit)
+}, function(code, signal) -- on exit
+  print("exit code", code)
+  print("exit signal", signal)
+end)
 
-p{
-  handle=handle,
-  pid=pid
-}
+print("process opened", handle, pid)
 
-uv.read_start(stdout, onread)
-uv.read_start(stderr, onread)
+uv.read_start(stdout, function(err, data)
+  assert(not err, err)
+  if data then
+    print("stdout chunk", stdout, data)
+  else
+    print("stdout end", stdout)
+  end
+end)
+
+uv.read_start(stderr, function(err, data)
+  assert(not err, err)
+  if data then
+    print("stderr chunk", stderr, data)
+  else
+    print("stderr end", stderr)
+  end
+end)
+
 uv.write(stdin, "Hello World")
-uv.shutdown(stdin, onshutdown)
+
+uv.shutdown(stdin, function()
+  print("stdin shutdown", stdin)
+  uv.close(handle, function()
+    print("process closed", handle, pid)
+  end)
+end)
 ```
 
 The `options` table accepts the following fields:
 
   - `options.args` - Command line arguments as a list of string. The first
-  string should be the path to the program. On Windows this uses CreateProcess
-  which concatenates the arguments into a string this can cause some strange
+  string should be the path to the program. On Windows, this uses CreateProcess
+  which concatenates the arguments into a string. This can cause some strange
   errors. (See `options.verbatim` below for Windows.)
   - `options.stdio` - Set the file descriptors that will be made available to
   the child process. The convention is that the first entries are stdin, stdout,
-  and stderr. (**Note** On Windows file descriptors after the third are
+  and stderr. (**Note**: On Windows, file descriptors after the third are
   available to the child process only if the child processes uses the MSVCRT
   runtime.)
   - `options.env` - Set environment variables for the new process.
-  - `options.cwd` - Set current working directory for the subprocess.
+  - `options.cwd` - Set the current working directory for the sub-process.
   - `options.uid` - Set the child process' user id.
   - `options.gid` - Set the child process' group id.
   - `options.verbatim` - If true, do not wrap any arguments in quotes, or
@@ -953,23 +1104,30 @@ The `options.stdio` entries can take many shapes.
   fd from the parent process.
   - If `uv_stream_t` handles are passed in, those are used as a read-write pipe
   or inherited stream depending if the stream has a valid fd.
-  - Including `nil` placeholders means to ignore that fd in the child.
+  - Including `nil` placeholders means to ignore that fd in the child process.
 
-When the child process exits, the `onexit` callback will be called with exit
-code and signal.
+When the child process exits, `on_exit` is called with an exit code and signal.
 
-**Returns:** `integer`, `integer`
+**Returns:** `uv_process_t userdata`, `integer`
 
-### `uv.process_kill(process, sigmun)`
+### `uv.process_kill(process, signum)`
 
-> method form `process:kill(sigmun)`
+> method form `process:kill(signum)`
+
+**Parameters:**
+- `process`: `uv_process_t userdata`
+- `signum`: `integer` or `string`
 
 Sends the specified signal to the given process handle. Check the documentation
 on `uv_signal_t` for signal support, specially on Windows.
 
 **Returns:** `0` or `fail`
 
-### `uv.kill(pid, sigmun)`
+### `uv.kill(pid, signum)`
+
+**Parameters:**
+- `pid`: `integer`
+- `signum`: `integer` or `string`
 
 Sends the specified signal to the given PID. Check the documentation on
 `uv_signal_t` for signal support, specially on Windows.
@@ -990,6 +1148,11 @@ in the form of [`uv_tcp_t`][], [`uv_pipe_t`][] and [`uv_tty_t`][].
 
 > method form `stream:shutdown([callback])`
 
+**Parameters:**
+- `stream`: `userdata` for sub-type of `uv_stream_t`
+- `callback`: `callable` or `nil`
+  - `err`: `nil` or `string`
+
 Shutdown the outgoing (write) side of a duplex stream. It waits for pending
 write requests to complete. The callback is called after shutdown is complete.
 
@@ -998,6 +1161,12 @@ write requests to complete. The callback is called after shutdown is complete.
 ### `uv.listen(stream, backlog, callback)`
 
 > method form `stream:listen(backlog, callback)`
+
+**Parameters:**
+- `stream`: `userdata` for sub-type of `uv_stream_t`
+- `backlog`: `integer`
+- `callback`: `callable`
+  - `err`: `nil` or `string`
 
 Start listening for incoming connections. `backlog` indicates the number of
 connections the kernel might queue, same as `listen(2)`. When a new incoming
@@ -1008,6 +1177,10 @@ connection is received the callback is called.
 ### `uv.accept(stream, client_stream)`
 
 > method form `stream:accept(client_stream)`
+
+**Parameters:**
+- `stream`: `userdata` for sub-type of `uv_stream_t`
+- `client_stream`: `userdata` for sub-type of `uv_stream_t`
 
 This call is used in conjunction with `uv.listen()` to accept incoming
 connections. Call this function after receiving a callback to accept the
@@ -1031,7 +1204,11 @@ end)
 
 > method form `stream:read_start(callback)`
 
-Callback is of the form `(err, data)`.
+**Parameters:**
+- `stream`: `userdata` for sub-type of `uv_stream_t`
+- `callback`: `callable`
+  - `err`: `nil` or `string`
+  - `data`: `string` or `nil`
 
 Read data from an incoming stream. The callback will be made several times until
 there is no more data to read or `uv.read_stop()` is called. When we've reached
@@ -1055,6 +1232,9 @@ end)
 
 > method form `stream:read_stop()`
 
+**Parameters:**
+- `stream`: `userdata` for sub-type of `uv_stream_t`
+
 Stop reading data from the stream. The read callback will no longer be called.
 
 This function is idempotent and may be safely called on a stopped stream.
@@ -1064,6 +1244,12 @@ This function is idempotent and may be safely called on a stopped stream.
 ### `uv.write(stream, data, [callback])`
 
 > method form `stream:write(data, [callback])`
+
+**Parameters:**
+- `stream`: `userdata` for sub-type of `uv_stream_t`
+- `data`: `buffer`
+- `callback`: `callable` or `nil`
+  - `err`: `nil` or `string`
 
 Write data to stream.
 
@@ -1078,6 +1264,13 @@ The optional `callback` is for knowing when the write is complete.
 
 > method form `stream:write2(data, send_handle, [callback])`
 
+**Parameters:**
+- `stream`: `userdata` for sub-type of `uv_stream_t`
+- `data`: `buffer`
+- `send_handle`: `userdata` for sub-type of `uv_stream_t`
+- `callback`: `callable` or `nil`
+  - `err`: `nil` or `string`
+
 Extended write function for sending handles over a pipe. The pipe must be
 initialized with `ipc` option `true`.
 
@@ -1091,6 +1284,10 @@ assumed to be servers.
 
 > method form `stream:try_write(data)`
 
+**Parameters:**
+- `stream`: `userdata` for sub-type of `uv_stream_t`
+- `data`: `buffer`
+
 Same as `uv.write()`, but won't queue a write request if it can't be completed
 immediately.
 
@@ -1102,6 +1299,9 @@ Will return number of bytes written (can be less than the supplied buffer size).
 
 > method form `stream:is_readable()`
 
+**Parameters:**
+- `stream`: `userdata` for sub-type of `uv_stream_t`
+
 Returns `true` if the stream is readable, `false` otherwise.
 
 **Returns:** `boolean`
@@ -1110,6 +1310,9 @@ Returns `true` if the stream is readable, `false` otherwise.
 
 > method form `stream:is_writable()`
 
+**Parameters:**
+- `stream`: `userdata` for sub-type of `uv_stream_t`
+
 Returns `true` if the stream is writable, `false` otherwise.
 
 **Returns:** `boolean`
@@ -1117,6 +1320,10 @@ Returns `true` if the stream is writable, `false` otherwise.
 ### `uv.stream_set_blocking(stream, blocking)`
 
 > method form `stream:set_blocking(blocking)`
+
+**Parameters:**
+- `stream`: `userdata` for sub-type of `uv_stream_t`
+- `blocking`: `boolean`
 
 Enable or disable blocking mode for a stream.
 
@@ -1151,6 +1358,9 @@ TCP handles are used to represent both TCP streams and servers.
 
 ### `uv.new_tcp([flags])`
 
+**Parameters:**
+- `flags`: `string` or `nil`
+
 Creates and initializes a new `uv_tcp_t`. Returns the Lua userdata wrapping it.
 Flags may be a family string: `"unix"`, `"inet"`, `"inet6"`, `"ipx"`,
 `"netlink"`, `"x25"`, `"ax25"`, `"atmpvc"`, `"appletalk"`, or `"packet"`.
@@ -1160,6 +1370,10 @@ Flags may be a family string: `"unix"`, `"inet"`, `"inet6"`, `"ipx"`,
 ### `uv.tcp_open(tcp, sock)`
 
 > method form `tcp:open(sock)`
+
+**Parameters:**
+- `tcp`: `uv_tcp_t userdata`
+- `sock`: `integer`
 
 Open an existing file descriptor or SOCKET as a TCP handle.
 
@@ -1171,6 +1385,10 @@ Open an existing file descriptor or SOCKET as a TCP handle.
 
 > method form `tcp:nodelay(enable)`
 
+**Parameters:**
+- `tcp`: `uv_tcp_t userdata`
+- `enable`: `boolean`
+
 Enable / disable Nagle's algorithm.
 
 **Returns:** `0` or `fail`
@@ -1178,6 +1396,11 @@ Enable / disable Nagle's algorithm.
 ### `uv.tcp_keepalive(tcp, enable, [delay])`
 
 > method form `tcp:keepalive(enable, [delay])`
+
+**Parameters:**
+- `tcp`: `uv_tcp_t userdata`
+- `enable`: `boolean`
+- `delay`: `integer` or `nil`
 
 Enable / disable TCP keep-alive. `delay` is the initial delay in seconds,
 ignored when enable is `false`.
@@ -1187,6 +1410,10 @@ ignored when enable is `false`.
 ### `uv.tcp_simultaneous_accepts(tcp, enable)`
 
 > method form `tcp:simultaneous_accepts(enable)`
+
+**Parameters:**
+- `tcp`: `uv_tcp_t userdata`
+- `enable`: `boolean`
 
 Enable / disable simultaneous asynchronous accept requests that are queued by
 the operating system when listening for new TCP connections.
@@ -1201,6 +1428,13 @@ in multi-process setups.
 ### `uv.tcp_bind(tcp, host, port, [flags])`
 
 > method form `tcp:bind(host, port, [flags])`
+
+**Parameters:**
+- `tcp`: `uv_tcp_t userdata`
+- `host`: `string`
+- `port`: `integer`
+- `flags`: `table` or `nil`
+  - `ipv6only`: `boolean`
 
 Bind the handle to an host and port. `host` should be an IP address and
 not a domain name. Any `flags` are set with a table with field `ipv6only`
@@ -1220,8 +1454,10 @@ later using `uv.tcp_getsockname()`.
 
 > method form `tcp:getpeername()`
 
-Get the current address to which the handle is bound. Returns an address table
-with fields `ip`, `family`, and `port`.
+**Parameters:**
+- `tcp`: `uv_tcp_t userdata`
+
+Get the current address to which the handle is bound.
 
 **Returns:** `table` or `fail`
 - `ip` : `string`
@@ -1232,8 +1468,10 @@ with fields `ip`, `family`, and `port`.
 
 > method form `tcp:getsockname()`
 
-Get the address of the peer connected to the handle. Returns an address table
-with fields `ip`, `family`, and `port`.
+**Parameters:**
+- `tcp`: `uv_tcp_t userdata`
+
+Get the address of the peer connected to the handle.
 
 **Returns:** `table` or `fail`
 - `ip` : `string`
@@ -1244,10 +1482,14 @@ with fields `ip`, `family`, and `port`.
 
 > method form `tcp:connect(host, port, callback)`
 
-Establish an IPv4 or IPv6 TCP connection.
+**Parameters:**
+- `tcp`: `uv_tcp_t userdata`
+- `host`: `string`
+- `port`: `integer`
+- `callback`: `callable`
+   - `err`: `nil` or `string`
 
-The callback is made when the connection has been established or when a
-connection error happened.
+Establish an IPv4 or IPv6 TCP connection.
 
 **Returns:** `uv_connect_t userdata` or `fail`
 
@@ -1264,9 +1506,13 @@ end)
 
 **Deprecated:** Please use `uv.stream_get_write_queue_size()` instead.
 
-### `uv.tcp_close_reset()`
+### `uv.tcp_close_reset([callback])`
 
-> method form `tcp:close_reset()`
+> method form `tcp:close_reset([callback])`
+
+**Parameters:**
+- `tcp`: `uv_tcp_t userdata`
+- `callback`: `callable` or `nil`
 
 Resets a TCP connection by sending a RST packet. This is accomplished by setting
 the SO_LINGER socket option with a linger interval of zero and then calling
@@ -1296,7 +1542,10 @@ pipe:listen(128, function()
 end)
 ```
 
-### `uv.new_pipe(ipc)`
+### `uv.new_pipe([ipc])`
+
+**Parameters:**
+- `ipc`: `boolean` or `nil` (default: `false`)
 
 Creates and initializes a new `uv_pipe_t`. Returns the Lua userdata wrapping
 it. The `ipc` argument is a boolean to indicate if this pipe will be used for
@@ -1304,7 +1553,13 @@ handle passing between processes.
 
 **Returns:** `uv_pipe_t userdata` or `fail`
 
-### `uv.pipe_open(file)`
+### `uv.pipe_open(pipe, fd)`
+
+> method form `pipe:open(fd)`
+
+**Parameters:**
+- `pipe`: `uv_pipe_t userdata`
+- `fd`: `integer`
 
 Open an existing file descriptor or [`uv_handle_t`][] as a pipe.
 
@@ -1315,6 +1570,10 @@ Open an existing file descriptor or [`uv_handle_t`][] as a pipe.
 ### `uv.pipe_bind(pipe, name)`
 
 > method form `pipe:bind(name)`
+
+**Parameters:**
+- `pipe`: `uv_pipe_t userdata`
+- `name`: `string`
 
 Bind the pipe to a file path (Unix) or a name (Windows).
 
@@ -1327,6 +1586,12 @@ typically between 92 and 108 bytes.
 
 > method form `pipe:connect(name, [callback])`
 
+**Parameters:**
+- `pipe`: `uv_pipe_t userdata`
+- `name`: `string`
+- `callback`: `callable` or `nil`
+  - `err`: `nil` or `string`
+
 Connect to the Unix domain socket or the named pipe.
 
 **Returns:** `uv_connect_t userdata` or `fail`
@@ -1338,6 +1603,9 @@ typically between 92 and 108 bytes.
 
 > method form `pipe:getsockname()`
 
+**Parameters:**
+- `pipe`: `uv_pipe_t userdata`
+
 Get the name of the Unix domain socket or the named pipe.
 
 **Returns:** `string` or `fail`
@@ -1345,6 +1613,9 @@ Get the name of the Unix domain socket or the named pipe.
 ### `uv.pipe_getpeername(pipe)`
 
 > method form `pipe:getpeername()`
+
+**Parameters:**
+- `pipe`: `uv_pipe_t userdata`
 
 Get the name of the Unix domain socket or the named pipe to which the handle is
 connected.
@@ -1354,6 +1625,10 @@ connected.
 ### `uv.pipe_pending_instances(pipe, count)`
 
 > method form `pipe:pending_instances(count)`
+
+**Parameters:**
+- `pipe`: `uv_pipe_t userdata`
+- `count`: `integer`
 
 Set the number of pending pipe instance handles when the pipe server is waiting
 for connections.
@@ -1366,6 +1641,9 @@ for connections.
 
 > method form `pipe:pending_count()`
 
+**Parameters:**
+- `pipe`: `uv_pipe_t userdata`
+
 Returns the pending pipe count for the named pipe.
 
 **Returns:** `integer`
@@ -1373,6 +1651,9 @@ Returns the pending pipe count for the named pipe.
 ### `uv.pipe_pending_type(pipe)`
 
 > method form `pipe:pending_type()`
+
+**Parameters:**
+- `pipe`: `uv_pipe_t userdata`
 
 Used to receive handles over IPC pipes.
 
@@ -1408,6 +1689,10 @@ end)
 
 ### `uv.new_tty(fd, readable)`
 
+**Parameters:**
+- `fd`: `integer`
+- `readable`: `boolean`
+
 Initialize a new TTY stream with the given file descriptor. Usually the file
 descriptor will be:
 
@@ -1429,6 +1714,10 @@ This function is not thread safe on systems that don’t support ioctl TIOCGPTN 
 ### `uv.tty_set_mode(tty, mode)`
 
 > method form `tty:set_mode(mode)`
+
+**Parameters:**
+- `tty`: `uv_tty_t userdata`
+- `mode`: `integer`
 
 Set the TTY using the specified terminal mode.
 
@@ -1455,11 +1744,17 @@ code `EBUSY` if you call it when execution is inside `uv.tty_set_mode()`.
 
 > method form `tty:get_winsize()`
 
+**Parameters:**
+- `tty`: `uv_tty_t userdata`
+
 Gets the current Window width and height.
 
 **Returns:** `integer, integer` or `fail`
 
 ### `uv.tty_set_vterm_state(state)`
+
+**Parameters:**
+- `state`: `string`
 
 Controls whether console virtual terminal sequences are processed by libuv or
 console. Useful in particular for enabling ConEmu support of ANSI X3.64 and
@@ -1490,6 +1785,9 @@ UDP handles encapsulate UDP communication for both clients and servers.
 
 ### `uv.new_udp([flags])`
 
+**Parameters:**
+- `flags`: `string` or `nil`
+
 Creates and initializes a new `uv_udp_t`. Returns the Lua userdata wrapping
 it. The actual socket is created lazily. Flags may be a family string:
 `"unix"`, `"inet"`, `"inet6"`, `"ipx"`, `"netlink"`, `"x25"`, `"ax25"`,
@@ -1517,6 +1815,10 @@ Returns the handle's send queue count.
 
 > method form `udp:open(fd)`
 
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
+- `fd`: `integer`
+
 Opens an existing file descriptor or Windows SOCKET as a UDP handle.
 
 Unix only: The only requirement of the sock argument is that it follows the
@@ -1535,6 +1837,13 @@ it's required that it represents a valid datagram socket.
 
 > method form `udp:bind(host, port, [flags])`
 
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
+- `host`: `string`
+- `port`: `number`
+- `flags`: `table` or `nil`
+  - `ipv6only`: `boolean`
+
 Bind the UDP handle to an IP address and port. Any `flags` are set with a table
 with fields `reuseaddr` or `ipv6only` equal to `true` or `false`.
 
@@ -1544,8 +1853,10 @@ with fields `reuseaddr` or `ipv6only` equal to `true` or `false`.
 
 > method form `udp:getsockname()`
 
-Get the local IP and port of the UDP handle. Returns an address table with
-fields `ip`, `family`, and `port`.
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
+
+Get the local IP and port of the UDP handle.
 
 **Returns:** `table` or `fail`
 - `ip` : `string`
@@ -1556,8 +1867,10 @@ fields `ip`, `family`, and `port`.
 
 > method form `udp:getpeername()`
 
-Get the remote IP and port of the UDP handle on connected UDP handles. Returns
-an address table with fields `ip`, `family`, and `port`.
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
+
+Get the remote IP and port of the UDP handle on connected UDP handles.
 
 **Returns:** `table` or `fail`
 - `ip` : `string`
@@ -1568,11 +1881,15 @@ an address table with fields `ip`, `family`, and `port`.
 
 > method form `udp:set_membership(multicast_addr, interface_addr, membership)`
 
-Set membership for a multicast address.
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
+- `multicast_addr`: `string`
+- `interface_addr`: `string`
+- `membership`: `string`
 
-  - `multicast_addr` is multicast address to set membership for.
-  - `interface_addr` is interface address.
-  - `membership` can be the string `"leave"` or `"join"`.
+Set membership for a multicast address. `multicast_addr` is multicast address to
+set membership for. `interface_addr` is interface address. `membership` can be
+the string `"leave"` or `"join"`.
 
 **Returns:** `0` or `fail`
 
@@ -1580,16 +1897,22 @@ Set membership for a multicast address.
 
 > method form `udp:set_multicast_loop(on)`
 
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
+- `on`: `boolean`
+
 Set IP multicast loop flag. Makes multicast packets loop back to local
 sockets.
 
-`on` is a boolean.
-
 **Returns:** `0` or `fail`
 
-### `uv.udp_set_multicast_ttl(udp, tty)`
+### `uv.udp_set_multicast_ttl(udp, ttl)`
 
-> method form `udp:set_multicast_ttl(tty)`
+> method form `udp:set_multicast_ttl(ttl)`
+
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
+- `ttl`: `integer`
 
 Set the multicast ttl.
 
@@ -1601,6 +1924,10 @@ Set the multicast ttl.
 
 > method form `udp:set_multicast_interface(interface_addr)`
 
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
+- `interface_addr`: `string`
+
 Set the multicast interface to send or receive data on.
 
 **Returns:** `0` or `fail`
@@ -1609,6 +1936,10 @@ Set the multicast interface to send or receive data on.
 
 > method form `udp:set_broadcast(on)`
 
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
+- `on`: `boolean`
+
 Set broadcast on or off.
 
 **Returns:** `0` or `fail`
@@ -1616,6 +1947,10 @@ Set broadcast on or off.
 ### `uv.udp_set_ttl(udp, ttl)`
 
 > method form `udp:set_ttl(ttl)`
+
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
+- `ttl`: `integer`
 
 Set the time to live.
 
@@ -1627,6 +1962,14 @@ Set the time to live.
 
 > method form `udp:send(data, host, port, callback)`
 
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
+- `data`: `buffer`
+- `host`: `string`
+- `port`: `integer`
+- `callback`: `callable`
+  - `err`: `nil` or `string`
+
 Send data over the UDP socket. If the socket has not previously been bound
 with `uv.udp_bind()` it will be bound to `0.0.0.0` (the "all interfaces" IPv4
 address) and a random port number.
@@ -1637,6 +1980,12 @@ address) and a random port number.
 
 > method form `udp:try_send(data, host, port)`
 
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
+- `data`: `buffer`
+- `host`: `string`
+- `port`: `integer`
+
 Same as `uv.udp_send()`, but won't queue a send request if it can't be
 completed immediately.
 
@@ -1645,6 +1994,19 @@ completed immediately.
 ### `uv.udp_recv_start(udp, callback)`
 
 > method form `udp:recv_start(callback)`
+
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
+- `callback`: `callable`
+  - `err`: `nil` or `string`
+  - `data`: `string` or `nil`
+  - `addr`: `table` or `nil`
+    - `ip`: `string`
+    - `port`: `integer`
+    - `family`: `string`
+  - `flags`: `table`
+    - `partial`: `boolean` or `nil`
+    - `mmsg_chunk`: `boolean` or `nil`
 
 Prepare for receiving data. If the socket has not previously been bound with
 `uv.udp_bind()` it is bound to `0.0.0.0` (the "all interfaces" IPv4 address)
@@ -1656,6 +2018,9 @@ and a random port number.
 
 > method form `udp:recv_stop()`
 
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
+
 Stop listening for incoming datagrams.
 
 **Returns:** `0` or `fail`
@@ -1663,6 +2028,11 @@ Stop listening for incoming datagrams.
 ### `uv.udp_connect(udp, host, port)`
 
 > method form `udp:connect(host, port)`
+
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
+- `host`: `string`
+- `port`: `integer`
 
 Associate the UDP handle to a remote address and port, so every message sent by
 this handle is automatically sent to that destination. Calling this function
@@ -1693,9 +2063,22 @@ it.
 
 > method form `fs_event:start(path, flags, callback)`
 
+**Parameters:**
+- `fs_event`: `uv_fs_event_t userdata`
+- `path`: `string`
+- `flags`: `table`
+  - `watch_entry`: `boolean` or `nil` (default: `false`)
+  - `stat`: `boolean` or `nil` (default: `false`)
+  - `recursive`: `boolean` or `nil` (default: `false`)
+- `callback`: `callable`
+  - `err`: `nil` or `string`
+  - `filename`: `string`
+  - `events`: `table`
+    - `change`: `boolean` or `nil`
+    - `rename`: `boolean` or `nil`
+
 Start the handle with the given callback, which will watch the specified path
-for changes. Any `flags` are set with a table with fields `watch_entry`, `stat`,
-or `recursive` equal to `true` or `false`.
+for changes.
 
 **Returns:** `0` or `fail`
 
@@ -1732,9 +2115,18 @@ it.
 
 **Returns:** `uv_fs_poll_t userdata` or `fail`
 
-### `uv.fs_poll_start(fs_poll, path, interval)`
+### `uv.fs_poll_start(fs_poll, path, interval, callback)`
 
-> method form `fs_poll:start(path, interval)`
+> method form `fs_poll:start(path, interval, callback)`
+
+**Parameters:**
+- `fs_event`: `uv_fs_event_t userdata`
+- `path`: `string`
+- `interval`: `integer`
+- `callback`: `callable`
+  - `err`: `nil` or `string`
+  - `prev`: `table` or `nil` (see `uv.fs_stat`)
+  - `curr`: `table` or `nil` (see `uv.fs_stat`)
 
 Check the file at `path` for changes every `interval` milliseconds.
 
@@ -1763,32 +2155,80 @@ Get the path being monitored by the handle.
 
 [File system operations]: #file-system-operations
 
-Libuv provides a wide variety of cross-platform sync and async file system
-operations.
+Most file system functions can operate synchronously or asynchronously. When a synchronous version is called (by omitting a callback), the function will
+immediately return the results of the FS call. When an asynchronous version is
+called (by providing a callback), the function will immediately return a
+`uv_fs_t userdata` and asynchronously execute its callback; if an error is encountered, the first and only argument passed to the callback will be the `err` error string; if the operation completes successfully, the first argument will be `nil` and the remaining arguments will be the results of the FS call.
 
-All file descriptors `fd` are integers.
+Synchronous and asynchronous versions of `readFile` (with naive error handling)
+are implemented below as an example:
 
-If a `callback` is passed to functions that accept one, the request `uv_fs_t` is
-returned to the original caller and is asynchronously completed with results
-passed to the callback. If omitted, the request is completed synchronously with
-values returned to the original caller.
+```lua
+local function readFileSync(path)
+  local fd = assert(uv.fs_open(path, "r", 438))
+  local stat = assert(uv.fs_fstat(fd))
+  local data = assert(uv.fs_read(fd, stat.size, 0))
+  assert(uv.fs_close(fd))
+  return data
+end
 
-All `mode`s are integers indicating access permissions in decimal format. To use
-an octal format, use a `tonumber`. For example: `tonumber("0666", 8)`.
+local data = readFileSync("main.lua")
+print("synchronous read", data)
+```
+
+```lua
+local function readFile(path, callback)
+  uv.fs_open(path, "r", 438, function(err, fd)
+    assert(not err, err)
+    uv.fs_fstat(fd, function(err, stat)
+      assert(not err, err)
+      uv.fs_read(fd, stat.size, 0, function(err, data)
+        assert(not err, err)
+        uv.fs_close(fd, function(err)
+          assert(not err, err)
+          return callback(data)
+        end)
+      end)
+    end)
+  end)
+end
+
+readFile("main.lua", function(data)
+  print("asynchronous read", data)
+end)
+```
 
 ### `uv.fs_close(fd, [callback])`
 
+**Parameters:**
+- `fd`: `integer`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
 Equivalent to `close(2)`.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_open(path, flags, mode, [callback])`
+
+**Parameters:**
+- `path`: `string`
+- `flags`: `string` or `integer`
+- `mode`: `integer`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `fd`: `integer` or `nil`
 
 Equivalent to `open(2)`. Access `flags` may be an integer or one of: `"r"`,
 `"rs"`, `"sr"`, `"r+"`, `"rs+"`, `"sr+"`, `"w"`, `"wx"`, `"xw"`, `"w+"`,
 `"wx+"`, `"xw+"`, `"a"`, `"ax"`, `"xa"`, `"a+"`, `"ax+"`, or "`xa+`".
 
-**Returns:** `integer`
+**Returns (sync version):** `integer` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 **Note:** On Windows, libuv uses `CreateFileW` and thus the file is always
 opened in binary mode. Because of this, the `O_BINARY` and `O_TEXT` flags are
@@ -1796,54 +2236,129 @@ not supported.
 
 ### `uv.fs_read(fd, size, offset, [callback])`
 
+**Parameters:**
+- `fd`: `integer`
+- `size`: `integer`
+- `offset`: `integer`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `data`: `string` or `nil`
+
 Equivalent to `preadv(2)`. Returns any data. An empty string indicates EOF.
 
-**Returns:** `string`
+**Returns (sync version):** `string` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_unlink(path, [callback])`
 
+**Parameters:**
+- `path`: `string`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
 Equivalent to `unlink(2)`.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_write(fd, data, offset, [callback])`
 
+**Parameters:**
+- `fd`: `integer`
+- `data`: `buffer`
+- `offset`: `integer`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `bytes`: `integer` or `nil`
+
 Equivalent to `pwritev(2)`. Returns the number of bytes written.
 
-**Returns:** `integer`
+**Returns (sync version):** `integer` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_mkdir(path, mode, [callback])`
 
+**Parameters:**
+- `path`: `string`
+- `mode`: `integer`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
 Equivalent to `mkdir(2)`.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_mkdtemp(template, [callback])`
 
+**Parameters:**
+- `template`: `string`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `path`: `string` or `nil`
+
 Equivalent to `mkdtemp(3)`.
 
-**Returns:** `string`
+**Returns (sync version):** `string` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_mkstemp(template, [callback])`
 
+**Parameters:**
+- `template`: `string`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `fd`: `integer` or `nil`
+  - `path`: `string` or `nil`
+
 Equivalent to `mkstemp(3)`. Returns a temporary file handle and filename.
 
-**Returns:** `integer`, `string`
+**Returns (sync version):** `integer, string` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_rmdir(path, [callback])`
 
+**Parameters:**
+- `path`: `string`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
 Equivalent to `rmdir(2)`.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_scandir(path, [callback])`
+
+**Parameters:**
+- `path`: `string`
+- `callback`: `callable`
+  - `err`: `nil` or `string`
+  - `success`: `uv_fs_t userdata` or `nil`
 
 Equivalent to `scandir(3)`, with a slightly different API. Returns a handle that
 the user can pass to `uv.fs_scandir_next()`.
 
-**Returns:** `uv_fs_t userdata`
+**Note:** This function can be used synchronously or asynchronously. The request
+userdata is always synchronously returned regardless of whether a callback is
+provided and the same userdata is passed to the callback if it is provided.
+
+**Returns:** `uv_fs_t userdata` or `fail`
 
 ### `uv.fs_scandir_next(fs)`
+
+**Parameters:**
+- `fs`: `uv_fs_t userdata`
 
 Called on a `uv_fs_t` returned by `uv.fs_scandir()` to get the next directory
 entry data as a `name, type` pair. When there are no more entries, `nil` is
@@ -1856,9 +2371,15 @@ its related functions for an asynchronous version.
 
 ### `uv.fs_stat(path, [callback])`
 
+**Parameters:**
+- `path`: `string`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `stat`: `table` or `nil` (see below)
+
 Equivalent to `stat(2)`.
 
-**Returns:** `table`
+**Returns (sync version):** `table` or `fail`
 - `dev` : `integer`
 - `mode` : `integer`
 - `nlink` : `integer`
@@ -1885,153 +2406,380 @@ Equivalent to `stat(2)`.
   - `nsec` : `integer`
 - `type` : `string`
 
+**Returns (async version):** `uv_fs_t userdata`
+
 ### `uv.fs_fstat(fd, [callback])`
+
+**Parameters:**
+- `fd`: `integer`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `stat`: `table` or `nil` (see `uv.fs_stat`)
 
 Equivalent to `fstat(2)`.
 
-**Returns:** `table` (see `uv.fs_stat` information)
+**Returns (sync version):** `table` or `fail` (see `uv.fs_stat`)
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_lstat(path, [callback])`
 
+**Parameters:**
+- `fd`: `integer`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `stat`: `table` or `nil` (see `uv.fs_stat`)
+
 Equivalent to `lstat(2)`.
 
-**Returns:** `table` (see `uv.fs_stat` information)
+**Returns (sync version):** `table` or `fail` (see `uv.fs_stat`)
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_rename(path, new_path, [callback])`
 
+**Parameters:**
+- `path`: `string`
+- `new_path`: `string`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
 Equivalent to `rename(2)`.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_fsync(fd, [callback])`
 
+**Parameters:**
+- `fd`: `integer`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
 Equivalent to `fsync(2)`.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_fdatasync(fd, [callback])`
 
+**Parameters:**
+- `fd`: `integer`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
 Equivalent to `fdatasync(2)`.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_ftruncate(fd, offset, [callback])`
 
+**Parameters:**
+- `fd`: `integer`
+- `offset`: `integer`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
 Equivalent to `ftruncate(2)`.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
 
-### `uv.fs_sendfile(out_fd, in_fd, in_offset, size)`
+**Returns (async version):** `uv_fs_t userdata`
+
+### `uv.fs_sendfile(out_fd, in_fd, in_offset, size, [callback])`
+
+**Parameters:**
+- `out_fd`: `integer`
+- `in_fd`: `integer`
+- `in_offset`: `integer`
+- `size`: `integer`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `bytes`: `integer` or `nil`
 
 Limited equivalent to `sendfile(2)`. Returns the number of bytes written.
 
-**Returns:** `integer`
+**Returns (sync version):** `integer` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_access(path, mode, [callback])`
+
+**Parameters:**
+- `path`: `string`
+- `mode`: `integer`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `permission`: `boolean` or `nil`
 
 Equivalent to `access(2)` on Unix. Windows uses `GetFileAttributesW()`. Access
 `mode` can be an integer or a string containing `""R"` or `"W"` or `"X"`.
 Returns `true` or `false` indicating access permission.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_chmod(path, mode, [callback])`
 
+**Parameters:**
+- `path`: `string`
+- `mode`: `integer`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
 Equivalent to `chmod(2)`.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_fchmod(fd, mode, [callback])`
 
+**Parameters:**
+- `fd`: `integer`
+- `mode`: `integer`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
 Equivalent to `fchmod(2)`.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_utime(path, atime, mtime, [callback])`
 
+**Parameters:**
+- `path`: `string`
+- `atime`: `number`
+- `mtime`: `number`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
 Equivalent to `utime(2)`.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_futime(fd, atime, mtime, [callback])`
 
+**Parameters:**
+- `fd`: `integer`
+- `atime`: `number`
+- `mtime`: `number`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
 Equivalent to `futime(2)`.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_link(path, new_path, [callback])`
 
+**Parameters:**
+- `path`: `string`
+- `new_path`: `string`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
 Equivalent to `link(2)`.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_symlink(path, new_path, flags, [callback])`
 
+**Parameters:**
+- `path`: `string`
+- `new_path`: `string`
+- `flags`: `table` or `nil`
+  - `dir`: `boolean`
+  - `junction`: `boolean`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
 Equivalent to `symlink(2)`.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_readlink(path, [callback])`
 
+**Parameters:**
+- `path`: `string`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `path`: `string` or `nil`
+
 Equivalent to `readlink(2)`.
 
-**Returns:** `string`
+**Returns (sync version):** `string` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_realpath(path, [callback])`
 
+**Parameters:**
+- `path`: `string`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `path`: `string` or `nil`
+
 Equivalent to `realpath(3)`.
 
-**Returns:** `string`
+**Returns (sync version):** `string` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_chown(path, uid, gid, [callback])`
 
+**Parameters:**
+- `path`: `string`
+- `uid`: `integer`
+- `gid`: `integer`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
 Equivalent to `chown(2)`.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_fchown(fd, uid, gid, [callback])`
 
+**Parameters:**
+- `fd`: `integer`
+- `uid`: `integer`
+- `gid`: `integer`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
 Equivalent to `fchown(2)`.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
+
+### `uv.fs_lchown(fd, uid, gid, [callback])`
+
+**Parameters:**
+- `fd`: `integer`
+- `uid`: `integer`
+- `gid`: `integer`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
+Equivalent to `lchown(2)`.
+
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_copyfile(path, new_path, flags, [callback])`
 
+**Parameters:**
+- `path`: `string`
+- `new_path`: `string`
+- `flags`: `table` or `nil`
+  - `excl`: `boolean`
+  - `ficlone`: `boolean`
+  - `ficlone_force`: `boolean`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
 Copies a file from path to new_path.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
 
-### `uv.fs_opendir(path, [callback], [entries])`
+**Returns (async version):** `uv_fs_t userdata`
+
+### `uv.fs_opendir(path, [callback, [entries]])`
+
+**Parameters:**
+- `path`: `string`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `dir`: `uv_dir_t userdata` or `nil`
+- `entries`: `integer` or `nil`
 
 Opens path as a directory stream. Returns a handle that the user can pass to
 `uv.fs_readdir()`. The `entries` parameter defines the maximum number of entries
 that should be returned by each call to `uv.fs_readdir()`.
 
-**Returns:** `uv_dir_t userdata`
+**Returns (sync version):** `uv_dir_t userdata` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_readdir(dir, [callback])`
+
+**Parameters:**
+- `dir`: `uv_dir_t userdata`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `entries`: `table` or `nil` (see below)
 
 Iterates over the directory stream `uv_dir_t` returned by a successful
 `uv.fs_opendir()` call. A table of data tables is returned where the number
 of entries `n` is equal to or less than the `entries` parameter used in
 the associated `uv.fs_opendir()` call.
 
-**Returns:** `table`
+**Returns (sync version):** `table` or `fail`
 - `[1, 2, 3, ..., n]` : `table`
   - `name` : `string`
   - `type` : `string`
 
+**Returns (async version):** `uv_fs_t userdata`
+
 ### `uv.fs_closedir(dir, [callback])`
+
+**Parameters:**
+- `dir`: `uv_dir_t userdata`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
 
 Closes a directory stream returned by a successful `uv.fs_opendir()` call.
 
-**Returns:** `boolean`
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_statfs(path, [callback])`
 
+**Parameters:**
+- `path`: `string`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `table` or `nil` (see below)
+
 Equivalent to `statfs(2)`.
 
-**Returns:** `table`
+**Returns** `table` or `nil`
 - `type` : `integer`
 - `bsize` : `integer`
 - `blocks` : `integer`
@@ -2066,6 +2814,12 @@ work:queue(1, 2)
 
 ### `uv.new_work(work_callback, after_work_callback)`
 
+**Parameters:**
+- `work_callback`: `function`
+  - `...`: `threadargs` passed to/from `uv.queue_work(work_ctx, ...)`
+- `after_work_callback`: `function`
+  - `...`: `threadargs` returned from `work_callback`
+
 Creates and initializes a new `luv_work_ctx_t` (not `uv_work_t`). Returns the
 Lua userdata wrapping it.
 
@@ -2074,6 +2828,10 @@ Lua userdata wrapping it.
 ### `uv.queue_work(work_ctx, ...)`
 
 > method form `work_ctx:queue(...)`
+
+**Parameters:**
+- `work_ctx`: `luv_work_ctx_t userdata`
+- `...`: `threadargs`
 
 Queues a work request which will run `work_callback` in a new Lua state in a
 thread from the threadpool with any additional arguments from `...`. Values
@@ -2086,35 +2844,57 @@ called in the main loop thread.
 
 [DNS utility functions]: #dns-utility-functions
 
-All functions take an optional `callback`. If the callback is omitted, the
-request is completed synchronously with values returned to the original caller.
-If a callback is provided, the request `uv_fs_t` is returned to the original
-caller and is asynchronously completed with results passed to the callback.
+### `uv.getaddrinfo(host, service, [hints, [callback]])`
 
-### `uv.getaddrinfo(host, port, [hints, [callback]])`
+**Parameters:**
+- `host`: `string` or `nil`
+- `service`: `string` or `nil`
+- `hints`: `table` or `nil`
+  - `family`: `integer` or `string` or `nil`
+  - `socktype`: `integer` or `string` or `nil`
+  - `protocol`: `integer` or `string` or `nil`
+  - `addrconfig`: `boolean` or `nil`
+  - `v4mapped`: `boolean` or `nil`
+  - `all`: `boolean` or `nil`
+  - `numerichost`: `boolean` or `nil`
+  - `passive`: `boolean` or `nil`
+  - `numericserv`: `boolean` or `nil`
+  - `canonname`: `boolean` or `nil`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `addresses`: `table` or `nil` (see below)
 
-Equivalent to `getaddrinfo(3)`. Either `host` or `port` may be `nil` but not
-both. The `hints` table may have fields: `socktype`, `protocol`, `addrconfig`,
-`v4mapped`, `all`, `numberichost`, `passive`, `numericserv`, or `canonname`.
+Equivalent to `getaddrinfo(3)`. Either `node` or `service` may be `nil` but not
+both.
 
-Returns a table of address tables where address tables may have fields
-`addr`, `family`, `port`, `socktype`, `protocol`, `canonname`.
-
-**Returns:** `table` or `fail`
+**Returns (sync version):** `table` or `fail`
 - `[1, 2, 3, ..., n]` : `table`
   - `addr` : `string`
   - `family` : `string`
-  - `port` : `integer`
+  - `port` : `integer` or `nil`
   - `socktype` : `string`
   - `protocol` : `string`
-  - `canonname` : `string`
+  - `canonname` : `string` or `nil`
+
+**Returns (async version):** `uv_getaddrinfo_t userdata` or `fail`
 
 ### `uv.getnameinfo(address, [callback])`
 
-Equivalent to `getnameinfo(3)`. The `address` table may have fields: `ip`,
-`port`, and `family`.
+**Parameters:**
+- `address`: `table`
+  - `ip`: `string` or `nil`
+  - `port`: `integer` or `nil`
+  - `family`: `string` or `integer` or `nil`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `sring`
+  - `host`: `string` or `nil`
+  - `service`: `string` or `nil`
 
-**Returns:** `string, string` or `fail`
+Equivalent to `getnameinfo(3)`.
+
+**Returns (sync version):** `string, string` or `fail`
+
+**Returns (async version):** `uv_getnameinfo_t userdata` or `fail`
 
 ## Threading and synchronization utilities
 
@@ -2125,6 +2905,12 @@ Libuv provides cross-platform implementations for multiple threading an
 
 ### `uv.new_thread([options], entry, ...)`
 
+**Parameters:**
+- `options`: `table` or `nil`
+  - `stack_size`: `integer` or `nil`
+- `entry`: `function`
+- `...`: `threadargs` passed to `entry`
+
 Creates and initializes a `luv_thread_t` (not `uv_thread_t`). Returns the Lua
 userdata wrapping it and asynchronously executes `entry`, which can be either
 a Lua function or a Lua function dumped to a string. Additional arguments `...`
@@ -2133,9 +2919,13 @@ provided. Currently accepted `option` fields are `stack_size`.
 
 **Returns:** `luv_thread_t userdata` or `fail`
 
-### `uv.thread_equal()`
+### `uv.thread_equal(thread, other_thread)`
 
 > method form `thread:equal(other_thread)`
+
+**Parameters:**
+- `thread`: `luv_thread_t userdata`
+- `other_thread`: `luv_thread_t userdata`
 
 Returns a boolean indicating whether two threads are the same. This function is
 equivalent to the `__eq` metamethod.
@@ -2152,11 +2942,17 @@ Returns the handle for the thread in which this is called.
 
 > method form `thread:join()`
 
+**Parameters:**
+- `thread`: `luv_thread_t userdata`
+
 Waits for the `thread` to finish executing its entry function.
 
 **Returns:** `boolean` or `fail`
 
 ### `uv.sleep(msec)`
+
+**Parameters:**
+- `msec`: `integer`
 
 Pauses the thread in which this is called for a number of milliseconds.
 
@@ -2180,6 +2976,9 @@ Returns the current working directory.
 
 ### `uv.chdir(cwd)`
 
+**Parameters:**
+- `cwd`: `string`
+
 Sets the current working directory with the string `cwd`.
 
 **Returns:** `0` or `fail`
@@ -2191,6 +2990,9 @@ Returns the title of the current process.
 **Returns:** `string` or `fail`
 
 ### `uv.set_process_title(title)`
+
+**Parameters:**
+- `title`: `string`
 
 Sets the title of the current process with the string `title`.
 
@@ -2287,6 +3089,9 @@ Returns the group ID of the process.
 
 ### `uv.setuid(id)`
 
+**Parameters:**
+- `id`: `integer`
+
 Sets the user ID of the process with the integer `id`.
 
 **Returns:** Nothing.
@@ -2294,6 +3099,9 @@ Sets the user ID of the process with the integer `id`.
 **Note:** This is not a libuv function and is not supported on Windows.
 
 ### `uv.setgid(id)`
+
+**Parameters:**
+- `id`: `integer`
 
 Sets the group ID of the process with the integer `id`.
 
@@ -2342,6 +3150,9 @@ stability guarantees.
 
 ### `uv.guess_handle(fd)`
 
+**Parameters:**
+- `fd`: `integer`
+
 Used to detect what type of stream should be used with a given file
 descriptor `fd`. Usually this will be used during initialization to guess the
 type of the stdio streams.
@@ -2372,11 +3183,17 @@ is an array of address information where fields are `ip`, `family`, `netmask`,
 
 ### `uv.if_indextoname(ifindex)`
 
+**Parameters:**
+- `ifindex`: `integer`
+
 IPv6-capable implementation of `if_indextoname(3)`.
 
 **Returns:** `string` or `fail`
 
 ### `uv.if_indextoiid(ifindex)`
+
+**Parameters:**
+- `ifindex`: `integer`
 
 Retrieves a network interface identifier suitable for use in an IPv6 scoped
 address. On Windows, returns the numeric `ifindex` as a string. On all other
@@ -2408,6 +3225,10 @@ Returns the hostname.
 
 ### `uv.os_getenv(name, [size])`
 
+**Parameters:**
+- `name`: `string`
+- `size`: `integer` (default = `LUAL_BUFFERSIZE`)
+
 Returns the environment variable specified by `name` as string. The internal
 buffer size can be set by defining `size`. If omitted, `LUAL_BUFFERSIZE` is
 used. If the environment variable exceeds the storage available in the internal
@@ -2419,6 +3240,10 @@ buffer, `ENOBUFS` is returned. If no matching environment variable exists,
 **Warning:** This function is not thread safe.
 
 ### `uv.os_setenv(name, value)`
+
+**Parameters:**
+- `name`: `string`
+- `value`: `string`
 
 Sets the environmental variable specified by `name` with the string `value`.
 
@@ -2478,11 +3303,18 @@ Returns the parent process ID.
 
 ### `uv.os_getpriority(pid)`
 
+**Parameters:**
+- `pid`: `integer`
+
 Returns the scheduling priority of the process specified by `pid`.
 
 **Returns:** `number` or `fail`
 
 ### `uv.os_setpriority(pid, priority)`
+
+**Parameters:**
+- `pid`: `integer`
+- `priority`: `integer`
 
 Sets the scheduling priority of the process specified by `pid`. The `priority`
 range is between -20 (high priority) and 19 (low priority).
@@ -2491,9 +3323,16 @@ range is between -20 (high priority) and 19 (low priority).
 
 ### `uv.random(len, flags, [callback])`
 
+**Parameters:**
+- `len`: `integer`
+- `flags`: `nil` (see below)
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `bytes`: `string` or `nil`
+
 Fills a string of length `len` with cryptographically strong random bytes
 acquired from the system CSPRNG. `flags` is reserved for future extension
-and must currently be 0, nil, or an empty table.
+and must currently be `nil` or `0` or `{}`.
 
 Short reads are not possible. When less than `len` random bytes are available,
 a non-zero error value is returned or passed to the callback. If the callback
@@ -2503,11 +3342,9 @@ The synchronous version may block indefinitely when not enough entropy is
 available. The asynchronous version may not ever finish when the system is
 low on entropy.
 
-**Returns (synchronous version):** `string` or `fail`
+**Returns (sync version):** `string` or `fail`
 
-**Returns (asynchronous version):** `0` or `fail`
-
-**Callback parameters (asynchronous version):** `function(err, randomBytes)`
+**Returns (async version):** `0` or `fail`
 
 ---
 
