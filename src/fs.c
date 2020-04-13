@@ -249,7 +249,9 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
 #endif
     case UV_FS_UTIME:
     case UV_FS_FUTIME:
+#if LUV_UV_VERSION_GEQ(1, 14, 0)
     case UV_FS_COPYFILE:
+#endif
       lua_pushboolean(L, 1);
       return 1;
 
