@@ -188,6 +188,12 @@ static int luv_getaddrinfo(lua_State* L) {
   }
 
   ref = luv_check_continuation(L, 4);
+#if !LUV_UV_VERSION_GEQ(1, 3, 0)
+  // in libuv < 1.3.0, the callback cannot be NULL
+  if (ref == LUA_NOREF) {
+    return luaL_argerror(L, 4, "callback must be provided");
+  }
+#endif
   req = (uv_getaddrinfo_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ctx, ref);
 
@@ -197,13 +203,14 @@ static int luv_getaddrinfo(lua_State* L) {
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
+#if LUV_UV_VERSION_GEQ(1, 3, 0)
   if (ref == LUA_NOREF) {
-
     lua_pop(L, 1);
     luv_pushaddrinfo(L, req->addrinfo);
     uv_freeaddrinfo(req->addrinfo);
     luv_cleanup_req(L, (luv_req_t*)req->data);
   }
+#endif
   return 1;
 }
 
