@@ -104,6 +104,11 @@ return require('lib/tap')(function (test)
   end)
 
   test("fs.realpath", function (print, p, expect, uv)
+    local version = 0x10000 + 8*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.8.0")
+      return
+    end
     p(assert(uv.fs_realpath('.')))
     assert(uv.fs_realpath('.', expect(function (err, path)
       assert(not err, err)
@@ -112,6 +117,11 @@ return require('lib/tap')(function (test)
   end)
 
   test("fs.copyfile", function (print, p, expect, uv)
+    local version = 0x10000 + 14*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.14.0")
+      return
+    end
     local path = "_test_"
     local path2 = "_test2_"
     local fd = assert(uv.fs_open(path, "w", 438))
@@ -218,12 +228,22 @@ return require('lib/tap')(function (test)
   end)
 
   test("fs.statfs sync", function (print, p, expect, uv)
+    local version = 0x10000 + 31*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.31.0")
+      return
+    end
     local stat = assert(uv.fs_statfs("."))
     p(stat)
     assert(stat.bavail>0)
   end)
 
   test("fs.statfs async", function (print, p, expect, uv)
+    local version = 0x10000 + 31*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.31.0")
+      return
+    end
     assert(uv.fs_statfs(".", expect(function (err, stat)
       assert(not err, err)
       p(stat)
@@ -232,6 +252,11 @@ return require('lib/tap')(function (test)
   end)
 
   test("fs.statfs sync error", function (print, p, expect, uv)
+    local version = 0x10000 + 31*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.31.0")
+      return
+    end
     local stat, err, code = uv.fs_statfs("BAD_FILE!")
     p{err=err,code=code,stat=stat}
     assert(not stat)
@@ -240,6 +265,11 @@ return require('lib/tap')(function (test)
   end)
 
   test("fs.statfs async error", function (print, p, expect, uv)
+    local version = 0x10000 + 31*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.31.0")
+      return
+    end
     assert(uv.fs_statfs("BAD_FILE@", expect(function (err, stat)
       p{err=err,stat=stat}
       assert(err)
@@ -292,6 +322,11 @@ return require('lib/tap')(function (test)
   end)
 
   test("fs.mkstemp async", function(print, p, expect, uv)
+    local version = 0x10000 + 34*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.34.0")
+      return
+    end
     local tp = "luvXXXXXX"
     uv.fs_mkstemp(tp, function(err, fd, path)
       assert(not err)
@@ -303,6 +338,11 @@ return require('lib/tap')(function (test)
   end)
 
   test("fs.mkstemp sync", function(print, p, expect, uv)
+    local version = 0x10000 + 34*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.34.0")
+      return
+    end
     local tp = "luvXXXXXX"
     local content = "hello world!"
     local fd, path = uv.fs_mkstemp(tp)
@@ -321,6 +361,11 @@ return require('lib/tap')(function (test)
   end)
 
   test("fs.mkstemp async error", function(print, p, expect, uv)
+    local version = 0x10000 + 34*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.34.0")
+      return
+    end
     local tp = "luvXXXXXZ"
     uv.fs_mkstemp(tp, function(err, path, fd)
       assert(err:match("^EINVAL:"))
@@ -330,6 +375,11 @@ return require('lib/tap')(function (test)
   end)
 
   test("fs.mkstemp sync error", function(print, p, expect, uv)
+    local version = 0x10000 + 34*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.34.0")
+      return
+    end
     local tp = "luvXXXXXZ"
     local path, err, code = uv.fs_mkstemp(tp)
     assert(path==nil)
