@@ -27,6 +27,7 @@ static int luv_new_udp(lua_State* L) {
   lua_settop(L, 1);
   uv_udp_t* handle = (uv_udp_t*)luv_newuserdata(L, sizeof(*handle));
   int ret;
+#if LUV_UV_VERSION_GEQ(1, 7, 0)
   if (lua_isnoneornil(L, 1)) {
     ret = uv_udp_init(ctx->loop, handle);
   }
@@ -47,6 +48,9 @@ static int luv_new_udp(lua_State* L) {
     }
     ret = uv_udp_init_ex(ctx->loop, handle, flags);
   }
+#else
+  ret = uv_udp_init(ctx->loop, handle);
+#endif
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
@@ -321,8 +325,11 @@ static int luv_udp_recv_start(lua_State* L) {
   luv_check_callback(L, (luv_handle_t*)handle->data, LUV_RECV, 2);
   ret = uv_udp_recv_start(handle, luv_alloc_cb, luv_udp_recv_cb);
 #if LUV_UV_VERSION_LEQ(1, 23, 0)
+#if LUV_UV_VERSION_GEQ(1, 10, 0)
   // in Libuv <= 1.23.0, uv_udp_recv_start will return untranslated error codes on Windows
+  // (uv_translate_sys_error was only made public in libuv >= 1.10.0)
   ret = uv_translate_sys_error(ret);
+#endif
 #endif
   return luv_result(L, ret);
 }

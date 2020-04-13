@@ -109,7 +109,7 @@ return require('lib/tap')(function (test)
       assert(not err, err)
       p(path)
     end)))
-  end)
+  end, "1.8.0")
 
   test("fs.copyfile", function (print, p, expect, uv)
     local path = "_test_"
@@ -120,108 +120,81 @@ return require('lib/tap')(function (test)
     assert(uv.fs_copyfile(path, path2))
     assert(uv.fs_unlink(path))
     assert(uv.fs_unlink(path2))
-  end)
+  end, "1.14.0")
 
   test("fs.{open,read,close}dir object sync #1", function(print, p, expect, uv)
-    local version = 0x10000 + 28*0x100 + 0
-    if uv.version() >= version then
-      local dir = assert(uv.fs_opendir('.'))
-      repeat
-        local dirent = dir:readdir()
-        if dirent then
-          assert(#dirent==1)
-          p(dirent)
-        end
-      until not dirent
-      assert(dir:closedir()==true)
-    else
-      print("skipped")
-    end
-  end)
+    local dir = assert(uv.fs_opendir('.'))
+    repeat
+      local dirent = dir:readdir()
+      if dirent then
+        assert(#dirent==1)
+        p(dirent)
+      end
+    until not dirent
+    assert(dir:closedir()==true)
+  end, "1.28.0")
 
   test("fs.{open,read,close}dir object sync #2", function(print, p, expect, uv)
-    local version = 0x10000 + 28*0x100 + 0
-    if uv.version() >= version then
-      local dir = assert(uv.fs_opendir('.'))
-      repeat
-        local dirent = dir:readdir()
-        if dirent then
-          assert(#dirent==1)
-          p(dirent)
-        end
-      until not dirent
-      dir:closedir(function(err, state)
-        assert(err==nil)
-        assert(state==true)
-        assert(tostring(dir):match("^uv_dir_t"))
-        print(dir, 'closed')
-      end)
-    else
-      print("skipped")
-    end
-  end)
+    local dir = assert(uv.fs_opendir('.'))
+    repeat
+      local dirent = dir:readdir()
+      if dirent then
+        assert(#dirent==1)
+        p(dirent)
+      end
+    until not dirent
+    dir:closedir(function(err, state)
+      assert(err==nil)
+      assert(state==true)
+      assert(tostring(dir):match("^uv_dir_t"))
+      print(dir, 'closed')
+    end)
+  end, "1.28.0")
 
   test("fs.{open,read,close}dir sync one entry", function(print, p, expect, uv)
-    local version = 0x10000 + 28*0x100 + 0
-    if uv.version() >= version then
-      local dir = assert(uv.fs_opendir('.'))
-      repeat
-        local dirent = uv.fs_readdir(dir)
-        if dirent then
-          assert(#dirent==1)
-          p(dirent)
-        end
-      until not dirent
-      assert(uv.fs_closedir(dir)==true)
-    else
-      print("skipped")
-    end
-  end)
+    local dir = assert(uv.fs_opendir('.'))
+    repeat
+      local dirent = uv.fs_readdir(dir)
+      if dirent then
+        assert(#dirent==1)
+        p(dirent)
+      end
+    until not dirent
+    assert(uv.fs_closedir(dir)==true)
+  end, "1.28.0")
 
   test("fs.{open,read,close}dir sync more entry", function(print, p, expect, uv)
-    local version = 0x10000 + 28*0x100 + 0
-    if uv.version() >= version then
-      local dir = assert(uv.fs_opendir('.', nil, 50))
-      repeat
-        local dirent = uv.fs_readdir(dir)
-        if dirent then p(dirent) end
-      until not dirent
-      assert(uv.fs_closedir(dir)==true)
-    else
-      print("skipped")
-    end
-  end)
+    local dir = assert(uv.fs_opendir('.', nil, 50))
+    repeat
+      local dirent = uv.fs_readdir(dir)
+      if dirent then p(dirent) end
+    until not dirent
+    assert(uv.fs_closedir(dir)==true)
+  end, "1.28.0")
 
   test("fs.{open,read,close}dir with more entry", function(print, p, expect, uv)
-    local version = 0x10000 + 28*0x100 + 0
-    if uv.version() >= version then
-
-      local function opendir_cb(err, dir)
+    local function opendir_cb(err, dir)
+      assert(not err)
+      local function readdir_cb(err, dirs)
         assert(not err)
-        local function readdir_cb(err, dirs)
-          assert(not err)
-          if dirs then
-            p(dirs)
-            uv.fs_readdir(dir, readdir_cb)
-          else
-            assert(uv.fs_closedir(dir)==true)
-          end
+        if dirs then
+          p(dirs)
+          uv.fs_readdir(dir, readdir_cb)
+        else
+          assert(uv.fs_closedir(dir)==true)
         end
-
-        uv.fs_readdir(dir, readdir_cb)
       end
 
-      assert(uv.fs_opendir('.', opendir_cb, 50))
-    else
-      print("skipped")
+      uv.fs_readdir(dir, readdir_cb)
     end
-  end)
+    assert(uv.fs_opendir('.', opendir_cb, 50))
+  end, "1.28.0")
 
   test("fs.statfs sync", function (print, p, expect, uv)
     local stat = assert(uv.fs_statfs("."))
     p(stat)
     assert(stat.bavail>0)
-  end)
+  end, "1.31.0")
 
   test("fs.statfs async", function (print, p, expect, uv)
     assert(uv.fs_statfs(".", expect(function (err, stat)
@@ -229,7 +202,7 @@ return require('lib/tap')(function (test)
       p(stat)
       assert(stat.bavail>0)
     end)))
-  end)
+  end, "1.31.0")
 
   test("fs.statfs sync error", function (print, p, expect, uv)
     local stat, err, code = uv.fs_statfs("BAD_FILE!")
@@ -237,7 +210,7 @@ return require('lib/tap')(function (test)
     assert(not stat)
     assert(err)
     assert(code == "ENOENT")
-  end)
+  end, "1.31.0")
 
   test("fs.statfs async error", function (print, p, expect, uv)
     assert(uv.fs_statfs("BAD_FILE@", expect(function (err, stat)
@@ -245,7 +218,7 @@ return require('lib/tap')(function (test)
       assert(err)
       assert(not stat)
     end)))
-  end)
+  end, "1.31.0")
 
   test("fs.mkdtemp async", function(print, p, expect, uv)
     local tp = "luvXXXXXX"
@@ -300,7 +273,7 @@ return require('lib/tap')(function (test)
       assert(uv.fs_close(fd))
       assert(uv.fs_unlink(path))
     end)
-  end)
+  end, "1.34.0")
 
   test("fs.mkstemp sync", function(print, p, expect, uv)
     local tp = "luvXXXXXX"
@@ -318,7 +291,7 @@ return require('lib/tap')(function (test)
     assert(chunk==content)
     assert(uv.fs_close(fd))
     assert(uv.fs_unlink(path))
-  end)
+  end, "1.34.0")
 
   test("fs.mkstemp async error", function(print, p, expect, uv)
     local tp = "luvXXXXXZ"
@@ -327,7 +300,7 @@ return require('lib/tap')(function (test)
       assert(path==nil)
       assert(fd==nil)
     end)
-  end)
+  end, "1.34.0")
 
   test("fs.mkstemp sync error", function(print, p, expect, uv)
     local tp = "luvXXXXXZ"
@@ -335,5 +308,5 @@ return require('lib/tap')(function (test)
     assert(path==nil)
     assert(err:match("^EINVAL:"))
     assert(code=='EINVAL')
-  end)
+  end, "1.34.0")
 end)

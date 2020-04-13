@@ -80,6 +80,6 @@ return require('lib/tap')(function (test)
       elapsed = elapsed
     })
     assert(elapsed >= 100, "elapsed should be at least delay ")
-  end)
+  end, "1.26.0")
 
 end)

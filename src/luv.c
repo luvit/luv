@@ -159,7 +159,9 @@ static const luaL_Reg luv_functions[] = {
   {"pipe_bind", luv_pipe_bind},
   {"pipe_connect", luv_pipe_connect},
   {"pipe_getsockname", luv_pipe_getsockname},
+#if LUV_UV_VERSION_GEQ(1, 3, 0)
   {"pipe_getpeername", luv_pipe_getpeername},
+#endif
   {"pipe_pending_instances", luv_pipe_pending_instances},
   {"pipe_pending_count", luv_pipe_pending_count},
   {"pipe_pending_type", luv_pipe_pending_type},
@@ -238,7 +240,9 @@ static const luaL_Reg luv_functions[] = {
   {"fs_link", luv_fs_link},
   {"fs_symlink", luv_fs_symlink},
   {"fs_readlink", luv_fs_readlink},
+#if LUV_UV_VERSION_GEQ(1, 8, 0)
   {"fs_realpath", luv_fs_realpath},
+#endif
   {"fs_chown", luv_fs_chown},
   {"fs_fchown", luv_fs_fchown},
 #if LUV_UV_VERSION_GEQ(1, 21, 0)
@@ -262,9 +266,11 @@ static const luaL_Reg luv_functions[] = {
 
   // misc.c
   {"chdir", luv_chdir},
+#if LUV_UV_VERSION_GEQ(1, 9, 0)
   {"os_homedir", luv_os_homedir},
   {"os_tmpdir", luv_os_tmpdir},
   {"os_get_passwd", luv_os_get_passwd},
+#endif
   {"cpu_info", luv_cpu_info},
   {"cwd", luv_cwd},
   {"exepath", luv_exepath},
@@ -292,8 +298,10 @@ static const luaL_Reg luv_functions[] = {
   {"version", luv_version},
   {"version_string", luv_version_string},
 #ifndef _WIN32
+#if LUV_UV_VERSION_GEQ(1, 8, 0)
   {"print_all_handles", luv_print_all_handles},
   {"print_active_handles", luv_print_active_handles},
+#endif
 #endif
 #if LUV_UV_VERSION_GEQ(1, 12, 0)
   {"os_getenv", luv_os_getenv},
@@ -413,7 +421,9 @@ static const luaL_Reg luv_pipe_methods[] = {
   {"bind", luv_pipe_bind},
   {"connect", luv_pipe_connect},
   {"getsockname", luv_pipe_getsockname},
+#if LUV_UV_VERSION_GEQ(1, 3, 0)
   {"getpeername", luv_pipe_getpeername},
+#endif
   {"pending_instances", luv_pipe_pending_instances},
   {"pending_count", luv_pipe_pending_count},
   {"pending_type", luv_pipe_pending_type},

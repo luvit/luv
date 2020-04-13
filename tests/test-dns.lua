@@ -31,7 +31,7 @@ return require('lib/tap')(function (test)
     assert(res, errstr)
     p(res, #res)
     assert(res[1].port == 80)
-  end)
+  end, "1.3.0")
 
   test("Get only ipv4 tcp adresses for luvit.io", function (print, p, expect, uv)
     assert(uv.getaddrinfo("luvit.io", nil, {
@@ -118,7 +118,7 @@ return require('lib/tap')(function (test)
     p{hostname=hostname,service=service}
     assert(hostname)
     assert(service)
-  end)
+  end, "1.3.0")
 
   test("Lookup local 127.0.0.1 ipv4 address", function (print, p, expect, uv)
     assert(uv.getnameinfo({

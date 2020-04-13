@@ -1,6 +1,7 @@
 local uv = require('luv')
 local dump = require('lib/utils').dump
 local stdout = require('lib/utils').stdout
+local uvVersionGEQ = require('lib/utils').uvVersionGEQ
 
 local function protect(...)
   local n = select('#', ...)
@@ -30,6 +31,7 @@ local tests = {};
 
 local function run()
   local passed = 0
+  local skipped = 0
 
   if #tests < 1 then
     error("No tests specified!")
@@ -38,64 +40,69 @@ local function run()
   print("1.." .. #tests)
   for i = 1, #tests do
     local test = tests[i]
-    local cwd = uv.cwd()
-    local pass, err = xpcall(function ()
-      local expected = 0
-      local function expect(fn, count)
-        expected = expected + (count or 1)
-        return function (...)
-          expected = expected - 1
-          local ret = fn(...)
-          collectgarbage()
-          return ret
+    if not uvVersionGEQ(test.min_uv_ver) then
+      print("ok " .. i .. " " .. test.name .. " # skip Requires libuv >= " .. test.min_uv_ver)
+      skipped = skipped + 1
+    else
+      local cwd = uv.cwd()
+      local pass, err = xpcall(function ()
+        local expected = 0
+        local function expect(fn, count)
+          expected = expected + (count or 1)
+          return function (...)
+            expected = expected - 1
+            local ret = fn(...)
+            collectgarbage()
+            return ret
+          end
         end
-      end
-      test.fn(protect, pprotect, expect, uv)
-      collectgarbage()
-      uv.run()
-      collectgarbage()
-      if expected > 0 then
-        error("Missing " .. expected .. " expected call" .. (expected == 1 and "" or "s"))
-      elseif expected < 0 then
-        error("Found " .. -expected .. " unexpected call" .. (expected == -1 and "" or "s"))
-      end
-      collectgarbage()
-      local unclosed = 0
+        test.fn(protect, pprotect, expect, uv)
+        collectgarbage()
+        uv.run()
+        collectgarbage()
+        if expected > 0 then
+          error("Missing " .. expected .. " expected call" .. (expected == 1 and "" or "s"))
+        elseif expected < 0 then
+          error("Found " .. -expected .. " unexpected call" .. (expected == -1 and "" or "s"))
+        end
+        collectgarbage()
+        local unclosed = 0
+        uv.walk(function (handle)
+          if handle == stdout then return end
+          unclosed = unclosed + 1
+          print("UNCLOSED", handle)
+        end)
+        if unclosed > 0 then
+          error(unclosed .. " unclosed handle" .. (unclosed == 1 and "" or "s"))
+        end
+        if uv.cwd() ~= cwd then
+          error("Test moved cwd from " .. cwd .. " to " .. uv.cwd())
+        end
+        collectgarbage()
+      end, debug.traceback)
+
+      -- Flush out any more opened handles
+      uv.stop()
       uv.walk(function (handle)
         if handle == stdout then return end
-        unclosed = unclosed + 1
-        print("UNCLOSED", handle)
+        if not uv.is_closing(handle) then uv.close(handle) end
       end)
-      if unclosed > 0 then
-        error(unclosed .. " unclosed handle" .. (unclosed == 1 and "" or "s"))
-      end
-      if uv.cwd() ~= cwd then
-        error("Test moved cwd from " .. cwd .. " to " .. uv.cwd())
-      end
-      collectgarbage()
-    end, debug.traceback)
+      uv.run()
+      uv.chdir(cwd)
 
-    -- Flush out any more opened handles
-    uv.stop()
-    uv.walk(function (handle)
-      if handle == stdout then return end
-      if not uv.is_closing(handle) then uv.close(handle) end
-    end)
-    uv.run()
-    uv.chdir(cwd)
-
-    if pass then
-      print("ok " .. i .. " " .. test.name)
-      passed = passed + 1
-    else
-      protect(err)
-      print("not ok " .. i .. " " .. test.name)
+      if pass then
+        print("ok " .. i .. " " .. test.name)
+        passed = passed + 1
+      else
+        protect(err)
+        print("not ok " .. i .. " " .. test.name)
+      end
     end
   end
 
-  local failed = #tests - passed
+  local failed = #tests - passed - skipped
   if failed == 0 then
-    print("# All tests passed")
+    print("# All tests passed" .. (skipped > 0 and (" ("..skipped.." skipped)") or ""))
   else
     print("#" .. failed .. " failed test" .. (failed == 1 and "" or "s"))
   end
@@ -116,13 +123,14 @@ local function tap(suite)
 
   if type(suite) == "function" then
     -- Pass in suite directly for single mode
-    suite(function (name, fn)
+    suite(function (name, fn, min_uv_ver)
       if prefix then
         name = prefix .. ' - ' .. name
       end
       tests[#tests + 1] = {
         name = name,
-        fn = fn
+        fn = fn,
+        min_uv_ver = min_uv_ver,
       }
     end)
     prefix = nil
