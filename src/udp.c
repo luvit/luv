@@ -27,6 +27,7 @@ static int luv_new_udp(lua_State* L) {
   lua_settop(L, 1);
   uv_udp_t* handle = (uv_udp_t*)luv_newuserdata(L, sizeof(*handle));
   int ret;
+#if LUV_UV_VERSION_GEQ(1, 7, 0)
   if (lua_isnoneornil(L, 1)) {
     ret = uv_udp_init(ctx->loop, handle);
   }
@@ -47,6 +48,9 @@ static int luv_new_udp(lua_State* L) {
     }
     ret = uv_udp_init_ex(ctx->loop, handle, flags);
   }
+#else
+  ret = uv_udp_init(ctx->loop, handle);
+#endif
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
