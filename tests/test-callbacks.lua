@@ -38,18 +38,22 @@ return require('lib/tap')(function (test)
   end)
 
   test("luv_req_t: function", function (print, p, expect, uv)
-    local fn = function(err, path)
-      p(err, path)
+    local fn = function(err, stat)
+      assert(not err)
+      assert(stat)
     end
-    assert(uv.fs_realpath('.', expect(fn)))
+    assert(uv.fs_stat('.', expect(fn)))
   end)
 
   test("luv_req_t: callable table", function (print, p, expect, uv)
-    local fn = function(self, err, path)
-      p(self, err, path)
+    local callable
+    local fn = function(self, err, stat)
+      assert(self == callable)
+      assert(not err, err)
+      assert(stat)
     end
-    local callable = setmetatable({}, {__call=expect(fn)})
-    assert(uv.fs_realpath('.', callable))
+    callable = setmetatable({}, {__call=expect(fn)})
+    assert(uv.fs_stat('.', callable))
   end)
 
 end)
