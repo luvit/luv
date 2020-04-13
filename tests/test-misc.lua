@@ -63,16 +63,31 @@ return require('lib/tap')(function (test)
   end)
 
   test("uv.os_homedir", function (print, p, expect, uv)
+    local version = 0x10000 + 9*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.9.0")
+      return
+    end
     local path = assert(uv.os_homedir())
     p(path)
   end)
 
   test("uv.os_tmpdir", function (print, p, expect, uv)
+    local version = 0x10000 + 9*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.9.0")
+      return
+    end
     local path = assert(uv.os_tmpdir())
     p(path)
   end)
 
   test("uv.os_get_passwd", function (print, p, expect, uv)
+    local version = 0x10000 + 9*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.9.0")
+      return
+    end
     local passwd = assert(uv.os_get_passwd())
     p(passwd)
   end)
@@ -121,6 +136,11 @@ return require('lib/tap')(function (test)
   end)
 
   test("uv.os_environ", function(print, p, expect, uv)
+    local version = 0x10000 + 31*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.31.0")
+      return
+    end
     local name, name2 = "LUV_TEST_FOO", "LUV_TEST_FOO2";
     local value, value2 = "123456789", ""
 
@@ -144,6 +164,11 @@ return require('lib/tap')(function (test)
   end)
 
   test("uv.random async", function(print, p, expect, uv)
+    local version = 0x10000 + 33*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.33.0")
+      return
+    end
     local len = 256
     assert(uv.random(len, {}, expect(function(err, randomBytes)
       assert(not err)
@@ -155,6 +180,11 @@ return require('lib/tap')(function (test)
   end)
 
   test("uv.random sync", function(print, p, expect, uv)
+    local version = 0x10000 + 33*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.33.0")
+      return
+    end
     local len = 256
     local randomBytes = assert(uv.random(len))
     assert(#randomBytes == len)
@@ -164,6 +194,11 @@ return require('lib/tap')(function (test)
   end)
 
   test("uv.random errors", function(print, p, expect, uv)
+    local version = 0x10000 + 33*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.33.0")
+      return
+    end
     -- invalid flag
     local _, err = uv.random(0, -1)
     assert(err:match("^EINVAL"))
