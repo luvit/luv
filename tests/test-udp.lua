@@ -80,12 +80,6 @@ return require('lib/tap')(function (test)
   end)
 
   test("udp send args", function(print, p, expect, uv)
-    local version = 0x10000 + 27*0x100 + 0
-    if uv.version() < version then
-      print("skipped, requires libuv >= 1.27.0")
-      return
-    end
-
     local udp = uv.new_udp()
 
     local _, err = pcall(function() uv.udp_send(udp, "PING", 5, 5) end)
@@ -98,15 +92,9 @@ return require('lib/tap')(function (test)
     print(assert(err))
 
     uv.close(udp)
-  end)
+  end, "1.27.0")
 
   test("udp connect", function(print, p, expect, uv)
-    local version = 0x10000 + 27*0x100 + 0
-    if uv.version() < version then
-      print("skipped, requires libuv >= 1.27.0")
-      return
-    end
-
     local server = uv.new_udp()
     local client = uv.new_udp()
 
@@ -180,5 +168,5 @@ return require('lib/tap')(function (test)
         assert(not err, err)
       end))
     end)))
-  end)
+  end, "1.27.0")
 end)

@@ -59,11 +59,6 @@ return require('lib/tap')(function (test)
   end)
 
   test("test thread create with options table", function(print, p, expect, uv)
-    local version = 0x10000 + 26*0x100 + 0
-    if uv.version() < version then
-      print("skipped, requires libuv >= 1.26.0")
-      return
-    end
     local delay = 100
     uv.update_time()
     local before = uv.now()
@@ -85,6 +80,6 @@ return require('lib/tap')(function (test)
       elapsed = elapsed
     })
     assert(elapsed >= 100, "elapsed should be at least delay ")
-  end)
+  end, "1.26.0")
 
 end)
