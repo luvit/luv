@@ -442,6 +442,7 @@ static int luv_setgid(lua_State* L){
   return 0;
 }
 
+#if LUV_UV_VERSION_GEQ(1, 8, 0)
 static int luv_print_all_handles(lua_State* L){
   luv_ctx_t* ctx = luv_context(L);
   uv_print_all_handles(ctx->loop, stderr);
@@ -453,6 +454,7 @@ static int luv_print_active_handles(lua_State* L){
   uv_print_active_handles(ctx->loop, stderr);
   return 0;
 }
+#endif
 #endif
 
 #if LUV_UV_VERSION_GEQ(1, 12, 0)

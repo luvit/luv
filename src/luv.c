@@ -298,8 +298,10 @@ static const luaL_Reg luv_functions[] = {
   {"version", luv_version},
   {"version_string", luv_version_string},
 #ifndef _WIN32
+#if LUV_UV_VERSION_GEQ(1, 8, 0)
   {"print_all_handles", luv_print_all_handles},
   {"print_active_handles", luv_print_active_handles},
+#endif
 #endif
 #if LUV_UV_VERSION_GEQ(1, 12, 0)
   {"os_getenv", luv_os_getenv},
