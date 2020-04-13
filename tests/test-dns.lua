@@ -113,6 +113,11 @@ return require('lib/tap')(function (test)
   end)
 
   test("Lookup local ipv4 address sync", function (print, p, expect, uv)
+    local version = 0x10000 + 3*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.3.0")
+      return
+    end
     local hostname, service, err = uv.getnameinfo({
       family = "inet",
     })
