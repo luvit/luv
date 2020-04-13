@@ -23,6 +23,11 @@ return require('lib/tap')(function (test)
   end)
 
   test("Get all local http addresses sync", function (print, p, expect, uv)
+    local version = 0x10000 + 3*0x100 + 0
+    if uv.version() < version then
+      print("skipped, requires libuv >= 1.3.0")
+      return
+    end
     local res, errstr, err = uv.getaddrinfo(nil, "http")
     if errorAllowed(err) then
       print(err, "skipping")
