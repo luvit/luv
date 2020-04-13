@@ -325,8 +325,11 @@ static int luv_udp_recv_start(lua_State* L) {
   luv_check_callback(L, (luv_handle_t*)handle->data, LUV_RECV, 2);
   ret = uv_udp_recv_start(handle, luv_alloc_cb, luv_udp_recv_cb);
 #if LUV_UV_VERSION_LEQ(1, 23, 0)
+#if LUV_UV_VERSION_GEQ(1, 10, 0)
   // in Libuv <= 1.23.0, uv_udp_recv_start will return untranslated error codes on Windows
+  // (uv_translate_sys_error was only made public in libuv >= 1.10.0)
   ret = uv_translate_sys_error(ret);
+#endif
 #endif
   return luv_result(L, ret);
 }
