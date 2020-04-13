@@ -159,7 +159,9 @@ static const luaL_Reg luv_functions[] = {
   {"pipe_bind", luv_pipe_bind},
   {"pipe_connect", luv_pipe_connect},
   {"pipe_getsockname", luv_pipe_getsockname},
+#if LUV_UV_VERSION_GEQ(1, 3, 0)
   {"pipe_getpeername", luv_pipe_getpeername},
+#endif
   {"pipe_pending_instances", luv_pipe_pending_instances},
   {"pipe_pending_count", luv_pipe_pending_count},
   {"pipe_pending_type", luv_pipe_pending_type},
@@ -413,7 +415,9 @@ static const luaL_Reg luv_pipe_methods[] = {
   {"bind", luv_pipe_bind},
   {"connect", luv_pipe_connect},
   {"getsockname", luv_pipe_getsockname},
+#if LUV_UV_VERSION_GEQ(1, 3, 0)
   {"getpeername", luv_pipe_getpeername},
+#endif
   {"pending_instances", luv_pipe_pending_instances},
   {"pending_count", luv_pipe_pending_count},
   {"pending_type", luv_pipe_pending_type},

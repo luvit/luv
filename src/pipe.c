@@ -72,6 +72,7 @@ static int luv_pipe_getsockname(lua_State* L) {
   return 1;
 }
 
+#if LUV_UV_VERSION_GEQ(1, 3, 0)
 static int luv_pipe_getpeername(lua_State* L) {
   uv_pipe_t* handle = luv_check_pipe(L, 1);
   size_t len = 2*PATH_MAX;
@@ -81,6 +82,7 @@ static int luv_pipe_getpeername(lua_State* L) {
   lua_pushlstring(L, buf, len);
   return 1;
 }
+#endif
 
 static int luv_pipe_pending_instances(lua_State* L) {
   uv_pipe_t* handle = luv_check_pipe(L, 1);
