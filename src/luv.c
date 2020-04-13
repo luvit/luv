@@ -240,7 +240,9 @@ static const luaL_Reg luv_functions[] = {
   {"fs_link", luv_fs_link},
   {"fs_symlink", luv_fs_symlink},
   {"fs_readlink", luv_fs_readlink},
+#if LUV_UV_VERSION_GEQ(1, 8, 0)
   {"fs_realpath", luv_fs_realpath},
+#endif
   {"fs_chown", luv_fs_chown},
   {"fs_fchown", luv_fs_fchown},
 #if LUV_UV_VERSION_GEQ(1, 21, 0)
