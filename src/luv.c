@@ -266,9 +266,11 @@ static const luaL_Reg luv_functions[] = {
 
   // misc.c
   {"chdir", luv_chdir},
+#if LUV_UV_VERSION_GEQ(1, 9, 0)
   {"os_homedir", luv_os_homedir},
   {"os_tmpdir", luv_os_tmpdir},
   {"os_get_passwd", luv_os_get_passwd},
+#endif
   {"cpu_info", luv_cpu_info},
   {"cwd", luv_cwd},
   {"exepath", luv_exepath},

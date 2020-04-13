@@ -334,6 +334,7 @@ static int luv_chdir(lua_State* L) {
   return luv_result(L, ret);
 }
 
+#if LUV_UV_VERSION_GEQ(1, 9, 0)
 static int luv_os_tmpdir(lua_State* L) {
   size_t size = 2*PATH_MAX;
   char tmpdir[2*PATH_MAX];
@@ -380,6 +381,7 @@ static int luv_os_get_passwd(lua_State* L) {
   uv_os_free_passwd(&pwd);
   return 1;
 }
+#endif
 
 #if LUV_UV_VERSION_GEQ(1, 29, 0)
 static int luv_get_constrained_memory(lua_State* L) {
