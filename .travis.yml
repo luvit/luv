@@ -80,6 +80,15 @@ jobs:
         - WITH_LUA_ENGINE=Lua
       script:
         - ./tests/test-sigchld-after-lua_close.sh
+    - name: minimum supported libuv
+      os: linux
+      env:
+        - WITH_LUA_ENGINE=Lua
+        - WITH_SHARED_LIBUV=On
+      script:
+        - ./.ci/setup_min_libuv.sh
+        - CMAKE_OPTIONS="-DCMAKE_PREFIX_PATH=$HOME/.libuv_min" make && make test
+
 
     - stage: deploy
       if: tag IS present
