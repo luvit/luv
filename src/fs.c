@@ -249,6 +249,9 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
 #endif
     case UV_FS_UTIME:
     case UV_FS_FUTIME:
+#if LUV_UV_VERSION_GEQ(1, 36, 0)
+    case UV_FS_LUTIME:
+#endif
 #if LUV_UV_VERSION_GEQ(1, 14, 0)
     case UV_FS_COPYFILE:
 #endif
@@ -677,6 +680,19 @@ static int luv_fs_futime(lua_State* L) {
   req->data = luv_setup_req(L, ctx, ref);
   FS_CALL(futime, req, file, atime, mtime);
 }
+
+#if LUV_UV_VERSION_GEQ(1, 36, 0)
+static int luv_fs_lutime(lua_State* L) {
+  luv_ctx_t* ctx = luv_context(L);
+  const char* path = luaL_checkstring(L, 1);
+  double atime = luaL_checknumber(L, 2);
+  double mtime = luaL_checknumber(L, 3);
+  int ref = luv_check_continuation(L, 4);
+  uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
+  req->data = luv_setup_req(L, ctx, ref);
+  FS_CALL(lutime, req, path, atime, mtime);
+}
+#endif
 
 static int luv_fs_link(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
