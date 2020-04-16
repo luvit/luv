@@ -140,14 +140,6 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
   free(work);
 }
 
-static void async_cb(uv_async_t *handle) {
-  luv_work_t* work = (luv_work_t*)handle->data;
-  luv_work_ctx_t* ctx = work->ctx;
-  lua_State* L = ctx->L;
-
-  luv_cfpcall(L, 0, 0, 0);
-}
-
 static int luv_new_work(lua_State* L) {
   size_t len;
   const char* buff;
