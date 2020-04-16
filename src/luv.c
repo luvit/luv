@@ -237,6 +237,9 @@ static const luaL_Reg luv_functions[] = {
   {"fs_fchmod", luv_fs_fchmod},
   {"fs_utime", luv_fs_utime},
   {"fs_futime", luv_fs_futime},
+#if LUV_UV_VERSION_GEQ(1, 36, 0)
+  {"fs_lutime", luv_fs_lutime},
+#endif
   {"fs_link", luv_fs_link},
   {"fs_symlink", luv_fs_symlink},
   {"fs_readlink", luv_fs_readlink},
