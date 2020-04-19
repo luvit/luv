@@ -2590,6 +2590,22 @@ Equivalent to `futime(2)`.
 
 **Returns (async version):** `uv_fs_t userdata`
 
+### `uv.fs_lutime(path, atime, mtime, [callback])`
+
+**Parameters:**
+- `path`: `string`
+- `atime`: `number`
+- `mtime`: `number`
+- `callback`: `callable` (async version) or `nil` (sync version)
+  - `err`: `nil` or `string`
+  - `success`: `boolean` or `nil`
+
+Equivalent to `lutime(2)`.
+
+**Returns (sync version):** `boolean` or `fail`
+
+**Returns (async version):** `uv_fs_t userdata`
+
 ### `uv.fs_link(path, new_path, [callback])`
 
 **Parameters:**
