@@ -160,7 +160,7 @@ static int luv_new_work(lua_State* L) {
   lua_pushvalue(L, 2);
   ctx->after_work_cb = luaL_ref(L, LUA_REGISTRYINDEX);
 
-  ctx->L = L;
+  ctx->L = luv_state(L);
   luaL_getmetatable(L, "luv_work_ctx");
   lua_setmetatable(L, -2);
 
