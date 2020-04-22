@@ -28,11 +28,8 @@ static int luv_new_udp(lua_State* L) {
   uv_udp_t* handle = (uv_udp_t*)luv_newuserdata(L, sizeof(*handle));
   int ret;
 #if LUV_UV_VERSION_GEQ(1, 7, 0)
-  if (lua_isnoneornil(L, 1)) {
-    ret = uv_udp_init(ctx->loop, handle);
-  }
-  else {
-    unsigned int flags = AF_UNSPEC;
+  unsigned int flags = AF_UNSPEC;
+  if (!lua_isnoneornil(L, 1)) {
     if (lua_isnumber(L, 1)) {
       flags = lua_tointeger(L, 1);
     }
@@ -46,8 +43,21 @@ static int luv_new_udp(lua_State* L) {
     else {
       luaL_argerror(L, 1, "expected string or integer");
     }
-    ret = uv_udp_init_ex(ctx->loop, handle, flags);
   }
+#if LUV_UV_VERSION_GEQ(1, 37, 0)
+  // Libuv intended to enable this by default, but it caused a backwards-incompatibility with how
+  // the buffer is freed in udp_recv_cb, so it had to be put behind a flag to avoid breaking
+  // existing libuv users. However, because luv handles UV_UDP_MMSG_CHUNK in luv_udp_recv_cb, we can
+  // always enable this flag and get the benefits of recvmmsg for platforms that support it.
+  //
+  // Relevant links:
+  // - https://github.com/libuv/libuv/issues/2791
+  // - https://github.com/libuv/libuv/pull/2792
+  // - https://github.com/libuv/libuv/pull/2532
+  // - https://github.com/libuv/libuv/issues/419
+  flags |= UV_UDP_RECVMMSG;
+#endif
+  ret = uv_udp_init_ex(ctx->loop, handle, flags);
 #else
   ret = uv_udp_init(ctx->loop, handle);
 #endif
