@@ -305,6 +305,22 @@ static int luv_constants(lua_State* L) {
   lua_pushinteger(L, SIGSYS);
   lua_setfield(L, -2, "SIGSYS");
 #endif
+#if LUV_UV_VERSION_GEQ(1, 37, 0)
+  lua_pushinteger(L, UV_UDP_RECVMMSG);
+  lua_setfield(L, -2, "UDP_RECVMMSG");
+#endif
+#if LUV_UV_VERSION_GEQ(1, 35, 0)
+  lua_pushinteger(L, UV_UDP_MMSG_CHUNK);
+  lua_setfield(L, -2, "UDP_MMSG_CHUNK");
+#endif
+  lua_pushinteger(L, UV_UDP_REUSEADDR);
+  lua_setfield(L, -2, "UDP_REUSEADDR");
+  lua_pushinteger(L, UV_UDP_PARTIAL);
+  lua_setfield(L, -2, "UDP_PARTIAL");
+  lua_pushinteger(L, UV_UDP_IPV6ONLY);
+  lua_setfield(L, -2, "UDP_IPV6ONLY");
+  lua_pushinteger(L, UV_TCP_IPV6ONLY);
+  lua_setfield(L, -2, "TCP_IPV6ONLY");
   return 1;
 }
 
