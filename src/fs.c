@@ -450,15 +450,24 @@ static int luv_fs_read(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
   uv_file file = luaL_checkinteger(L, 1);
   int64_t len = luaL_checkinteger(L, 2);
-  int64_t offset = luaL_checkinteger(L, 3);
-  uv_buf_t buf;
+  // -1 offset means "the current file offset is used and updated"
+  int64_t offset = -1;
   int ref;
-  uv_fs_t* req;
+  // both offset and callback are optional
+  if (luv_is_callable(L, 3) && lua_isnoneornil(L, 4)) {
+    ref = luv_check_continuation(L, 3);
+  }
+  else {
+    offset = luaL_optinteger(L, 3, offset);
+    ref = luv_check_continuation(L, 4);
+  }
   char* data = (char*)malloc(len);
-  if (!data) return luaL_error(L, "Failure to allocate buffer");
-  buf = uv_buf_init(data, len);
-  ref = luv_check_continuation(L, 4);
-  req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
+  if (!data) {
+    luaL_unref(L, LUA_REGISTRYINDEX, ref);
+    return luaL_error(L, "Failure to allocate buffer");
+  }
+  uv_buf_t buf = uv_buf_init(data, len);
+  uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ctx, ref);
   // TODO: find out why we can't just use req->ptr for the base
   ((luv_req_t*)req->data)->data = buf.base;
@@ -477,8 +486,17 @@ static int luv_fs_unlink(lua_State* L) {
 static int luv_fs_write(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
   uv_file file = luaL_checkinteger(L, 1);
-  int64_t offset = luaL_checkinteger(L, 3);
-  int ref = luv_check_continuation(L, 4);
+  // -1 offset means "the current file offset is used and updated"
+  int64_t offset = -1;
+  int ref;
+  // both offset and callback are optional
+  if (luv_is_callable(L, 3) && lua_isnoneornil(L, 4)) {
+    ref = luv_check_continuation(L, 3);
+  }
+  else {
+    offset = luaL_optinteger(L, 3, offset);
+    ref = luv_check_continuation(L, 4);
+  }
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ctx, ref);
   size_t count;
