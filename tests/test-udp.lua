@@ -169,4 +169,78 @@ return require('lib/tap')(function (test)
       end))
     end)))
   end, "1.27.0")
+
+  -- return a test function reusable for ipv4 and ipv6
+  local function multicast_join_test(bind_addr, multicast_addr, interface_addr)
+    return function(print, p, expect, uv)
+      local uvVersionGEQ = require('lib/utils').uvVersionGEQ
+
+      local server = assert(uv.new_udp())
+      assert(uv.udp_bind(server, bind_addr, TEST_PORT))
+      local _, err, errname = uv.udp_set_membership(server, multicast_addr, interface_addr, "join")
+      if errname == "ENODEV" then
+        print("no ipv6 multicast route, skipping")
+        server:close()
+        return
+      end
+      assert(not err, err)
+
+      local client = assert(uv.new_udp())
+
+      local recv_cb_called = 0
+      local function recv_cb(err, data, addr, flags)
+        assert(not err, err)
+        p(data, addr)
+
+        assert(addr)
+        assert(data == "PING")
+
+        recv_cb_called = recv_cb_called + 1
+        if recv_cb_called == 2 then
+          server:close()
+        else
+          -- udp_set_source_membership added in 1.32.0
+          if uvVersionGEQ("1.32.0") then
+            local source_addr = addr.ip
+            assert(server:set_membership(multicast_addr, interface_addr, "leave"))
+            assert(server:set_source_membership(multicast_addr, interface_addr, source_addr, "join"))
+          end
+          assert(client:send("PING", multicast_addr, TEST_PORT, expect(function(err)
+            assert(not err, err)
+            client:close()
+          end)))
+        end
+      end
+
+      server:recv_start(expect(recv_cb, 2))
+
+      assert(client:send("PING", multicast_addr, TEST_PORT, expect(function(err)
+        assert(not err, err)
+      end)))
+    end
+  end
+
+  test("udp multicast join ipv4", multicast_join_test("0.0.0.0", "239.255.0.1", nil))
+
+  test("udp multicast join ipv6", function(print, p, expect, uv)
+    local function can_ipv6_external()
+      local addresses = assert(uv.interface_addresses())
+      for _, vals in pairs(addresses) do
+        for _, info in ipairs(vals) do
+          if info.family == "inet6" and not info.internal then
+            return true
+          end
+        end
+      end
+      return false
+    end
+
+    if not can_ipv6_external() then
+      print("no ipv6 support, skipping")
+      return
+    end
+
+    local testfn = multicast_join_test("::", "ff02::1", nil)
+    return testfn(print, p, expect, uv)
+  end)
 end)

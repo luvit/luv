@@ -26,7 +26,7 @@ skipped+=(
 	uv_loop_size uv_loop_fork uv_loop_get_data uv_loop_set_data uv_strerror uv_strerror_r uv_err_name
 	uv_err_name_r uv_handle_size uv_handle_get_type uv_handle_type_name uv_handle_get_data
 	uv_handle_get_loop uv_handle_set_data uv_req_size uv_req_get_data uv_req_set_data uv_req_get_type
-	uv_req_type_name uv_udp_set_source_membership uv_pipe_chmod uv_process_get_pid uv_get_osfhandle
+	uv_req_type_name uv_pipe_chmod uv_process_get_pid uv_get_osfhandle
 	uv_open_osfhandle uv_fs_get_type uv_fs_get_result uv_fs_get_ptr uv_fs_get_path uv_fs_get_statbuf
 	uv_ip4_addr uv_ip6_addr uv_ip4_name uv_ip6_name uv_inet_ntop uv_inet_pton uv_dlopen uv_dlclose
 	uv_dlsym uv_dlerror

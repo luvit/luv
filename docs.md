@@ -1884,12 +1884,29 @@ Get the remote IP and port of the UDP handle on connected UDP handles.
 **Parameters:**
 - `udp`: `uv_udp_t userdata`
 - `multicast_addr`: `string`
-- `interface_addr`: `string`
+- `interface_addr`: `string` or `nil`
 - `membership`: `string`
 
 Set membership for a multicast address. `multicast_addr` is multicast address to
 set membership for. `interface_addr` is interface address. `membership` can be
 the string `"leave"` or `"join"`.
+
+**Returns:** `0` or `fail`
+
+### `uv.udp_set_source_membership(udp, multicast_addr, interface_addr, source_addr, membership)`
+
+> method form `udp:set_source_membership(multicast_addr, interface_addr, source_addr, membership)`
+
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
+- `multicast_addr`: `string`
+- `interface_addr`: `string` or `nil`
+- `source_addr`: `string`
+- `membership`: `string`
+
+Set membership for a source-specific multicast group. `multicast_addr` is multicast
+address to set membership for. `interface_addr` is interface address. `source_addr`
+is source address. `membership` can be the string `"leave"` or `"join"`.
 
 **Returns:** `0` or `fail`
 

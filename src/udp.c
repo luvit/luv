@@ -120,11 +120,25 @@ static const char *const luv_membership_opts[] = {
 static int luv_udp_set_membership(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   const char* multicast_addr = luaL_checkstring(L, 2);
-  const char* interface_addr = luaL_checkstring(L, 3);
+  const char* interface_addr = lua_isstring(L, 3) ? lua_tostring(L, 3) : NULL;
+  luaL_argcheck(L, lua_isstring(L, 3) || lua_isnil(L, 3), 3, "expected string or nil");
   uv_membership membership = (uv_membership)luaL_checkoption(L, 4, NULL, luv_membership_opts);
   int ret = uv_udp_set_membership(handle, multicast_addr, interface_addr, membership);
   return luv_result(L, ret);
 }
+
+#if LUV_UV_VERSION_GEQ(1, 32, 0)
+static int luv_udp_set_source_membership(lua_State* L) {
+  uv_udp_t* handle = luv_check_udp(L, 1);
+  const char* multicast_addr = luaL_checkstring(L, 2);
+  const char* interface_addr = lua_isstring(L, 3) ? lua_tostring(L, 3) : NULL;
+  luaL_argcheck(L, lua_isstring(L, 3) || lua_isnil(L, 3), 3, "expected string or nil");
+  const char* source_addr = luaL_checkstring(L, 4);
+  uv_membership membership = (uv_membership)luaL_checkoption(L, 5, NULL, luv_membership_opts);
+  int ret = uv_udp_set_source_membership(handle, multicast_addr, interface_addr, source_addr, membership);
+  return luv_result(L, ret);
+}
+#endif
 
 static int luv_udp_set_multicast_loop(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
