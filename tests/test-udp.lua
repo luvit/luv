@@ -203,7 +203,13 @@ return require('lib/tap')(function (test)
           if uvVersionGEQ("1.32.0") then
             local source_addr = addr.ip
             assert(server:set_membership(multicast_addr, interface_addr, "leave"))
-            assert(server:set_source_membership(multicast_addr, interface_addr, source_addr, "join"))
+            _, err, errname = server:set_source_membership(multicast_addr, interface_addr, source_addr, "join")
+            if errname == "ENOSYS" then
+              -- not all systems support set_source_membership, so rejoin the previous group and continue on
+              assert(server:set_membership(multicast_addr, interface_addr, "join"))
+            else
+              assert(not err, err)
+            end
           end
           assert(client:send("PING", multicast_addr, TEST_PORT, expect(function(err)
             assert(not err, err)
