@@ -199,11 +199,18 @@ return require('lib/tap')(function (test)
         assert(not err, err)
         p(data, addr)
 
+        -- empty callback can happen, just return early
+        if data == nil and addr == nil then
+          return
+        end
+
         assert(addr)
         assert(data == "PING")
 
         recv_cb_called = recv_cb_called + 1
         if recv_cb_called == 2 then
+          -- note: because of this conditional close, the test will fail with an unclosed handle if recv_cb_called
+          -- doesn't hit 2, so we don't need to expect(recv_cb) or assert recv_cb_called == 2
           server:close()
         else
           -- udp_set_source_membership added in 1.32.0
@@ -225,7 +232,7 @@ return require('lib/tap')(function (test)
         end
       end
 
-      server:recv_start(expect(recv_cb, 2))
+      server:recv_start(recv_cb)
 
       assert(client:send("PING", multicast_addr, TEST_PORT, expect(function(err)
         assert(not err, err)
