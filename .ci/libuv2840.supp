@@ -1,0 +1,21 @@
+{
+   <libuv#2840>
+   Memcheck:Param
+   socketcall.setsockopt(optval)
+   fun:setsockopt
+   fun:uv__udp_set_source_membership6
+   fun:uv_udp_set_source_membership
+   fun:luv_udp_set_source_membership
+   fun:luaD_precall
+   fun:luaV_execute
+   fun:luaD_call
+   fun:luaD_callnoyield
+   fun:f_call
+   fun:luaD_rawrunprotected
+   fun:luaD_pcall
+   fun:lua_pcallk
+   fun:luv_cfpcall
+   fun:uv__udp_recvmsg
+   fun:uv__udp_io
+}
+

@@ -184,6 +184,9 @@ static const luaL_Reg luv_functions[] = {
   {"udp_bind", luv_udp_bind},
   {"udp_getsockname", luv_udp_getsockname},
   {"udp_set_membership", luv_udp_set_membership},
+#if LUV_UV_VERSION_GEQ(1, 32, 0)
+  {"udp_set_source_membership", luv_udp_set_source_membership},
+#endif
   {"udp_set_multicast_loop", luv_udp_set_multicast_loop},
   {"udp_set_multicast_ttl", luv_udp_set_multicast_ttl},
   {"udp_set_multicast_interface", luv_udp_set_multicast_interface},
@@ -488,6 +491,9 @@ static const luaL_Reg luv_udp_methods[] = {
   {"bind", luv_udp_bind},
   {"getsockname", luv_udp_getsockname},
   {"set_membership", luv_udp_set_membership},
+#if LUV_UV_VERSION_GEQ(1, 32, 0)
+  {"set_source_membership", luv_udp_set_source_membership},
+#endif
   {"set_multicast_loop", luv_udp_set_multicast_loop},
   {"set_multicast_ttl", luv_udp_set_multicast_ttl},
   {"set_multicast_interface", luv_udp_set_multicast_interface},
