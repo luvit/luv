@@ -157,6 +157,9 @@ static const luaL_Reg luv_functions[] = {
   {"new_pipe", luv_new_pipe},
   {"pipe_open", luv_pipe_open},
   {"pipe_bind", luv_pipe_bind},
+#if LUV_UV_VERSION_GEQ(1, 16, 0)
+  {"pipe_chmod", luv_pipe_chmod},
+#endif
   {"pipe_connect", luv_pipe_connect},
   {"pipe_getsockname", luv_pipe_getsockname},
 #if LUV_UV_VERSION_GEQ(1, 3, 0)
@@ -422,6 +425,9 @@ static const luaL_Reg luv_stream_methods[] = {
 static const luaL_Reg luv_pipe_methods[] = {
   {"open", luv_pipe_open},
   {"bind", luv_pipe_bind},
+#if LUV_UV_VERSION_GEQ(1, 16, 0)
+  {"chmod", luv_pipe_chmod},
+#endif
   {"connect", luv_pipe_connect},
   {"getsockname", luv_pipe_getsockname},
 #if LUV_UV_VERSION_GEQ(1, 3, 0)
