@@ -2234,17 +2234,21 @@ Equivalent to `open(2)`. Access `flags` may be an integer or one of: `"r"`,
 opened in binary mode. Because of this, the `O_BINARY` and `O_TEXT` flags are
 not supported.
 
-### `uv.fs_read(fd, size, offset, [callback])`
+### `uv.fs_read(fd, size, [offset], [callback])`
 
 **Parameters:**
 - `fd`: `integer`
 - `size`: `integer`
-- `offset`: `integer`
+- `offset`: `integer` or `nil`
 - `callback`: `callable` (async version) or `nil` (sync version)
   - `err`: `nil` or `string`
   - `data`: `string` or `nil`
 
 Equivalent to `preadv(2)`. Returns any data. An empty string indicates EOF.
+
+If `offset` is nil or omitted, it will default to `-1`, which indicates 'use and update the current file offset.'
+
+**Note:** When `offset` is >= 0, the current file offset will not be updated by the read.
 
 **Returns (sync version):** `string` or `fail`
 
@@ -2264,17 +2268,21 @@ Equivalent to `unlink(2)`.
 
 **Returns (async version):** `uv_fs_t userdata`
 
-### `uv.fs_write(fd, data, offset, [callback])`
+### `uv.fs_write(fd, data, [offset], [callback])`
 
 **Parameters:**
 - `fd`: `integer`
 - `data`: `buffer`
-- `offset`: `integer`
+- `offset`: `integer` or `nil`
 - `callback`: `callable` (async version) or `nil` (sync version)
   - `err`: `nil` or `string`
   - `bytes`: `integer` or `nil`
 
 Equivalent to `pwritev(2)`. Returns the number of bytes written.
+
+If `offset` is nil or omitted, it will default to `-1`, which indicates 'use and update the current file offset.'
+
+**Note:** When `offset` is >= 0, the current file offset will not be updated by the write.
 
 **Returns (sync version):** `integer` or `fail`
 
