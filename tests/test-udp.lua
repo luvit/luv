@@ -182,8 +182,15 @@ return require('lib/tap')(function (test)
         print("no ipv6 multicast route, skipping")
         server:close()
         return
+      elseif errname == "EADDRNOTAVAIL" and multicast_addr == "ff02::1" then
+        -- OSX, BSDs, and some other platforms need %lo in their multicast/interface addr
+        -- so try that instead
+        multicast_addr = "ff02::1%lo0"
+        interface_addr = "::1%lo0"
+        assert(uv.udp_set_membership(server, multicast_addr, interface_addr, "join"))
+      else
+        assert(not err, err)
       end
-      assert(not err, err)
 
       local client = assert(uv.new_udp())
 
