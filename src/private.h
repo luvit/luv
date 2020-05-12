@@ -106,6 +106,9 @@ static int luv_optboolean(lua_State*L, int idx, int defaultval);
 /* From thread.c */
 static lua_State* luv_thread_acquire_vm();
 
+/* From process.c */
+static int luv_parse_signal(lua_State* L, int slot);
+
 /* From work.c */
 static const char* luv_thread_dumped(lua_State* L, int idx, size_t* l);
 static const char* luv_getmtname(lua_State *L, int idx);

@@ -60,6 +60,9 @@ static const luaL_Reg luv_functions[] = {
   {"now", luv_now},
   {"update_time", luv_update_time},
   {"walk", luv_walk},
+#if LUV_UV_VERSION_GEQ(1, 0, 2)
+  {"loop_configure", luv_loop_configure},
+#endif
 
   // req.c
   {"cancel", luv_cancel},
