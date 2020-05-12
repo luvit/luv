@@ -302,3 +302,11 @@ static int luv_kill(lua_State* L) {
   int ret = uv_kill(pid, signum);
   return luv_result(L, ret);
 }
+
+#ifdef LUV_UV_VERSION_GEQ(1, 19, 0)
+static int luv_process_get_pid(lua_State* L) {
+  uv_process_t* handle = luv_check_process(L, 1);
+  lua_pushinteger(L, uv_process_get_pid(handle));
+  return 1;
+}
+#endif
