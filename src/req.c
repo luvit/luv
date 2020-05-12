@@ -33,13 +33,6 @@ static int luv_req_tostring(lua_State* L) {
   return 1;
 }
 
-static void luv_req_init(lua_State* L) {
-  luaL_newmetatable (L, "uv_req");
-  lua_pushcfunction(L, luv_req_tostring);
-  lua_setfield(L, -2, "__tostring");
-  lua_pop(L, 1);
-}
-
 // Metamethod to allow storing anything in the userdata's environment
 static int luv_cancel(lua_State* L) {
   uv_req_t* req = (uv_req_t*)luv_check_req(L, 1);
@@ -47,3 +40,14 @@ static int luv_cancel(lua_State* L) {
   // Cleanup occurs when callbacks are ran with UV_ECANCELED status.
   return luv_result(L, ret);
 }
+
+#ifdef LUV_UV_VERSION_GEQ(1, 19, 0)
+static int luv_req_get_type(lua_State* L) {
+  uv_req_t* req = luv_check_req(L, 1);
+  uv_req_type type = uv_req_get_type(req);
+  const char* type_name = uv_req_type_name(type);
+  lua_pushstring(L, type_name);
+  lua_pushinteger(L, type);
+  return 2;
+}
+#endif

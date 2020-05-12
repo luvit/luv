@@ -63,6 +63,9 @@ static const luaL_Reg luv_functions[] = {
 
   // req.c
   {"cancel", luv_cancel},
+#if LUV_UV_VERSION_GEQ(1, 19, 0)
+  {"req_get_type", luv_req_get_type},
+#endif
 
   // handle.c
   {"is_active", luv_is_active},
@@ -74,6 +77,9 @@ static const luaL_Reg luv_functions[] = {
   {"send_buffer_size", luv_send_buffer_size},
   {"recv_buffer_size", luv_recv_buffer_size},
   {"fileno", luv_fileno},
+#if LUV_UV_VERSION_GEQ(1, 19, 0)
+  {"handle_get_type", luv_handle_get_type},
+#endif
 
   // timer.c
   {"new_timer", luv_new_timer},
@@ -376,6 +382,9 @@ static const luaL_Reg luv_handle_methods[] = {
   {"send_buffer_size", luv_send_buffer_size},
   {"recv_buffer_size", luv_recv_buffer_size},
   {"fileno", luv_fileno},
+#if LUV_UV_VERSION_GEQ(1, 19, 0)
+  {"get_type", luv_handle_get_type},
+#endif
   {NULL, NULL}
 };
 
@@ -590,6 +599,24 @@ static void luv_handle_init(lua_State* L) {
   lua_rawset(L, -3);
 
   lua_setfield(L, LUA_REGISTRYINDEX, "uv_stream");
+}
+
+static const luaL_Reg luv_req_methods[] = {
+  // req.c
+  {"cancel", luv_cancel},
+#if LUV_UV_VERSION_GEQ(1, 19, 0)
+  {"get_type", luv_req_get_type},
+#endif
+  {NULL, NULL}
+};
+
+static void luv_req_init(lua_State* L) {
+  luaL_newmetatable(L, "uv_req");
+  lua_pushcfunction(L, luv_req_tostring);
+  lua_setfield(L, -2, "__tostring");
+  luaL_newlib(L, luv_req_methods);
+  lua_setfield(L, -2, "__index");
+  lua_pop(L, 1);
 }
 
 // Call lua function, will pop nargs values from top of vm stack and push some
