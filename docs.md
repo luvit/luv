@@ -284,6 +284,8 @@ end)
 
 ### `uv.cancel(req)`
 
+> method form `req:cancel()`
+
 **Parameters:**
 - `req`: `userdata` for sub-type of `uv_req_t`
 
@@ -292,6 +294,18 @@ executing. Only cancellation of `uv_fs_t`, `uv_getaddrinfo_t`,
 `uv_getnameinfo_t` and `uv_work_t` requests is currently supported.
 
 **Returns:** `0` or `fail`
+
+### `uv.req_get_type(req)`
+
+> method form `req:get_type()`
+
+**Parameters:**
+- `req`: `userdata` for sub-type of `uv_req_t`
+
+Returns the name of the struct for a given request (e.g. `"fs"` for `uv_fs_t`)
+and the libuv enum integer for the request's type (`uv_req_type`).
+
+**Returns:** `string, integer`
 
 ## `uv_handle_t` — Base handle
 
