@@ -137,4 +137,13 @@ return require('lib/tap')(function (test)
 
   end)
 
+  test("get pid", function (print, p, expect, uv)
+    local handle, pid
+    handle, pid = uv.spawn(longRunning.cmd, longRunning.options, expect(function(status, signal)
+      handle:close()
+    end))
+    assert(handle:get_pid() == pid)
+    handle:kill("sigterm")
+  end, "1.19.0")
+
 end)

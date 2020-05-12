@@ -1134,6 +1134,17 @@ Sends the specified signal to the given PID. Check the documentation on
 
 **Returns:** `0` or `fail`
 
+### `uv.process_get_pid(process)`
+
+> method form `process:get_pid()`
+
+**Parameters:**
+- `process`: `uv_process_t userdata`
+
+Returns the handle's pid.
+
+**Returns:** `integer`
+
 ## `uv_stream_t` — Stream handle
 
 [`uv_stream_t`]: #uv_stream_t--stream-handle

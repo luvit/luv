@@ -120,6 +120,9 @@ static const luaL_Reg luv_functions[] = {
   {"disable_stdio_inheritance", luv_disable_stdio_inheritance},
   {"spawn", luv_spawn},
   {"process_kill", luv_process_kill},
+#if LUV_UV_VERSION_GEQ(1, 19, 0)
+  {"process_get_pid", luv_process_get_pid},
+#endif
   {"kill", luv_kill},
 
   // stream.c
@@ -456,6 +459,9 @@ static const luaL_Reg luv_prepare_methods[] = {
 
 static const luaL_Reg luv_process_methods[] = {
   {"kill", luv_process_kill},
+#if LUV_UV_VERSION_GEQ(1, 19, 0)
+  {"get_pid", luv_process_get_pid},
+#endif
   {NULL, NULL}
 };
 
