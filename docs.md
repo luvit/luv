@@ -466,6 +466,18 @@ has been closed, this function will return `EBADF`.
 **Warning**: Be very careful when using this function. libuv assumes it's in
 control of the file descriptor so any change to it may lead to malfunction.
 
+### `uv.handle_get_type(handle)`
+
+> method form `handle:get_type()`
+
+**Parameters:**
+- `handle`: `userdata` for sub-type of `uv_handle_t`
+
+Returns the name of the struct for a given handle (e.g. `"pipe"` for `uv_pipe_t`)
+and the libuv enum integer for the handle's type (`uv_handle_type`).
+
+**Returns:** `string, integer`
+
 ## Reference counting
 
 [reference counting]: #reference-counting

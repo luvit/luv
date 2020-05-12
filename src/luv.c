@@ -74,6 +74,9 @@ static const luaL_Reg luv_functions[] = {
   {"send_buffer_size", luv_send_buffer_size},
   {"recv_buffer_size", luv_recv_buffer_size},
   {"fileno", luv_fileno},
+#if LUV_UV_VERSION_GEQ(1, 19, 0)
+  {"handle_get_type", luv_handle_get_type},
+#endif
 
   // timer.c
   {"new_timer", luv_new_timer},
@@ -370,6 +373,9 @@ static const luaL_Reg luv_handle_methods[] = {
   {"send_buffer_size", luv_send_buffer_size},
   {"recv_buffer_size", luv_recv_buffer_size},
   {"fileno", luv_fileno},
+#if LUV_UV_VERSION_GEQ(1, 19, 0)
+  {"get_type", luv_handle_get_type},
+#endif
   {NULL, NULL}
 };
 

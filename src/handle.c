@@ -188,3 +188,14 @@ static int luv_fileno(lua_State* L) {
   lua_pushinteger(L, (LUA_INTEGER)(ptrdiff_t)fd);
   return 1;
 }
+
+#ifdef LUV_UV_VERSION_GEQ(1, 19, 0)
+static int luv_handle_get_type(lua_State* L) {
+  uv_handle_t* handle = luv_check_handle(L, 1);
+  uv_handle_type type = uv_handle_get_type(handle);
+  const char* type_name = uv_handle_type_name(type);
+  lua_pushstring(L, type_name);
+  lua_pushinteger(L, type);
+  return 2;
+}
+#endif
