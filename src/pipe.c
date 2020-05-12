@@ -111,3 +111,22 @@ static int luv_pipe_pending_type(lua_State* L) {
   lua_pushstring(L, type_name);
   return 1;
 }
+
+#if LUV_UV_VERSION_GEQ(1,16,0)
+static const char *const luv_pipe_chmod_flags[] = {
+  "r", "w", "rw", "wr", NULL
+};
+
+static int luv_pipe_chmod(lua_State* L) {
+  uv_pipe_t* handle = luv_check_pipe(L, 1);
+  int flags;
+  switch (luaL_checkoption(L, 2, NULL, luv_pipe_chmod_flags)) {
+  case 0: flags = UV_READABLE; break;
+  case 1: flags = UV_WRITABLE; break;
+  case 2: case 3: flags = UV_READABLE | UV_WRITABLE; break;
+  default: flags = 0; /* unreachable */
+  }
+  int ret = uv_pipe_chmod(handle, flags);
+  return luv_result(L, ret);
+}
+#endif

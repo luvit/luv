@@ -1663,6 +1663,20 @@ the given type, returned by `uv.pipe_pending_type()` and call
 
 **Returns:** `string`
 
+### `uv.pipe_chmod(pipe, flags)`
+
+> method form `pipe:chmod(flags)`
+
+**Parameters:**
+- `pipe`: `uv_pipe_t userdata`
+- `flags`: `string`
+
+Alters pipe permissions, allowing it to be accessed from processes run by different users.
+Makes the pipe writable or readable by all users. `flags` are: `"r"`, `"w"`, `"rw"`, or `"wr"`
+where `r` is `READABLE` and `w` is `WRITABLE`. This function is blocking.
+
+**Returns:** `0` or `fail`
+
 ## `uv_tty_t` — TTY handle
 
 [`uv_tty_t`]: #uv_tty_t--tty-handle
