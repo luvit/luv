@@ -41,7 +41,7 @@ static int luv_cancel(lua_State* L) {
   return luv_result(L, ret);
 }
 
-#ifdef LUV_UV_VERSION_GEQ(1, 19, 0)
+#if LUV_UV_VERSION_GEQ(1, 19, 0)
 static int luv_req_get_type(lua_State* L) {
   uv_req_t* req = luv_check_req(L, 1);
   uv_req_type type = uv_req_get_type(req);
