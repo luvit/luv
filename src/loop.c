@@ -94,3 +94,26 @@ static int luv_walk(lua_State* L) {
   uv_walk(luv_loop(L), luv_walk_cb, L);
   return 0;
 }
+
+#if LUV_UV_VERSION_GEQ(1, 0, 2)
+static const char *const luv_loop_configure_options[] = {
+  "block_signal", NULL
+};
+
+static int luv_loop_configure(lua_State* L) {
+  uv_loop_t* loop = luv_loop(L);
+  uv_loop_option option;
+  switch (luaL_checkoption(L, 1, NULL, luv_loop_configure_options)) {
+  case 0: option = UV_LOOP_BLOCK_SIGNAL; break;
+  default: break; /* unreachable */
+  }
+  int ret;
+  if (option == UV_LOOP_BLOCK_SIGNAL) {
+    // lua_isstring checks for string or number
+    luaL_argcheck(L, lua_isstring(L, 2), 2, "block_signal option: expected signal as string or number");
+    int signal = luv_parse_signal(L, 2);
+    ret = uv_loop_configure(loop, UV_LOOP_BLOCK_SIGNAL, signal);
+  }
+  return luv_result(L, ret);
+}
+#endif

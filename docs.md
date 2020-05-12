@@ -200,6 +200,34 @@ specified mode:
 you use the luv bindings directly, you need to call this after registering
 your initial set of event callbacks to start the event loop.
 
+### `uv.loop_configure(option, ...)`
+
+**Parameters:**
+- `option`: `string`
+- `...`: depends on `option`, see below
+
+Set additional loop options. You should normally call this before the first call
+to uv_run() unless mentioned otherwise.
+
+Supported options:
+
+  - `"block_signal"`: Block a signal when polling for new events. The second argument
+  to loop_configure() is the signal name (as a lowercase string) or the signal number.
+  This operation is currently only implemented for `"sigprof"` signals, to suppress
+  unnecessary wakeups when using a sampling profiler. Requesting other signals will
+  fail with `EINVAL`.
+
+An example of a valid call to this function is:
+
+```lua
+uv.loop_configure("block_signal", "sigprof")
+```
+
+**Returns:** `0` or `fail`
+
+**Note:** Be prepared to handle the `ENOSYS` error; it means the loop option is
+not supported by the platform.
+
 ### `uv.loop_alive()`
 
 Returns `true` if there are referenced active handles, active requests, or
