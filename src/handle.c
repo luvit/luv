@@ -189,7 +189,7 @@ static int luv_fileno(lua_State* L) {
   return 1;
 }
 
-#ifdef LUV_UV_VERSION_GEQ(1, 19, 0)
+#if LUV_UV_VERSION_GEQ(1, 19, 0)
 static int luv_handle_get_type(lua_State* L) {
   uv_handle_t* handle = luv_check_handle(L, 1);
   uv_handle_type type = uv_handle_get_type(handle);
