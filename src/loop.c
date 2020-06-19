@@ -102,16 +102,17 @@ static const char *const luv_loop_configure_options[] = {
 
 static int luv_loop_configure(lua_State* L) {
   uv_loop_t* loop = luv_loop(L);
-  uv_loop_option option;
+  uv_loop_option option = 0;
+  int ret = 0;
   switch (luaL_checkoption(L, 1, NULL, luv_loop_configure_options)) {
   case 0: option = UV_LOOP_BLOCK_SIGNAL; break;
   default: break; /* unreachable */
   }
-  int ret;
   if (option == UV_LOOP_BLOCK_SIGNAL) {
     // lua_isstring checks for string or number
+    int signal;
     luaL_argcheck(L, lua_isstring(L, 2), 2, "block_signal option: expected signal as string or number");
-    int signal = luv_parse_signal(L, 2);
+    signal = luv_parse_signal(L, 2);
     ret = uv_loop_configure(loop, UV_LOOP_BLOCK_SIGNAL, signal);
   }
   return luv_result(L, ret);
