@@ -2,7 +2,7 @@
 #define LUV_PRIVATE_H
 
 #include <lua.h>
-#if (LUA_VERSION_NUM != 503)
+#if (LUA_VERSION_NUM < 503)
 #include "compat-5.3.h"
 #endif
 
