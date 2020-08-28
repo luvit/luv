@@ -213,27 +213,23 @@ int thread_dump(lua_State* L, const void* p, size_t sz, void* B) {
   return 0;
 }
 
-static const char* luv_thread_dumped(lua_State* L, int idx, size_t* l) {
+static int luv_thread_dumped(lua_State* L, int idx) {
   if (lua_isstring(L, idx)) {
-    return lua_tolstring(L, idx, l);
+    lua_pushvalue(L, idx);
   } else {
-    const char* buff = NULL;
-    int top = lua_gettop(L);
+    int ret;
     luaL_Buffer b;
-    int test_lua_dump;
     luaL_checktype(L, idx, LUA_TFUNCTION);
     lua_pushvalue(L, idx);
     luaL_buffinit(L, &b);
-    test_lua_dump = (lua_dump(L, thread_dump, &b, 1) == 0);
-    if (test_lua_dump) {
+    ret = lua_dump(L, thread_dump, &b, 1);
+    lua_pop(L, 1);
+    if (ret==0) {
       luaL_pushresult(&b);
-      buff = lua_tolstring(L, -1, l);
     } else
       luaL_error(L, "Error: unable to dump given function");
-    lua_settop(L, top);
-
-    return buff;
   }
+  return 1;
 }
 
 static luv_thread_t* luv_check_thread(lua_State* L, int index) {
@@ -281,7 +277,7 @@ static void luv_thread_cb(void* varg) {
 static int luv_new_thread(lua_State* L) {
   int ret;
   size_t len;
-  const char* buff;
+  char* code;
   luv_thread_t* thread;
   int cbidx = 1;
 #if LUV_UV_VERSION_GEQ(1, 26, 0)
@@ -306,18 +302,22 @@ static int luv_new_thread(lua_State* L) {
   }
 #endif
 
-  buff = luv_thread_dumped(L, cbidx, &len);
+  luv_thread_dumped(L, cbidx);
+  len = lua_rawlen(L, -1);
+  code = malloc(len);
+  memcpy(code, lua_tostring(L, -1), len);
 
   thread = (luv_thread_t*)lua_newuserdata(L, sizeof(*thread));
   memset(thread, 0, sizeof(*thread));
   luaL_getmetatable(L, "uv_thread");
   lua_setmetatable(L, -2);
 
+  thread->len = len;
+  thread->code = code;
+  lua_remove(L, -2);
   //clear in luv_thread_gc or in child threads
   thread->argc = luv_thread_arg_set(L, &thread->args, cbidx+1, lua_gettop(L) - 1, LUVF_THREAD_SIDE_MAIN);
   thread->len = len;
-  thread->code = (char*)malloc(thread->len);
-  memcpy(thread->code, buff, len);
 
 #if LUV_UV_VERSION_GEQ(1, 26, 0)
   ret = uv_thread_create_ex(&thread->handle, &options, luv_thread_cb, thread);
