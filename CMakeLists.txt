@@ -138,14 +138,49 @@ else (LUA)
     endif (LUA_BUILD_TYPE STREQUAL Static)
     if (USE_LUAJIT)
       include(deps/luajit.cmake)
-      include_directories(deps/luajit/src)
+      set(LUA_INCLUDE_DIR deps/luajit/src)
       set(LUAJIT_LIBRARIES luajit-5.1)
     else(USE_LUAJIT)
       include(deps/lua.cmake)
-      include_directories(deps/lua)
+      set(LUA_INCLUDE_DIR deps/lua)
     endif (USE_LUAJIT)
+    include_directories(${LUA_INCLUDE_DIR})
+    set(LUA_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${LUA_INCLUDE_DIR})
   endif (LUA_BUILD_TYPE STREQUAL System)
 endif (LUA)
+
+if (EXISTS "${LUA_INCLUDE_DIR}/lua.h")
+    # At least 5.[012] have different ways to express the version
+    # so all of them need to be tested. Lua 5.2 defines LUA_VERSION
+    # and LUA_RELEASE as joined by the C preprocessor, so avoid those.
+
+    # lua 5.2 and above
+    file(STRINGS "${LUA_INCLUDE_DIR}/lua.h" LUA_VERSION_MAJOR
+         REGEX "^#define[ \t]+LUA_VERSION_MAJOR[ \t]+\"Lua [0-9]+")
+    file(STRINGS "${LUA_INCLUDE_DIR}/lua.h" LUA_VERSION_MINOR
+         REGEX "^#define[ \t]+LUA_VERSION_MINOR[ \t]+\"Lua [0-9]+")
+
+    if(NOT LUA_VERSION_MAJOR AND NOT LUA_VERSION_MINOR)
+      file(STRINGS "${LUA_INCLUDE_DIR}/lua.h" lua_version_strings
+           REGEX "^#define[ \t]+LUA_VERSION([ \t]+\"Lua [0-9]|_[MR]).*")
+      string(REGEX REPLACE ".*;#define[ \t]+LUA_VERSION_MAJOR[ \t]+\"([0-9])\"[ \t]*;.*" "\\1" LUA_VERSION_MAJOR ";${lua_version_strings};")
+      if (LUA_VERSION_MAJOR MATCHES "^[0-9]+$")
+          string(REGEX REPLACE ".*;#define[ \t]+LUA_VERSION_MINOR[ \t]+\"([0-9])\"[ \t]*;.*" "\\1" LUA_VERSION_MINOR ";${lua_version_strings};")
+          string(REGEX REPLACE ".*;#define[ \t]+LUA_VERSION_RELEASE[ \t]+\"([0-9])\"[ \t]*;.*" "\\1" LUA_VERSION_PATCH ";${lua_version_strings};")
+          set(LUA_VERSION_STRING "${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}.${LUA_VERSION_PATCH}")
+      else ()
+          string(REGEX REPLACE ".*;#define[ \t]+LUA_RELEASE[ \t]+\"Lua ([0-9.]+)\"[ \t]*;.*" "\\1" LUA_VERSION_STRING ";${lua_version_strings};")
+          if (NOT LUA_VERSION_STRING MATCHES "^[0-9.]+$")
+              string(REGEX REPLACE ".*;#define[ \t]+LUA_VERSION[ \t]+\"Lua ([0-9.]+)\"[ \t]*;.*" "\\1" LUA_VERSION_STRING ";${lua_version_strings};")
+          endif ()
+          string(REGEX REPLACE "^([0-9]+)\\.[0-9.]*$" "\\1" LUA_VERSION_MAJOR "${LUA_VERSION_STRING}")
+          string(REGEX REPLACE "^[0-9]+\\.([0-9]+)[0-9.]*$" "\\1" LUA_VERSION_MINOR "${LUA_VERSION_STRING}")
+          string(REGEX REPLACE "^[0-9]+\\.[0-9]+\\.([0-9]).*" "\\1" LUA_VERSION_PATCH "${LUA_VERSION_STRING}")
+      endif ()
+
+      unset(lua_version_strings)
+    endif()
+endif()
 
 if (BUILD_MODULE)
   add_library(luv MODULE src/luv.c)
