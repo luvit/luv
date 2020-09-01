@@ -110,7 +110,7 @@ static lua_State* luv_thread_acquire_vm();
 static int luv_parse_signal(lua_State* L, int slot);
 
 /* From work.c */
-static const char* luv_thread_dumped(lua_State* L, int idx, size_t* l);
+static int luv_thread_dumped(lua_State* L, int idx);
 static const char* luv_getmtname(lua_State *L, int idx);
 static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int top, int flags);
 static int luv_thread_arg_push(lua_State* L, luv_thread_arg_t* args, int flags);

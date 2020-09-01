@@ -142,10 +142,15 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
 
 static int luv_new_work(lua_State* L) {
   size_t len;
-  const char* buff;
+  char* code;
   luv_work_ctx_t* ctx;
 
-  buff = luv_thread_dumped(L, 1, &len);
+  luv_thread_dumped(L, 1);
+  len = lua_rawlen(L, -1);
+  code = malloc(len);
+  memcpy(code, lua_tostring(L, -1), len);
+  lua_pop(L, 1);
+
   luaL_checktype(L, 2, LUA_TFUNCTION);
   if(!lua_isnoneornil(L, 3))
     luaL_checktype(L, 3, LUA_TFUNCTION);
@@ -154,8 +159,7 @@ static int luv_new_work(lua_State* L) {
   memset(ctx, 0, sizeof(*ctx));
 
   ctx->len = len;
-  ctx->code = (char*)malloc(ctx->len);
-  memcpy(ctx->code, buff, len);
+  ctx->code = code;
 
   lua_pushvalue(L, 2);
   ctx->after_work_cb = luaL_ref(L, LUA_REGISTRYINDEX);
