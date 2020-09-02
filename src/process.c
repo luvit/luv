@@ -48,7 +48,8 @@ static void luv_clean_options(lua_State* L, uv_process_options_t* options, int* 
   free(options->stdio);
   free(options->env);
   if (args_refs) {
-    for (int i = 0; args_refs[i] != LUA_NOREF; i++) {
+    int i;
+    for (i = 0; args_refs[i] != LUA_NOREF; i++) {
       luaL_unref(L, LUA_REGISTRYINDEX, args_refs[i]);
     }
     free(args_refs);
