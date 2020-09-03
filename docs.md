@@ -107,6 +107,7 @@ are relevant to behavior seen in the Lua module.
 - [DNS utility functions][]
 - [Threading and synchronization utilities][]
 - [Miscellaneous utilities][]
+- [Metrics operations][]
 
 ## Error Handling
 
@@ -216,6 +217,8 @@ Supported options:
   This operation is currently only implemented for `"sigprof"` signals, to suppress
   unnecessary wakeups when using a sampling profiler. Requesting other signals will
   fail with `EINVAL`.
+  - `"metrics_idle_time"`: Accumulate the amount of idle time the event loop spends
+  in the event provider. This option is necessary to use `metrics_idle_time()`.
 
 An example of a valid call to this function is:
 
@@ -3465,6 +3468,23 @@ low on entropy.
 **Returns (sync version):** `string` or `fail`
 
 **Returns (async version):** `0` or `fail`
+
+## Metrics operations
+
+[Metrics operations]: #metrics-operations
+
+### `uv.metrics_idle_time()`
+
+Retrieve the amount of time the event loop has been idle in the kernel’s event
+provider (e.g. `epoll_wait`). The call is thread safe.
+
+The return value is the accumulated time spent idle in the kernel’s event
+provider starting from when the [`uv_loop_t`][] was configured to collect the idle time.
+
+**Note:** The event loop will not begin accumulating the event provider’s idle
+time until calling `loop_configure` with `"metrics_idle_time"`.
+
+**Returns:** `number`
 
 ---
 

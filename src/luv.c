@@ -48,6 +48,7 @@
 #include "work.c"
 #include "misc.c"
 #include "constants.c"
+#include "metrics.c"
 
 static const luaL_Reg luv_functions[] = {
   // loop.c
@@ -369,6 +370,11 @@ static const luaL_Reg luv_functions[] = {
   // util.c
 #if LUV_UV_VERSION_GEQ(1, 10, 0)
   {"translate_sys_error", luv_translate_sys_error},
+#endif
+
+  // metrics.c
+#if LUV_UV_VERSION_GEQ(1, 39, 0)
+  {"metrics_idle_time", luv_metrics_idle_time},
 #endif
 
   {NULL, NULL}
