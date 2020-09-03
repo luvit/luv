@@ -97,7 +97,11 @@ static int luv_walk(lua_State* L) {
 
 #if LUV_UV_VERSION_GEQ(1, 0, 2)
 static const char *const luv_loop_configure_options[] = {
-  "block_signal", NULL
+  "block_signal",
+#if LUV_UV_VERSION_GEQ(1, 39, 0)
+  "metrics_idle_time",
+#endif
+  NULL
 };
 
 static int luv_loop_configure(lua_State* L) {
@@ -106,6 +110,9 @@ static int luv_loop_configure(lua_State* L) {
   int ret = 0;
   switch (luaL_checkoption(L, 1, NULL, luv_loop_configure_options)) {
   case 0: option = UV_LOOP_BLOCK_SIGNAL; break;
+#if LUV_UV_VERSION_GEQ(1, 39, 0)
+  case 1: option = UV_METRICS_IDLE_TIME; break;
+#endif
   default: break; /* unreachable */
   }
   if (option == UV_LOOP_BLOCK_SIGNAL) {
@@ -114,6 +121,8 @@ static int luv_loop_configure(lua_State* L) {
     luaL_argcheck(L, lua_isstring(L, 2), 2, "block_signal option: expected signal as string or number");
     signal = luv_parse_signal(L, 2);
     ret = uv_loop_configure(loop, UV_LOOP_BLOCK_SIGNAL, signal);
+  } else {
+    ret = uv_loop_configure(loop, option);
   }
   return luv_result(L, ret);
 }

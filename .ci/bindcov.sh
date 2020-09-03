@@ -7,7 +7,7 @@ skipped=()
 skipped+=(uv_thread_create uv_thread_create_ex)
 
 # intentionally not bound
-skipped+=(uv_replace_allocator)
+skipped+=(uv_replace_allocator uv_library_shutdown)
 
 # threading/synchronization
 skipped+=(
@@ -29,7 +29,7 @@ skipped+=(
 	uv_req_type_name uv_pipe_chmod uv_process_get_pid uv_get_osfhandle
 	uv_open_osfhandle uv_fs_get_type uv_fs_get_result uv_fs_get_ptr uv_fs_get_path uv_fs_get_statbuf
 	uv_ip4_addr uv_ip6_addr uv_ip4_name uv_ip6_name uv_inet_ntop uv_inet_pton uv_dlopen uv_dlclose
-	uv_dlsym uv_dlerror
+	uv_dlsym uv_dlerror uv_udp_using_recvmmsg uv_fs_get_system_error
 )
 
 # get all public uv_ functions from uv.h
