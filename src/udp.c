@@ -27,6 +27,16 @@ static int luv_new_udp(lua_State* L) {
   lua_settop(L, 1);
   uv_udp_t* handle = (uv_udp_t*)luv_newuserdata(L, sizeof(*handle));
   int ret;
+#if LUV_UV_VERSION_GEQ(1, 39, 0)
+  // TODO: This default can potentially be increased once Libuv is updated
+  // to include the UV_UDP_MMSG_FREE flag. With that flag, Lua won't be able
+  // to tell the difference between using mmsg and not using it, but
+  // without it, a different number of callbacks will be called
+  // when using recvmmsg.
+  //
+  // See https://github.com/libuv/libuv/pull/2836
+  int mmsg_num_msgs = 1;
+#endif
 #if LUV_UV_VERSION_GEQ(1, 7, 0)
   unsigned int flags = AF_UNSPEC;
   if (!lua_isnoneornil(L, 1)) {
@@ -36,15 +46,35 @@ static int luv_new_udp(lua_State* L) {
     else if (lua_isstring(L, 1)) {
       const char* family = lua_tostring(L, 1);
       flags = luv_af_string_to_num(family);
-      if (!flags) {
-        luaL_argerror(L, 1, lua_pushfstring(L, "invalid or unknown address family: '%s'", family));
+    } else if (lua_istable(L, 1)) {
+      lua_getfield(L, 1, "family");
+      if (lua_isnumber(L, -1)) {
+        // The lower 8 bits of the flags parameter are used as the socket domain
+        flags = lua_tointeger(L, -1) & 0xFF;
       }
+      else if (lua_isstring(L, -1)) {
+        flags = luv_af_string_to_num(lua_tostring(L, -1));
+      }
+      else if (!lua_isnil(L, -1)) {
+        luaL_argerror(L, 1, "family must be string or integer if set");
+      }
+      lua_pop(L, 1);
+
+#if LUV_UV_VERSION_GEQ(1, 39, 0)
+      lua_getfield(L, 1, "mmsgs");
+      if (lua_isnumber(L, -1)) {
+        mmsg_num_msgs = lua_tonumber(L, -1);
+      } else if (!lua_isnil(L, -1)) {
+        luaL_argerror(L, 1, "mmsgs must be integer if set");
+      }
+      lua_pop(L, 1);
+#endif
     }
     else {
-      luaL_argerror(L, 1, "expected string or integer");
+      luaL_argerror(L, 1, "expected table, string, or integer");
     }
   }
-#if LUV_UV_VERSION_GEQ(1, 37, 0)
+#if LUV_UV_VERSION_GEQ(1, 39, 0)
   // Libuv intended to enable this by default, but it caused a backwards-incompatibility with how
   // the buffer is freed in udp_recv_cb, so it had to be put behind a flag to avoid breaking
   // existing libuv users. However, because luv handles UV_UDP_MMSG_CHUNK in luv_udp_recv_cb, we can
@@ -55,7 +85,10 @@ static int luv_new_udp(lua_State* L) {
   // - https://github.com/libuv/libuv/pull/2792
   // - https://github.com/libuv/libuv/pull/2532
   // - https://github.com/libuv/libuv/issues/419
-  flags |= UV_UDP_RECVMMSG;
+  //
+  // But only set the flag if we can actually take advantage of it.
+  if (mmsg_num_msgs > 1)
+    flags |= UV_UDP_RECVMMSG;
 #endif
   ret = uv_udp_init_ex(ctx->loop, handle, flags);
 #else
@@ -66,6 +99,16 @@ static int luv_new_udp(lua_State* L) {
     return luv_error(L, ret);
   }
   handle->data = luv_setup_handle(L, ctx);
+#if LUV_UV_VERSION_GEQ(1, 39, 0)
+  if (flags & UV_UDP_RECVMMSG) {
+    // store the number of msgs to be received for use in alloc_cb
+    int* extra_data = malloc(sizeof(int));
+    assert(extra_data);
+    *extra_data = mmsg_num_msgs;
+    ((luv_handle_t*)handle->data)->extra = extra_data;
+    ((luv_handle_t*)handle->data)->extra_gc = free;
+  }
+#endif
   return 1;
 }
 
@@ -343,11 +386,30 @@ static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf
   luv_call_callback(L, (luv_handle_t*)handle->data, LUV_RECV, 4);
 }
 
+#if LUV_UV_VERSION_GEQ(1, 39, 0)
+#define MAX_DGRAM_SIZE (64*1024)
+
+static void luv_udp_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
+  size_t buffer_size = suggested_size;
+  if (uv_udp_using_recvmmsg((uv_udp_t*)handle)) {
+    int num_msgs = *(int*)(((luv_handle_t*)handle->data)->extra);
+    buffer_size = MAX_DGRAM_SIZE * num_msgs;
+  }
+  buf->base = (char*)malloc(buffer_size);
+  assert(buf->base);
+  buf->len = buffer_size;
+}
+#endif
+
 static int luv_udp_recv_start(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   int ret;
   luv_check_callback(L, (luv_handle_t*)handle->data, LUV_RECV, 2);
+#if LUV_UV_VERSION_GEQ(1, 39, 0)
+  ret = uv_udp_recv_start(handle, luv_udp_alloc_cb, luv_udp_recv_cb);
+#else
   ret = uv_udp_recv_start(handle, luv_alloc_cb, luv_udp_recv_cb);
+#endif
 #if LUV_UV_VERSION_LEQ(1, 23, 0)
 #if LUV_UV_VERSION_GEQ(1, 10, 0)
   // in Libuv <= 1.23.0, uv_udp_recv_start will return untranslated error codes on Windows

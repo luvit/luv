@@ -1888,12 +1888,26 @@ UDP handles encapsulate UDP communication for both clients and servers.
 ### `uv.new_udp([flags])`
 
 **Parameters:**
-- `flags`: `string` or `nil`
+- `flags`: `table` or `nil`
+  - `family`: `string` or `nil`
+  - `mmsgs`: `integer` or `nil` (default: `1`)
 
 Creates and initializes a new `uv_udp_t`. Returns the Lua userdata wrapping
-it. The actual socket is created lazily. Flags may be a family string:
-`"unix"`, `"inet"`, `"inet6"`, `"ipx"`, `"netlink"`, `"x25"`, `"ax25"`,
-`"atmpvc"`, `"appletalk"`, or `"packet"`.
+it. The actual socket is created lazily.
+
+When specified, `family` must be one of `"unix"`, `"inet"`, `"inet6"`,
+`"ipx"`, `"netlink"`, `"x25"`, `"ax25"`, `"atmpvc"`, `"appletalk"`, or
+`"packet"`.
+
+When specified, `mmsgs` determines the number of messages able to be received
+at one time via `recvmmsg(2)` (the allocated buffer will be sized to be able
+to fit the specified number of max size dgrams). Only has an effect on
+platforms that support `recvmmsg(2)`.
+
+**Note:** For backwards compatibility reasons, `flags` can also be a string or
+integer. When it is a string, it will be treated like the `family` key above.
+When it is an integer, it will be used directly as the `flags` parameter when
+calling `uv_udp_init_ex`.
 
 **Returns:** `uv_udp_t userdata` or `fail`
 

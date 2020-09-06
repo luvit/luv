@@ -263,4 +263,40 @@ return require('lib/tap')(function (test)
     local testfn = multicast_join_test("::", "ff02::1", nil)
     return testfn(print, p, expect, uv)
   end)
+
+  test("udp recvmmsg", function(print, p, expect, uv)
+    local NUM_SENDS = 8
+    local NUM_MSGS_PER_ALLOC = 4
+
+    local recver = uv.new_udp({mmsgs = NUM_MSGS_PER_ALLOC})
+    assert(recver:bind("0.0.0.0", TEST_PORT))
+
+    local sender = uv.new_udp()
+
+    local msgs_recved = 0
+    local recv_cb = function(err, data, addr, flags)
+      assert(not err, err)
+      p(data, addr)
+
+      -- empty callback can happen, just return early
+      if data == nil and addr == nil then
+        return
+      end
+
+      assert(addr)
+      assert(data == "PING")
+
+      msgs_recved = msgs_recved + 1
+      if msgs_recved == NUM_SENDS then
+        sender:close()
+        recver:close()
+      end
+    end
+
+    assert(recver:recv_start(recv_cb))
+
+    for i=1,NUM_SENDS do
+      assert(sender:try_send("PING", "127.0.0.1", TEST_PORT))
+    end
+  end, "1.39.0")
 end)
