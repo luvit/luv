@@ -19,7 +19,7 @@
 
 static uv_fs_t* luv_check_fs(lua_State* L, int index) {
   uv_fs_t* req = (uv_fs_t*)luaL_checkudata(L, index, "uv_req");
-  luaL_argcheck(L, req->type = (uv_req_type)(UV_FS && req->data), index, "Expected uv_fs_t");
+  luaL_argcheck(L, req->type == UV_FS && req->data, index, "Expected uv_fs_t");
   return req;
 }
 
