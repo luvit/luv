@@ -231,6 +231,13 @@ uv.loop_configure("block_signal", "sigprof")
 **Note:** Be prepared to handle the `ENOSYS` error; it means the loop option is
 not supported by the platform.
 
+### `uv.loop_mode()`
+
+If the loop is running, returns a string indicating the mode in use. If the loop
+is not running, `nil` is returned instead.
+
+**Returns:** `string` or `nil`
+
 ### `uv.loop_alive()`
 
 Returns `true` if there are referenced active handles, active requests, or
