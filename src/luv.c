@@ -54,6 +54,7 @@ static const luaL_Reg luv_functions[] = {
   // loop.c
   {"loop_close", luv_loop_close},
   {"run", luv_run},
+  {"loop_mode", luv_loop_mode},
   {"loop_alive", luv_loop_alive},
   {"stop", luv_stop},
   {"backend_fd", luv_backend_fd},
@@ -716,6 +717,7 @@ LUALIB_API void luv_set_loop(lua_State* L, uv_loop_t* loop) {
 
   ctx->loop = loop;
   ctx->L = L;
+  ctx->mode = -1;
 }
 
 // Set an external event callback routine, before luaopen_luv
@@ -775,6 +777,7 @@ LUALIB_API int luaopen_luv (lua_State* L) {
 
     ctx->loop = loop;
     ctx->L = L;
+    ctx->mode = -1;
 
     ret = uv_loop_init(loop);
     if (ret < 0) {

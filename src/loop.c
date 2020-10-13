@@ -31,9 +31,22 @@ static const char *const luv_runmodes[] = {
 
 static int luv_run(lua_State* L) {
   int mode = luaL_checkoption(L, 1, "default", luv_runmodes);
-  int ret = uv_run(luv_loop(L), (uv_run_mode)mode);
+  luv_ctx_t* ctx = luv_context(L);
+  ctx->mode = mode;
+  int ret = uv_run(ctx->loop, (uv_run_mode)mode);
+  ctx->mode = -1;
   if (ret < 0) return luv_error(L, ret);
   lua_pushboolean(L, ret);
+  return 1;
+}
+
+static int luv_loop_mode(lua_State* L) {
+  luv_ctx_t* ctx = luv_context(L);
+  if (ctx->mode == -1) {
+    lua_pushnil(L);
+  } else {
+    lua_pushstring(L, luv_runmodes[ctx->mode]);
+  }
   return 1;
 }
 

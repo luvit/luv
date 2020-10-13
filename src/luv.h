@@ -79,6 +79,7 @@ typedef struct {
   uv_loop_t*   loop;        /* main loop */
   lua_State*   L;           /* main thread,ensure coroutines works */
   luv_CFpcall  pcall;       /* luv event callback function in protected mode */
+  int          mode;        /* the mode used to run the loop (-1 if not running) */
 
   void* extra;              /* extra data */
 } luv_ctx_t;
