@@ -305,6 +305,10 @@ static int luv_constants(lua_State* L) {
   lua_pushinteger(L, SIGSYS);
   lua_setfield(L, -2, "SIGSYS");
 #endif
+#if LUV_UV_VERSION_GEQ(1, 40, 0)
+  lua_pushinteger(L, UV_UDP_MMSG_FREE);
+  lua_setfield(L, -2, "UDP_MMSG_FREE");
+#endif
 #if LUV_UV_VERSION_GEQ(1, 37, 0)
   lua_pushinteger(L, UV_UDP_RECVMMSG);
   lua_setfield(L, -2, "UDP_RECVMMSG");
