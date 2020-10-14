@@ -91,7 +91,8 @@ return require('lib/tap')(function (test)
     assert(timer:get_repeat()==0)
     if uvVersionGEQ("1.40.0") then
       assert(uv.timer_get_due_in)
-      assert(timer:get_due_in()==0)
+      -- avoid https://github.com/libuv/libuv/issues/3020
+      --assert(timer:get_due_in()==0)
     end
     assert(timer:is_active()==false)
     uv.close(timer)
