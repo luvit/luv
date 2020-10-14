@@ -84,4 +84,27 @@ return require('lib/tap')(function (test)
     end, 4))
   end)
 
+  test("timer init", function(print, p, expect, uv)
+    local timer = uv.new_timer()
+    assert(timer:get_repeat()==0)
+    assert(timer:get_due_in()>=0)
+    assert(timer:is_active()==false)
+    uv.close(timer)
+  end)
+
+  test("timer huge timeout", function(print, p, expect, uv)
+    local tiny_timer = uv.new_timer()
+    local huge_timer = uv.new_timer()
+
+    local function timer_cb()
+      uv.close(tiny_timer)
+      uv.close(huge_timer)
+    end
+
+    uv.timer_start(tiny_timer, 1, 0, expect(timer_cb))
+    uv.timer_start(huge_timer, 0xfffffffffff, 0, timer_cb)
+    assert(tiny_timer:get_due_in()==1)
+    assert(huge_timer:get_due_in()==0xfffffffffff)
+  end)
+
 end)

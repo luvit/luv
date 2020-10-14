@@ -659,6 +659,19 @@ Get the timer repeat value.
 
 **Returns:** `integer`
 
+### `uv.timer_get_due_in(timer)`
+
+> method form `timer:get_due_in()`
+
+**Parameters:**
+- `timer`: `uv_timer_t userdata`
+
+Get the timer due value or 0 if it has expired. The time is relative to `uv.now()`.
+
+**Returns:** `integer`
+
+**Note**: New in libuv version 1.40.0.
+
 ## `uv_prepare_t` — Prepare handle
 
 [`uv_prepare_t`]: #uv_prepare_t--prepare-handle
