@@ -76,9 +76,9 @@ jobs:
       script:
         - make
         # --suppressions should be removed once
-        # https://github.com/libuv/libuv/issues/2840
+        # https://github.com/libuv/libuv/issues/3020
         # is closed and we update to the fixed libuv
-        - valgrind --suppressions=.ci/libuv2840.supp --error-exitcode=1 --leak-check=full --child-silent-after-fork=yes ./build/lua -e "collectgarbage('setpause', 0); collectgarbage('setstepmul', 10000000000000)" tests/run.lua
+        - valgrind --suppressions=.ci/libuv3020.supp --error-exitcode=1 --leak-check=full --child-silent-after-fork=yes ./build/lua -e "collectgarbage('setpause', 0); collectgarbage('setstepmul', 10000000000000)" tests/run.lua
     - name: process cleanup test
       os: linux
       env:

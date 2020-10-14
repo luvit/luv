@@ -1,0 +1,18 @@
+{
+   <libuv#3020>
+   Memcheck:Cond
+   fun:luaV_execute
+   fun:luaD_call
+   fun:luaD_callnoyield
+   fun:f_call
+   fun:luaD_rawrunprotected
+   fun:luaD_pcall
+   fun:lua_pcallk
+   fun:luaB_xpcall
+   fun:luaD_precall
+   fun:luaV_execute
+   fun:luaD_call
+   fun:luaD_callnoyield
+   fun:f_call
+   fun:luaD_rawrunprotected
+}
