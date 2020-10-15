@@ -93,6 +93,9 @@ static const luaL_Reg luv_functions[] = {
   {"timer_again", luv_timer_again},
   {"timer_set_repeat", luv_timer_set_repeat},
   {"timer_get_repeat", luv_timer_get_repeat},
+#if LUV_UV_VERSION_GEQ(1, 40, 0)
+  {"timer_get_due_in", luv_timer_get_due_in},
+#endif
 
   // prepare.c
   {"new_prepare", luv_new_prepare},
@@ -506,6 +509,9 @@ static const luaL_Reg luv_timer_methods[] = {
   {"again", luv_timer_again},
   {"set_repeat", luv_timer_set_repeat},
   {"get_repeat", luv_timer_get_repeat},
+#if LUV_UV_VERSION_GEQ(1, 40, 0)
+  {"get_due_in", luv_timer_get_due_in},
+#endif
   {NULL, NULL}
 };
 
