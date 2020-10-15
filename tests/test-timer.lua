@@ -1,3 +1,5 @@
+local uvVersionGEQ = require('lib/utils').uvVersionGEQ
+
 return require('lib/tap')(function (test)
 
   -- This tests using timers for a simple timeout.
@@ -87,11 +89,10 @@ return require('lib/tap')(function (test)
   test("timer init", function(print, p, expect, uv)
     local timer = uv.new_timer()
     assert(timer:get_repeat()==0)
-    local version = uv.version()
-    if version>= 0x012800 then
+    if uvVersionGEQ("1.40.0") then
       assert(uv.timer_get_due_in)
-      --avoid https://travis-ci.org/github/luvit/luv/jobs/735591007#L960
-      --assert(timer:get_due_in()>=0)
+      -- avoid https://github.com/libuv/libuv/issues/3020
+      --assert(timer:get_due_in()==0)
     end
     assert(timer:is_active()==false)
     uv.close(timer)
@@ -108,13 +109,9 @@ return require('lib/tap')(function (test)
 
     uv.timer_start(tiny_timer, 1, 0, expect(timer_cb))
     uv.timer_start(huge_timer, 0xffff, 0, timer_cb)
-    local version = uv.version()
-    if version>= 0x012800 then
-      assert(uv.timer_get_due_in)
-      --(Lua_Integer)0xffffffff is not 0xffffffff on x86
-      assert(tiny_timer:get_due_in()==1)
-      assert(huge_timer:get_due_in()==0xffff)
-    end
-  end)
+    --(Lua_Integer)0xffffffff is not 0xffffffff on x86
+    assert(tiny_timer:get_due_in()==1)
+    assert(huge_timer:get_due_in()==0xffff)
+  end, "1.40.0")
 
 end)
