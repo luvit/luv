@@ -224,7 +224,7 @@ if %LUA_SVER%==53 (
    )
 )
 if %LUA_SVER%==54 (
-   set FILES_CORE=lapi lcode lctype ldebug ldo ldump lfunc lgc llex lmem lobject lopcodes lparser lstate lstring ltable ltm lundump lvm lzio ltests lauxlib
+   set FILES_CORE=lapi lcode lctype ldebug ldo ldump lfunc lgc llex lmem lobject lopcodes lparser lstate lstring ltable ltm lundump lvm lzio lauxlib
    set FILES_LIB=lbaselib ldblib liolib lmathlib loslib ltablib lstrlib lutf8lib loadlib lcorolib linit
    set FILES_DLL=lua
    set FILES_OTH=luac
