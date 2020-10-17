@@ -6,7 +6,7 @@
 # Redistribution and use of this file is allowed according to the terms of the MIT license.
 # Debugged and (now seriously) modified by Ronan Collobert, for Torch7
 
-#project(Lua53 C)
+#project(Lua54 C)
 
 SET(LUA_DIR ${CMAKE_CURRENT_LIST_DIR}/lua CACHE PATH "location of lua sources")
 
@@ -95,22 +95,24 @@ SET(SRC_LUACORE
 
 IF(WITH_SHARED_LUA)
   IF(WITH_AMALG)
-    add_library(lualib SHARED ${LUA_DIR}/../lua_one.c)
+    add_library(lualib SHARED ${LUA_DIR}/onelua.c)
   ELSE()
     add_library(lualib SHARED ${SRC_LUACORE})
   ENDIF()
 ELSE()
   IF(WITH_AMALG)
-    add_library(lualib STATIC ${LUA_DIR}/../lua_one.c )
+    add_library(lualib STATIC ${LUA_DIR}/onelua.c )
   ELSE()
     add_library(lualib STATIC ${SRC_LUACORE} )
   ENDIF()
   set_target_properties(lualib PROPERTIES
     PREFIX "lib" IMPORT_PREFIX "lib")
 ENDIF()
+set_target_properties(lualib PROPERTIES
+  COMPILE_DEFINITIONS MAKE_LIB=1)
 
 target_link_libraries (lualib ${LIBS} )
-set_target_properties (lualib PROPERTIES OUTPUT_NAME "lua53")
+set_target_properties (lualib PROPERTIES OUTPUT_NAME "lua54")
 
 add_executable(lua ${LUA_DIR}/lua.c)
 IF(WIN32)

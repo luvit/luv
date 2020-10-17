@@ -223,6 +223,16 @@ if %LUA_SVER%==53 (
       set COMPATFLAG=-DLUA_COMPAT_5_2
    )
 )
+if %LUA_SVER%==54 (
+   set FILES_CORE=lapi lcode lctype ldebug ldo ldump lfunc lgc llex lmem lobject lopcodes lparser lstate lstring ltable ltm lundump lvm lzio lauxlib
+   set FILES_LIB=lbaselib ldblib liolib lmathlib loslib ltablib lstrlib lutf8lib loadlib lcorolib linit
+   set FILES_DLL=lua
+   set FILES_OTH=luac
+   set INSTALL_H=lauxlib.h lua.h lua.hpp luaconf.h lualib.h
+   if "%COMPATFLAG%"=="" (
+      set COMPATFLAG=-DLUA_COMPAT_5_3
+   )
+)
 
 if "%NOCOMPAT%"=="TRUE" (
    set COMPATFLAG=

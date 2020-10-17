@@ -69,10 +69,13 @@ else
   elif [ "$LUA" == "lua5.3" ]; then
     curl --silent https://www.lua.org/ftp/lua-5.3.2.tar.gz | tar xz
     cd lua-5.3.2;
+  elif [ "$LUA" == "lua5.4" ]; then
+    curl --silent https://www.lua.org/ftp/lua-5.4.1.tar.gz | tar xz
+    cd lua-5.4.1;
   fi
 
   # Build Lua without backwards compatibility for testing
-  perl -i -pe 's/-DLUA_COMPAT_(ALL|5_2)//' src/Makefile
+  perl -i -pe 's/-DLUA_COMPAT_(ALL|5_2|5_3)//' src/Makefile
   make "$PLATFORM"
   make INSTALL_TOP="$LUA_HOME_DIR" install;
 
@@ -129,4 +132,6 @@ elif [ "$LUA" == "lua5.2" ]; then
   rm -rf lua-5.2.4;
 elif [ "$LUA" == "lua5.3" ]; then
   rm -rf lua-5.3.2;
+elif [ "$LUA" == "lua5.4" ]; then
+  rm -rf lua-5.4.1;
 fi
