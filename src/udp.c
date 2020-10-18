@@ -28,13 +28,12 @@ static int luv_new_udp(lua_State* L) {
   uv_udp_t* handle = (uv_udp_t*)luv_newuserdata(L, sizeof(*handle));
   int ret;
 #if LUV_UV_VERSION_GEQ(1, 39, 0)
-  // TODO: This default can potentially be increased once Libuv is updated
-  // to include the UV_UDP_MMSG_FREE flag. With that flag, Lua won't be able
-  // to tell the difference between using mmsg and not using it, but
-  // without it, a different number of callbacks will be called
-  // when using recvmmsg.
+  // TODO: This default can potentially be increased, but it's
+  //       not clear what the best default would be, or if unconditionally
+  //       using recvmmsg is always an improvement.
   //
-  // See https://github.com/libuv/libuv/pull/2836
+  //       Would probably need to do some extensive benchmarking to
+  //       figure out what a good default might be.
   int mmsg_num_msgs = 1;
 #endif
 #if LUV_UV_VERSION_GEQ(1, 7, 0)
@@ -86,7 +85,7 @@ static int luv_new_udp(lua_State* L) {
   // - https://github.com/libuv/libuv/pull/2532
   // - https://github.com/libuv/libuv/issues/419
   //
-  // But only set the flag if we can actually take advantage of it.
+  // But we should only set the flag if we can actually take advantage of it.
   if (mmsg_num_msgs > 1)
     flags |= UV_UDP_RECVMMSG;
 #endif
@@ -328,6 +327,16 @@ static int luv_udp_try_send(lua_State* L) {
 static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags) {
   luv_handle_t* data = (luv_handle_t*)handle->data;
   lua_State* L = data->ctx->L;
+
+#if LUV_UV_VERSION_GEQ(1, 40, 0)
+  // If UV_UDP_MMSG_FREE is set, we can skip calling the callback
+  // and return early because we know the only purpose of this recv_cb call
+  // is to free the buffer that was being used by recvmmsg
+  if (flags & UV_UDP_MMSG_FREE) {
+    free(buf->base);
+    return;
+  }
+#endif
 
   // err
   if (nread < 0) {
