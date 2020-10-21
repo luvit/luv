@@ -176,10 +176,10 @@ with PUC Lua 5.3 you can run make with:
 If you want to build luv as a static library run make with:
 
 ```
-~/Code/luv> BUILD_MODULE=OFF make
+~/Code/luv> BUILD_MODULE=OFF BUILD_STATIC_LIBS=ON make
 ```
 
-This will create a static library `libluv.a`.
+This will create a static library `libluv_a.a`.
 
 #### Build as shared library
 
