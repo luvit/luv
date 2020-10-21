@@ -10,7 +10,8 @@ luv
 [luajit](http://luajit.org/) and [lua](http://www.lua.org/)
 [5.1](http://www.lua.org/manual/5.1/manual.html)/
 [5.2](http://www.lua.org/manual/5.2/manual.html)/
-[5.3](http://www.lua.org/manual/5.3/manual.html).
+[5.3](http://www.lua.org/manual/5.3/manual.html)/
+[5.4](http://www.lua.org/manual/5.4/manual.html).
 
 This library makes libuv available to lua scripts.  It was made for the [luvit](http://luvit.io/) project but should usable from nearly any lua project.
 
@@ -163,9 +164,9 @@ On unix systems, use the Makefile.
 This will build luv as a module library. Module libraries are plugins that are
 not linked into other targets.
 
-#### Build with PUC Lua 5.3
+#### Build with PUC Lua 5.4
 By default luv is linked with LuaJIT 2.1.0-beta3. If you rather like to link luv
-with PUC Lua 5.3 you can run make with:
+with PUC Lua 5.4 you can run make with:
 
 ```
 ~/Code/luv> WITH_LUA_ENGINE=Lua make
