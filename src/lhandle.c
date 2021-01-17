@@ -37,6 +37,7 @@ static luv_handle_t* luv_setup_handle(lua_State* L, luv_ctx_t* ctx) {
   switch (handle->type) {
     UV_HANDLE_TYPE_MAP(XX)
     default:
+      free(data);
       luaL_error(L, "Unknown handle type");
       return NULL;
   }
