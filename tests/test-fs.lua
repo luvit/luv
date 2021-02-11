@@ -331,4 +331,24 @@ return require('lib/tap')(function (test)
     assert(err:match("^EINVAL:"))
     assert(code=='EINVAL')
   end, "1.34.0")
+
+  test("errors with dest paths", function (print, p, expect, uv)
+    -- this combination will cause all of the functions below to fail
+    local fd1, path1 = assert(uv.fs_mkstemp("luvXXXXXX"))
+    assert(uv.fs_close(fd1))
+    local path2 = assert(uv.fs_mkdtemp("luvXXXXXX"))
+
+    local fns = {"fs_rename", "fs_link", "fs_symlink", "fs_copyfile"}
+    for _, fn_name in ipairs(fns) do
+      if uv[fn_name] then
+        local fn = uv[fn_name]
+        local ok, err, code = fn(path1, path2)
+        p(fn_name, ok, err, code)
+        assert(not ok)
+      end
+    end
+
+    assert(uv.fs_unlink(path1))
+    assert(uv.fs_rmdir(path2))
+  end)
 end)
