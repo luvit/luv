@@ -208,6 +208,20 @@ static void luv_push_statfs_table(lua_State* L, const uv_statfs_t* s) {
 };
 #endif
 
+static int fs_req_has_dest_path(uv_fs_t* req) {
+  switch (req->fs_type) {
+    case UV_FS_RENAME:
+    case UV_FS_SYMLINK:
+    case UV_FS_LINK:
+#if LUV_UV_VERSION_GEQ(1, 14, 0)
+    case UV_FS_COPYFILE:
+#endif
+      return 1;
+    default:
+      return 0;
+  }
+}
+
 /* Processes a result and pushes the data onto the stack
    returns the number of items pushed */
 static int push_fs_result(lua_State* L, uv_fs_t* req) {
@@ -220,7 +234,13 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
 
   if (req->result < 0) {
     lua_pushnil(L);
-    if (req->path) {
+    if (fs_req_has_dest_path(req)) {
+      lua_rawgeti(L, LUA_REGISTRYINDEX, data->data_ref);
+      const char* dest_path = lua_tostring(L, -1);
+      lua_pop(L, 1);
+      lua_pushfstring(L, "%s: %s: %s -> %s", uv_err_name(req->result), uv_strerror(req->result), req->path, dest_path);
+    }
+    else if (req->path) {
       lua_pushfstring(L, "%s: %s: %s", uv_err_name(req->result), uv_strerror(req->result), req->path);
     }
     else {
@@ -377,20 +397,6 @@ static void luv_fs_cb(uv_fs_t* req) {
     req->data = NULL;
     luv_fulfill_req(L, data, nargs);
     luv_cleanup_req(L, data);
-  }
-}
-
-static int fs_req_has_dest_path(uv_fs_t* req) {
-  switch (req->fs_type) {
-    case UV_FS_RENAME:
-    case UV_FS_SYMLINK:
-    case UV_FS_LINK:
-#if LUV_UV_VERSION_GEQ(1, 14, 0)
-    case UV_FS_COPYFILE:
-#endif
-      return 1;
-    default:
-      return 0;
   }
 }
 
