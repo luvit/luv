@@ -2662,7 +2662,7 @@ Limited equivalent to `sendfile(2)`. Returns the number of bytes written.
   - `permission`: `boolean` or `nil`
 
 Equivalent to `access(2)` on Unix. Windows uses `GetFileAttributesW()`. Access
-`mode` can be an integer or a string containing `""R"` or `"W"` or `"X"`.
+`mode` can be an integer or a string containing `"R"` or `"W"` or `"X"`.
 Returns `true` or `false` indicating access permission.
 
 **Returns (sync version):** `boolean` or `fail`
