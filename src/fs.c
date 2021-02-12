@@ -208,6 +208,20 @@ static void luv_push_statfs_table(lua_State* L, const uv_statfs_t* s) {
 };
 #endif
 
+static int fs_req_has_dest_path(uv_fs_t* req) {
+  switch (req->fs_type) {
+    case UV_FS_RENAME:
+    case UV_FS_SYMLINK:
+    case UV_FS_LINK:
+#if LUV_UV_VERSION_GEQ(1, 14, 0)
+    case UV_FS_COPYFILE:
+#endif
+      return 1;
+    default:
+      return 0;
+  }
+}
+
 /* Processes a result and pushes the data onto the stack
    returns the number of items pushed */
 static int push_fs_result(lua_State* L, uv_fs_t* req) {
@@ -220,7 +234,13 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
 
   if (req->result < 0) {
     lua_pushnil(L);
-    if (req->path) {
+    if (fs_req_has_dest_path(req)) {
+      lua_rawgeti(L, LUA_REGISTRYINDEX, data->data_ref);
+      const char* dest_path = lua_tostring(L, -1);
+      lua_pop(L, 1);
+      lua_pushfstring(L, "%s: %s: %s -> %s", uv_err_name(req->result), uv_strerror(req->result), req->path, dest_path);
+    }
+    else if (req->path) {
       lua_pushfstring(L, "%s: %s: %s", uv_err_name(req->result), uv_strerror(req->result), req->path);
     }
     else {
@@ -390,7 +410,16 @@ static void luv_fs_cb(uv_fs_t* req) {
                      sync ? NULL : luv_fs_cb);            \
   if (req->fs_type != UV_FS_ACCESS && ret < 0) {          \
     lua_pushnil(L);                                       \
-    if (req->path) {                                      \
+    if (fs_req_has_dest_path(req)) {                      \
+      lua_rawgeti(L, LUA_REGISTRYINDEX, data->data_ref);  \
+      const char* dest_path = lua_tostring(L, -1);        \
+      lua_pop(L, 1);                                      \
+      lua_pushfstring(L, "%s: %s: %s -> %s",              \
+          uv_err_name(req->result),                       \
+          uv_strerror(req->result),                       \
+          req->path, dest_path);                          \
+    }                                                     \
+    else if (req->path) {                                 \
       lua_pushfstring(L, "%s: %s: %s",                    \
           uv_err_name(req->result),                       \
           uv_strerror(req->result), req->path);           \
@@ -604,6 +633,9 @@ static int luv_fs_rename(lua_State* L) {
   int ref = luv_check_continuation(L, 3);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ctx, ref);
+  // ref the dest path so that we can print it in the error message
+  lua_pushvalue(L, 2);
+  ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
   FS_CALL(rename, req, path, new_path);
 }
 
@@ -719,6 +751,9 @@ static int luv_fs_link(lua_State* L) {
   int ref = luv_check_continuation(L, 3);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ctx, ref);
+  // ref the dest path so that we can print it in the error message
+  lua_pushvalue(L, 2);
+  ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
   FS_CALL(link, req, path, new_path);
 }
 
@@ -739,7 +774,9 @@ static int luv_fs_symlink(lua_State* L) {
   ref = luv_check_continuation(L, 4);
   req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ctx, ref);
-
+  // ref the dest path so that we can print it in the error message
+  lua_pushvalue(L, 2);
+  ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
   FS_CALL(symlink, req, path, new_path, flags);
 }
 
@@ -824,6 +861,9 @@ static int luv_fs_copyfile(lua_State*L) {
   ref = luv_check_continuation(L, 4);
   req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ctx, ref);
+  // ref the dest path so that we can print it in the error message
+  lua_pushvalue(L, 2);
+  ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
   FS_CALL(copyfile, req, path, new_path, flags);
 }
 #endif
