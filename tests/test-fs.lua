@@ -334,9 +334,10 @@ return require('lib/tap')(function (test)
 
   test("errors with dest paths", function (print, p, expect, uv)
     -- this combination will cause all of the functions below to fail
-    local fd1, path1 = assert(uv.fs_mkstemp("luvXXXXXX"))
+    local path1, path2 = "_test_", "_testdir_"
+    local fd1 = assert(uv.fs_open(path1, "w", 438))
     assert(uv.fs_close(fd1))
-    local path2 = assert(uv.fs_mkdtemp("luvXXXXXX"))
+    assert(uv.fs_mkdir(path2, tonumber('777', 8)))
 
     local fns = {"fs_rename", "fs_link", "fs_symlink", "fs_copyfile"}
     for _, fn_name in ipairs(fns) do
