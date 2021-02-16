@@ -771,6 +771,9 @@ static int luv_fs_symlink(lua_State* L) {
     if (lua_toboolean(L, -1)) flags |= UV_FS_SYMLINK_JUNCTION;
     lua_pop(L, 1);
   }
+  else if (lua_type(L, 3) == LUA_TNUMBER) {
+    flags = lua_tointeger(L, 3);
+  }
   ref = luv_check_continuation(L, 4);
   req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ctx, ref);
