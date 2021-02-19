@@ -73,19 +73,23 @@ static int luv_is_callable(lua_State* L, int index) {
 }
 
 static void luv_check_callable(lua_State* L, int index) {
-  const char *msg;
-  const char *typearg;  /* name for the type of the actual argument */
   if (luv_is_callable(L, index))
     return;
+  else
+    luv_arg_type_error(L, index, "function or callable table expected, got %s");
+}
 
+static int luv_arg_type_error(lua_State* L, int index, const char* fmt) {
+  const char *msg;
+  const char *typearg;  /* name for the type of the actual argument */
   if (luaL_getmetafield(L, index, "__name") == LUA_TSTRING)
     typearg = lua_tostring(L, -1);  /* use the given type name */
   else if (lua_type(L, index) == LUA_TLIGHTUSERDATA)
     typearg = "light userdata";  /* special name for messages */
   else
     typearg = luaL_typename(L, index);  /* standard name */
-  msg = lua_pushfstring(L, "function or callable table expected, got %s", typearg);
-  luaL_argerror(L, index, msg);
+  msg = lua_pushfstring(L, fmt, typearg);
+  return luaL_argerror(L, index, msg);
 }
 
 #if LUV_UV_VERSION_GEQ(1, 10, 0)
