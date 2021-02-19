@@ -779,7 +779,7 @@ static int luv_fs_symlink(lua_State* L) {
       flags = lua_tointeger(L, 3);
     }
     else if (!lua_isnoneornil(L, 3)) {
-      return luv_arg_type_error(L, 3, "expected nil, integer, or table; got %s");
+      return luv_arg_type_error(L, 3, "table, integer, or nil expected, got %s");
     }
     ref = luv_check_continuation(L, 4);
   }
@@ -874,7 +874,7 @@ static int luv_fs_copyfile(lua_State*L) {
       flags = lua_tointeger(L, 3);
     }
     else if (!lua_isnoneornil(L, 3)) {
-      return luv_arg_type_error(L, 3, "expected nil, integer, or table; got %s");
+      return luv_arg_type_error(L, 3, "table, integer, or nil expected, got %s");
     }
     ref = luv_check_continuation(L, 4);
   }
