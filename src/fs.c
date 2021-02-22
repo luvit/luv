@@ -763,15 +763,26 @@ static int luv_fs_symlink(lua_State* L) {
   const char* new_path = luaL_checkstring(L, 2);
   int flags = 0, ref;
   uv_fs_t* req;
-  if (lua_type(L, 3) == LUA_TTABLE) {
-    lua_getfield(L, 3, "dir");
-    if (lua_toboolean(L, -1)) flags |= UV_FS_SYMLINK_DIR;
-    lua_pop(L, 1);
-    lua_getfield(L, 3, "junction");
-    if (lua_toboolean(L, -1)) flags |= UV_FS_SYMLINK_JUNCTION;
-    lua_pop(L, 1);
+  // callback can be the 3rd parameter
+  if (luv_is_callable(L, 3) && lua_isnone(L, 4)) {
+    ref = luv_check_continuation(L, 3);
+  } else {
+    if (lua_type(L, 3) == LUA_TTABLE) {
+      lua_getfield(L, 3, "dir");
+      if (lua_toboolean(L, -1)) flags |= UV_FS_SYMLINK_DIR;
+      lua_pop(L, 1);
+      lua_getfield(L, 3, "junction");
+      if (lua_toboolean(L, -1)) flags |= UV_FS_SYMLINK_JUNCTION;
+      lua_pop(L, 1);
+    }
+    else if (lua_type(L, 3) == LUA_TNUMBER) {
+      flags = lua_tointeger(L, 3);
+    }
+    else if (!lua_isnoneornil(L, 3)) {
+      return luv_arg_type_error(L, 3, "table, integer, or nil expected, got %s");
+    }
+    ref = luv_check_continuation(L, 4);
   }
-  ref = luv_check_continuation(L, 4);
   req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ctx, ref);
   // ref the dest path so that we can print it in the error message
@@ -842,23 +853,31 @@ static int luv_fs_copyfile(lua_State*L) {
   const char* new_path = luaL_checkstring(L, 2);
   int flags = 0, ref;
   uv_fs_t* req;
-  if (lua_type(L, 3) == LUA_TTABLE) {
-    lua_getfield(L, 3, "excl");
-    if (lua_toboolean(L, -1)) flags |= UV_FS_COPYFILE_EXCL;
-    lua_pop(L, 1);
+  // callback can be the 3rd parameter
+  if (luv_is_callable(L, 3) && lua_isnone(L, 4)) {
+    ref = luv_check_continuation(L, 3);
+  } else {
+    if (lua_type(L, 3) == LUA_TTABLE) {
+      lua_getfield(L, 3, "excl");
+      if (lua_toboolean(L, -1)) flags |= UV_FS_COPYFILE_EXCL;
+      lua_pop(L, 1);
 #if LUV_UV_VERSION_GEQ(1, 20, 0)
-    lua_getfield(L, 3, "ficlone");
-    if (lua_toboolean(L, -1)) flags |= UV_FS_COPYFILE_FICLONE;
-    lua_pop(L, 1);
-    lua_getfield(L, 3, "ficlone_force");
-    if (lua_toboolean(L, -1)) flags |= UV_FS_COPYFILE_FICLONE_FORCE;
-    lua_pop(L, 1);
+      lua_getfield(L, 3, "ficlone");
+      if (lua_toboolean(L, -1)) flags |= UV_FS_COPYFILE_FICLONE;
+      lua_pop(L, 1);
+      lua_getfield(L, 3, "ficlone_force");
+      if (lua_toboolean(L, -1)) flags |= UV_FS_COPYFILE_FICLONE_FORCE;
+      lua_pop(L, 1);
 #endif
+    }
+    else if (lua_type(L, 3) == LUA_TNUMBER) {
+      flags = lua_tointeger(L, 3);
+    }
+    else if (!lua_isnoneornil(L, 3)) {
+      return luv_arg_type_error(L, 3, "table, integer, or nil expected, got %s");
+    }
+    ref = luv_check_continuation(L, 4);
   }
-  else if (lua_type(L, 3) == LUA_TNUMBER) {
-    flags = lua_tointeger(L, 3);
-  }
-  ref = luv_check_continuation(L, 4);
   req = (uv_fs_t*)lua_newuserdata(L, sizeof(*req));
   req->data = luv_setup_req(L, ctx, ref);
   // ref the dest path so that we can print it in the error message

@@ -101,6 +101,10 @@ static int luv_is_callable(lua_State* L, int index);
 // Check if the argument is callable and throw an error if it's not
 static void luv_check_callable(lua_State* L, int index);
 
+// Throw an argument error formatted with the type name of the value at the argument's index
+// Example: luv_arg_type_error(L, 1, "expected number or table, got %s");
+static int luv_arg_type_error(lua_State* L, int index, const char* fmt);
+
 static int luv_optboolean(lua_State*L, int idx, int defaultval);
 
 /* From thread.c */
