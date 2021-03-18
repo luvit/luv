@@ -197,6 +197,10 @@ if (BUILD_SHARED_LIBS)
   set_target_properties(libluv PROPERTIES PREFIX "")
   set_target_properties(libluv
     PROPERTIES VERSION ${LUV_VERSION} SOVERSION ${LUV_VERSION_MAJOR})
+  if(APPLE)
+    set_target_properties(libluv
+      PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
+  endif(APPLE)
   list(APPEND ACTIVE_TARGETS "libluv")
 endif (BUILD_SHARED_LIBS)
 
