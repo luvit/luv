@@ -1765,6 +1765,42 @@ where `r` is `READABLE` and `w` is `WRITABLE`. This function is blocking.
 
 **Returns:** `0` or `fail`
 
+### `uv.pipe(read_flags, write_flags)`
+
+**Parameters:**
+- `read_flags`: `table` or `nil`
+  - `nonblock`: `boolean` (default: `false`)
+- `write_flags`: `table` or `nil`
+  - `nonblock`: `boolean` (default: `false`)
+
+Create a pair of connected pipe handles. Data may be written to the `write` fd and read from the `read` fd. The resulting handles can be passed to `pipe_open`, used with `spawn`, or for any other purpose.
+
+Flags:
+ - `nonblock`: Opens the specified socket handle for `OVERLAPPED` or `FIONBIO`/`O_NONBLOCK` I/O usage. This is recommended for handles that will be used by libuv, and not usually recommended otherwise.
+
+Equivalent to `pipe(2)` with the `O_CLOEXEC` flag set.
+
+**Returns:** `table` or `fail`
+- `read` : `integer` (file descriptor)
+- `write` : `integer` (file descriptor)
+
+```lua
+-- Simple read/write with pipe_open
+local fds = uv.pipe({nonblock=true}, {nonblock=true})
+
+local read_pipe = uv.new_pipe()
+read_pipe:open(fds.read)
+
+local write_pipe = uv.new_pipe()
+write_pipe:open(fds.write)
+
+write_pipe:write("hello")
+read_pipe:read_start(function(err, chunk)
+  assert(not err, err)
+  print(chunk)
+end)
+```
+
 ## `uv_tty_t` — TTY handle
 
 [`uv_tty_t`]: #uv_tty_t--tty-handle

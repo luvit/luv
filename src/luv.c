@@ -185,6 +185,9 @@ static const luaL_Reg luv_functions[] = {
   {"pipe_pending_instances", luv_pipe_pending_instances},
   {"pipe_pending_count", luv_pipe_pending_count},
   {"pipe_pending_type", luv_pipe_pending_type},
+#if LUV_UV_VERSION_GEQ(1, 41, 0)
+  {"pipe", luv_pipe},
+#endif
 
   // tty.c
   {"new_tty", luv_new_tty},

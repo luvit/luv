@@ -130,3 +130,35 @@ static int luv_pipe_chmod(lua_State* L) {
   return luv_result(L, ret);
 }
 #endif
+
+#if LUV_UV_VERSION_GEQ(1,41,0)
+static int luv_pipe(lua_State* L) {
+  luv_ctx_t* ctx = luv_context(L);
+  int read_flags, write_flags = 0;
+  uv_file fds[2];
+  int ret;
+  if (lua_type(L, 3) == LUA_TTABLE) {
+    lua_getfield(L, 3, "nonblock");
+    if (lua_toboolean(L, -1)) read_flags |= UV_NONBLOCK_PIPE;
+    lua_pop(L, 1);
+  } else if (!lua_isnoneornil(L, 3)) {
+    luv_arg_type_error(L, 3, "table or nil expected, got %s");
+  }
+  if (lua_type(L, 4) == LUA_TTABLE) {
+    lua_getfield(L, 4, "nonblock");
+    if (lua_toboolean(L, -1)) write_flags |= UV_NONBLOCK_PIPE;
+    lua_pop(L, 1);
+  } else if (!lua_isnoneornil(L, 4)) {
+    luv_arg_type_error(L, 4, "table or nil expected, got %s");
+  }
+  ret = uv_pipe(fds, read_flags, write_flags);
+  if (ret < 0) return luv_error(L, ret);
+  // return as a table with 'read' and 'write' keys containing the corresponding fds
+  lua_createtable(L, 0, 2);
+  lua_pushinteger(L, fds[0]);
+  lua_setfield(L, -2, "read");
+  lua_pushinteger(L, fds[1]);
+  lua_setfield(L, -2, "write");
+  return 1;
+}
+#endif
