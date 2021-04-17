@@ -137,19 +137,19 @@ static int luv_pipe(lua_State* L) {
   int read_flags = 0, write_flags = 0;
   uv_file fds[2];
   int ret;
-  if (lua_type(L, 3) == LUA_TTABLE) {
-    lua_getfield(L, 3, "nonblock");
+  if (lua_type(L, 1) == LUA_TTABLE) {
+    lua_getfield(L, 1, "nonblock");
     if (lua_toboolean(L, -1)) read_flags |= UV_NONBLOCK_PIPE;
     lua_pop(L, 1);
-  } else if (!lua_isnoneornil(L, 3)) {
-    luv_arg_type_error(L, 3, "table or nil expected, got %s");
+  } else if (!lua_isnoneornil(L, 1)) {
+    luv_arg_type_error(L, 1, "table or nil expected, got %s");
   }
-  if (lua_type(L, 4) == LUA_TTABLE) {
-    lua_getfield(L, 4, "nonblock");
+  if (lua_type(L, 2) == LUA_TTABLE) {
+    lua_getfield(L, 2, "nonblock");
     if (lua_toboolean(L, -1)) write_flags |= UV_NONBLOCK_PIPE;
     lua_pop(L, 1);
-  } else if (!lua_isnoneornil(L, 4)) {
-    luv_arg_type_error(L, 4, "table or nil expected, got %s");
+  } else if (!lua_isnoneornil(L, 2)) {
+    luv_arg_type_error(L, 2, "table or nil expected, got %s");
   }
   ret = uv_pipe(fds, read_flags, write_flags);
   if (ret < 0) return luv_error(L, ret);
