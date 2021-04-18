@@ -311,8 +311,6 @@ return require('lib/tap')(function (test)
     local NUM_PINGS = 4
 
     local fds = assert(uv.socketpair("stream", 0, {nonblock=true}, {nonblock=true}))
-    assert(uv.guess_handle(fds[1]) == "pipe")
-    assert(uv.guess_handle(fds[2]) == "pipe")
 
     local pinger = uv.new_tcp()
     pinger:open(fds[2])
