@@ -1939,7 +1939,7 @@ Gets the current Window width and height.
 Controls whether console virtual terminal sequences are processed by libuv or
 console. Useful in particular for enabling ConEmu support of ANSI X3.64 and
 Xterm 256 colors. Otherwise Windows10 consoles are usually detected
-automatically. State may be a family string: `"supported"` or `"unsupported"`.
+automatically. State should be one of: `"supported"` or `"unsupported"`.
 
 This function is only meaningful on Windows systems. On Unix it is silently
 ignored.
@@ -3086,9 +3086,9 @@ called in the main loop thread.
 - `host`: `string` or `nil`
 - `service`: `string` or `nil`
 - `hints`: `table` or `nil`
-  - `family`: `integer` or `string` or `nil`
-  - `socktype`: `integer` or `string` or `nil`
-  - `protocol`: `integer` or `string` or `nil`
+  - `family`: `string` or `integer` or `nil`
+  - `socktype`: `string` or `integer` or `nil`
+  - `protocol`: `string` or `integer` or `nil`
   - `addrconfig`: `boolean` or `nil`
   - `v4mapped`: `boolean` or `nil`
   - `all`: `boolean` or `nil`
@@ -3102,6 +3102,13 @@ called in the main loop thread.
 
 Equivalent to `getaddrinfo(3)`. Either `node` or `service` may be `nil` but not
 both.
+
+Valid hint strings for the keys that take a string:
+- `family`: `"unix"`, `"inet"`, `"inet6"`, `"ipx"`,
+`"netlink"`, `"x25"`, `"ax25"`, `"atmpvc"`, `"appletalk"`, or `"packet"`
+- `socktype`: `"stream"`, `"dgram"`, `"raw"`,
+`"rdm"`, or `"seqpacket"`
+- `protocol`: will be looked up using the `getprotobyname(3)` function (examples: `"ip"`, `"icmp"`, `"tcp"`, `"udp"`, etc)
 
 **Returns (sync version):** `table` or `fail`
 - `[1, 2, 3, ..., n]` : `table`
@@ -3127,6 +3134,9 @@ both.
   - `service`: `string` or `nil`
 
 Equivalent to `getnameinfo(3)`.
+
+When specified, `family` must be one of `"unix"`, `"inet"`, `"inet6"`, `"ipx"`,
+`"netlink"`, `"x25"`, `"ax25"`, `"atmpvc"`, `"appletalk"`, or `"packet"`.
 
 **Returns (sync version):** `string, string` or `fail`
 
