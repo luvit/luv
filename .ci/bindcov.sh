@@ -39,9 +39,9 @@ for fn in `grep -oP "UV_EXTERN [^\(]+ uv_[^\(]+\(" deps/libuv/include/uv.h | sed
 		continue
 	fi
 	# count all uses
-	count=`grep -o "$fn" src/*.c | wc -l`
+	count=`grep -o "\b$fn\b" src/*.c | wc -l`
 	# check if a luv_ version exists
-	grep -Fq "l$fn" src/*.c
+	grep -q "\bl$fn\b" src/*.c
 	bound=$?
 	# not bound
 	if [ ! $bound -eq 0 ] ; then

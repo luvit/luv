@@ -304,4 +304,53 @@ return require('lib/tap')(function (test)
       p{socket=socket,req=req}
     end)))
   end, "1.32.0")
+
+  test("socketpair ping pong", function(print, p, expect, uv)
+    local PING = "PING\n"
+    local PONG = "PONG\n"
+    local NUM_PINGS = 4
+
+    local fds = assert(uv.socketpair("stream", 0, {nonblock=true}, {nonblock=true}))
+
+    local pinger = uv.new_tcp()
+    pinger:open(fds[2])
+
+    local ponger = uv.new_tcp()
+    ponger:open(fds[1])
+
+    local ping = function()
+      assert(pinger:write(PING, expect(function(err)
+        assert(not err, err)
+      end)))
+    end
+
+    local pongs = 0
+    ping()
+
+    assert(pinger:read_start(function(err, chunk)
+      assert(not err, err)
+      if chunk == nil then
+        return
+      end
+      assert(chunk == PONG)
+      pongs = pongs + 1
+      if pongs == NUM_PINGS then
+        ponger:close()
+        pinger:close()
+      else
+        ping()
+      end
+    end))
+
+    assert(ponger:read_start(function(err, chunk)
+      assert(not err, err)
+      if chunk == nil then
+        return
+      end
+      assert(chunk == PING)
+      ponger:write(PONG, expect(function(err)
+        assert(not err, err)
+      end))
+    end))
+  end, "1.41.0")
 end)

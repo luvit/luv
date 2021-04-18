@@ -667,3 +667,11 @@ static const char* luv_sig_num_to_string(const int num) {
   }
   return NULL;
 }
+
+static int luv_proto_string_to_num(const char* string) {
+  struct protoent* proto;
+  if (!string) return -1;
+  proto = getprotobyname(string);
+  if (!proto) return -1;
+  return proto->p_proto;
+}

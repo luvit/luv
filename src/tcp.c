@@ -222,3 +222,65 @@ static int luv_tcp_close_reset(lua_State* L) {
 }
 #endif
 
+#if LUV_UV_VERSION_GEQ(1, 41, 0)
+static int luv_socketpair(lua_State* L) {
+  int ret;
+  int socktype = SOCK_STREAM;
+  int protocol = 0; // 0 = let the protocol be chosen automatically
+  int flags0 = 0, flags1 = 0;
+  uv_os_sock_t socks[2];
+
+  // socktype
+  if (lua_isnumber(L, 1)) {
+    socktype = lua_tointeger(L, 1);
+  }
+  else if (lua_isstring(L, 1)) {
+    socktype = luv_sock_string_to_num(lua_tostring(L, 1));
+    if (socktype == 0) {
+      return luaL_argerror(L, 1, lua_pushfstring(L, "invalid socket type: %s", lua_tostring(L, 1)));
+    }
+  }
+  else if (!lua_isnoneornil(L, 1)) {
+    return luv_arg_type_error(L, 1, "socket type must be string or integer if set, got %s");
+  }
+  // protocol
+  if (lua_isnumber(L, 2)) {
+    protocol = lua_tointeger(L, 2);
+  }
+  else if (lua_isstring(L, 2)) {
+    protocol = luv_proto_string_to_num(lua_tostring(L, 2));
+    if (protocol < 0) {
+      return luaL_argerror(L, 2, lua_pushfstring(L, "invalid protocol: %s", lua_tostring(L, 2)));
+    }
+  }
+  else if (!lua_isnoneornil(L, 2)) {
+    return luv_arg_type_error(L, 2, "protocol must be string or integer if set, got %s");
+  }
+  // flags0
+  if (lua_type(L, 3) == LUA_TTABLE) {
+    lua_getfield(L, 3, "nonblock");
+    if (lua_toboolean(L, -1)) flags0 |= UV_NONBLOCK_PIPE;
+    lua_pop(L, 1);
+  } else if (!lua_isnoneornil(L, 3)) {
+    luv_arg_type_error(L, 3, "table or nil expected, got %s");
+  }
+  // flags1
+  if (lua_type(L, 4) == LUA_TTABLE) {
+    lua_getfield(L, 4, "nonblock");
+    if (lua_toboolean(L, -1)) flags1 |= UV_NONBLOCK_PIPE;
+    lua_pop(L, 1);
+  } else if (!lua_isnoneornil(L, 4)) {
+    luv_arg_type_error(L, 4, "table or nil expected, got %s");
+  }
+
+  ret = uv_socketpair(socktype, protocol, socks, flags0, flags1);
+  if (ret < 0) return luv_error(L, ret);
+
+  lua_createtable(L, 2, 0);
+  lua_pushinteger(L, socks[0]);
+  lua_rawseti(L, -2, 1);
+  lua_pushinteger(L, socks[1]);
+  lua_rawseti(L, -2, 2);
+  return 1;
+}
+#endif
