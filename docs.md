@@ -2037,6 +2037,7 @@ it's required that it represents a valid datagram socket.
 - `port`: `number`
 - `flags`: `table` or `nil`
   - `ipv6only`: `boolean`
+  - `reuseaddr`: `boolean`
 
 Bind the UDP handle to an IP address and port. Any `flags` are set with a table
 with fields `reuseaddr` or `ipv6only` equal to `true` or `false`.
