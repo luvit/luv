@@ -1609,6 +1609,48 @@ and `uv.tcp_close_reset()` calls is not allowed.
 
 **Returns:** `0` or `fail`
 
+### `uv.socketpair([socktype], [protocol], [flags1], [flags2])`
+
+**Parameters:**
+- `socktype`: `string`, `integer` or `nil` (default: `stream`)
+- `protocol`: `string`, `integer` or `nil` (default: 0)
+- `flags1`: `table` or `nil`
+  - `nonblock`: `boolean` (default: `false`)
+- `flags2`: `table` or `nil`
+  - `nonblock`: `boolean` (default: `false`)
+
+Create a pair of connected sockets with the specified properties. The resulting handles can be passed to `uv.tcp_open`, used with `uv.spawn`, or for any other purpose.
+
+When specified as a string, `socktype` must be one of `"stream"`, `"dgram"`, `"raw"`,
+`"rdm"`, or `"seqpacket"`.
+
+When `protocol` is set to 0 or nil, it will be automatically chosen based on the socket's domain and type. When `protocol` is specified as a string, it will be looked up using the `getprotobyname(3)` function (examples: `"ip"`, `"icmp"`, `"tcp"`, `"udp"`, etc).
+
+Flags:
+ - `nonblock`: Opens the specified socket handle for `OVERLAPPED` or `FIONBIO`/`O_NONBLOCK` I/O usage. This is recommended for handles that will be used by libuv, and not usually recommended otherwise.
+
+Equivalent to `socketpair(2)` with a domain of `AF_UNIX`.
+
+**Returns:** `table` or `fail`
+- `[1, 2]` : `integer` (file descriptor)
+
+```lua
+-- Simple read/write with tcp
+local fds = uv.socketpair(nil, nil, {nonblock=true}, {nonblock=true})
+
+local sock1 = uv.new_tcp()
+sock1:open(fds[1])
+
+local sock2 = uv.new_tcp()
+sock2:open(fds[2])
+
+sock1:write("hello")
+sock2:read_start(function(err, chunk)
+  assert(not err, err)
+  print(chunk)
+end)
+```
+
 ## `uv_pipe_t` — Pipe handle
 
 [`uv_pipe_t`]: #uv_pipe_t--pipe-handle

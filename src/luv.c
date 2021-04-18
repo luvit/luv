@@ -169,6 +169,9 @@ static const luaL_Reg luv_functions[] = {
 #if LUV_UV_VERSION_GEQ(1, 32, 0)
   {"tcp_close_reset", luv_tcp_close_reset},
 #endif
+#if LUV_UV_VERSION_GEQ(1, 41, 0)
+  {"socketpair", luv_socketpair},
+#endif
 
   // pipe.c
   {"new_pipe", luv_new_pipe},
