@@ -675,3 +675,9 @@ static int luv_proto_string_to_num(const char* string) {
   if (!proto) return -1;
   return proto->p_proto;
 }
+
+static const char* luv_proto_num_to_string(int num) {
+  struct protoent* proto = getprotobynumber(num);
+  if (!proto) return NULL;
+  return proto->p_name;
+}

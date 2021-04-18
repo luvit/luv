@@ -83,6 +83,7 @@ static const char* luv_sock_num_to_string(const int num);
 static int luv_sig_string_to_num(const char* string);
 static const char* luv_sig_num_to_string(const int num);
 static int luv_proto_string_to_num(const char* string);
+static const char* luv_proto_num_to_string(int num);
 
 /* From util.c */
 // Push a Libuv error code onto the Lua stack
