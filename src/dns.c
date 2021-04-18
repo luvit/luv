@@ -49,7 +49,7 @@ static void luv_pushaddrinfo(lua_State* L, struct addrinfo* res) {
       }
       lua_pushstring(L, luv_sock_num_to_string(curr->ai_socktype));
       lua_setfield(L, -2, "socktype");
-      lua_pushstring(L, luv_af_num_to_string(curr->ai_protocol));
+      lua_pushstring(L, luv_proto_num_to_string(curr->ai_protocol));
       lua_setfield(L, -2, "protocol");
       if (curr->ai_canonname) {
         lua_pushstring(L, curr->ai_canonname);
@@ -134,13 +134,11 @@ static int luv_getaddrinfo(lua_State* L) {
       hints->ai_protocol = lua_tointeger(L, -1);
     }
     else if (lua_isstring(L, -1)) {
-      int protocol = luv_af_string_to_num(lua_tostring(L, -1));
-      if (protocol) {
-        hints->ai_protocol = protocol;
+      int protocol = luv_proto_string_to_num(lua_tostring(L, -1));
+      if (protocol < 0) {
+        return luaL_argerror(L, 3, lua_pushfstring(L, "invalid protocol: %s", lua_tostring(L, -1)));
       }
-      else {
-        return luaL_argerror(L, 3, "Invalid protocol hint");
-      }
+      hints->ai_protocol = protocol;
     }
     else if (!lua_isnil(L, -1)) {
       return luaL_argerror(L, 3, "protocol hint must be string if set");
