@@ -235,6 +235,20 @@ return require('lib/tap')(function (test)
       server:recv_start(recv_cb)
 
       assert(client:send("PING", multicast_addr, TEST_PORT, expect(function(err)
+        -- EPERM here likely means that a firewall has denied the send, which
+        -- can happen in some build/CI environments, e.g. the Fedora build system.
+        -- Reproducible on Linux with iptables by doing:
+        --  iptables --policy OUTPUT DROP
+        --  iptables -A OUTPUT -s 127.0.0.1 -j ACCEPT
+        -- and for ipv6:
+        --  ip6tables --policy OUTPUT DROP
+        --  ip6tables -A OUTPUT -s ::1 -j ACCEPT
+        if err == "EPERM" then
+          print("send to multicast ip was likely denied by firewall, skipping")
+          client:close()
+          server:close()
+          return
+        end
         assert(not err, err)
       end)))
     end
