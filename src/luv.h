@@ -29,15 +29,27 @@
 # include <fcntl.h>
 # include <sys/types.h>
 # include <sys/stat.h>
-# ifndef __MINGW32__
-#   define S_ISREG(x)  (((x) & _S_IFMT) == _S_IFREG)
-#   define S_ISDIR(x)  (((x) & _S_IFMT) == _S_IFDIR)
-#   define S_ISFIFO(x) (((x) & _S_IFMT) == _S_IFIFO)
-#   define S_ISCHR(x)  (((x) & _S_IFMT) == _S_IFCHR)
-#   define S_ISBLK(x)  0
+# ifndef S_ISREG
+#  define S_ISREG(x)  (((x) & _S_IFMT) == _S_IFREG)
 # endif
-# define S_ISLNK(x)  (((x) & S_IFLNK) == S_IFLNK)
-# define S_ISSOCK(x) 0
+# ifndef S_ISDIR
+#  define S_ISDIR(x)  (((x) & _S_IFMT) == _S_IFDIR)
+# endif
+# ifndef S_ISFIFO
+#  define S_ISFIFO(x) (((x) & _S_IFMT) == _S_IFIFO)
+# endif
+# ifndef S_ISCHR
+#  define S_ISCHR(x)  (((x) & _S_IFMT) == _S_IFCHR)
+# endif
+# ifndef S_ISBLK
+#  define S_ISBLK(x)  0
+# endif
+# ifndef S_ISLNK
+#  define S_ISLNK(x)  (((x) & S_IFLNK) == S_IFLNK)
+# endif
+# ifndef S_ISSOCK
+#  define S_ISSOCK(x) 0
+# endif
 #else
 # include <unistd.h>
 #endif
