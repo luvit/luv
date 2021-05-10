@@ -705,7 +705,7 @@ LUALIB_API luv_ctx_t* luv_context(lua_State* L) {
   return ctx;
 }
 
-LUALIB_API luv_ctx_t* luv_new_context(lua_State* L) {
+static luv_ctx_t* luv_new_context(lua_State* L) {
   luv_ctx_t* ctx = (luv_ctx_t*)lua_newuserdata(L, sizeof(luv_ctx_t));
   memset(ctx, 0, sizeof(luv_ctx_t));
   luaL_getmetatable(L, LUV_CONTEXT_META);
