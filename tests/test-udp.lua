@@ -174,6 +174,8 @@ return require('lib/tap')(function (test)
   local function multicast_join_test(bind_addr, multicast_addr, interface_addr)
     return function(print, p, expect, uv)
       local uvVersionGEQ = require('lib/utils').uvVersionGEQ
+      local timeout = uv.new_timer()
+      local TIMEOUT_TIME = 1000
 
       local server = assert(uv.new_udp())
       assert(uv.udp_bind(server, bind_addr, TEST_PORT))
@@ -181,6 +183,7 @@ return require('lib/tap')(function (test)
       if errname == "ENODEV" then
         print("no multicast route, skipping")
         server:close()
+        timeout:close()
         return
       elseif errname == "EADDRNOTAVAIL" and multicast_addr == "ff02::1" then
         -- OSX, BSDs, and some other platforms need %lo in their multicast/interface addr
@@ -212,6 +215,7 @@ return require('lib/tap')(function (test)
           -- note: because of this conditional close, the test will fail with an unclosed handle if recv_cb_called
           -- doesn't hit 2, so we don't need to expect(recv_cb) or assert recv_cb_called == 2
           server:close()
+          timeout:close()
         else
           -- udp_set_source_membership added in 1.32.0
           if uvVersionGEQ("1.32.0") then
@@ -247,10 +251,20 @@ return require('lib/tap')(function (test)
           print("send to multicast ip was likely denied by firewall, skipping")
           client:close()
           server:close()
+          timeout:close()
           return
         end
         assert(not err, err)
       end)))
+
+      -- some firewalls might reject incoming messages from multicast IPs,
+      -- so we need a timeout to avoid hanging forever in that scenario
+      timeout:start(TIMEOUT_TIME, 0, expect(function()
+        print("timeout (could be caused by firewall settings)")
+        client:close()
+        server:close()
+        timeout:close()
+      end, 0))
     end
   end
 
