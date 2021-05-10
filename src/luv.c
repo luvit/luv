@@ -50,6 +50,8 @@
 #include "constants.c"
 #include "metrics.c"
 
+#define LUV_CONTEXT_META "luv_context.meta"
+
 static const luaL_Reg luv_functions[] = {
   // loop.c
   {"loop_close", luv_loop_close},
@@ -694,24 +696,20 @@ LUALIB_API int luv_cfpcall(lua_State* L, int nargs, int nresult, int flags) {
   return ret;
 }
 
-// TODO: see if we can avoid using a string key for this to increase performance
-static const char* luv_ctx_key = "luv_context";
-
 // Please look at luv_ctx_t in luv.h
 LUALIB_API luv_ctx_t* luv_context(lua_State* L) {
-  luv_ctx_t* ctx;
-  lua_pushstring(L, luv_ctx_key);
-  lua_rawget(L, LUA_REGISTRYINDEX);
-  if (lua_isnil(L, -1)) {
-    // create it if not exist in registry
-    lua_pushstring(L, luv_ctx_key);
-    ctx = (luv_ctx_t*)lua_newuserdata(L, sizeof(*ctx));
-    memset(ctx, 0, sizeof(*ctx));
-    lua_rawset(L, LUA_REGISTRYINDEX);
-  } else {
-    ctx = (luv_ctx_t*)lua_touserdata(L, -1);
+  luv_ctx_t* ctx = (luv_ctx_t*)lua_touserdata(L, lua_upvalueindex(1));
+  if (ctx == NULL) {
+    luaL_error(L, "uv context no exists");
   }
-  lua_pop(L, 1);
+  return ctx;
+}
+
+LUALIB_API luv_ctx_t* luv_new_context(lua_State* L) {
+  luv_ctx_t* ctx = (luv_ctx_t*)lua_newuserdata(L, sizeof(luv_ctx_t));
+  memset(ctx, 0, sizeof(luv_ctx_t));
+  luaL_getmetatable(L, LUV_CONTEXT_META);
+  lua_setmetatable(L, -2);
   return ctx;
 }
 
@@ -761,9 +759,12 @@ static int loop_gc(lua_State *L) {
 }
 
 LUALIB_API int luaopen_luv (lua_State* L) {
-  luv_ctx_t* ctx = luv_context(L);
+  luaL_newmetatable(L, LUV_CONTEXT_META);
+  lua_pop(L, 1);
 
-  luaL_newlib(L, luv_functions);
+  luaL_newlibtable(L, luv_functions);
+  luv_ctx_t* ctx = luv_new_context(L);
+  luaL_setfuncs(L, luv_functions, 1);
 
   // loop is NULL, luv need to create an inner loop
   if (ctx->loop==NULL) {
