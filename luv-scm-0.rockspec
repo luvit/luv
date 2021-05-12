@@ -27,6 +27,7 @@ build = {
      CMAKE_MODULE_LINKER_FLAGS="$(LIBFLAG)",
      LUA_LIBDIR="$(LUA_LIBDIR)",
      LUA_INCDIR="$(LUA_INCDIR)",
+     LUA_LIBFILE="$(LUALIB)",
      LUA="$(LUA)",
      LIBDIR="$(LIBDIR)",
      LUADIR="$(LUADIR)",
