@@ -133,7 +133,6 @@ static int luv_pipe_chmod(lua_State* L) {
 
 #if LUV_UV_VERSION_GEQ(1,41,0)
 static int luv_pipe(lua_State* L) {
-  luv_ctx_t* ctx = luv_context(L);
   int read_flags = 0, write_flags = 0;
   uv_file fds[2];
   int ret;
