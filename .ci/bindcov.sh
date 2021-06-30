@@ -32,6 +32,11 @@ skipped+=(
 	uv_dlsym uv_dlerror uv_udp_using_recvmmsg uv_fs_get_system_error
 )
 
+if [[ ! -f deps/libuv/include/uv.h ]] ; then
+	echo "Missing deps/libuv/include/uv.h, make sure submodules have been initialized"
+	exit 1
+fi
+
 # get all public uv_ functions from uv.h
 for fn in `grep -oP "UV_EXTERN [^\(]+ uv_[^\(]+\(" deps/libuv/include/uv.h | sed 's/($//' | grep -oP "[^ ]+$"`; do
 	# skip everything in the skipped array and any initialization/cleanup fns
