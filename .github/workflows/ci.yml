@@ -1,0 +1,59 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  bindings-coverage:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      run: ./.ci/bindcov.sh
+
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+        include:
+          - luarocks_version: 2.3.0
+            lua_engine: Lua
+            lua_version: lua5.3
+          - luarocks_version: 2.3.0
+            lua_engine: LuaJIT
+            lua_version: luajit2.1
+          - luarocks_version: 3.4.0
+            lua_engine: Lua
+            lua_version: lua5.4
+          - luarocks_version: 3.4.0
+            lua_engine: LuaJIT
+            lua_version: luajit2.1
+    env:
+      # For LuaJIT 2.1, see https://github.com/LuaJIT/LuaJIT/commit/8961a92dd1607108760694af3486b4434602f8be
+      MACOSX_DEPLOYMENT_TARGET: 10.12
+      LUAROCKS: ${{ matrix.luarocks_version }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build
+      run: make
+
+    - name: Test
+      run: make test
+
+    - name: Setup Luarocks
+      run: source .ci/setenv_lua.sh
+
+    - name: Build with Luarocks
+      run: |
+        luarocks make
+        test $PWD = `lua -e "print(require'luv'.cwd())"`
+        luarocks remove luv
+
+    - name: Build with Luarocks (alternate rockspec)
+      run: |
+        mkdir ${{github.workspace}}/build/lib
+        cp ${{github.workspace}}/build/deps/libuv/libuv_a.a ${{github.workspace}}/build/lib/libuv.a
+        cp -a ${{github.workspace}}/deps/libuv/include ${{github.workspace}}/build
+        luarocks make rockspecs/$(ls rockspecs) LIBUV_DIR=${{github.workspace}}/build LUA_COMPAT53_INCDIR=${{github.workspace}}/deps/lua-compat-5.3/c-api
+        test $PWD = `lua -e "print(require'luv'.cwd())"`
