@@ -79,15 +79,15 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest]
-        luarocks_version: [2.3.0, 3.4.0]
+        luarocks_version: [2.4.4, 3.7.0]
         lua_engine: [Lua, LuaJIT]
         include:
           - lua_engine: LuaJIT
             lua_version: luajit2.1
           - lua_engine: Lua
             lua_version: lua5.4
-          # use 5.3 with Luarocks 2.3.0
-          - luarocks_version: 2.3.0
+          # use 5.3 with Luarocks 2.x
+          - luarocks_version: 2.4.4
             lua_engine: Lua
             lua_version: lua5.3
     env:
