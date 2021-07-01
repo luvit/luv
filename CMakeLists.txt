@@ -88,7 +88,26 @@ if (LUA)
   SET(INSTALL_LIB_DIR ${LIBDIR})
 
   if (LUA_LIBDIR)
-    get_filename_component(LUA_LIBRARIES "${LUA_LIBDIR}/${LUA_LIBFILE}" ABSOLUTE)
+    if (NOT LUA_LIBFILE)
+      # If LIBDIR is set but LIBFILE is not, then that means
+      # Luarocks 2.x is being used, and we'll need to find the lib
+      # ourselves
+      GET_FILENAME_COMPONENT(LUA_EXEC_NAME ${LUA_EXECUTABLE} NAME_WE)
+      IF(LUA_EXEC_NAME STREQUAL "luajit")
+      FIND_LIBRARY(LUA_LIBRARIES
+        NAMES luajit libluajit
+        PATHS ${LUA_LIBDIR}
+        NO_DEFAULT_PATH)
+      ELSEIF(LUA_EXEC_NAME MATCHES "lua.*")
+        FIND_LIBRARY(LUA_LIBRARIES
+          NAMES lua lua54 lua53 lua52 lua51 liblua liblua54 liblua53 liblua52 liblua51
+          PATHS ${LUA_LIBDIR}
+          NO_DEFAULT_PATH)
+      ENDIF()
+    else()
+      # Otherwise, we can just use the LIBFILE that Luarocks provides
+      get_filename_component(LUA_LIBRARIES "${LUA_LIBDIR}/${LUA_LIBFILE}" ABSOLUTE)
+    endif()
     MESSAGE(STATUS "Lua library: ${LUA_LIBRARIES}")
   else()
     MESSAGE(STATUS "Lua library not set, presuming LuaRocks config has link_lua_explicitly set to false")
