@@ -13,9 +13,9 @@ LUAJIT_BASE="LuaJIT-$LUAJIT_VERSION"
 
 source .ci/platform.sh
 
-LUA_HOME_DIR=$TRAVIS_BUILD_DIR/install/lua
+LUA_HOME_DIR=$GITHUB_WORKSPACE/install/lua
 
-LR_HOME_DIR=$TRAVIS_BUILD_DIR/install/luarocks
+LR_HOME_DIR=$GITHUB_WORKSPACE/install/luarocks
 
 mkdir "$HOME/.lua"
 
@@ -84,7 +84,7 @@ else
 
 fi
 
-cd "$TRAVIS_BUILD_DIR"
+cd "$GITHUB_WORKSPACE"
 
 lua -v
 
@@ -118,7 +118,7 @@ make build && make install
 
 ln -s "$LR_HOME_DIR/bin/luarocks" "$HOME/.lua/luarocks"
 
-cd "$TRAVIS_BUILD_DIR"
+cd "$GITHUB_WORKSPACE"
 
 luarocks --version
 
