@@ -128,3 +128,48 @@ jobs:
         cp -a ${{github.workspace}}/deps/libuv/include ${{github.workspace}}/build
         luarocks make rockspecs/$(ls rockspecs) LIBUV_DIR=${{github.workspace}}/build LUA_COMPAT53_INCDIR=${{github.workspace}}/deps/lua-compat-5.3/c-api
         test $PWD = `lua -e "print(require'luv'.cwd())"`
+
+  deploy:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build, minimum-supported-libuv, process-cleanup-test, valgrind, clang-asan, bindings-coverage]
+    runs-on: ubuntu-latest
+    env:
+      WITH_LUA_ENGINE: LuaJIT
+      LUA: luajit2.1
+      LUAROCKS: 3.7.0
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Get version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+
+    - name: Setup
+      run: |
+        source .ci/setenv_lua.sh
+        echo "$HOME/.lua" >> $GITHUB_PATH
+        echo "LUA_PATH=$LUA_PATH" >> $GITHUB_ENV
+        echo "LUA_CPATH=$LUA_CPATH" >> $GITHUB_ENV
+
+    - name: Build
+      run: .ci/make_rockspec.sh ${{ steps.get_version.outputs.VERSION }}
+
+    - name: Github Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        files: luv-${{ steps.get_version.outputs.VERSION }}.tar.gz
+        draft: false
+        prerelease: false
+
+    - name: Luarocks Release
+      # lua-cjson is required for luarocks upload
+      env:
+        LUAROCKS_API_KEY: ${{ secrets.LUAROCKS_API_KEY }}
+      run: |
+        luarocks install lua-cjson
+        luarocks upload luv-${{ steps.get_version.outputs.VERSION }}.rockspec --api-key=$LUAROCKS_API_KEY --force
