@@ -16,19 +16,19 @@
  */
 #ifndef LUV_H
 #define LUV_H
+#include "uv.h"
+#include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
-#include <lauxlib.h>
-#include "uv.h"
 
-#include <string.h>
-#include <stdlib.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
 #if defined(_WIN32)
 # include <fcntl.h>
-# include <sys/types.h>
 # include <sys/stat.h>
+# include <sys/types.h>
 # ifndef S_ISREG
 #  define S_ISREG(x)  (((x) & _S_IFMT) == _S_IFREG)
 # endif

@@ -6,11 +6,11 @@
 #include "compat-5.3.h"
 #endif
 
-#include "luv.h"
-#include "util.h"
 #include "lhandle.h"
 #include "lreq.h"
 #include "lthreadpool.h"
+#include "luv.h"
+#include "util.h"
 
 #if defined(__clang__)
 #pragma clang diagnostic push
