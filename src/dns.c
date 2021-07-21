@@ -17,9 +17,9 @@
 
 #include "private.h"
 #ifndef WIN32
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <netdb.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #endif
 
 static void luv_pushaddrinfo(lua_State* L, struct addrinfo* res) {

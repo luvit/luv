@@ -11,6 +11,11 @@ set(LUV_VERSION_MINOR 41)
 set(LUV_VERSION_PATCH 1)
 set(LUV_VERSION ${LUV_VERSION_MAJOR}.${LUV_VERSION_MINOR}.${LUV_VERSION_PATCH})
 
+if(NOT ${CMAKE_VERSION} VERSION_LESS "3.5.0")
+    # generate compilation database used by C code intelligence tools
+  set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+endif()
+
 option(BUILD_MODULE "Build as module" ON)
 option(BUILD_STATIC_LIBS "Build static library" OFF)
 option(BUILD_SHARED_LIBS "Build shared library" OFF)
