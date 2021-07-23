@@ -148,6 +148,9 @@ static const luaL_Reg luv_functions[] = {
   {"write", luv_write},
   {"write2", luv_write2},
   {"try_write", luv_try_write},
+#if LUV_UV_VERSION_GEQ(1, 42, 0)
+  {"try_write2", luv_try_write2},
+#endif
   {"is_readable", luv_is_readable},
   {"is_writable", luv_is_writable},
   {"stream_set_blocking", luv_stream_set_blocking},
@@ -447,6 +450,9 @@ static const luaL_Reg luv_stream_methods[] = {
   {"write", luv_write},
   {"write2", luv_write2},
   {"try_write", luv_try_write},
+#if LUV_UV_VERSION_GEQ(1, 42, 0)
+  {"try_write2", luv_try_write2},
+#endif
   {"is_readable", luv_is_readable},
   {"is_writable", luv_is_writable},
   {"set_blocking", luv_stream_set_blocking},
