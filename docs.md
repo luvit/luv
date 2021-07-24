@@ -1383,6 +1383,21 @@ Will return number of bytes written (can be less than the supplied buffer size).
 
 **Returns:** `integer` or `fail`
 
+### `uv.try_write2(stream, data, send_handle)`
+
+> method form `stream:try_write2(data, send_handle)`
+
+**Parameters:**
+- `stream`: `userdata` for sub-type of `uv_stream_t`
+- `data`: `buffer`
+- `send_handle`: `userdata` for sub-type of `uv_stream_t`
+
+Like `uv.write2()`, but with the properties of `uv.try_write()`. Not supported on Windows, where it returns `UV_EAGAIN`.
+
+Will return number of bytes written (can be less than the supplied buffer size).
+
+**Returns:** `integer` or `fail`
+
 ### `uv.is_readable(stream)`
 
 > method form `stream:is_readable()`

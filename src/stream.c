@@ -190,6 +190,21 @@ static int luv_try_write(lua_State* L) {
   return 1;
 }
 
+#if LUV_UV_VERSION_GEQ(1, 42, 0)
+static int luv_try_write2(lua_State* L) {
+  uv_stream_t* handle = luv_check_stream(L, 1);
+  int err_or_num_bytes;
+  size_t count;
+  uv_stream_t* send_handle = luv_check_stream(L, 3);
+  uv_buf_t* bufs = luv_check_bufs_noref(L, 2, &count);
+  err_or_num_bytes = uv_try_write2(handle, bufs, count, send_handle);
+  free(bufs);
+  if (err_or_num_bytes < 0) return luv_error(L, err_or_num_bytes);
+  lua_pushinteger(L, err_or_num_bytes);
+  return 1;
+}
+#endif
+
 static int luv_is_readable(lua_State* L) {
   uv_stream_t* handle = luv_check_stream(L, 1);
   lua_pushboolean(L, uv_is_readable(handle));
