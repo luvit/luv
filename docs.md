@@ -2014,7 +2014,7 @@ Returns the handle's send queue size.
 
 ### `uv.udp_get_send_queue_count()`
 
-> method form `udp:get_send_count_size()`
+> method form `udp:get_send_queue_count()`
 
 Returns the handle's send queue count.
 
@@ -2988,6 +2988,8 @@ that should be returned by each call to `uv.fs_readdir()`.
 
 ### `uv.fs_readdir(dir, [callback])`
 
+> method form `dir:readdir([callback])`
+
 **Parameters:**
 - `dir`: `uv_dir_t userdata`
 - `callback`: `callable` (async version) or `nil` (sync version)
@@ -3007,6 +3009,8 @@ the associated `uv.fs_opendir()` call.
 **Returns (async version):** `uv_fs_t userdata`
 
 ### `uv.fs_closedir(dir, [callback])`
+
+> method form `dir:closedir([callback])`
 
 **Parameters:**
 - `dir`: `uv_dir_t userdata`
@@ -3606,6 +3610,15 @@ low on entropy.
 **Returns (sync version):** `string` or `fail`
 
 **Returns (async version):** `0` or `fail`
+
+### `uv.translate_sys_error(errcode)`
+
+**Parameters:**
+- `errcode`: `integer`
+
+Returns the libuv error message and error name (both in string form, see [`err` and `name` in Error Handling](#error-handling)) equivalent to the given platform dependent error code: POSIX error codes on Unix (the ones stored in errno), and Win32 error codes on Windows (those returned by GetLastError() or WSAGetLastError()).
+
+**Returns:** `string, string` or `nil`
 
 ## Metrics operations
 
