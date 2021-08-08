@@ -653,6 +653,7 @@ static void luv_req_init(lua_State* L) {
 LUALIB_API int luv_cfpcall(lua_State* L, int nargs, int nresult, int flags) {
   int ret, top, errfunc;
 
+  top  = lua_gettop(L);
   // Get the traceback function in case of error
   if ((flags & (LUVF_CALLBACK_NOTRACEBACK|LUVF_CALLBACK_NOERRMSG) ) == 0)
   {
@@ -663,7 +664,6 @@ LUALIB_API int luv_cfpcall(lua_State* L, int nargs, int nresult, int flags) {
     errfunc -= (nargs+1);
   }else
     errfunc = 0;
-  top  = lua_gettop(L);
 
   ret = lua_pcall(L, nargs, nresult, errfunc);
   switch (ret) {
