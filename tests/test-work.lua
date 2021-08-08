@@ -1,4 +1,13 @@
 return require('lib/tap')(function (test)
+
+  test("test threadpool with return none", function(print,p,expect,_uv)
+    local work_fn = function() end
+    local after_work_fn = function() end
+    local work_ctx = _uv.new_work(work_fn, after_work_fn)
+
+    work_ctx:queue()
+  end)
+
   test("test threadpool", function(print,p,expect,_uv)
     p('Please be patient, the test cost a lots of time')
     local count = 1000 --for memleaks dected
