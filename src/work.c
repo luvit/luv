@@ -181,6 +181,7 @@ static int luv_queue_work(lua_State* L) {
   luv_work_t* work = (luv_work_t*)malloc(sizeof(*work));
   int ret, n;
 
+  memset(work, 0, sizeof(*work));
   //prepare lua_State for threadpool
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->pool_ref);
   n = lua_rawlen(L, -1);
