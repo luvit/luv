@@ -68,6 +68,7 @@ static void luv_work_cb(uv_work_t* req) {
   luv_work_t* work = (luv_work_t*)req->data;
   luv_work_ctx_t* ctx = work->ctx;
   lua_State *L = work->args.L;
+  luv_ctx_t *lctx = luv_context(L);
 
   int top = lua_gettop(L);
 
@@ -93,7 +94,7 @@ static void luv_work_cb(uv_work_t* req) {
 
   if (lua_isfunction(L, -1)) {
     int i = luv_thread_arg_push(L, &work->args, LUVF_THREAD_SIDE_CHILD);
-    i = luv_cfpcall(L, i, LUA_MULTRET, 0);
+    i = lctx->thrd_pcall(L, i, LUA_MULTRET, 0);
     if ( i>=0 ) {
       //clear in main threads, luv_after_work_cb
       i = luv_thread_arg_set(L, &work->rets, top + 1, lua_gettop(L),

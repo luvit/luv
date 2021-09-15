@@ -741,7 +741,13 @@ LUALIB_API void luv_set_loop(lua_State* L, uv_loop_t* loop) {
 // Set an external event callback routine, before luaopen_luv
 LUALIB_API void luv_set_callback(lua_State* L, luv_CFpcall pcall) {
   luv_ctx_t* ctx = luv_context(L);
-  ctx->pcall = pcall;
+  ctx->cb_pcall = pcall;
+}
+
+// Set an external thread routine, before luaopen_luv
+LUALIB_API void luv_set_thread(lua_State* L, luv_CFpcall pcall) {
+  luv_ctx_t* ctx = luv_context(L);
+  ctx->thrd_pcall = pcall;
 }
 
 static void walk_cb(uv_handle_t *handle, void *arg)
@@ -803,8 +809,13 @@ LUALIB_API int luaopen_luv (lua_State* L) {
     }
   }
   // pcall is NULL, luv use default callback routine
-  if (ctx->pcall==NULL) {
-    ctx->pcall = luv_cfpcall;
+  if (ctx->cb_pcall==NULL) {
+    ctx->cb_pcall = luv_cfpcall;
+  }
+
+  // pcall is NULL, luv use default thread routine
+  if (ctx->thrd_pcall==NULL) {
+    ctx->thrd_pcall = luv_cfpcall;
   }
 
   luv_req_init(L);

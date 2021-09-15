@@ -99,7 +99,7 @@ static void luv_walk_cb(uv_handle_t* handle, void* arg) {
 
   lua_pushvalue(L, 1);           // Copy the function
   luv_find_handle(L, data);      // Get the userdata
-  data->ctx->pcall(L, 1, 0, 0);  // Call the function
+  data->ctx->cb_pcall(L, 1, 0, 0);  // Call the function
 }
 
 static int luv_walk(lua_State* L) {
