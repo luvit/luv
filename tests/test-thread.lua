@@ -82,4 +82,11 @@ return require('lib/tap')(function (test)
     assert(elapsed >= 100, "elapsed should be at least delay ")
   end, "1.26.0")
 
+  test("test thread create with invalid arguments", function(print, p, expect, uv)
+    local thread = uv.new_thread(function(t)
+      assert(t==nil)
+    end, {})
+    thread:join()
+  end)
+
 end)

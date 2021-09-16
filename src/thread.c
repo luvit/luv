@@ -103,8 +103,8 @@ static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int
       }
       break;
     default:
-      fprintf(stderr, "Error: thread arg not support type '%s' at %d",
-        lua_typename(L, arg->type), i);
+      fprintf(stderr, "Error: thread arg #%d not support %s type\n",
+        i - idx + 1, lua_typename(L, arg->type));
       arg->val.str.base = NULL;
       arg->val.str.len = 0;
       break;
@@ -199,8 +199,7 @@ static int luv_thread_arg_push(lua_State* L, luv_thread_arg_t* args, int flags) 
       }
       break;
     default:
-      fprintf(stderr, "Error: thread arg not support type %s at %d",
-        lua_typename(L, arg->type), i + 1);
+      lua_pushnil(L);
     }
     i++;
   };
