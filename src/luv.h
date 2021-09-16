@@ -84,14 +84,21 @@
  */
 typedef int (*luv_CFpcall) (lua_State* L, int nargs, int nresults, int flags);
 
+typedef int (*luv_CFcpcall) (lua_State* L, lua_CFunction func, void* ud, int flags);
+
 /* Default implemention of event callback */
 LUALIB_API int luv_cfpcall(lua_State* L, int nargs, int nresult, int flags);
+
+/* Default implemention of thread entory function */
+LUALIB_API int luv_cfcpcall(lua_State* L, lua_CFunction func, void* ud, int flags);
 
 typedef struct {
   uv_loop_t*   loop;        /* main loop */
   lua_State*   L;           /* main thread,ensure coroutines works */
   luv_CFpcall  cb_pcall;    /* luv event callback function in protected mode */
   luv_CFpcall  thrd_pcall;  /* luv thread function in protected mode*/
+  luv_CFcpcall thrd_cpcall; /* luv thread c function in protected mode*/
+
   int          mode;        /* the mode used to run the loop (-1 if not running) */
 
   void* extra;              /* extra data */
@@ -126,6 +133,13 @@ LUALIB_API void luv_set_callback(lua_State* L, luv_CFpcall pcall);
    (otherwise luv will use the default callback function: luv_cfpcall)
 */
 LUALIB_API void luv_set_thread(lua_State* L, luv_CFpcall pcall);
+
+/* Set or clear an external c routine for luv c thread When using
+ * a custom/external function, this must be called before luaopen_luv
+ * in the function that create the lua_State of the thread
+   (otherwise luv will use the default callback function: luv_cfcpcall)
+*/
+LUALIB_API void luv_set_cthread(lua_State* L, luv_CFcpcall cpcall);
 
 /* This is the main hook to load the library.
    This can be called multiple times in a process as long

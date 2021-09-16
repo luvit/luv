@@ -700,6 +700,15 @@ LUALIB_API int luv_cfpcall(lua_State* L, int nargs, int nresult, int flags) {
   return ret;
 }
 
+// Call lua c function in protected mode. When error occurs, it will print
+// error message to stderr, and memory allocation error will cause exit.
+LUALIB_API int luv_cfcpcall(lua_State* L, lua_CFunction func, void * ud, int flags) {
+  lua_pushcfunction(L, func);
+  lua_pushlightuserdata(L, ud);
+  int ret = luv_cfpcall(L, 1, 0, flags);
+  return ret;
+}
+
 // TODO: see if we can avoid using a string key for this to increase performance
 static const char* luv_ctx_key = "luv_context";
 
@@ -748,6 +757,12 @@ LUALIB_API void luv_set_callback(lua_State* L, luv_CFpcall pcall) {
 LUALIB_API void luv_set_thread(lua_State* L, luv_CFpcall pcall) {
   luv_ctx_t* ctx = luv_context(L);
   ctx->thrd_pcall = pcall;
+}
+
+// Set an external c thread routine, before luaopen_luv
+LUALIB_API void luv_set_cthread(lua_State* L, luv_CFcpcall cpcall) {
+  luv_ctx_t* ctx = luv_context(L);
+  ctx->thrd_cpcall = cpcall;
 }
 
 static void walk_cb(uv_handle_t *handle, void *arg)
@@ -816,6 +831,10 @@ LUALIB_API int luaopen_luv (lua_State* L) {
   // pcall is NULL, luv use default thread routine
   if (ctx->thrd_pcall==NULL) {
     ctx->thrd_pcall = luv_cfpcall;
+  }
+
+  if (ctx->thrd_cpcall==NULL) {
+    ctx->thrd_cpcall = luv_cfcpcall;
   }
 
   luv_req_init(L);
