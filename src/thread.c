@@ -271,13 +271,14 @@ static void luv_thread_cb(void* varg) {
   //acquire vm and get top
   luv_thread_t* thd = (luv_thread_t*)varg;
   lua_State* L = acquire_vm_cb();
+  luv_ctx_t *ctx = luv_context(L);
 
   //push lua function, thread entry
   if (luaL_loadbuffer(L, thd->code, thd->len, "=thread") == 0) {
     //push parameter for real thread function
     int i = luv_thread_arg_push(L, &thd->args, LUVF_THREAD_SIDE_CHILD);
 
-    luv_cfpcall(L, i, 0, 0);
+    ctx->thrd_pcall(L, i, 0, 0);
     luv_thread_arg_clear(L, &thd->args, LUVF_THREAD_SIDE_CHILD);
   } else {
     fprintf(stderr, "Uncaught Error in thread: %s\n", lua_tostring(L, -1));

@@ -59,7 +59,7 @@ static void luv_fulfill_req(lua_State* L, luv_req_t* data, int nargs) {
     if (nargs) {
       lua_insert(L, -1 - nargs);
     }
-    data->ctx->pcall(L, nargs, 0, 0);
+    data->ctx->cb_pcall(L, nargs, 0, 0);
   }
 }
 
