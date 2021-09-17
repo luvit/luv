@@ -118,8 +118,8 @@ return require('lib/tap')(function (test)
     local after_work_fn = function() end
     local work_ctx = _uv.new_work(work_fn, after_work_fn)
 
-    local ok, msg = pcall(work_ctx.queue, work_ctx, {})
-    assert(ok==false)
+    local ok, msg = work_ctx.queue(work_ctx, {})
+    assert(ok==nil)
     assert(msg=="thread arg #1 not support table type")
   end)
 
@@ -130,7 +130,7 @@ return require('lib/tap')(function (test)
     end)
     local work_ctx = _uv.new_work(work_fn, after_work_fn)
 
-    work_ctx:queue()
+    assert(work_ctx:queue())
   end)
 
 end)

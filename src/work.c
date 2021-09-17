@@ -202,7 +202,17 @@ static int luv_queue_work(lua_State* L) {
     work->args.L = acquire_vm_cb();
   lua_pop(L, 1);
 
-  luv_thread_arg_set(L, &work->args, 2, top, LUVF_THREAD_SIDE_MAIN); //clear in sub threads,luv_work_cb
+  //clear in sub threads,luv_work_cb
+  ret = luv_thread_arg_set(L, &work->args, 2, top, LUVF_THREAD_SIDE_MAIN);
+  if (ret<0)
+  {
+    luv_thread_arg_clear(L, &work->args, LUVF_THREAD_SIDE_MAIN);
+    free(work);
+    lua_pushnil(L);
+    lua_insert(L, lua_gettop(L) - 1);
+    return 2;
+  }
+
   work->ctx = ctx;
   work->work.data = work;
   ret = uv_queue_work(luv_loop(L), &work->work, luv_work_cb, luv_after_work_cb);

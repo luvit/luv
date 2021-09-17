@@ -103,14 +103,23 @@ static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int
       }
       break;
     default:
-      if (side==LUVF_THREAD_SIDE_MAIN)
-        return luaL_error(L, "thread arg #%d not support %s type",
-          i - idx + 1, lua_typename(L, arg->type));
-
-      fprintf(stderr, "Error: return value #%d not support %s type\n",
-        i - idx + 1, lua_typename(L, arg->type));
       arg->val.str.base = NULL;
       arg->val.str.len = 0;
+      args->argc = i - idx + 1;
+
+      if(side == LUVF_THREAD_SIDE_MAIN)
+      {
+        lua_pushfstring(L, "thread arg #%d not support %s type",
+          args->argc,
+          lua_typename(L, arg->type));
+
+        return -args->argc;
+      } else {
+        fprintf(stderr, "return value #%d not support %s type\n",
+          args->argc,
+          lua_typename(L, arg->type));
+      }
+      arg->type = LUA_TNIL;
     }
     i++;
   }
@@ -335,6 +344,14 @@ static int luv_new_thread(lua_State* L) {
   //clear in luv_thread_gc or in child threads
   thread->argc = luv_thread_arg_set(L, &thread->args, cbidx+1, lua_gettop(L) - 1, LUVF_THREAD_SIDE_MAIN);
   thread->len = len;
+
+  if (thread->argc < 0)
+  {
+    thread->argc = -thread->argc;
+    lua_pushnil(L);
+    lua_insert(L, lua_gettop(L) -1);
+    return 2;
+  }
 
 #if LUV_UV_VERSION_GEQ(1, 26, 0)
   ret = uv_thread_create_ex(&thread->handle, &options, luv_thread_cb, thread);
