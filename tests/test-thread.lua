@@ -83,10 +83,10 @@ return require('lib/tap')(function (test)
   end, "1.26.0")
 
   test("test thread create with invalid arguments", function(print, p, expect, uv)
-    local thread = uv.new_thread(function(t)
-      assert(t==nil)
+    local ok, msg = pcall(uv.new_thread, function(t)
     end, {})
-    thread:join()
+    assert(ok==false)
+    assert(msg=="thread arg #1 not support table type")
   end)
 
 end)
