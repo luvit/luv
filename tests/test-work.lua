@@ -113,7 +113,6 @@ return require('lib/tap')(function (test)
     coroutine.resume(co)
   end)
 
---[[
   test("test threadpool with invalid argument", function(print,p,expect,_uv)
     local work_fn = function() end
     local after_work_fn = function() end
@@ -123,7 +122,7 @@ return require('lib/tap')(function (test)
     assert(ok==nil)
     assert(msg=="thread arg #1 not support table type")
   end)
---]]
+
   test("test threadpool with invalid return value", function(print,p,expect,_uv)
     local work_fn = function() return {} end
     local after_work_fn = expect(function(val)

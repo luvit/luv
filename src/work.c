@@ -208,6 +208,7 @@ static int luv_queue_work(lua_State* L) {
   {
     luv_thread_arg_clear(L, &work->args, LUVF_THREAD_SIDE_MAIN);
     free(work);
+    lua_settop(L, top);
     lua_pushnil(L);
     lua_insert(L, lua_gettop(L) - 1);
     return 2;
