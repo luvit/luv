@@ -140,13 +140,14 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
   luv_work_t* work = (luv_work_t*)req->data;
   luv_work_ctx_t* ctx = work->ctx;
   lua_State* L = ctx->L;
+  luv_ctx_t *lctx = luv_context(L);
   int i;
 
   (void)status;
 
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->after_work_cb);
   i = luv_thread_arg_push(L, &work->rets, LUVF_THREAD_SIDE_MAIN);
-  luv_cfpcall(L, i, 0, 0);
+  lctx->cb_pcall(L, i, 0, 0);
 
   //cache lua_State to reuse
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->pool_ref);
