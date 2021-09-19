@@ -226,6 +226,13 @@ static int luv_queue_work(lua_State* L) {
 
   ret = luv_thread_arg_set(L, &work->args, 2, top, LUVF_THREAD_SIDE_MAIN); //clear in sub threads,luv_work_cb
   if (ret < 0) {
+    //cache lua_State to reuse
+    lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->pool_ref);
+    int i = lua_rawlen(L, -1);
+    *(lua_State**)lua_newuserdata(L, sizeof(lua_State*)) = work->args.L;
+    lua_rawseti(L, -2, i+1);
+    lua_pop(L, 1);
+
     luv_thread_arg_clear(L, &work->args, LUVF_THREAD_SIDE_MAIN);
     free(work);
     return luv_thread_arg_error(L);
@@ -234,6 +241,13 @@ static int luv_queue_work(lua_State* L) {
   work->work.data = work;
   ret = uv_queue_work(luv_loop(L), &work->work, luv_work_cb_wrapper, luv_after_work_cb);
   if (ret < 0) {
+    //cache lua_State to reuse
+    lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->pool_ref);
+    int i = lua_rawlen(L, -1);
+    *(lua_State**)lua_newuserdata(L, sizeof(lua_State*)) = work->args.L;
+    lua_rawseti(L, -2, i+1);
+    lua_pop(L, 1);
+
     luv_thread_arg_clear(L, &work->args, LUVF_THREAD_SIDE_MAIN);
     free(work);
     return luv_error(L, ret);
