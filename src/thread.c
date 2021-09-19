@@ -104,8 +104,9 @@ static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int
       break;
     default:
       args->argc = i - idx;
-      return luaL_error(L, "Error: thread arg not support type '%s' at %d",
-        lua_typename(L, arg->type), i - idx + 1);
+      lua_pushinteger(L, arg->type);
+      lua_pushinteger(L, i - idx + 1);
+      return -1;
     }
     i++;
   }
@@ -203,6 +204,14 @@ static int luv_thread_arg_push(lua_State* L, luv_thread_arg_t* args, int flags) 
     i++;
   };
   return i;
+}
+
+static int luv_thread_arg_error(lua_State *L) {
+  int type = lua_tointeger(L, -2);
+  int pos = lua_tointeger(L, -1);
+  lua_pop(L, 2);
+  return luaL_error(L, "Error: thread arg not support type '%s' at %d",
+    lua_typename(L, type), pos);
 }
 
 // Copied from lstrlib.c in Lua 5.4.3
@@ -330,6 +339,9 @@ static int luv_new_thread(lua_State* L) {
   lua_remove(L, -2);
   //clear in luv_thread_gc or in child threads
   thread->argc = luv_thread_arg_set(L, &thread->args, cbidx+1, lua_gettop(L) - 1, LUVF_THREAD_SIDE_MAIN);
+  if (thread->argc < 0) {
+    return luv_thread_arg_error(L);
+  }
   thread->len = len;
 
 #if LUV_UV_VERSION_GEQ(1, 26, 0)
