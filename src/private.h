@@ -121,6 +121,7 @@ static const char* luv_getmtname(lua_State *L, int idx);
 static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int top, int flags);
 static int luv_thread_arg_push(lua_State* L, luv_thread_arg_t* args, int flags);
 static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags);
+static int luv_thread_arg_error(lua_State* L);
 
 static luv_acquire_vm acquire_vm_cb = NULL;
 static luv_release_vm release_vm_cb = NULL;

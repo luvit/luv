@@ -102,6 +102,9 @@ static int luv_work_cb(lua_State* L) {
       //clear in main threads, luv_after_work_cb
       i = luv_thread_arg_set(L, &work->rets, top + 1, lua_gettop(L),
           LUVF_THREAD_MODE_ASYNC|LUVF_THREAD_SIDE_CHILD);
+      if (i < 0) {
+        return luv_thread_arg_error(L);
+      }
       lua_pop(L, i);  // pop all returned value
       luv_thread_arg_clear(L, &work->rets, LUVF_THREAD_MODE_ASYNC|LUVF_THREAD_SIDE_CHILD);
     }
@@ -221,11 +224,17 @@ static int luv_queue_work(lua_State* L) {
     work->args.L = acquire_vm_cb();
   lua_pop(L, 1);
 
-  luv_thread_arg_set(L, &work->args, 2, top, LUVF_THREAD_SIDE_MAIN); //clear in sub threads,luv_work_cb
+  ret = luv_thread_arg_set(L, &work->args, 2, top, LUVF_THREAD_SIDE_MAIN); //clear in sub threads,luv_work_cb
+  if (ret < 0) {
+    luv_thread_arg_clear(L, &work->args, LUVF_THREAD_SIDE_MAIN);
+    free(work);
+    return luv_thread_arg_error(L);
+  }
   work->ctx = ctx;
   work->work.data = work;
   ret = uv_queue_work(luv_loop(L), &work->work, luv_work_cb_wrapper, luv_after_work_cb);
   if (ret < 0) {
+    luv_thread_arg_clear(L, &work->args, LUVF_THREAD_SIDE_MAIN);
     free(work);
     return luv_error(L, ret);
   }
