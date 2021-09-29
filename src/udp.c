@@ -294,7 +294,7 @@ static int luv_udp_send(lua_State* L) {
   luv_handle_t* lhandle = handle->data;
   addr_ptr = luv_check_addr(L, &addr, 3, 4);
   ref = luv_check_continuation(L, 5);
-  req = (uv_udp_send_t*)lua_newuserdata(L, sizeof(*req));
+  req = (uv_udp_send_t*)lua_newuserdata(L, uv_req_size(UV_UDP_SEND));
   req->data = luv_setup_req(L, lhandle->ctx, ref);
   size_t count;
   uv_buf_t* bufs = luv_check_bufs(L, 2, &count, (luv_req_t*)req->data);

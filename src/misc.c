@@ -728,7 +728,7 @@ static int luv_random(lua_State* L) {
     // ref buffer
     int buf_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-    uv_random_t* req = (uv_random_t*)lua_newuserdata(L, sizeof(*req));
+    uv_random_t* req = (uv_random_t*)lua_newuserdata(L, uv_req_size(UV_RANDOM));
     req->data = luv_setup_req(L, ctx, cb_ref);
     ((luv_req_t*)req->data)->req_ref = buf_ref;
 

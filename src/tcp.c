@@ -190,7 +190,7 @@ static int luv_tcp_connect(lua_State* L) {
   }
   ref = luv_check_continuation(L, 4);
 
-  req = (uv_connect_t*)lua_newuserdata(L, sizeof(*req));
+  req = (uv_connect_t*)lua_newuserdata(L, uv_req_size(UV_CONNECT));
   req->data = luv_setup_req(L, lhandle->ctx, ref);
   ret = uv_tcp_connect(req, handle, (struct sockaddr*)&addr, luv_connect_cb);
   if (ret < 0) {
