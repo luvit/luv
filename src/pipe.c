@@ -27,7 +27,7 @@ static int luv_new_pipe(lua_State* L) {
   int ipc, ret;
   luv_ctx_t* ctx = luv_context(L);
   ipc = luv_optboolean(L, 1, 0);
-  handle = (uv_pipe_t*)luv_newuserdata(L, sizeof(*handle));
+  handle = (uv_pipe_t*)luv_newuserdata(L, uv_handle_size(UV_NAMED_PIPE));
   ret = uv_pipe_init(ctx->loop, handle, ipc);
   if (ret < 0) {
     lua_pop(L, 1);
@@ -56,7 +56,7 @@ static int luv_pipe_connect(lua_State* L) {
   uv_pipe_t* handle = luv_check_pipe(L, 1);
   const char* name = luaL_checkstring(L, 2);
   int ref = luv_check_continuation(L, 3);
-  uv_connect_t* req = (uv_connect_t*)lua_newuserdata(L, sizeof(*req));
+  uv_connect_t* req = (uv_connect_t*)lua_newuserdata(L, uv_req_size(UV_CONNECT));
   req->data = luv_setup_req(L, ctx, ref);
   uv_pipe_connect(req, handle, name, luv_connect_cb);
   return 1;

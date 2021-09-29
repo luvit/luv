@@ -192,7 +192,7 @@ static int luv_getaddrinfo(lua_State* L) {
     return luaL_argerror(L, 4, "callback must be provided");
   }
 #endif
-  req = (uv_getaddrinfo_t*)lua_newuserdata(L, sizeof(*req));
+  req = (uv_getaddrinfo_t*)lua_newuserdata(L, uv_req_size(UV_GETADDRINFO));
   req->data = luv_setup_req(L, ctx, ref);
 
   ret = uv_getaddrinfo(ctx->loop, req, ref == LUA_NOREF ? NULL : luv_getaddrinfo_cb, node, service, hints);
@@ -295,7 +295,7 @@ static int luv_getnameinfo(lua_State* L) {
   }
 #endif
 
-  req = (uv_getnameinfo_t*)lua_newuserdata(L, sizeof(*req));
+  req = (uv_getnameinfo_t*)lua_newuserdata(L, uv_req_size(UV_GETNAMEINFO));
   req->data = luv_setup_req(L, ctx, ref);
 
   ret = uv_getnameinfo(ctx->loop, req, ref == LUA_NOREF ? NULL : luv_getnameinfo_cb, (struct sockaddr*)&addr, flags);

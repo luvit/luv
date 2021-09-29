@@ -277,7 +277,7 @@ static int luv_spawn(lua_State* L) {
   // the uv_process_t userdata doesn't get treated as the 3rd argument
   lua_settop(L, 3);
 
-  handle = (uv_process_t*)luv_newuserdata(L, sizeof(*handle));
+  handle = (uv_process_t*)luv_newuserdata(L, uv_handle_size(UV_PROCESS));
   handle->type = UV_PROCESS;
   handle->data = luv_setup_handle(L, ctx);
 
