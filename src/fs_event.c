@@ -25,7 +25,7 @@ static uv_fs_event_t* luv_check_fs_event(lua_State* L, int index) {
 
 static int luv_new_fs_event(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
-  uv_fs_event_t* handle = (uv_fs_event_t*)luv_newuserdata(L, sizeof(*handle));
+  uv_fs_event_t* handle = (uv_fs_event_t*)luv_newuserdata(L, uv_handle_size(UV_FS_EVENT));
   int ret = uv_fs_event_init(ctx->loop, handle);
   if (ret < 0) {
     lua_pop(L, 1);

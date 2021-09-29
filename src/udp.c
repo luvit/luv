@@ -25,7 +25,7 @@ static uv_udp_t* luv_check_udp(lua_State* L, int index) {
 static int luv_new_udp(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
   lua_settop(L, 1);
-  uv_udp_t* handle = (uv_udp_t*)luv_newuserdata(L, sizeof(*handle));
+  uv_udp_t* handle = (uv_udp_t*)luv_newuserdata(L, uv_handle_size(UV_UDP));
   int ret;
 #if LUV_UV_VERSION_GEQ(1, 39, 0)
   // TODO: This default can potentially be increased, but it's

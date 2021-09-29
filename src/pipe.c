@@ -27,7 +27,7 @@ static int luv_new_pipe(lua_State* L) {
   int ipc, ret;
   luv_ctx_t* ctx = luv_context(L);
   ipc = luv_optboolean(L, 1, 0);
-  handle = (uv_pipe_t*)luv_newuserdata(L, sizeof(*handle));
+  handle = (uv_pipe_t*)luv_newuserdata(L, uv_handle_size(UV_NAMED_PIPE));
   ret = uv_pipe_init(ctx->loop, handle, ipc);
   if (ret < 0) {
     lua_pop(L, 1);

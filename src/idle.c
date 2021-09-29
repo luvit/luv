@@ -24,7 +24,7 @@ static uv_idle_t* luv_check_idle(lua_State* L, int index) {
 
 static int luv_new_idle(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
-  uv_idle_t* handle = (uv_idle_t*)luv_newuserdata(L, sizeof(*handle));
+  uv_idle_t* handle = (uv_idle_t*)luv_newuserdata(L, uv_handle_size(UV_IDLE));
   int ret = uv_idle_init(ctx->loop, handle);
   if (ret < 0) {
     lua_pop(L, 1);

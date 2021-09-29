@@ -24,7 +24,7 @@ static uv_prepare_t* luv_check_prepare(lua_State* L, int index) {
 
 static int luv_new_prepare(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
-  uv_prepare_t* handle = (uv_prepare_t*)luv_newuserdata(L, sizeof(*handle));
+  uv_prepare_t* handle = (uv_prepare_t*)luv_newuserdata(L, uv_handle_size(UV_PREPARE));
   int ret = uv_prepare_init(ctx->loop, handle);
   if (ret < 0) {
     lua_pop(L, 1);

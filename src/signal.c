@@ -24,7 +24,7 @@ static uv_signal_t* luv_check_signal(lua_State* L, int index) {
 
 static int luv_new_signal(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
-  uv_signal_t* handle = (uv_signal_t*)luv_newuserdata(L, sizeof(*handle));
+  uv_signal_t* handle = (uv_signal_t*)luv_newuserdata(L, uv_handle_size(UV_SIGNAL));
   int ret = uv_signal_init(ctx->loop, handle);
   if (ret < 0) {
     lua_pop(L, 1);

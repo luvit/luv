@@ -27,7 +27,7 @@ static int luv_new_tcp(lua_State* L) {
   int ret;
   luv_ctx_t* ctx = luv_context(L);
   lua_settop(L, 1);
-  handle = (uv_tcp_t*)luv_newuserdata(L, sizeof(*handle));
+  handle = (uv_tcp_t*)luv_newuserdata(L, uv_handle_size(UV_TCP));
 #if LUV_UV_VERSION_GEQ(1, 7, 0)
   if (lua_isnoneornil(L, 1)) {
     ret = uv_tcp_init(ctx->loop, handle);

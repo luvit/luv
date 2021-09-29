@@ -36,7 +36,7 @@ static int luv_new_async(lua_State* L) {
   int ret;
   luv_ctx_t* ctx = luv_context(L);
   luaL_checktype(L, 1, LUA_TFUNCTION);
-  handle = (uv_async_t*)luv_newuserdata(L, sizeof(*handle));
+  handle = (uv_async_t*)luv_newuserdata(L, uv_handle_size(UV_ASYNC));
   ret = uv_async_init(ctx->loop, handle, luv_async_cb);
   if (ret < 0) {
     lua_pop(L, 1);
