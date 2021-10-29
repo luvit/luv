@@ -1560,7 +1560,7 @@ later using `uv.tcp_getsockname()`.
 **Parameters:**
 - `tcp`: `uv_tcp_t userdata`
 
-Get the current address to which the handle is bound.
+Get the address of the peer connected to the handle.
 
 **Returns:** `table` or `fail`
 - `ip` : `string`
@@ -1574,7 +1574,7 @@ Get the current address to which the handle is bound.
 **Parameters:**
 - `tcp`: `uv_tcp_t userdata`
 
-Get the address of the peer connected to the handle.
+Get the current address to which the handle is bound.
 
 **Returns:** `table` or `fail`
 - `ip` : `string`
