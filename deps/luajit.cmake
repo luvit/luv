@@ -238,6 +238,7 @@ SET(SRC_LJLIB
   ${LUAJIT_DIR}/src/lib_debug.c
   ${LUAJIT_DIR}/src/lib_jit.c
   ${LUAJIT_DIR}/src/lib_ffi.c
+  ${LUAJIT_DIR}/src/lib_buffer.c
 )
 
 SET(SRC_LIBAUX
