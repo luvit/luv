@@ -123,7 +123,6 @@ static int luv_work_cb(lua_State* L) {
 
 static void luv_work_cb_wrapper(uv_work_t* req) {
   luv_work_t* work =  (luv_work_t*)req->data;
-  luv_work_ctx_t* ctx = work->ctx;
   lua_State *L = work->args.L;
   luv_ctx_t* lctx = luv_context(L);
 
