@@ -215,6 +215,10 @@ if (BUILD_SHARED_LIBS)
   set_target_properties(libluv PROPERTIES PREFIX "")
   set_target_properties(libluv
     PROPERTIES VERSION ${LUV_VERSION} SOVERSION ${LUV_VERSION_MAJOR})
+  # Prevent lib prefix in shared library name
+  if(WIN32)
+    set_target_properties(libluv PROPERTIES IMPORT_PREFIX "")
+  endif(WIN32)
   if(APPLE)
     set_target_properties(libluv
       PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
@@ -279,6 +283,8 @@ if (NOT LUA)
       CACHE PATH "Installation directory for static libraries")
   endif (BUILD_STATIC_LIBS)
   if (BUILD_SHARED_LIBS)
+    set(SHAREDLIBS_INSTALL_BIN_DIR "${CMAKE_INSTALL_PREFIX}/bin"
+      CACHE PATH "Installation directory for runtime components")
     set(SHAREDLIBS_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
       CACHE PATH "Installation directory for shared libraries")
   endif (BUILD_SHARED_LIBS)
@@ -318,10 +324,11 @@ if (CMAKE_INSTALL_PREFIX)
   endif (BUILD_STATIC_LIBS)
   if (BUILD_SHARED_LIBS)
     install(TARGETS libluv
+      RUNTIME DESTINATION "${SHAREDLIBS_INSTALL_BIN_DIR}"
       ARCHIVE DESTINATION "${SHAREDLIBS_INSTALL_LIB_DIR}"
       LIBRARY DESTINATION "${SHAREDLIBS_INSTALL_LIB_DIR}"
     )
-    if(UNIX)
+    if(UNIX OR MINGW)
       set(prefix ${CMAKE_INSTALL_PREFIX})
       set(includedir ${SHAREDLIBS_INSTALL_INC_DIR})
       set(libdir ${SHAREDLIBS_INSTALL_LIB_DIR})
