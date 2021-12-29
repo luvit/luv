@@ -35,6 +35,22 @@ typedef struct {
 
 static uv_once_t once_vmkey = UV_ONCE_INIT;
 static uv_key_t tls_vmkey;  /* thread local storage key for Lua state */
+static uv_mutex_t vm_mutex;
+
+static unsigned int idx_vms = 0;
+static unsigned int nvms = 0;
+static lua_State** vms;
+static lua_State* default_vms[4];
+
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+#endif
+
+#if LUV_UV_VERSION_GEQ(1, 30, 0)
+#define MAX_THREADPOOL_SIZE 1024
+#else
+#define MAX_THREADPOOL_SIZE 128
+#endif
 
 static luv_work_ctx_t* luv_check_work_ctx(lua_State* L, int index) {
   luv_work_ctx_t* ctx = (luv_work_ctx_t*)luaL_checkudata(L, index, "luv_work_ctx");
@@ -118,6 +134,13 @@ static lua_State* luv_work_acquire_vm()
   {
     L = acquire_vm_cb();
     uv_key_set(&tls_vmkey, L);
+    lua_pushboolean(L, 1);
+    lua_setglobal(L, "_THREAD");
+
+    uv_mutex_lock(&vm_mutex);
+    vms[idx_vms] = L;
+    idx_vms += 1;
+    uv_mutex_unlock(&vm_mutex);
   }
   return L;
 }
@@ -226,12 +249,61 @@ static const luaL_Reg luv_work_ctx_methods[] = {
 
 static void luv_key_init_once()
 {
+  const char* val;
   int status = uv_key_create(&tls_vmkey);
   if (status != 0)
   {
     fprintf(stderr, "*** threadpool not works\n");
-    fprintf(stderr, "Error to uv_key_create with %s: %s\n", uv_err_name(status), uv_strerror(status));
+    fprintf(stderr, "Error to uv_key_create with %s: %s\n",
+      uv_err_name(status), uv_strerror(status));
+    abort();
   }
+  status = uv_mutex_init(&vm_mutex);
+  if (status != 0)
+  {
+    fprintf(stderr, "*** threadpool not works\n");
+    fprintf(stderr, "Error to uv_mutex_init with %s: %s\n",
+      uv_err_name(status), uv_strerror(status));
+    abort();
+  }
+
+  /* ref to https://github.com/libuv/libuv/blob/v1.x/src/threadpool.c init_threads */
+  nvms = ARRAY_SIZE(default_vms);
+  val = getenv("UV_THREADPOOL_SIZE");
+  if (val != NULL)
+    nvms = atoi(val);
+  if (nvms == 0)
+    nvms = 1;
+  if (nvms > MAX_THREADPOOL_SIZE)
+    nvms = MAX_THREADPOOL_SIZE;
+
+  vms = default_vms;
+  if (nvms > ARRAY_SIZE(default_vms)) {
+    vms = malloc(nvms * sizeof(vms[0]));
+    if (vms == NULL) {
+      nvms = ARRAY_SIZE(default_vms);
+      vms = default_vms;
+    }
+    memset(vms, 0, sizeof(vms[0]) * nvms);
+  }
+  idx_vms = 0;
+}
+
+static void luv_work_cleanup()
+{
+  unsigned int i;
+
+  if (nvms == 0)
+    return;
+
+  for (i = 0; i < nvms && vms[i]; i++)
+    release_vm_cb(vms[i]);
+
+  if (vms != default_vms)
+    free(vms);
+
+  uv_mutex_destroy(&vm_mutex);
+  nvms = 0;
 }
 
 static void luv_work_init(lua_State* L) {
