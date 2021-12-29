@@ -280,6 +280,9 @@ static void luv_thread_cb(void* varg) {
   lua_State* L = acquire_vm_cb();
   luv_ctx_t *ctx = luv_context(L);
 
+  lua_pushboolean(L, 1);
+  lua_setglobal(L, "_THREAD");
+
   //push lua function, thread entry
   if (luaL_loadbuffer(L, thd->code, thd->len, "=thread") == 0) {
     //push parameter for real thread function

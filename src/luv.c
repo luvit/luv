@@ -822,6 +822,12 @@ LUALIB_API int luaopen_luv (lua_State* L) {
     if (ret < 0) {
       return luaL_error(L, "%s: %s\n", uv_err_name(ret), uv_strerror(ret));
     }
+
+    /* do cleanup in main thread */
+    lua_getglobal(L, "_THREAD");
+    if (lua_isnil(L, -1))
+      atexit(luv_work_cleanup);
+    lua_pop(L, 1);
   }
   // pcall is NULL, luv use default callback routine
   if (ctx->cb_pcall==NULL) {
