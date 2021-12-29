@@ -46,7 +46,6 @@ typedef struct {
   int argc;
   int flags;          // control gc
 
-  lua_State *L;
   luv_val_t argv[LUV_THREAD_MAXNUM_ARG];
 } luv_thread_arg_t;
 
