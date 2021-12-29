@@ -277,7 +277,7 @@ static int luv_thread_tostring(lua_State* L)
 static void luv_thread_cb(void* varg) {
   //acquire vm and get top
   luv_thread_t* thd = (luv_thread_t*)varg;
-  lua_State* L = thd->args.L;
+  lua_State* L = acquire_vm_cb();
   luv_ctx_t *ctx = luv_context(L);
 
   //push lua function, thread entry
@@ -344,14 +344,12 @@ static int luv_new_thread(lua_State* L) {
   }
   thread->len = len;
 
-  thread->args.L = acquire_vm_cb();
 #if LUV_UV_VERSION_GEQ(1, 26, 0)
   ret = uv_thread_create_ex(&thread->handle, &options, luv_thread_cb, thread);
 #else
   ret = uv_thread_create(&thread->handle, luv_thread_cb, thread);
 #endif
   if (ret < 0) {
-    release_vm_cb(thread->args.L);
     return luv_error(L, ret);
   }
 
