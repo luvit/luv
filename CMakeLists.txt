@@ -124,7 +124,7 @@ else (LUA)
     if (USE_LUAJIT)
       # We only link the libs on Windows, so find_package fully succeeding
       # is only required on Windows
-      if (WIN32)
+      if (WIN32 OR CYGWIN)
         find_package(LuaJIT REQUIRED)
         link_directories(${LUAJIT_LIBRARIES})
       else()
@@ -137,7 +137,7 @@ else (LUA)
     else (USE_LUAJIT)
       # We only link the libs on Windows, so find_package fully succeeding
       # is only required on Windows
-      if (WIN32)
+      if (WIN32 OR CYGWIN)
         find_package(Lua REQUIRED)
       else()
         find_package(Lua)
@@ -249,7 +249,7 @@ if(WIN32)
 endif()
 
 foreach(TARGET_NAME ${ACTIVE_TARGETS})
-  if(WIN32)
+  if(WIN32 OR CYGWIN)
     if (LUA)
       target_link_libraries(${TARGET_NAME} ${LIBUV_LIBRARIES} ${LUA_LIBRARIES})
     else (LUA)
