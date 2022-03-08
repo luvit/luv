@@ -181,6 +181,7 @@ if not exist "%LR_ROOT%" (
 		set MSVS_GENERATORS[2015]=Visual Studio 14 2015
 		set MSVS_GENERATORS[2017]=Visual Studio 15 2017
 		set MSVS_GENERATORS[2019]=Visual Studio 16 2019
+		set MSVS_GENERATORS[2022]=Visual Studio 17 2022
 
 		set CMAKE_GENERATOR=!MSVS_GENERATORS[%APPVEYOR_BUILD_WORKER_IMAGE:~14,4%]!
 		:: Starting with MSVC 2019, CMake uses -A option to specify arch rather than Win64 suffix

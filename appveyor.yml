@@ -1,7 +1,6 @@
 image:
   - Visual Studio 2015
-  - Visual Studio 2017
-  - Visual Studio 2019
+  - Visual Studio 2022
 
 platform:
   - x86
@@ -12,36 +11,32 @@ environment:
     - FROM_DEPS: true
 
     # LuaRocks 3.x
-    - LUA_VER: 5.4.1
+    - LUA_VER: 5.4.4
       NOCOMPAT: true  # with compatibility flags disabled.
-      LUAROCKS_VER: 3.4.0
+      LUAROCKS_VER: 3.8.0
     - LJ_VER: 2.1
-      LUAROCKS_VER: 3.4.0
+      LUAROCKS_VER: 3.8.0
 
     # LuaRocks 2.x
-    - LUA_VER: 5.3.2
+    - LUA_VER: 5.3.6
       NOCOMPAT: true  # with compatibility flags disabled.
-      LUAROCKS_VER: 2.3.0
+      LUAROCKS_VER: 2.4.4
     - LJ_VER: 2.1
-      LUAROCKS_VER: 2.3.0
+      LUAROCKS_VER: 2.4.4
 
 matrix:
   fast_finish: true
   exclude:
     # Skip x86 for LuaRocks tests
     - platform: x86
-      LUAROCKS_VER: 3.4.0
+      LUAROCKS_VER: 3.8.0
     - platform: x86
-      LUAROCKS_VER: 2.3.0
-    # Only test LuaRocks with MSVC 2017
+      LUAROCKS_VER: 2.4.4
+    # Only test LuaRocks with latest MSVC
     - image: Visual Studio 2015
-      LUAROCKS_VER: 3.4.0
+      LUAROCKS_VER: 3.8.0
     - image: Visual Studio 2015
-      LUAROCKS_VER: 2.3.0
-    - image: Visual Studio 2019
-      LUAROCKS_VER: 3.4.0
-    - image: Visual Studio 2019
-      LUAROCKS_VER: 2.3.0
+      LUAROCKS_VER: 2.4.4
 
 cache:
   - c:\lua -> appveyor.yml

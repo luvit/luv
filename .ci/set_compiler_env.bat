@@ -11,6 +11,10 @@ set arch=x86
 
 if "%platform%" EQU "x64" ( set arch=x86_amd64 )
 
+if "%COMPILER%"=="2022" (
+	set SET_VS_ENV="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat"
+)
+
 if "%COMPILER%"=="2019" (
 	set SET_VS_ENV="C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat"
 )
