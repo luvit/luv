@@ -1,7 +1,6 @@
 image:
   - Visual Studio 2015
-  - Visual Studio 2017
-  - Visual Studio 2019
+  - Visual Studio 2022
 
 platform:
   - x86
@@ -33,14 +32,10 @@ matrix:
       LUAROCKS_VER: 3.4.0
     - platform: x86
       LUAROCKS_VER: 2.3.0
-    # Only test LuaRocks with MSVC 2017
+    # Only test LuaRocks with latest MSVC
     - image: Visual Studio 2015
       LUAROCKS_VER: 3.4.0
     - image: Visual Studio 2015
-      LUAROCKS_VER: 2.3.0
-    - image: Visual Studio 2019
-      LUAROCKS_VER: 3.4.0
-    - image: Visual Studio 2019
       LUAROCKS_VER: 2.3.0
 
 cache:
