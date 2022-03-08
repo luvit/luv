@@ -221,6 +221,13 @@ static int luv_getrusage(lua_State* L) {
   return 1;
 }
 
+#if LUV_UV_VERSION_GEQ(1, 44, 0)
+static int luv_available_parallelism(lua_State* L) {
+  lua_pushinteger(L, uv_available_parallelism());
+  return 1;
+}
+#endif
+
 static int luv_cpu_info(lua_State* L) {
   uv_cpu_info_t* cpu_infos = NULL;
   int count = 0, i;

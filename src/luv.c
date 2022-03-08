@@ -306,6 +306,9 @@ static const luaL_Reg luv_functions[] = {
   {"os_tmpdir", luv_os_tmpdir},
   {"os_get_passwd", luv_os_get_passwd},
 #endif
+#if LUV_UV_VERSION_GEQ(1, 44, 0)
+  {"available_parallelism", luv_available_parallelism},
+#endif
   {"cpu_info", luv_cpu_info},
   {"cwd", luv_cwd},
   {"exepath", luv_exepath},
