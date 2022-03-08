@@ -3316,6 +3316,18 @@ Returns the resource usage.
 - `nvcsw` : `integer` (voluntary context switches)
 - `nivcsw` : `integer` (involuntary context switches)
 
+### `uv.available_parallelism()`
+
+Returns an estimate of the default amount of parallelism a program should use. Always returns a non-zero value.
+
+On Linux, inspects the calling thread’s CPU affinity mask to determine if it has been pinned to specific CPUs.
+
+On Windows, the available parallelism may be underreported on systems with more than 64 logical CPUs.
+
+On other platforms, reports the number of CPUs that the operating system considers to be online.
+
+**Returns:** `integer`
+
 ### `uv.cpu_info()`
 
 Returns information about the CPU(s) on the system as a table of tables for each
