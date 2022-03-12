@@ -373,14 +373,15 @@ static int luv_os_get_passwd(lua_State* L) {
     lua_pushstring(L, pwd.username);
     lua_setfield(L, -2, "username");
   }
-  if (pwd.uid != -1) {
-    lua_pushinteger(L, pwd.uid);
-    lua_setfield(L, -2, "uid");
-  }
-  if (pwd.gid != -1) {
-    lua_pushinteger(L, pwd.gid);
-    lua_setfield(L, -2, "gid");
-  }
+  // From the uv_os_get_passwd docs:
+  // "On Windows, uid and gid are set to -1 and have no meaning"
+  // so we omit these fields on Windows.
+#ifndef _WIN32
+  lua_pushinteger(L, pwd.uid);
+  lua_setfield(L, -2, "uid");
+  lua_pushinteger(L, pwd.gid);
+  lua_setfield(L, -2, "gid");
+#endif
   if (pwd.shell) {
     lua_pushstring(L, pwd.shell);
     lua_setfield(L, -2, "shell");
