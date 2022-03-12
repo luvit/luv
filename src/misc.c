@@ -373,11 +373,11 @@ static int luv_os_get_passwd(lua_State* L) {
     lua_pushstring(L, pwd.username);
     lua_setfield(L, -2, "username");
   }
-  if (pwd.uid >= 0) {
+  if (pwd.uid != -1) {
     lua_pushinteger(L, pwd.uid);
     lua_setfield(L, -2, "uid");
   }
-  if (pwd.gid >= 0) {
+  if (pwd.gid != -1) {
     lua_pushinteger(L, pwd.gid);
     lua_setfield(L, -2, "gid");
   }
