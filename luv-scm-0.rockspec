@@ -3,6 +3,7 @@ version = "scm-0"
 source = {
   url = 'git://github.com/luvit/luv.git'
 }
+rockspec_format = "3.0"
 
 description = {
   summary = "Bare libuv bindings for lua",
@@ -32,4 +33,9 @@ build = {
      LIBDIR="$(LIBDIR)",
      LUADIR="$(LUADIR)",
   },
+}
+
+test = {
+  type = "command",
+  script = "tests/run.lua",
 }
