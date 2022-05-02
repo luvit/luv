@@ -214,23 +214,11 @@ static int luv_thread_arg_error(lua_State *L) {
     lua_typename(L, type), pos);
 }
 
-// Copied from lstrlib.c in Lua 5.4.3
-//
-// luaL_buffinit might push stuff onto the stack (this is undocumented as of now),
-// so it must be called after lua_dump to ensure that the function to dump
-// is still on the top of the stack
-struct luv_thread_Writer {
-  int init;
-  luaL_Buffer B;
-};
-
 static int thread_dump (lua_State *L, const void *b, size_t size, void *ud) {
-  struct luv_thread_Writer *state = (struct luv_thread_Writer *)ud;
-  if (!state->init) {
-    state->init = 1;
-    luaL_buffinit(L, &state->B);
-  }
-  luaL_addlstring(&state->B, (const char *)b, size);
+  luaL_Buffer *B = (luaL_Buffer *)ud;
+  (void)L;
+
+  luaL_addlstring(B, (const char *)b, size);
   return 0;
 }
 
@@ -238,15 +226,19 @@ static int luv_thread_dumped(lua_State* L, int idx) {
   if (lua_isstring(L, idx)) {
     lua_pushvalue(L, idx);
   } else {
-    int ret;
-    struct luv_thread_Writer state;
-    state.init = 0;
+    int ret, top;
+    luaL_Buffer B;
+
+    // In Lua >= 5.4.3, luaL_buffinit pushes a value onto the stack, so it needs to be called
+    // here to ensure that the function is at the top of the stack during the lua_dump call
+    luaL_buffinit(L, &B);
     luaL_checktype(L, idx, LUA_TFUNCTION);
     lua_pushvalue(L, idx);
-    ret = lua_dump(L, thread_dump, &state, 1);
-    lua_pop(L, 1);
+    top = lua_gettop(L);
+    ret = lua_dump(L, thread_dump, &B, 1);
+    lua_remove(L, top);
     if (ret==0) {
-      luaL_pushresult(&state.B);
+      luaL_pushresult(&B);
     } else
       luaL_error(L, "Error: unable to dump given function");
   }
