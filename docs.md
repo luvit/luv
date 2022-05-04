@@ -2975,14 +2975,14 @@ Copies a file from path to new_path. If the `flags` parameter is omitted, then t
 - `path`: `string`
 - `callback`: `callable` (async version) or `nil` (sync version)
   - `err`: `nil` or `string`
-  - `dir`: `uv_dir_t userdata` or `nil`
+  - `dir`: `luv_dir_t userdata` or `nil`
 - `entries`: `integer` or `nil`
 
 Opens path as a directory stream. Returns a handle that the user can pass to
 `uv.fs_readdir()`. The `entries` parameter defines the maximum number of entries
 that should be returned by each call to `uv.fs_readdir()`.
 
-**Returns (sync version):** `uv_dir_t userdata` or `fail`
+**Returns (sync version):** `luv_dir_t userdata` or `fail`
 
 **Returns (async version):** `uv_fs_t userdata`
 
@@ -2991,12 +2991,12 @@ that should be returned by each call to `uv.fs_readdir()`.
 > method form `dir:readdir([callback])`
 
 **Parameters:**
-- `dir`: `uv_dir_t userdata`
+- `dir`: `luv_dir_t userdata`
 - `callback`: `callable` (async version) or `nil` (sync version)
   - `err`: `nil` or `string`
   - `entries`: `table` or `nil` (see below)
 
-Iterates over the directory stream `uv_dir_t` returned by a successful
+Iterates over the directory stream `luv_dir_t` returned by a successful
 `uv.fs_opendir()` call. A table of data tables is returned where the number
 of entries `n` is equal to or less than the `entries` parameter used in
 the associated `uv.fs_opendir()` call.
@@ -3013,7 +3013,7 @@ the associated `uv.fs_opendir()` call.
 > method form `dir:closedir([callback])`
 
 **Parameters:**
-- `dir`: `uv_dir_t userdata`
+- `dir`: `luv_dir_t userdata`
 - `callback`: `callable` (async version) or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`

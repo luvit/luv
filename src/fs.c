@@ -17,6 +17,13 @@
 
 #include "private.h"
 
+#if LUV_UV_VERSION_GEQ(1, 28, 0)
+typedef struct {
+  uv_dir_t* handle;
+  int dirents_ref; /* handle has been closed if this is LUA_NOREF */
+} luv_dir_t;
+#endif
+
 static uv_fs_t* luv_check_fs(lua_State* L, int index) {
   uv_fs_t* req = (uv_fs_t*)luaL_checkudata(L, index, "uv_req");
   luaL_argcheck(L, req->type == UV_FS && req->data, index, "Expected uv_fs_t");
@@ -333,13 +340,14 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
       luaL_unref(L, LUA_REGISTRYINDEX, data->data_ref);
       data->data_ref = LUA_NOREF;
 
-      (*(void**)lua_newuserdata(L, sizeof(void*))) = dir;
-      lua_pushfstring(L, "uv_dir:%p", dir);
-      dir->dirents = lua_newuserdata(L, sizeof(uv_dirent_t)*nentries);
-      dir->nentries = nentries;
-      lua_rawset(L, LUA_REGISTRYINDEX);
+      luv_dir_t* luv_dir = lua_newuserdata(L, sizeof(*luv_dir));
       luaL_getmetatable(L, "uv_dir");
       lua_setmetatable(L, -2);
+
+      luv_dir->handle = dir;
+      luv_dir->handle->dirents = lua_newuserdata(L, sizeof(uv_dirent_t)*nentries);
+      luv_dir->dirents_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+      luv_dir->handle->nentries = nentries;
 
       return 1;
     }
@@ -888,8 +896,8 @@ static int luv_fs_copyfile(lua_State*L) {
 #endif
 
 #if LUV_UV_VERSION_GEQ(1, 28, 0)
-static uv_dir_t* luv_check_dir(lua_State* L, int idx) {
-  uv_dir_t* dir = *(uv_dir_t**)luaL_checkudata(L, idx, "uv_dir");
+static luv_dir_t* luv_check_dir(lua_State* L, int idx) {
+  luv_dir_t* dir = (luv_dir_t*)luaL_checkudata(L, idx, "uv_dir");
   return dir;
 }
 
@@ -911,45 +919,44 @@ static int luv_fs_opendir(lua_State* L) {
 static int luv_fs_readdir(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
   uv_fs_t *req;
-  uv_dir_t* dir = luv_check_dir(L, 1);
+  luv_dir_t* dir = luv_check_dir(L, 1);
   int ref = luv_check_continuation(L, 2);
 
   req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(readdir, req, dir);
+  FS_CALL(readdir, req, dir->handle);
 }
 
 static int luv_fs_closedir(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
-  uv_dir_t* dir = luv_check_dir(L, 1);
+  luv_dir_t* dir = luv_check_dir(L, 1);
   int ref = luv_check_continuation(L, 2);
+
+  luaL_unref(L, LUA_REGISTRYINDEX, dir->dirents_ref);
+  dir->dirents_ref = LUA_NOREF;
+
   uv_fs_t *req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  lua_pushfstring(L, "uv_dir:%p", dir);
-  lua_pushnil(L);
-  lua_rawset(L, LUA_REGISTRYINDEX);
-  FS_CALL(closedir, req, dir);
+  FS_CALL(closedir, req, dir->handle);
 }
 
 static int luv_fs_dir_tostring(lua_State* L) {
-  uv_dir_t* dir = luv_check_dir(L, 1);
+  luv_dir_t* dir = luv_check_dir(L, 1);
   lua_pushfstring(L, "uv_dir_t: %p", dir);
   return 1;
 }
 
 static int luv_fs_dir_gc(lua_State* L) {
-  uv_dir_t* dir = luv_check_dir(L, 1);
-  lua_pushfstring(L, "uv_dir:%p", dir);
-  lua_rawget(L, LUA_REGISTRYINDEX);
-  if (!lua_isnil(L, -1)) {
+  luv_dir_t* dir = luv_check_dir(L, 1);
+  if (dir->dirents_ref != LUA_NOREF) {
     uv_fs_t req;
     luv_ctx_t* ctx = luv_context(L);
 
-    uv_fs_closedir(ctx->loop, &req, dir, NULL);
+    luaL_unref(L, LUA_REGISTRYINDEX, dir->dirents_ref);
+    dir->dirents_ref = LUA_NOREF;
+
+    uv_fs_closedir(ctx->loop, &req, dir->handle, NULL);
     uv_fs_req_cleanup(&req);
-    lua_pushfstring(L, "uv_dir:%p", dir);
-    lua_pushnil(L);
-    lua_rawset(L, LUA_REGISTRYINDEX);
   }
   lua_pop(L, 1);
 
