@@ -212,6 +212,17 @@ return require('lib/tap')(function (test)
     assert(uv.fs_opendir('.', opendir_cb, 50))
   end, "1.28.0")
 
+  test("fs.opendir and fs.closedir in a loop", function(print, p, expect, uv)
+    -- Previously, this triggered a GC/closedir race condition
+    -- see https://github.com/luvit/luv/issues/597
+    for _ = 1,1000 do
+      local dir, err = uv.fs_opendir('.', nil, 64)
+      if not err then
+        uv.fs_closedir(dir)
+      end
+    end
+  end, "1.28.0")
+
   test("fs.statfs sync", function (print, p, expect, uv)
     local stat = assert(uv.fs_statfs("."))
     p(stat)
