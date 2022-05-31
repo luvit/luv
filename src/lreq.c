@@ -26,7 +26,7 @@ static int luv_check_continuation(lua_State* L, int index) {
 
 // Store a lua callback in a luv_req for the continuation.
 // The uv_req_t is assumed to be at the top of the stack
-static luv_req_t* luv_setup_req(lua_State* L, luv_ctx_t* ctx, int cb_ref) {
+static luv_req_t* luv_setup_req_with_mt(lua_State* L, luv_ctx_t* ctx, int cb_ref, const char* mt_name) {
   luv_req_t* data;
 
   luaL_checktype(L, -1, LUA_TUSERDATA);
@@ -34,7 +34,7 @@ static luv_req_t* luv_setup_req(lua_State* L, luv_ctx_t* ctx, int cb_ref) {
   data = (luv_req_t*)malloc(sizeof(*data));
   if (!data) luaL_error(L, "Problem allocating luv request");
 
-  luaL_getmetatable(L, "uv_req");
+  luaL_getmetatable(L, mt_name);
   lua_setmetatable(L, -2);
 
   lua_pushvalue(L, -1);
@@ -45,6 +45,10 @@ static luv_req_t* luv_setup_req(lua_State* L, luv_ctx_t* ctx, int cb_ref) {
   data->data = NULL;
 
   return data;
+}
+
+static luv_req_t* luv_setup_req(lua_State* L, luv_ctx_t* ctx, int cb_ref) {
+  return luv_setup_req_with_mt(L, ctx, cb_ref, "uv_req");
 }
 
 

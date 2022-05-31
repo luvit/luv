@@ -54,6 +54,7 @@ static int luv_check_continuation(lua_State* L, int index);
    top of the stack.
 */
 static luv_req_t* luv_setup_req(lua_State* L, luv_ctx_t* ctx, int ref);
+static luv_req_t* luv_setup_req_with_mt(lua_State* L, luv_ctx_t* ctx, int ref, const char* mt_name);
 static void luv_fulfill_req(lua_State* L, luv_req_t* data, int nargs);
 static void luv_cleanup_req(lua_State* L, luv_req_t* data);
 

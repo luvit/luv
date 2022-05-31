@@ -25,9 +25,20 @@ typedef struct {
 #endif
 
 static uv_fs_t* luv_check_fs(lua_State* L, int index) {
+  if (luaL_testudata(L, index, "uv_fs") != NULL) {
+    return (uv_fs_t*)lua_touserdata(L, index);
+  }
   uv_fs_t* req = (uv_fs_t*)luaL_checkudata(L, index, "uv_req");
   luaL_argcheck(L, req->type == UV_FS && req->data, index, "Expected uv_fs_t");
   return req;
+}
+
+static int luv_fs_gc(lua_State* L) {
+  uv_fs_t* req = luv_check_fs(L, 1);
+  luv_cleanup_req(L, (luv_req_t*)req->data);
+  req->data = NULL;
+  uv_fs_req_cleanup(req);
+  return 0;
 }
 
 static void luv_push_timespec_table(lua_State* L, const uv_timespec_t* t) {
@@ -589,7 +600,7 @@ static int luv_fs_scandir(lua_State* L) {
   int flags = 0; // TODO: find out what these flags are.
   int ref = luv_check_continuation(L, 2);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
-  req->data = luv_setup_req(L, ctx, ref);
+  req->data = luv_setup_req_with_mt(L, ctx, ref, "uv_fs");
   FS_CALL(scandir, req, path, flags);
 }
 
@@ -597,12 +608,7 @@ static int luv_fs_scandir_next(lua_State* L) {
   uv_fs_t* req = luv_check_fs(L, 1);
   uv_dirent_t ent;
   int ret = uv_fs_scandir_next(req, &ent);
-  if (ret == UV_EOF) {
-    luv_cleanup_req(L, (luv_req_t*)req->data);
-    req->data = NULL;
-    uv_fs_req_cleanup(req);
-    return 0;
-  }
+  if (ret == UV_EOF) return 0;
   if (ret < 0) return luv_error(L, ret);
   return luv_push_dirent(L, &ent, 0);
 }
