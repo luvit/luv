@@ -23,6 +23,15 @@ static uv_stream_t* luv_check_stream(lua_State* L, int index) {
   if (!(udata = lua_touserdata(L, index))) { goto fail; }
   if (!(handle = *(uv_stream_t**) udata)) { goto fail; }
   if (!handle->data) { goto fail; }
+  // "uv_stream" in the registry is a table structured like so:
+  // {
+  //   [<uv_pipe metatable>] = true,
+  //   [<uv_tcp metatable>] = true,
+  //   [<uv_tty metatable>] = true,
+  // }
+  // so to check that the value at the index is a "uv_stream",
+  // we get its metatable and check that we get `true` back
+  // when looking the metatable up in the "uv_stream" table.
   lua_getfield(L, LUA_REGISTRYINDEX, "uv_stream");
   lua_getmetatable(L, index < 0 ? index - 1 : index);
   lua_rawget(L, -2);

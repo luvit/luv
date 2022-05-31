@@ -35,6 +35,15 @@ static uv_handle_t* luv_check_handle(lua_State* L, int index) {
   if (!(udata = lua_touserdata(L, index))) { goto fail; }
   if (!(handle = *(uv_handle_t**) udata)) { goto fail; }
   if (!handle->data) { goto fail; }
+  // "uv_handle" in the registry is a table structured like so:
+  // {
+  //   [<uv_aync metatable>] = true,
+  //   [<uv_check metatable>] = true,
+  //   ...
+  // }
+  // so to check that the value at the index is a "uv_handle",
+  // we get its metatable and check that we get `true` back
+  // when looking the metatable up in the "uv_handle" table.
   lua_getfield(L, LUA_REGISTRYINDEX, "uv_handle");
   lua_getmetatable(L, index < 0 ? index - 1 : index);
   lua_rawget(L, -2);
