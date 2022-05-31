@@ -648,6 +648,17 @@ static void luv_req_init(lua_State* L) {
   luaL_newlib(L, luv_req_methods);
   lua_setfield(L, -2, "__index");
   lua_pop(L, 1);
+
+  // Only used for things that need to be garbage collected
+  // (e.g. the req when using uv_fs_scandir)
+  luaL_newmetatable(L, "uv_fs");
+  lua_pushcfunction(L, luv_req_tostring);
+  lua_setfield(L, -2, "__tostring");
+  luaL_newlib(L, luv_req_methods);
+  lua_setfield(L, -2, "__index");
+  lua_pushcfunction(L, luv_fs_gc);
+  lua_setfield(L, -2, "__gc");
+  lua_pop(L, 1);
 }
 
 // Call lua function, will pop nargs values from top of vm stack and push some

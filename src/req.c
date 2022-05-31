@@ -17,13 +17,16 @@
 #include "private.h"
 
 static uv_req_t* luv_check_req(lua_State* L, int index) {
+  if (luaL_testudata(L, index, "uv_fs") != NULL) {
+    return (uv_req_t*)lua_touserdata(L, index);
+  }
   uv_req_t* req = (uv_req_t*)luaL_checkudata(L, index, "uv_req");
   luaL_argcheck(L, req->data, index, "Expected uv_req_t");
   return req;
 }
 
 static int luv_req_tostring(lua_State* L) {
-  uv_req_t* req = (uv_req_t*)luaL_checkudata(L, 1, "uv_req");
+  uv_req_t* req = luv_check_req(L, 1);
   switch (req->type) {
 #define XX(uc, lc) case UV_##uc: lua_pushfstring(L, "uv_"#lc"_t: %p", req); break;
   UV_REQ_TYPE_MAP(XX)

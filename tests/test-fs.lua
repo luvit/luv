@@ -125,6 +125,14 @@ return require('lib/tap')(function (test)
     end
   end)
 
+  -- this test does nothing on its own, but when run with a leak checker,
+  -- it will check that the memory allocated by Libuv for req is cleaned up
+  -- even if its not iterated fully (or at all)
+  test("fs.scandir with no iteration", function(print, p, expect, uv)
+    local req = uv.fs_scandir('.')
+    assert(req)
+  end)
+
   test("fs.realpath", function (print, p, expect, uv)
     p(assert(uv.fs_realpath('.')))
     assert(uv.fs_realpath('.', expect(function (err, path)
