@@ -35,8 +35,11 @@ static uv_fs_t* luv_check_fs(lua_State* L, int index) {
 
 static int luv_fs_gc(lua_State* L) {
   uv_fs_t* req = luv_check_fs(L, 1);
-  luv_cleanup_req(L, (luv_req_t*)req->data);
-  req->data = NULL;
+  if (req->data)
+  {
+    luv_cleanup_req(L, (luv_req_t*)req->data);
+    req->data = NULL;
+  }
   uv_fs_req_cleanup(req);
   return 0;
 }
