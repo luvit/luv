@@ -391,6 +391,11 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
 
 static void luv_fs_cb(uv_fs_t* req) {
   luv_req_t* data = (luv_req_t*)req->data;
+  // This can happen if luv_fs_cb is called during loop gc. For example, this can happen
+  // when the async version of fs_scandir is called but the loop is never run before the process exits.
+  //
+  // TODO: A more comprehensive fix for this problem would be related to https://github.com/luvit/luv/issues/437
+  if (data == NULL) return;
   lua_State* L = data->ctx->L;
 
   int nargs = push_fs_result(L, req);
