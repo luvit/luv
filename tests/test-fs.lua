@@ -125,6 +125,21 @@ return require('lib/tap')(function (test)
     end
   end)
 
+  test("fs.scandir async", function (print, p, expect, uv)
+    assert(uv.fs_scandir('.', function(err, req)
+      assert(not err)
+      local function iter()
+        return uv.fs_scandir_next(req)
+      end
+      for name, ftype in iter do
+        p{name=name, ftype=ftype}
+        assert(name)
+        -- ftype is not available in all filesystems; for example it's
+        -- provided for HFS+ (OSX), NTFS (Windows) but not for ext4 (Linux).
+      end
+    end))
+  end)
+
   -- this test does nothing on its own, but when run with a leak checker,
   -- it will check that the memory allocated by Libuv for req is cleaned up
   -- even if its not iterated fully (or at all)
