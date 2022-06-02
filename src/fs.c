@@ -454,9 +454,11 @@ static void luv_fs_cb(uv_fs_t* req) {
           uv_strerror(req->result));                      \
     }                                                     \
     lua_pushstring(L, uv_err_name(req->result));          \
-    luv_cleanup_req(L, data);                             \
-    req->data = NULL;                                     \
-    uv_fs_req_cleanup(req);                               \
+    if(req->fs_type != UV_FS_SCANDIR) {                   \
+      luv_cleanup_req(L, data);                           \
+      req->data = NULL;                                   \
+      uv_fs_req_cleanup(req);                             \
+    }                                                     \
     nargs = 3;                                            \
   }                                                       \
   else if (sync) {                                        \
