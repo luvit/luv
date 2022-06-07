@@ -125,6 +125,29 @@ return require('lib/tap')(function (test)
     end
   end)
 
+  test("fs.scandir sync error", function (print, p, expect, uv)
+    local req, err, code = uv.fs_scandir('BAD_FILE!')
+    p{err=err,code=code,req=req}
+    assert(not req)
+    assert(err)
+    assert(code == "ENOENT")
+  end)
+
+  test("fs.scandir async error", function (print, p, expect, uv)
+    local _req, _err = uv.fs_scandir('BAD_FILE!', expect(function(err, req)
+      p{err=err,req=req}
+      assert(not req)
+      assert(err)
+    end))
+    -- Note: when using the async version, the initial return only errors
+    -- if there is an error when setting up the internal Libuv call
+    -- (e.g. if there's an out-of-memory error when copying the path).
+    -- So even though the callback will have an error, the initial call
+    -- should return a valid uv_fs_t userdata without an error.
+    assert(_req)
+    assert(not _err)
+  end)
+
   test("fs.scandir async", function (print, p, expect, uv)
     assert(uv.fs_scandir('.', function(err, req)
       assert(not err)
