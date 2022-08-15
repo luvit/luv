@@ -65,7 +65,6 @@ static void luv_poll_cb(uv_poll_t* handle, int status, int events) {
   const char* evtstr;
 
   if (status < 0) {
-    fprintf(stderr, "%s: %s\n", uv_err_name(status), uv_strerror(status));
     lua_pushstring(L, uv_err_name(status));
   }
   else {
