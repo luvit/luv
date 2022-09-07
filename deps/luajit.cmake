@@ -227,7 +227,10 @@ ELSEIF(NOT WIN32)
     execute_process(COMMAND "${CMAKE_C_COMPILER}" -c -x c "${TMPUNWIND_DIR}/tmpunwind.c" -o "${TMPUNWIND_DIR}/tmpunwind.o"
       RESULT_VARIABLE UNWIND_TEST_ERRORED)
     IF(UNWIND_TEST_ERRORED EQUAL 0)
-      file(READ "${TMPUNWIND_DIR}/tmpunwind.o" TMPUNWIND_O)
+      # Use STRINGS here so that CMake doesn't stop reading the file once it hits a NUL character.
+      # Note: STRINGS skips all non-ASCII/binary bytes, but that's okay since we're only checking
+      #       for the presence of some ASCII strings.
+      file(STRINGS "${TMPUNWIND_DIR}/tmpunwind.o" TMPUNWIND_O)
       string(FIND "${TMPUNWIND_O}" "eh_frame" EH_FRAME_FOUND)
       string(FIND "${TMPUNWIND_O}" "__unwind_info" UNWIND_INFO_FOUND)
       IF(EH_FRAME_FOUND GREATER -1 OR UNWIND_INFO_FOUND GREATER -1)
