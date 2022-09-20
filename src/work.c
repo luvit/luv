@@ -193,8 +193,6 @@ static int luv_new_work(lua_State* L) {
   lua_pop(L, 1);
 
   luaL_checktype(L, 2, LUA_TFUNCTION);
-  if(!lua_isnoneornil(L, 3))
-    luaL_checktype(L, 3, LUA_TFUNCTION);
 
   ctx = (luv_work_ctx_t*)lua_newuserdata(L, sizeof(*ctx));
   memset(ctx, 0, sizeof(*ctx));
