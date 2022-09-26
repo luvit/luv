@@ -30,4 +30,12 @@ typedef struct {
 // This is an arbitrary value that we can assume will never be returned by luaL_ref
 #define LUV_REQ_MULTIREF (-0x1234)
 
+#define luv_yield_req(L, data) \
+  lua_rawgeti(L, LUA_REGISTRYINDEX, (data)->callback_ref); \
+  lua_State *th = lua_tothread(L, -1);                   \
+  lua_pop(L, 1);                                         \
+                                                         \
+  if (th)                                                \
+    return lua_yield(th, 0);
+
 #endif

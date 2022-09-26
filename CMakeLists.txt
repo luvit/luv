@@ -12,6 +12,7 @@ if(NOT ${CMAKE_VERSION} VERSION_LESS "3.5.0")
   set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 endif()
 
+option(LUV_FORCE_COROUTINE_CONTINUATION "Build as module" ON)
 option(BUILD_MODULE "Build as module" ON)
 option(BUILD_STATIC_LIBS "Build static library" OFF)
 option(BUILD_SHARED_LIBS "Build shared library" OFF)
@@ -20,6 +21,10 @@ option(WITH_SHARED_LIBUV "Link to a shared libuv library instead of static linki
 if (MINGW)
   add_definitions(-D_WIN32_WINNT=0x0600)
 endif (MINGW)
+
+if (LUV_FORCE_COROUTINE_CONTINUATION)
+  add_definitions(-DLUV_FORCE_COROUTINE_CONTINUATION=1)
+endif (LUV_FORCE_COROUTINE_CONTINUATION)
 
 if (WIN32)
   # replace /MD to /MT to avoid link msvcr*.dll

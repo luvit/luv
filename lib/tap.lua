@@ -132,6 +132,11 @@ local function tap(suite)
         fn = fn,
         min_uv_ver = min_uv_ver,
       }
+      tests[#tests + 1] = {
+        name = name .. ' (coro)',
+        fn = coroutine.wrap(fn),
+        min_uv_ver = min_uv_ver,
+      }
     end)
     prefix = nil
   elseif type(suite) == "string" then

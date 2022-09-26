@@ -16,10 +16,28 @@
  */
 #include "private.h"
 
-
 static int luv_check_continuation(lua_State* L, int index) {
-  if (lua_isnoneornil(L, index)) return LUA_NOREF;
-  luv_check_callable(L, index);
+#ifdef LUV_FORCE_COROUTINE_CONTINUATION
+// Uses the current thread unless it is the main thread
+if (lua_isnoneornil(L, index)) {
+    int ismain = lua_pushthread(L);
+    if (ismain) {
+      lua_pop(L, 1);
+      return LUA_NOREF;
+    }
+    return luaL_ref(L, LUA_REGISTRYINDEX);
+  }
+#else
+  if (lua_isnoneornil(L, index))
+    return LUA_NOREF;
+#endif
+
+  lua_State *thread = lua_tothread(L, index);
+  if (thread) {
+    if (lua_status(thread) != LUA_OK && lua_status(thread) != LUA_YIELD)
+      luaL_argerror(L, index, "expected non-suspended coroutine");
+  } else
+    luv_check_callable(L, index);
   lua_pushvalue(L, index);
   return luaL_ref(L, LUA_REGISTRYINDEX);
 }
@@ -59,11 +77,56 @@ static void luv_fulfill_req(lua_State* L, luv_req_t* data, int nargs) {
   else {
     // Get the callback
     lua_rawgeti(L, LUA_REGISTRYINDEX, data->callback_ref);
-    // And insert it before the args if there are any.
-    if (nargs) {
-      lua_insert(L, -1 - nargs);
+    lua_State *thread = lua_tothread(L, -1);
+    
+    if (thread) {
+      // We need to resume the thread
+      lua_pop(L, 1);
+
+      if (lua_status(thread) != LUA_OK && lua_status(thread) != LUA_YIELD)
+        luaL_error(L, "cannot resume suspended coroutine");
+
+      lua_xmove(L, thread, nargs);
+
+#if LUA_VERSION_NUM >= 504
+      int nres;
+      int status = lua_resume(thread, NULL, nargs, &nres);
+#else
+      int status = lua_resume(thread, NULL, nargs);
+#endif
+      if (status == LUA_OK || status == LUA_YIELD) {
+        // We've handled control back to lua, hopefully we don't need to do anything here.
+        lua_pop(L, lua_gettop(L));
+      } else {
+#if LUA_VERSION_NUM >= 504
+        status = lua_resetthread(thread);  /* close its tbc variables */
+        lua_assert(status != LUA_OK);
+#endif
+        const char *msg = lua_tostring(thread, -1);
+        luaL_traceback(L, thread, msg, 0);
+
+        lua_error(L);
+      }
+    } else {
+      // insert the callback before the args if there are any.
+      if (nargs) {
+        lua_insert(L, -1 - nargs);
+      }
+
+      data->ctx->cb_pcall(L, nargs, 0, 0);
     }
-    data->ctx->cb_pcall(L, nargs, 0, 0);
+  }
+}
+
+static void luv_fulfill_req_status(lua_State *L, luv_req_t *data, int status) {
+  int is_thread = luv_is_sync_req(L, data);
+
+  if (is_thread) {
+    int nargs = luv_result(L, status);
+    luv_fulfill_req(L, data, nargs);
+  } else {
+    luv_status(L, status);
+    luv_fulfill_req(L, data, 1);
   }
 }
 
@@ -80,4 +143,12 @@ static void luv_cleanup_req(lua_State* L, luv_req_t* data) {
     luaL_unref(L, LUA_REGISTRYINDEX, data->data_ref);
   free(data->data);
   free(data);
+}
+
+static int luv_is_sync_req(lua_State *L, luv_req_t *data) {
+  lua_rawgeti(L, LUA_REGISTRYINDEX, (data)->callback_ref);
+  int isth = lua_isthread(L, -1);
+  lua_pop(L, 1);
+
+  return isth;
 }

@@ -64,6 +64,14 @@ Some (generally FS and DNS) functions can behave either synchronously or
 asynchronously. If a callback is provided to these functions, they behave
 asynchronously; if no callback is provided, they behave synchronously.
 
+Any asynchronous function that returns a `uv_req_t` may instead accept a thread
+which will be resumed as if it were a synchronous call to that function. The
+**calling** thread will be yielded.
+
+If luv is compiled with the `LUV_FORCE_COROUTINE_CONTINUATION` define (default
+on) any blocking function calls inside of a coroutine will instead yield and
+resume upon completion.
+
 ### Pseudo-Types
 
 Some unique types are defined. These are not actual types in Lua, but they are
@@ -1325,13 +1333,15 @@ in the form of [`uv_tcp_t`][], [`uv_pipe_t`][] and [`uv_tty_t`][].
 
 **Parameters:**
 - `stream`: `userdata` for sub-type of `uv_stream_t`
-- `callback`: `callable` or `nil`
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version) 
   - `err`: `nil` or `string`
 
 Shutdown the outgoing (write) side of a duplex stream. It waits for pending
 write requests to complete. The callback is called after shutdown is complete.
 
-**Returns:** `uv_shutdown_t userdata` or `fail`
+**Returns (async version):** `uv_shutdown_t userdata` or `fail`
+
+**Returns (sync version):** `nil` or `fail`
 
 ### `uv.listen(stream, backlog, callback)`
 
@@ -1423,7 +1433,7 @@ This function is idempotent and may be safely called on a stopped stream.
 **Parameters:**
 - `stream`: `userdata` for sub-type of `uv_stream_t`
 - `data`: `buffer`
-- `callback`: `callable` or `nil`
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
 
 Write data to stream.
@@ -1433,7 +1443,9 @@ in, the C backend will use writev to send all strings in a single system call.
 
 The optional `callback` is for knowing when the write is complete.
 
-**Returns:** `uv_write_t userdata` or `fail`
+**Returns (async version):** `uv_write_t userdata` or `fail`
+
+**Returns (sync version):** `nil` or `fail`
 
 ### `uv.write2(stream, data, send_handle, [callback])`
 
@@ -1443,13 +1455,15 @@ The optional `callback` is for knowing when the write is complete.
 - `stream`: `userdata` for sub-type of `uv_stream_t`
 - `data`: `buffer`
 - `send_handle`: `userdata` for sub-type of `uv_stream_t`
-- `callback`: `callable` or `nil`
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
 
 Extended write function for sending handles over a pipe. The pipe must be
 initialized with `ipc` option `true`.
 
-**Returns:** `uv_write_t userdata` or `fail`
+**Returns (async version):** `uv_write_t userdata` or `fail`
+
+**Returns (sync version):** `nil` or `fail`
 
 **Note:** `send_handle` must be a TCP socket or pipe, which is a server or a
 connection (listening or connected state). Bound sockets or pipes will be
@@ -1676,12 +1690,14 @@ Get the current address to which the handle is bound.
 - `tcp`: `uv_tcp_t userdata`
 - `host`: `string`
 - `port`: `integer`
-- `callback`: `callable`
+- `callback`: `callable` (async version) or `thread` (sync version)
    - `err`: `nil` or `string`
 
 Establish an IPv4 or IPv6 TCP connection.
 
-**Returns:** `uv_connect_t userdata` or `fail`
+**Returns (async version):** `uv_connect_t userdata` or `fail`
+
+**Returns (sync version):** `nil` or `fail`
 
 ```lua
 local client = uv.new_tcp()
@@ -1821,12 +1837,14 @@ typically between 92 and 108 bytes.
 **Parameters:**
 - `pipe`: `uv_pipe_t userdata`
 - `name`: `string`
-- `callback`: `callable` or `nil`
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
 
 Connect to the Unix domain socket or the named pipe.
 
-**Returns:** `uv_connect_t userdata` or `fail`
+**Returns (async version):** `uv_connect_t userdata` or `fail`
+
+**Returns (sync version):** `nil` or `fail`
 
 **Note**: Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes,
 typically between 92 and 108 bytes.
@@ -2341,14 +2359,16 @@ Set the time to live.
 - `data`: `buffer`
 - `host`: `string`
 - `port`: `integer`
-- `callback`: `callable`
+- `callback`: `callable` (async version) or `thread` (sync version)
   - `err`: `nil` or `string`
 
 Send data over the UDP socket. If the socket has not previously been bound
 with `uv.udp_bind()` it will be bound to `0.0.0.0` (the "all interfaces" IPv4
 address) and a random port number.
 
-**Returns:** `uv_udp_send_t userdata` or `fail`
+**Returns (async version):** `uv_udp_send_t userdata` or `fail`
+
+**Returns (sync version):** `nil` or `fail`
 
 ### `uv.udp_try_send(udp, data, host, port)`
 
@@ -2444,7 +2464,7 @@ it.
   - `watch_entry`: `boolean` or `nil` (default: `false`)
   - `stat`: `boolean` or `nil` (default: `false`)
   - `recursive`: `boolean` or `nil` (default: `false`)
-- `callback`: `callable`
+- `callback`: `callable` (async version) or `thread` (sync version)
   - `err`: `nil` or `string`
   - `filename`: `string`
   - `events`: `table`
@@ -2454,7 +2474,9 @@ it.
 Start the handle with the given callback, which will watch the specified path
 for changes.
 
-**Returns:** `0` or `fail`
+**Returns (async version):** `0` or `fail`
+
+**Returns (sync version):** `string, table` or `fail`
 
 ### `uv.fs_event_stop()`
 
@@ -2497,7 +2519,7 @@ it.
 - `fs_poll`: `uv_fs_poll_t userdata`
 - `path`: `string`
 - `interval`: `integer`
-- `callback`: `callable`
+- `callback`: `callable` (async version) or `thread` (sync version)
   - `err`: `nil` or `string`
   - `prev`: `table` or `nil` (see `uv.fs_stat`)
   - `curr`: `table` or `nil` (see `uv.fs_stat`)
@@ -2507,7 +2529,9 @@ Check the file at `path` for changes every `interval` milliseconds.
 **Note:** For maximum portability, use multi-second intervals. Sub-second
 intervals will not detect all changes on many file systems.
 
-**Returns:** `0` or `fail`
+**Returns (async version):** `0` or `fail`
+
+**Returns (sync version):** `table/nil, table/nil` or `fail`
 
 ### `uv.fs_poll_stop()`
 
@@ -2576,7 +2600,7 @@ end)
 
 **Parameters:**
 - `fd`: `integer`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -2592,7 +2616,7 @@ Equivalent to `close(2)`.
 - `path`: `string`
 - `flags`: `string` or `integer`
 - `mode`: `integer`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `fd`: `integer` or `nil`
 
@@ -2614,7 +2638,7 @@ not supported.
 - `fd`: `integer`
 - `size`: `integer`
 - `offset`: `integer` or `nil`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `data`: `string` or `nil`
 
@@ -2632,7 +2656,7 @@ If `offset` is nil or omitted, it will default to `-1`, which indicates 'use and
 
 **Parameters:**
 - `path`: `string`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -2648,7 +2672,7 @@ Equivalent to `unlink(2)`.
 - `fd`: `integer`
 - `data`: `buffer`
 - `offset`: `integer` or `nil`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `bytes`: `integer` or `nil`
 
@@ -2667,7 +2691,7 @@ If `offset` is nil or omitted, it will default to `-1`, which indicates 'use and
 **Parameters:**
 - `path`: `string`
 - `mode`: `integer`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -2681,7 +2705,7 @@ Equivalent to `mkdir(2)`.
 
 **Parameters:**
 - `template`: `string`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `path`: `string` or `nil`
 
@@ -2695,7 +2719,7 @@ Equivalent to `mkdtemp(3)`.
 
 **Parameters:**
 - `template`: `string`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `fd`: `integer` or `nil`
   - `path`: `string` or `nil`
@@ -2710,7 +2734,7 @@ Equivalent to `mkstemp(3)`. Returns a temporary file handle and filename.
 
 **Parameters:**
 - `path`: `string`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -2726,7 +2750,7 @@ Equivalent to `rmdir(2)`.
 - `path`: `string`
 - `callback`: `callable`
   - `err`: `nil` or `string`
-  - `success`: `uv_fs_t userdata` or `nil`
+  - `success`: `uv_fs_t userdata` or `thread` or `nil`
 
 Equivalent to `scandir(3)`, with a slightly different API. Returns a handle that
 the user can pass to `uv.fs_scandir_next()`.
@@ -2755,7 +2779,7 @@ its related functions for an asynchronous version.
 
 **Parameters:**
 - `path`: `string`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `stat`: `table` or `nil` (see below)
 
@@ -2794,7 +2818,7 @@ Equivalent to `stat(2)`.
 
 **Parameters:**
 - `fd`: `integer`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `stat`: `table` or `nil` (see `uv.fs_stat`)
 
@@ -2808,7 +2832,7 @@ Equivalent to `fstat(2)`.
 
 **Parameters:**
 - `path`: `string`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `stat`: `table` or `nil` (see `uv.fs_stat`)
 
@@ -2823,7 +2847,7 @@ Equivalent to `lstat(2)`.
 **Parameters:**
 - `path`: `string`
 - `new_path`: `string`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -2837,7 +2861,7 @@ Equivalent to `rename(2)`.
 
 **Parameters:**
 - `fd`: `integer`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -2851,7 +2875,7 @@ Equivalent to `fsync(2)`.
 
 **Parameters:**
 - `fd`: `integer`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -2866,7 +2890,7 @@ Equivalent to `fdatasync(2)`.
 **Parameters:**
 - `fd`: `integer`
 - `offset`: `integer`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -2883,7 +2907,7 @@ Equivalent to `ftruncate(2)`.
 - `in_fd`: `integer`
 - `in_offset`: `integer`
 - `size`: `integer`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `bytes`: `integer` or `nil`
 
@@ -2898,7 +2922,7 @@ Limited equivalent to `sendfile(2)`. Returns the number of bytes written.
 **Parameters:**
 - `path`: `string`
 - `mode`: `integer`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `permission`: `boolean` or `nil`
 
@@ -2915,7 +2939,7 @@ Returns `true` or `false` indicating access permission.
 **Parameters:**
 - `path`: `string`
 - `mode`: `integer`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -2930,7 +2954,7 @@ Equivalent to `chmod(2)`.
 **Parameters:**
 - `fd`: `integer`
 - `mode`: `integer`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -2946,7 +2970,7 @@ Equivalent to `fchmod(2)`.
 - `path`: `string`
 - `atime`: `number`
 - `mtime`: `number`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -2962,7 +2986,7 @@ Equivalent to `utime(2)`.
 - `fd`: `integer`
 - `atime`: `number`
 - `mtime`: `number`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -2978,7 +3002,7 @@ Equivalent to `futime(2)`.
 - `path`: `string`
 - `atime`: `number`
 - `mtime`: `number`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -2993,7 +3017,7 @@ Equivalent to `lutime(2)`.
 **Parameters:**
 - `path`: `string`
 - `new_path`: `string`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -3011,7 +3035,7 @@ Equivalent to `link(2)`.
 - `flags`: `table`, `integer`, or `nil`
   - `dir`: `boolean`
   - `junction`: `boolean`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -3025,7 +3049,7 @@ Equivalent to `symlink(2)`. If the `flags` parameter is omitted, then the 3rd pa
 
 **Parameters:**
 - `path`: `string`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `path`: `string` or `nil`
 
@@ -3039,7 +3063,7 @@ Equivalent to `readlink(2)`.
 
 **Parameters:**
 - `path`: `string`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `path`: `string` or `nil`
 
@@ -3055,7 +3079,7 @@ Equivalent to `realpath(3)`.
 - `path`: `string`
 - `uid`: `integer`
 - `gid`: `integer`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -3071,7 +3095,7 @@ Equivalent to `chown(2)`.
 - `fd`: `integer`
 - `uid`: `integer`
 - `gid`: `integer`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -3087,7 +3111,7 @@ Equivalent to `fchown(2)`.
 - `fd`: `integer`
 - `uid`: `integer`
 - `gid`: `integer`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -3106,7 +3130,7 @@ Equivalent to `lchown(2)`.
   - `excl`: `boolean`
   - `ficlone`: `boolean`
   - `ficlone_force`: `boolean`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -3120,7 +3144,7 @@ Copies a file from path to new_path. If the `flags` parameter is omitted, then t
 
 **Parameters:**
 - `path`: `string`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `dir`: `luv_dir_t userdata` or `nil`
 - `entries`: `integer` or `nil`
@@ -3139,7 +3163,7 @@ that should be returned by each call to `uv.fs_readdir()`.
 
 **Parameters:**
 - `dir`: `luv_dir_t userdata`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `entries`: `table` or `nil` (see below)
 
@@ -3161,7 +3185,7 @@ the associated `uv.fs_opendir()` call.
 
 **Parameters:**
 - `dir`: `luv_dir_t userdata`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
@@ -3175,7 +3199,7 @@ Closes a directory stream returned by a successful `uv.fs_opendir()` call.
 
 **Parameters:**
 - `path`: `string`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `table` or `nil` (see below)
 
@@ -3263,7 +3287,7 @@ called in the main loop thread.
   - `passive`: `boolean` or `nil`
   - `numericserv`: `boolean` or `nil`
   - `canonname`: `boolean` or `nil`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `addresses`: `table` or `nil` (see below)
 
@@ -3295,7 +3319,7 @@ Valid hint strings for the keys that take a string:
   - `ip`: `string` or `nil`
   - `port`: `integer` or `nil`
   - `family`: `string` or `integer` or `nil`
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `sring`
   - `host`: `string` or `nil`
   - `service`: `string` or `nil`
@@ -3889,7 +3913,7 @@ range is between -20 (high priority) and 19 (low priority).
 **Parameters:**
 - `len`: `integer`
 - `flags`: `nil` (see below)
-- `callback`: `callable` (async version) or `nil` (sync version)
+- `callback`: `callable` (async version) or `thread` or `nil` (sync version)
   - `err`: `nil` or `string`
   - `bytes`: `string` or `nil`
 

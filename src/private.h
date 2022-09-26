@@ -56,7 +56,9 @@ static int luv_check_continuation(lua_State* L, int index);
 static luv_req_t* luv_setup_req(lua_State* L, luv_ctx_t* ctx, int ref);
 static luv_req_t* luv_setup_req_with_mt(lua_State* L, luv_ctx_t* ctx, int ref, const char* mt_name);
 static void luv_fulfill_req(lua_State* L, luv_req_t* data, int nargs);
+static void luv_fulfill_req_status(lua_State* L, luv_req_t* data, int status);
 static void luv_cleanup_req(lua_State* L, luv_req_t* data);
+static int luv_is_sync_req(lua_State *L, luv_req_t *data);
 
 /* From handle.c */
 static void* luv_checkudata(lua_State* L, int ud, const char* tname);

@@ -163,8 +163,7 @@ static int luv_tcp_getpeername(lua_State* L) {
 static void luv_connect_cb(uv_connect_t* req, int status) {
   luv_req_t* data = (luv_req_t*)req->data;
   lua_State* L = data->ctx->L;
-  luv_status(L, status);
-  luv_fulfill_req(L, (luv_req_t*)req->data, 1);
+  luv_fulfill_req_status(L, (luv_req_t*)req->data, status);
   luv_cleanup_req(L, (luv_req_t*)req->data);
   req->data = NULL;
 }
@@ -198,6 +197,7 @@ static int luv_tcp_connect(lua_State* L) {
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
+  luv_yield_req(L, (luv_req_t*)req->data);
   return 1;
 }
 

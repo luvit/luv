@@ -264,7 +264,8 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
     else {
       lua_pushfstring(L, "%s: %s", uv_err_name(req->result), uv_strerror(req->result));
     }
-    return 2;
+    lua_pushstring(L, uv_err_name(req->result));
+    return 3;
   }
 
   switch (req->fs_type) {
@@ -401,17 +402,23 @@ static void luv_fs_cb(uv_fs_t* req) {
   if (data == NULL) return;
   lua_State* L = data->ctx->L;
 
+  int is_thread = luv_is_sync_req(L, data);
+
   int nargs = push_fs_result(L, req);
-  if (nargs == 2 && lua_isnil(L, -nargs)) {
-    // If it was an error, convert to (err, value) format.
-    lua_remove(L, -nargs);
-    nargs--;
-  }
-  else {
-    // Otherwise insert a nil in front to convert to (err, value) format.
-    lua_pushnil(L);
-    lua_insert(L, -nargs - 1);
-    nargs++;
+  if (!is_thread) {
+    if (nargs == 3 && lua_isnil(L, -nargs)) {
+      // If it was an error, convert to (err, value) format.
+      lua_remove(L, -nargs);
+      lua_pop(L, 1);
+
+      nargs -= 2;
+    }
+    else {
+      // Otherwise insert a nil in front to convert to (err, value) format.
+      lua_pushnil(L);
+      lua_insert(L, -nargs - 1);
+      nargs++;
+    }
   }
   if (req->fs_type == UV_FS_SCANDIR) {
     luv_fulfill_req(L, data, nargs);
@@ -429,7 +436,7 @@ static void luv_fs_cb(uv_fs_t* req) {
 
 // handle the FS call but don't return, instead set the local
 // variable 'nargs' to the number of return values
-#define FS_CALL_NORETURN(func, req, ...) {                \
+#define FS_CALL_NORETURN(func, req, CLEANUP, ...) {       \
   int ret, sync;                                          \
   luv_req_t* lreq = (luv_req_t*)req->data;                \
   sync = lreq->callback_ref == LUA_NOREF;                 \
@@ -473,14 +480,27 @@ static void luv_fs_cb(uv_fs_t* req) {
     }                                                     \
   }                                                       \
   else {                                                  \
-    lua_rawgeti(L, LUA_REGISTRYINDEX, lreq->req_ref);     \
-    nargs = 1;                                            \
+    if (luv_is_sync_req(L, lreq)) {                       \
+      CLEANUP;                                            \
+      return lua_yield(L, 0);                             \
+    } else {                                              \
+      lua_pop(L, 1);                                      \
+      lua_rawgeti(L, LUA_REGISTRYINDEX, lreq->req_ref);   \
+      nargs = 1;                                          \
+    }                                                     \
   }                                                       \
+  CLEANUP;                                                \
 }
 
 #define FS_CALL(func, req, ...) {                         \
   int nargs;                                              \
-  FS_CALL_NORETURN(func, req, __VA_ARGS__)                \
+  FS_CALL_NORETURN(func, req, {}, __VA_ARGS__)            \
+  return nargs;                                           \
+}
+
+#define FS_CALL_WRITE(func, req, ...) {                   \
+  int nargs;                                              \
+  FS_CALL_NORETURN(func, req, free(bufs), __VA_ARGS__)    \
   return nargs;                                           \
 }
 

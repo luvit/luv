@@ -236,8 +236,7 @@ static int luv_udp_set_ttl(lua_State* L) {
 static void luv_udp_send_cb(uv_udp_send_t* req, int status) {
   luv_req_t* data = (luv_req_t*)req->data;
   lua_State* L = data->ctx->L;
-  luv_status(L, status);
-  luv_fulfill_req(L, (luv_req_t*)req->data, 1);
+  luv_fulfill_req_status(L, (luv_req_t*)req->data, status);
   luv_cleanup_req(L, (luv_req_t*)req->data);
   req->data = NULL;
 }
@@ -305,6 +304,7 @@ static int luv_udp_send(lua_State* L) {
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
+  luv_yield_req(L, (luv_req_t*)req->data);
   lua_pushinteger(L, ret);
   return 1;
 }
@@ -373,7 +373,9 @@ static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf
 
   // address
   if (addr) {
-    parse_sockaddr(L, (struct sockaddr_storage*)addr);
+    // Force the sockaddr to be properly aligned
+    struct sockaddr_storage address = *(struct sockaddr_storage*)addr;
+    parse_sockaddr(L, &address);
   }
   else {
     lua_pushnil(L);
