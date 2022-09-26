@@ -12,7 +12,7 @@ if(NOT ${CMAKE_VERSION} VERSION_LESS "3.5.0")
   set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 endif()
 
-option(LUV_FORCE_COROUTINE_CONTINUATION "Build as module" ON)
+option(LUV_FORCE_COROUTINE_CONTINUATION "Build as module" OFF)
 option(BUILD_MODULE "Build as module" ON)
 option(BUILD_STATIC_LIBS "Build static library" OFF)
 option(BUILD_SHARED_LIBS "Build shared library" OFF)

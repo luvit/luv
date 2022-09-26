@@ -69,7 +69,7 @@ which will be resumed as if it were a synchronous call to that function. The
 **calling** thread will be yielded.
 
 If luv is compiled with the `LUV_FORCE_COROUTINE_CONTINUATION` define (default
-on) any blocking function calls inside of a coroutine will instead yield and
+off) any blocking function calls inside of a coroutine will instead yield and
 resume upon completion.
 
 ### Pseudo-Types
