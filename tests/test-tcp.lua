@@ -26,6 +26,32 @@ return require('lib/tap')(function (test)
     p{client=client,req=req}
   end)
 
+  test("basic tcp server and sync client (ipv4)", function (print, p, expect, uv)
+    if select(2, coroutine.running()) then return print("not in a coroutine, skipping") end
+
+    local server = uv.new_tcp()
+    assert(uv.tcp_bind(server, "127.0.0.1", 0))
+    assert(uv.listen(server, 128, expect(function (err)
+      p("server on connection", server)
+      assert(not err, err)
+      uv.close(server)
+    end)))
+
+    local address = uv.tcp_getsockname(server)
+    p{server=server,address=address}
+
+    local client = uv.new_tcp()
+    assert(uv.tcp_connect(client, "127.0.0.1", address.port, coroutine.running()))
+
+    p("client on connect", client)
+    assert(uv.shutdown(client, coroutine.running()))
+    p("client on shutdown", client)
+    uv.close(client)
+    p("client on close", client)
+
+    p{client=client}
+  end)
+
   test("basic tcp server and client (ipv6)", function (print, p, expect, uv)
     local server = uv.new_tcp()
     local _, err = uv.tcp_bind(server, "::1", 0)

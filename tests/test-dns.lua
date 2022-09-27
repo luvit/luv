@@ -92,6 +92,19 @@ return require('lib/tap')(function (test)
     end)))
   end)
 
+  test("Get all adresses for luvit.io sync", function (print, p, expect, uv)
+    if select(2, coroutine.running()) then return print("not in a coroutine, skipping") end
+
+    local res, err = uv.getaddrinfo("luvit.io", nil, nil, coroutine.running())
+    if errorAllowed(err) then
+      print(err, "skipping")
+      return
+    end
+    assert(not err, err)
+    p(res, #res)
+    assert(#res > 0)
+  end)
+
   test("Lookup local ipv4 address", function (print, p, expect, uv)
     assert(uv.getnameinfo({
       family = "inet",

@@ -25,6 +25,30 @@ return require('lib/tap')(function (test)
     p{client=client,req=req}
   end)
 
+  test("basic udp server and sync client (ipv4)", function (print, p, expect, uv)
+    if select(2, coroutine.running()) then return print("not in a coroutine, skipping") end
+
+    local server = uv.new_udp()
+    assert(uv.udp_bind(server, "0.0.0.0", TEST_PORT))
+    assert(uv.udp_recv_start(server, expect(function (err, data, addr, flags)
+      p("server on recv", server, data, addr, flags)
+      assert(not err, err)
+      assert(data == "PING")
+      uv.close(server, expect(function()
+        p("server on close", server)
+      end))
+    end)))
+    p{server=server}
+
+    local client = uv.new_udp()
+    assert(uv.udp_send(client, "PING", "127.0.0.1", TEST_PORT, coroutine.running()))
+    p("client on send", client)
+    uv.close(client)
+    p("client on close", client)
+
+    p{client=client}
+  end)
+
   test("basic udp send from table", function (print, p, expect, uv)
     local sendData = {"P", "I", "NG"}
     local server = uv.new_udp()
