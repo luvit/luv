@@ -18,8 +18,8 @@
 
 static int luv_check_continuation(lua_State* L, int index) {
 #ifdef LUV_FORCE_COROUTINE_CONTINUATION
-// Uses the current thread unless it is the main thread
-if (lua_isnoneornil(L, index)) {
+  // Uses the current thread unless it is the main thread
+  if (lua_isnoneornil(L, index)) {
     int ismain = lua_pushthread(L);
     if (ismain) {
       lua_pop(L, 1);
