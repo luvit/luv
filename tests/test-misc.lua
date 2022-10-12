@@ -168,4 +168,18 @@ return require('lib/tap')(function (test)
     assert(err:match("^E2BIG"))
   end, "1.33.0")
 
+  test("uv errno", function(print, p, expect, uv)
+    assert(type(uv.errno)=='table')
+    for k, v in pairs(uv.errno) do
+      assert(v < 0, k)
+    end
+  end)
+
+  test("uv constants", function(print, p, expect, uv)
+    assert(type(uv.constants)=='table')
+    for k, v in pairs(uv.constants) do
+      assert(v >= 0, k)
+    end
+  end)
+
 end)
