@@ -316,7 +316,7 @@ end)
 
 ## `uv_req_t` — Base request
 
-[`uv_req_t`]: #uv_req_t--request-handle
+[`uv_req_t`]: #uv_req_t--base-request
 
 `uv_req_t` is the base type for all libuv request types.
 
