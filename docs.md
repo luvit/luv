@@ -133,6 +133,7 @@ success, or sometimes nothing at all. These cases are documented below.
 ### `uv.errno`
 
 A table value which exposes error constants as a map, where the key is the error name (without the `UV_` prefix) and its value is a negative number.
+See Libuv's [Error constants](https://docs.libuv.org/en/v1.x/errors.html#error-constants) page for further details.
 
 - `E2BIG`: argument list too long.
 - `EACCES`: permission denied.
