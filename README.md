@@ -30,14 +30,14 @@ local timer = uv.new_timer()
 timer:start(1000, 0, function ()
   -- timer here is the value we passed in before from new_timer.
 
-  print ("Awake!")
+  print("Awake!")
 
   -- You must always close your uv handles or you'll leak memory
   -- We can't depend on the GC since it doesn't know enough about libuv.
   timer:close()
 end)
 
-print("Sleeping");
+print("Sleeping")
 
 -- uv.run will block and wait for all events to run.
 -- When there are no longer any active handles, it will return
