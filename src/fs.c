@@ -430,7 +430,7 @@ static void luv_fs_cb(uv_fs_t* req) {
   int ret, sync;                                          \
   luv_req_t* data = (luv_req_t*)req->data;                \
   sync = data->callback_ref == LUA_NOREF;                 \
-  ret = uv_fs_##func(data->ctx->loop, req, __VA_ARGS__,   \
+  ret = func(data->ctx->loop, req, __VA_ARGS__,           \
                      sync ? NULL : luv_fs_cb);            \
   if (req->fs_type != UV_FS_ACCESS && ret < 0) {          \
     lua_pushnil(L);                                       \
@@ -487,7 +487,7 @@ static int luv_fs_close(lua_State* L) {
   int ref = luv_check_continuation(L, 2);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(close, req, file);
+  FS_CALL(uv_fs_close, req, file);
 }
 
 static int luv_fs_open(lua_State* L) {
@@ -498,7 +498,7 @@ static int luv_fs_open(lua_State* L) {
   int ref = luv_check_continuation(L, 4);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(open, req, path, flags, mode);
+  FS_CALL(uv_fs_open, req, path, flags, mode);
 }
 
 static int luv_fs_read(lua_State* L) {
@@ -526,7 +526,7 @@ static int luv_fs_read(lua_State* L) {
   req->data = luv_setup_req(L, ctx, ref);
   // TODO: find out why we can't just use req->ptr for the base
   ((luv_req_t*)req->data)->data = buf.base;
-  FS_CALL(read, req, file, &buf, 1, offset);
+  FS_CALL(uv_fs_read, req, file, &buf, 1, offset);
 }
 
 static int luv_fs_unlink(lua_State* L) {
@@ -535,7 +535,7 @@ static int luv_fs_unlink(lua_State* L) {
   int ref = luv_check_continuation(L, 2);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(unlink, req, path);
+  FS_CALL(uv_fs_unlink, req, path);
 }
 
 static int luv_fs_write(lua_State* L) {
@@ -557,7 +557,7 @@ static int luv_fs_write(lua_State* L) {
   size_t count;
   uv_buf_t* bufs = luv_check_bufs(L, 2, &count, (luv_req_t*)req->data);
   int nargs;
-  FS_CALL_NORETURN(write, req, file, bufs, count, offset);
+  FS_CALL_NORETURN(uv_fs_write, req, file, bufs, count, offset);
   free(bufs);
   return nargs;
 }
@@ -569,7 +569,7 @@ static int luv_fs_mkdir(lua_State* L) {
   int ref = luv_check_continuation(L, 3);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(mkdir, req, path, mode);
+  FS_CALL(uv_fs_mkdir, req, path, mode);
 }
 
 static int luv_fs_mkdtemp(lua_State* L) {
@@ -578,7 +578,7 @@ static int luv_fs_mkdtemp(lua_State* L) {
   int ref = luv_check_continuation(L, 2);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(mkdtemp, req, tpl);
+  FS_CALL(uv_fs_mkdtemp, req, tpl);
 }
 
 #if LUV_UV_VERSION_GEQ(1, 34, 0)
@@ -588,7 +588,7 @@ static int luv_fs_mkstemp(lua_State* L) {
   int ref = luv_check_continuation(L, 2);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(mkstemp, req, tpl);
+  FS_CALL(uv_fs_mkstemp, req, tpl);
 }
 #endif
 
@@ -598,7 +598,7 @@ static int luv_fs_rmdir(lua_State* L) {
   int ref = luv_check_continuation(L, 2);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(rmdir, req, path);
+  FS_CALL(uv_fs_rmdir, req, path);
 }
 
 static int luv_fs_scandir(lua_State* L) {
@@ -608,7 +608,7 @@ static int luv_fs_scandir(lua_State* L) {
   int ref = luv_check_continuation(L, 2);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req_with_mt(L, ctx, ref, "uv_fs");
-  FS_CALL(scandir, req, path, flags);
+  FS_CALL(uv_fs_scandir, req, path, flags);
 }
 
 static int luv_fs_scandir_next(lua_State* L) {
@@ -626,7 +626,7 @@ static int luv_fs_stat(lua_State* L) {
   int ref = luv_check_continuation(L, 2);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(stat, req, path);
+  FS_CALL(uv_fs_stat, req, path);
 }
 
 static int luv_fs_fstat(lua_State* L) {
@@ -635,7 +635,7 @@ static int luv_fs_fstat(lua_State* L) {
   int ref = luv_check_continuation(L, 2);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(fstat, req, file);
+  FS_CALL(uv_fs_fstat, req, file);
 }
 
 static int luv_fs_lstat(lua_State* L) {
@@ -644,7 +644,7 @@ static int luv_fs_lstat(lua_State* L) {
   int ref = luv_check_continuation(L, 2);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(lstat, req, path);
+  FS_CALL(uv_fs_lstat, req, path);
 }
 
 static int luv_fs_rename(lua_State* L) {
@@ -657,7 +657,7 @@ static int luv_fs_rename(lua_State* L) {
   // ref the dest path so that we can print it in the error message
   lua_pushvalue(L, 2);
   ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
-  FS_CALL(rename, req, path, new_path);
+  FS_CALL(uv_fs_rename, req, path, new_path);
 }
 
 static int luv_fs_fsync(lua_State* L) {
@@ -666,7 +666,7 @@ static int luv_fs_fsync(lua_State* L) {
   int ref = luv_check_continuation(L, 2);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(fsync, req, file);
+  FS_CALL(uv_fs_fsync, req, file);
 }
 
 static int luv_fs_fdatasync(lua_State* L) {
@@ -675,7 +675,7 @@ static int luv_fs_fdatasync(lua_State* L) {
   int ref = luv_check_continuation(L, 2);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(fdatasync, req, file);
+  FS_CALL(uv_fs_fdatasync, req, file);
 }
 
 static int luv_fs_ftruncate(lua_State* L) {
@@ -685,7 +685,7 @@ static int luv_fs_ftruncate(lua_State* L) {
   int ref = luv_check_continuation(L, 3);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(ftruncate, req, file, offset);
+  FS_CALL(uv_fs_ftruncate, req, file, offset);
 }
 
 static int luv_fs_sendfile(lua_State* L) {
@@ -697,7 +697,7 @@ static int luv_fs_sendfile(lua_State* L) {
   int ref = luv_check_continuation(L, 5);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(sendfile, req, out_fd, in_fd, in_offset, length);
+  FS_CALL(uv_fs_sendfile, req, out_fd, in_fd, in_offset, length);
 }
 
 static int luv_fs_access(lua_State* L) {
@@ -707,7 +707,7 @@ static int luv_fs_access(lua_State* L) {
   int ref = luv_check_continuation(L, 3);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(access, req, path, amode);
+  FS_CALL(uv_fs_access, req, path, amode);
 }
 
 static int luv_fs_chmod(lua_State* L) {
@@ -717,7 +717,7 @@ static int luv_fs_chmod(lua_State* L) {
   int ref = luv_check_continuation(L, 3);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(chmod, req, path, mode);
+  FS_CALL(uv_fs_chmod, req, path, mode);
 }
 
 static int luv_fs_fchmod(lua_State* L) {
@@ -727,7 +727,7 @@ static int luv_fs_fchmod(lua_State* L) {
   int ref = luv_check_continuation(L, 3);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(fchmod, req, file, mode);
+  FS_CALL(uv_fs_fchmod, req, file, mode);
 }
 
 static int luv_fs_utime(lua_State* L) {
@@ -738,7 +738,7 @@ static int luv_fs_utime(lua_State* L) {
   int ref = luv_check_continuation(L, 4);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(utime, req, path, atime, mtime);
+  FS_CALL(uv_fs_utime, req, path, atime, mtime);
 }
 
 static int luv_fs_futime(lua_State* L) {
@@ -749,7 +749,7 @@ static int luv_fs_futime(lua_State* L) {
   int ref = luv_check_continuation(L, 4);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(futime, req, file, atime, mtime);
+  FS_CALL(uv_fs_futime, req, file, atime, mtime);
 }
 
 #if LUV_UV_VERSION_GEQ(1, 36, 0)
@@ -761,7 +761,7 @@ static int luv_fs_lutime(lua_State* L) {
   int ref = luv_check_continuation(L, 4);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(lutime, req, path, atime, mtime);
+  FS_CALL(uv_fs_lutime, req, path, atime, mtime);
 }
 #endif
 
@@ -775,7 +775,7 @@ static int luv_fs_link(lua_State* L) {
   // ref the dest path so that we can print it in the error message
   lua_pushvalue(L, 2);
   ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
-  FS_CALL(link, req, path, new_path);
+  FS_CALL(uv_fs_link, req, path, new_path);
 }
 
 static int luv_fs_symlink(lua_State* L) {
@@ -809,7 +809,7 @@ static int luv_fs_symlink(lua_State* L) {
   // ref the dest path so that we can print it in the error message
   lua_pushvalue(L, 2);
   ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
-  FS_CALL(symlink, req, path, new_path, flags);
+  FS_CALL(uv_fs_symlink, req, path, new_path, flags);
 }
 
 static int luv_fs_readlink(lua_State* L) {
@@ -818,7 +818,7 @@ static int luv_fs_readlink(lua_State* L) {
   int ref = luv_check_continuation(L, 2);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(readlink, req, path);
+  FS_CALL(uv_fs_readlink, req, path);
 }
 
 #if LUV_UV_VERSION_GEQ(1, 8, 0)
@@ -828,7 +828,7 @@ static int luv_fs_realpath(lua_State* L) {
   int ref = luv_check_continuation(L, 2);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(realpath, req, path);
+  FS_CALL(uv_fs_realpath, req, path);
 }
 #endif
 
@@ -840,7 +840,7 @@ static int luv_fs_chown(lua_State* L) {
   int ref = luv_check_continuation(L, 4);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(chown, req, path, uid, gid);
+  FS_CALL(uv_fs_chown, req, path, uid, gid);
 }
 
 static int luv_fs_fchown(lua_State* L) {
@@ -851,7 +851,7 @@ static int luv_fs_fchown(lua_State* L) {
   int ref = luv_check_continuation(L, 4);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(fchown, req, file, uid, gid);
+  FS_CALL(uv_fs_fchown, req, file, uid, gid);
 }
 
 #if LUV_UV_VERSION_GEQ(1, 21, 0)
@@ -863,7 +863,7 @@ static int luv_fs_lchown(lua_State* L) {
   int ref = luv_check_continuation(L, 4);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(lchown, req, path, uid, gid);
+  FS_CALL(uv_fs_lchown, req, path, uid, gid);
 }
 #endif
 
@@ -904,7 +904,7 @@ static int luv_fs_copyfile(lua_State*L) {
   // ref the dest path so that we can print it in the error message
   lua_pushvalue(L, 2);
   ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
-  FS_CALL(copyfile, req, path, new_path, flags);
+  FS_CALL(uv_fs_copyfile, req, path, new_path, flags);
 }
 #endif
 
@@ -926,7 +926,7 @@ static int luv_fs_opendir(lua_State* L) {
   lua_pushinteger(L, nentries);
   ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-  FS_CALL(opendir, req, path);
+  FS_CALL(uv_fs_opendir, req, path);
 }
 
 static int luv_fs_readdir(lua_State* L) {
@@ -937,7 +937,7 @@ static int luv_fs_readdir(lua_State* L) {
 
   req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(readdir, req, dir->handle);
+  FS_CALL(uv_fs_readdir, req, dir->handle);
 }
 
 static int luv_fs_closedir(lua_State* L) {
@@ -950,7 +950,7 @@ static int luv_fs_closedir(lua_State* L) {
 
   uv_fs_t *req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(closedir, req, dir->handle);
+  FS_CALL(uv_fs_closedir, req, dir->handle);
 }
 
 static int luv_fs_dir_tostring(lua_State* L) {
@@ -984,7 +984,7 @@ static int luv_fs_statfs(lua_State* L) {
   int ref = luv_check_continuation(L, 2);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
-  FS_CALL(statfs, req, path);
+  FS_CALL(uv_fs_statfs, req, path);
 }
 #endif
 
