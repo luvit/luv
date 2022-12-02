@@ -428,14 +428,14 @@ static void luv_fs_cb(uv_fs_t* req) {
 // variable 'nargs' to the number of return values
 #define FS_CALL_NORETURN(func, req, ...) {                \
   int ret, sync;                                          \
-  luv_req_t* data = (luv_req_t*)req->data;                \
-  sync = data->callback_ref == LUA_NOREF;                 \
-  ret = func(data->ctx->loop, req, __VA_ARGS__,           \
+  luv_req_t* lreq = (luv_req_t*)req->data;                \
+  sync = lreq->callback_ref == LUA_NOREF;                 \
+  ret = func(lreq->ctx->loop, req, __VA_ARGS__,           \
                      sync ? NULL : luv_fs_cb);            \
   if (req->fs_type != UV_FS_ACCESS && ret < 0) {          \
     lua_pushnil(L);                                       \
     if (fs_req_has_dest_path(req)) {                      \
-      lua_rawgeti(L, LUA_REGISTRYINDEX, data->data_ref);  \
+      lua_rawgeti(L, LUA_REGISTRYINDEX, lreq->data_ref);  \
       const char* dest_path = lua_tostring(L, -1);        \
       lua_pop(L, 1);                                      \
       lua_pushfstring(L, "%s: %s: %s -> %s",              \
@@ -455,7 +455,7 @@ static void luv_fs_cb(uv_fs_t* req) {
     }                                                     \
     lua_pushstring(L, uv_err_name(req->result));          \
     if(req->fs_type != UV_FS_SCANDIR) {                   \
-      luv_cleanup_req(L, data);                           \
+      luv_cleanup_req(L, lreq);                           \
       req->data = NULL;                                   \
       uv_fs_req_cleanup(req);                             \
     }                                                     \
@@ -464,13 +464,13 @@ static void luv_fs_cb(uv_fs_t* req) {
   else if (sync) {                                        \
     nargs = push_fs_result(L, req);                       \
     if(req->fs_type != UV_FS_SCANDIR) {                   \
-      luv_cleanup_req(L, data);                           \
+      luv_cleanup_req(L, lreq);                           \
       req->data = NULL;                                   \
       uv_fs_req_cleanup(req);                             \
     }                                                     \
   }                                                       \
   else {                                                  \
-    lua_rawgeti(L, LUA_REGISTRYINDEX, data->req_ref);     \
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lreq->req_ref);     \
     nargs = 1;                                            \
   }                                                       \
 }

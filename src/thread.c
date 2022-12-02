@@ -24,7 +24,7 @@ typedef struct {
   luv_thread_arg_t args;
 } luv_thread_t;
 
-static lua_State* luv_thread_acquire_vm() {
+static lua_State* luv_thread_acquire_vm(void) {
   lua_State* L = luaL_newstate();
 
   // Add in the lua standard libraries
