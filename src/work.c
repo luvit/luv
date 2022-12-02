@@ -127,7 +127,7 @@ static int luv_work_cb(lua_State* L) {
   return LUA_OK;
 }
 
-static lua_State* luv_work_acquire_vm()
+static lua_State* luv_work_acquire_vm(void)
 {
   lua_State* L = uv_key_get(&tls_vmkey);
   if (L == NULL)
@@ -245,7 +245,7 @@ static const luaL_Reg luv_work_ctx_methods[] = {
   {NULL, NULL}
 };
 
-static void luv_key_init_once()
+static void luv_key_init_once(void)
 {
   const char* val;
   int status = uv_key_create(&tls_vmkey);
@@ -287,7 +287,7 @@ static void luv_key_init_once()
   idx_vms = 0;
 }
 
-static void luv_work_cleanup()
+static void luv_work_cleanup(void)
 {
   unsigned int i;
 

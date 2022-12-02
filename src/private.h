@@ -111,7 +111,7 @@ static int luv_arg_type_error(lua_State* L, int index, const char* fmt);
 static int luv_optboolean(lua_State*L, int idx, int defaultval);
 
 /* From thread.c */
-static lua_State* luv_thread_acquire_vm();
+static lua_State* luv_thread_acquire_vm(void);
 
 /* From process.c */
 static int luv_parse_signal(lua_State* L, int slot);
