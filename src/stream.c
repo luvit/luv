@@ -20,9 +20,9 @@ static uv_stream_t* luv_check_stream(lua_State* L, int index) {
   int isStream;
   void *udata;
   uv_stream_t* handle;
-  if (!(udata = lua_touserdata(L, index))) { goto fail; }
-  if (!(handle = *(uv_stream_t**) udata)) { goto fail; }
-  if (!handle->data) { goto fail; }
+  // check if the input is a userdata
+  udata = lua_touserdata(L, index);
+  if (!udata) goto fail;
   // "uv_stream" in the registry is a table structured like so:
   // {
   //   [<uv_pipe metatable>] = true,
@@ -33,11 +33,17 @@ static uv_stream_t* luv_check_stream(lua_State* L, int index) {
   // we get its metatable and check that we get `true` back
   // when looking the metatable up in the "uv_stream" table.
   lua_getfield(L, LUA_REGISTRYINDEX, "uv_stream");
-  lua_getmetatable(L, index < 0 ? index - 1 : index);
+  isStream = lua_getmetatable(L, index < 0 ? index - 1 : index);
+  if (!isStream) goto fail;
   lua_rawget(L, -2);
   isStream = lua_toboolean(L, -1);
   lua_pop(L, 2);
-  if (isStream) { return handle; }
+  if (!isStream) goto fail;
+  // cast the userdata to uv_stream_t
+  handle = *(uv_stream_t**)udata;
+  if (!handle->data) goto fail;
+  return handle;
+
   fail: luaL_argerror(L, index, "Expected uv_stream userdata");
   return NULL;
 }

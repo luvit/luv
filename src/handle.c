@@ -32,9 +32,9 @@ static uv_handle_t* luv_check_handle(lua_State* L, int index) {
   int isHandle;
   uv_handle_t* handle;
   void *udata;
-  if (!(udata = lua_touserdata(L, index))) { goto fail; }
-  if (!(handle = *(uv_handle_t**) udata)) { goto fail; }
-  if (!handle->data) { goto fail; }
+  // check if input is a userdata
+  udata = lua_touserdata(L, index);
+  if (!udata) goto fail;
   // "uv_handle" in the registry is a table structured like so:
   // {
   //   [<uv_aync metatable>] = true,
@@ -45,11 +45,17 @@ static uv_handle_t* luv_check_handle(lua_State* L, int index) {
   // we get its metatable and check that we get `true` back
   // when looking the metatable up in the "uv_handle" table.
   lua_getfield(L, LUA_REGISTRYINDEX, "uv_handle");
-  lua_getmetatable(L, index < 0 ? index - 1 : index);
+  isHandle = lua_getmetatable(L, index < 0 ? index - 1 : index);
+  if (!isHandle) goto fail;
   lua_rawget(L, -2);
   isHandle = lua_toboolean(L, -1);
   lua_pop(L, 2);
-  if (isHandle) { return handle; }
+  if (!isHandle) goto fail;
+  // cast the userdata to uv_handle_t
+  handle = *(uv_handle_t**)udata;
+  if (!handle->data) goto fail;
+  return handle;
+
   fail: luaL_argerror(L, index, "Expected uv_handle userdata");
   return NULL;
 }
