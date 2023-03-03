@@ -51,9 +51,9 @@ static uv_handle_t* luv_check_handle(lua_State* L, int index) {
   isHandle = lua_toboolean(L, -1);
   lua_pop(L, 2);
   if (!isHandle) goto fail;
-  // cast the uesrdata to uv_handle_t
+  // cast the userdata to uv_handle_t
   handle = *(uv_handle_t**)udata;
-  if (!handle || !handle->data) goto fail;
+  if (!handle->data) goto fail;
   return handle;
 
   fail: luaL_argerror(L, index, "Expected uv_handle userdata");

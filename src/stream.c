@@ -41,7 +41,7 @@ static uv_stream_t* luv_check_stream(lua_State* L, int index) {
   if (!isStream) goto fail;
   // cast the userdata to uv_stream_t
   handle = *(uv_stream_t**)udata;
-  if (!handle || !handle->data) goto fail;
+  if (!handle->data) goto fail;
   return handle;
 
   fail: luaL_argerror(L, index, "Expected uv_stream userdata");
