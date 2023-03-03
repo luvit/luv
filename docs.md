@@ -3156,13 +3156,14 @@ work:queue(1, 2)
 ### `uv.new_work(work_callback, after_work_callback)`
 
 **Parameters:**
-- `work_callback`: `function`
+- `work_callback`: `function` or `string`
   - `...`: `threadargs` passed to/from `uv.queue_work(work_ctx, ...)`
 - `after_work_callback`: `function`
   - `...`: `threadargs` returned from `work_callback`
 
-Creates and initializes a new `luv_work_ctx_t` (not `uv_work_t`). Returns the
-Lua userdata wrapping it.
+Creates and initializes a new `luv_work_ctx_t` (not `uv_work_t`).
+`work_callback` is a Lua function or a string containing Lua code or bytecode dumped from a function.
+Returns the Lua userdata wrapping it.
 
 **Returns:** `luv_work_ctx_t userdata`
 
@@ -3259,12 +3260,12 @@ Libuv provides cross-platform implementations for multiple threading an
 **Parameters:**
 - `options`: `table` or `nil`
   - `stack_size`: `integer` or `nil`
-- `entry`: `function`
+- `entry`: `function` or `string`
 - `...`: `threadargs` passed to `entry`
 
 Creates and initializes a `luv_thread_t` (not `uv_thread_t`). Returns the Lua
 userdata wrapping it and asynchronously executes `entry`, which can be either
-a Lua function or a Lua function dumped to a string. Additional arguments `...`
+a Lua function or a string containing Lua code or bytecode dumped from a function. Additional arguments `...`
 are passed to the `entry` function and an optional `options` table may be
 provided. Currently accepted `option` fields are `stack_size`.
 
