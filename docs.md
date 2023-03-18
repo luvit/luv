@@ -2433,7 +2433,7 @@ it.
 > method form `fs_poll:start(path, interval, callback)`
 
 **Parameters:**
-- `fs_event`: `uv_fs_event_t userdata`
+- `fs_poll`: `uv_fs_poll_t userdata`
 - `path`: `string`
 - `interval`: `integer`
 - `callback`: `callable`
