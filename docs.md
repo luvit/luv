@@ -73,7 +73,7 @@ used here to facilitate documenting consistent behavior:
   metamethod
 - `buffer`: a `string` or a sequential `table` of `string`s
 - `threadargs`: variable arguments (`...`) of type `nil`, `boolean`, `number`,
-  `string`, or `userdata`
+  `string`, or `userdata`, numbers of argument limited to 9.
 
 ## Contents
 
@@ -3270,6 +3270,8 @@ are passed to the `entry` function and an optional `options` table may be
 provided. Currently accepted `option` fields are `stack_size`.
 
 **Returns:** `luv_thread_t userdata` or `fail`
+
+**Note:** unsafe, please make sure the thread end of life before the Lua state close.
 
 ### `uv.thread_equal(thread, other_thread)`
 
