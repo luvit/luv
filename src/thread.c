@@ -65,7 +65,7 @@ static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int
   idx = idx > 0 ? idx : 1;
   i = idx;
   args->flags = flags;
-  while (i <= top && i <= LUV_THREAD_MAXNUM_ARG + idx)
+  while (i <= top && i < LUV_THREAD_MAXNUM_ARG + idx)
   {
     luv_val_t *arg = args->argv + i - idx;
     arg->type = lua_type(L, i);

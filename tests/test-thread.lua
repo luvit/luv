@@ -82,4 +82,21 @@ return require('lib/tap')(function (test)
     assert(elapsed >= 100, "elapsed should be at least delay ")
   end, "1.26.0")
 
+  test("test thread arguments limit", function(print, p, expect, uv)
+    local args = {}
+    args[1] = uv.new_async(expect(function (n)
+      assert(n==9)
+      args[1]:close()
+    end))
+    for i=2, 10 do
+      args[i] = i
+    end
+    local unpack = unpack or table.unpack
+    uv.new_thread(function(...)
+      local arg = {...}
+      assert(#arg == 9)
+      arg[1]:send(#arg)
+    end, unpack(args)):join()
+    assert(#args==10)
+  end)
 end)
