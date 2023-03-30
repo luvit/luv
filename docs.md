@@ -3271,7 +3271,8 @@ provided. Currently accepted `option` fields are `stack_size`.
 
 **Returns:** `luv_thread_t userdata` or `fail`
 
-**Note:** unsafe, please make sure the thread end of life before the Lua state close.
+**Note:** unsafe, please make sure the thread end of life before it is released
+by Lua state close or garbage collection.
 
 ### `uv.thread_equal(thread, other_thread)`
 
