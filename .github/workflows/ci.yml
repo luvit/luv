@@ -35,6 +35,25 @@ jobs:
       # Run with extremely aggressive garbage collection to potentially find more problems
       run: ./build/lua -e "collectgarbage('setpause', 0); collectgarbage('setstepmul', 10000000000000)" tests/run.lua
 
+  clang-tsan:
+    runs-on: ubuntu-latest
+    env:
+      BUILD_TYPE: Debug
+      WITH_LUA_ENGINE: Lua
+      CC: clang
+      CXX: clang++
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Build
+      run: CMAKE_OPTIONS="-DCMAKE_C_FLAGS=-fsanitize=thread -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=thread -DTSAN=ON" make
+    - name: Test
+      run: make test
+    - name: Test with Aggressive GC
+      # Run with extremely aggressive garbage collection to potentially find more problems
+      run: ./build/lua -e "collectgarbage('setpause', 0); collectgarbage('setstepmul', 10000000000000)" tests/run.lua
+
   valgrind:
     runs-on: ubuntu-latest
     env:

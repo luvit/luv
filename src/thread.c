@@ -258,8 +258,6 @@ static luv_thread_t* luv_check_thread(lua_State* L, int index) {
 static int luv_thread_gc(lua_State* L) {
   luv_thread_t* tid = luv_check_thread(L, 1);
   free(tid->code);
-  tid->code = NULL;
-  tid->len = 0;
   luv_thread_arg_clear(L, &tid->args, LUVF_THREAD_SIDE_MAIN);
   return 0;
 }
@@ -299,11 +297,12 @@ static void luv_thread_cb(void* varg) {
 
 static void luv_thread_notify_close_cb(uv_handle_t *handle) {
   luv_thread_t *thread = handle->data;
+  if (thread->handle != 0)
+    uv_thread_join(&thread->handle);
 
   luaL_unref(thread->L, LUA_REGISTRYINDEX, thread->ref);
   thread->ref = LUA_NOREF;
   thread->L = NULL;
-  uv_thread_join(&thread->handle);
 }
 
 static void luv_thread_exit_cb(uv_async_t* handle) {
@@ -387,6 +386,7 @@ static int luv_thread_join(lua_State* L) {
   luv_thread_t* tid = luv_check_thread(L, 1);
   int ret = uv_thread_join(&tid->handle);
   if (ret < 0) return luv_error(L, ret);
+  tid->handle = 0;
   lua_pushboolean(L, 1);
   return 1;
 }
