@@ -3,8 +3,6 @@ luv
 
 [![Linux Build Status](https://github.com/luvit/luv/actions/workflows/ci.yml/badge.svg)](https://github.com/luvit/luv/actions/workflows/ci.yml)
 [![Windows Build status](https://ci.appveyor.com/api/projects/status/uo1qhdcc0vcqsiok/branch/master?svg=true)](https://ci.appveyor.com/project/racker-buildbot/luv/branch/master)
-[![Code Quality: Cpp](https://img.shields.io/lgtm/grade/cpp/g/luvit/luv.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/luvit/luv/context:cpp)
-[![Total Alerts](https://img.shields.io/lgtm/alerts/g/luvit/luv.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/luvit/luv/alerts)
 
 [libuv](https://github.com/libuv/libuv) bindings for
 [luajit](http://luajit.org/) and [lua](http://www.lua.org/)
