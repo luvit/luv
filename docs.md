@@ -2746,7 +2746,7 @@ Equivalent to `fstat(2)`.
 ### `uv.fs_lstat(path, [callback])`
 
 **Parameters:**
-- `fd`: `integer`
+- `path`: `string`
 - `callback`: `callable` (async version) or `nil` (sync version)
   - `err`: `nil` or `string`
   - `stat`: `table` or `nil` (see `uv.fs_stat`)
