@@ -508,6 +508,7 @@ static int luv_fs_read(lua_State* L) {
   // -1 offset means "the current file offset is used and updated"
   int64_t offset = -1;
   int ref;
+  char* data;
   // both offset and callback are optional
   if (luv_is_callable(L, 3) && lua_isnoneornil(L, 4)) {
     ref = luv_check_continuation(L, 3);
@@ -516,7 +517,7 @@ static int luv_fs_read(lua_State* L) {
     offset = luaL_optinteger(L, 3, offset);
     ref = luv_check_continuation(L, 4);
   }
-  char* data = (char*)malloc(len);
+  data = (char*)malloc(len);
   if (!data) {
     luaL_unref(L, LUA_REGISTRYINDEX, ref);
     return luaL_error(L, "Failure to allocate buffer");
