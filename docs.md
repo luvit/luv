@@ -3554,6 +3554,24 @@ time between intervals.
 
 **Returns:** `number`
 
+### `uv.clock_gettime(clock_id)`
+
+**Parameters:**
+- `clock_id`: `string`
+
+Obtain the current system time from a high-resolution real-time or monotonic
+clock source. `clock_id` can be the string `"monotonic"` or `"realtime"`.
+
+The real-time clock counts from the UNIX epoch (1970-01-01) and is subject
+to time adjustments; it can jump back in time.
+
+The monotonic clock counts from an arbitrary point in the past and never
+jumps back in time.
+
+**Returns:** `table` or `fail`
+- `sec`: `integer`
+- `nsec`: `integer`
+
 ### `uv.uptime()`
 
 Returns the current system uptime in seconds.

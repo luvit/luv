@@ -375,6 +375,7 @@ static const luaL_Reg luv_functions[] = {
 #if LUV_UV_VERSION_GEQ(1, 45, 0)
   {"cpumask_size", luv_cpumask_size},
   {"get_available_memory", luv_get_available_memory},
+  {"clock_gettime", luv_clock_gettime},
 #endif
 
   // thread.c
