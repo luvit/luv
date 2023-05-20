@@ -1,0 +1,71 @@
+{
+  luv_push_stats_table
+  Memcheck:Cond
+  fun:luv_push_stats_table
+}
+{
+  tostringbuff
+  Memcheck:Value8
+  fun:_itoa_word
+  fun:__vfprintf_internal
+  fun:__vsnprintf_internal
+  fun:snprintf
+  fun:tostringbuff
+}
+{
+  tostringbuff Conditional jump or move depends on uninitialised value(s)
+  Memcheck:Cond
+  fun:_itoa_word
+  fun:__vfprintf_internal
+  fun:__vsnprintf_internal
+  fun:snprintf
+  fun:tostringbuff
+}
+{
+  addnum2buff Conditional jump or move depends on uninitialised value(s)
+  Memcheck:Cond
+  fun:__vfprintf_internal
+  fun:__vsnprintf_internal
+  fun:snprintf
+  fun:tostringbuff
+  fun:addnum2buff
+  fun:luaO_pushvfstring
+  fun:lua_pushfstring
+  fun:luaL_tolstring
+  fun:luaB_tostring
+  fun:precallC
+  fun:luaD_precall
+  fun:luaV_execute
+}
+{
+  luv_fs_read
+  Memcheck:Cond
+  fun:malloc
+  fun:luv_fs_read
+}
+{
+  luv_fulfill_req
+  Memcheck:Cond
+  fun:luaV_execute
+  fun:ccall
+  fun:luaD_callnoyield
+  fun:f_call
+  fun:luaD_rawrunprotected
+  fun:luaD_pcall
+  fun:lua_pcallk
+  fun:luv_fulfill_req
+}
+{
+  Conditional jump or move depends on uninitialised value(s)
+  Memcheck:Cond
+  fun:luaV_execute
+  fun:ccall
+  fun:luaD_callnoyield
+  fun:f_call
+  fun:luaD_rawrunprotected
+  fun:luaD_pcall
+  fun:lua_pcallk
+  fun:luv_cfpcall
+  fun:luv_fulfill_req
+  fun:luv_fs_cb
+}
