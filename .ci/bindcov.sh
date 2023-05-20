@@ -3,6 +3,10 @@
 unbound_functions=0
 skipped=()
 
+# waiting on these being documented
+# https://github.com/libuv/libuv/issues/4007
+skipped+=(uv_os_get_passwd2 uv_os_get_group uv_os_free_group)
+
 # false positives
 skipped+=(uv_thread_create uv_thread_create_ex)
 
