@@ -382,6 +382,84 @@ static int luv_new_thread(lua_State* L) {
   return 1;
 }
 
+#if LUV_UV_VERSION_GEQ(1, 45, 0)
+static int luv_thread_getaffinity(lua_State* L) {
+  luv_thread_t* tid = luv_check_thread(L, 1);
+  int default_mask_size = uv_cpumask_size();
+  if (default_mask_size < 0) {
+    return luv_error(L, default_mask_size);
+  }
+  int mask_size = luaL_optinteger(L, 2, default_mask_size);
+  if (mask_size < default_mask_size) {
+    return luaL_argerror(L, 2, lua_pushfstring(L, "cpumask size must be >= %d (from cpumask_size()), got %d", default_mask_size, mask_size));
+  }
+  char* cpumask = malloc(mask_size);
+  int ret = uv_thread_getaffinity(tid, cpumask, mask_size);
+  if (ret < 0) {
+    free(cpumask);
+    return luv_error(L, ret);
+  }
+  lua_newtable(L);
+  for (int i = 0; i < mask_size; i++) {
+    lua_pushboolean(L, cpumask[i]);
+    lua_rawseti(L, -2, i + 1);
+  }
+  free(cpumask);
+  return 1;
+}
+
+static int luv_thread_setaffinity(lua_State* L) {
+  luv_thread_t* tid = luv_check_thread(L, 1);
+  luaL_checktype(L, 2, LUA_TTABLE);
+  int get_old_mask = lua_toboolean(L, 3);
+  int min_mask_size = uv_cpumask_size();
+  if (min_mask_size < 0) {
+    return luv_error(L, min_mask_size);
+  }
+  int mask_size = lua_rawlen(L, 2);
+  if (mask_size < min_mask_size) {
+    return luaL_argerror(L, 2, lua_pushfstring(L, "cpumask size must be >= %d (from cpumask_size()), got %d", min_mask_size, mask_size));
+  }
+  char* cpumask = malloc(mask_size);
+  for (int i = 0; i < mask_size; i++) {
+    lua_rawgeti(L, 2, i+1);
+    int val = lua_toboolean(L, -1);
+    cpumask[i] = val;
+    lua_pop(L, 1);
+  }
+  char* oldmask = get_old_mask ? malloc(mask_size) : NULL;
+  int ret = uv_thread_setaffinity(tid, cpumask, oldmask, mask_size);
+  // Done with cpumask at this point
+  free(cpumask);
+  if (ret < 0) {
+    if (get_old_mask) free(oldmask);
+    return luv_error(L, ret);
+  }
+  if (get_old_mask) {
+    lua_newtable(L);
+    for (int i = 0; i < mask_size; i++) {
+      lua_pushboolean(L, oldmask[i]);
+      lua_rawseti(L, -2, i + 1);
+    }
+    free(oldmask);
+  }
+  else {
+    lua_pushboolean(L, 1);
+  }
+  return 1;
+}
+
+static int luv_thread_getcpu(lua_State* L) {
+  int ret = uv_thread_getcpu();
+  if (ret < 0) return luv_error(L, ret);
+  // Make the returned value start at 1 to match how getaffinity/setaffinity
+  // masks are implemented (they use array-like tables so the first
+  // CPU is index 1).
+  lua_pushinteger(L, ret + 1);
+  return 1;
+}
+#endif
+
 static int luv_thread_join(lua_State* L) {
   luv_thread_t* tid = luv_check_thread(L, 1);
   int ret = uv_thread_join(&tid->handle);
@@ -414,6 +492,10 @@ static int luv_thread_equal(lua_State* L) {
 static const luaL_Reg luv_thread_methods[] = {
   {"equal", luv_thread_equal},
   {"join", luv_thread_join},
+#if LUV_UV_VERSION_GEQ(1, 45, 0)
+  {"getaffinity", luv_thread_getaffinity},
+  {"setaffinity", luv_thread_setaffinity},
+#endif
   {NULL, NULL}
 };
 

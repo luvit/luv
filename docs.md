@@ -3286,6 +3286,60 @@ equivalent to the `__eq` metamethod.
 
 **Returns:** `boolean`
 
+### `uv.thread_setaffinity(thread, affinity, [get_old_affinity])`
+
+> method form `thread:setaffinity(affinity, [get_old_affinity])`
+
+**Parameters:**
+- `thread`: `luv_thread_t userdata`
+- `affinity`: `table`
+  - `[1, 2, 3, ..., n]` : `boolean`
+- `get_old_affinity`: `boolean`
+
+Sets the specified thread's affinity setting. `affinity` must be an array-like
+table where each of the keys correspond to a CPU number and the values are
+booleans that represent whether the `thread` should be eligible to run on that
+CPU. The length of the `affinity` table must be greater than or equal to
+`uv.cpumask_size()`. If `get_old_affinity` is `true`, the previous affinity
+settings for the `thread` will be returned. Otherwise, `true` is returned after
+a successful call.
+
+**Note:** Thread affinity setting is not atomic on Windows. Unsupported on macOS.
+
+**Returns:** `table` or `boolean` or `fail`
+- `[1, 2, 3, ..., n]` : `boolean`
+
+### `uv.thread_getaffinity(thread, [mask_size])`
+
+> method form `thread:getaffinity([mask_size])`
+
+**Parameters:**
+- `thread`: `luv_thread_t userdata`
+- `mask_size`: `integer`
+
+Gets the specified thread's affinity setting.
+
+If `mask_size` is provided, it must be greater than or equal to
+`uv.cpumask_size()`. If the `mask_size` parameter is omitted, then the return
+of `uv.cpumask_size()` will be used. Returns an array-like table where each of
+the keys correspond to a CPU number and the values are booleans that represent
+whether the `thread` is eligible to run on that CPU.
+
+**Note:** Thread affinity getting is not atomic on Windows. Unsupported on macOS.
+
+**Returns:** `table` or `fail`
+- `[1, 2, 3, ..., n]` : `boolean`
+
+### `uv.thread_getcpu()`
+
+Gets the CPU number on which the calling thread is running.
+
+**Note:** The first CPU will be returned as the number 1, not 0. This allows for
+the number to correspond with the table keys used in `uv.thread_getaffinity` and
+`uv.thread_setaffinity`.
+
+**Returns:** `integer` or `fail`
+
 ### `uv.thread_self()`
 
 Returns the handle for the thread in which this is called.
@@ -3373,6 +3427,15 @@ greater than the total system memory.
 
 **Returns:** `number`
 
+### `uv.get_available_memory()`
+
+Gets the amount of free memory that is still available to the process (in
+bytes). This differs from `uv.get_free_memory()` in that it takes into account
+any limits imposed by the OS. If there is no such constraint, or the constraint
+is unknown, the amount returned will be identical to `uv.get_free_memory()`.
+
+**Returns:** `number`
+
 ### `uv.resident_set_memory()`
 
 Returns the resident set size (RSS) for the current process.
@@ -3432,6 +3495,13 @@ CPU found.
     - `sys` : `number`
     - `idle` : `number`
     - `irq` : `number`
+
+### `uv.cpumask_size()`
+
+Returns the maximum size of the mask used for process/thread affinities, or
+`ENOTSUP` if affinities are not supported on the current platform.
+
+**Returns:** `integer` or `fail`
 
 ### `uv.getpid()`
 

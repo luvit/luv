@@ -23,9 +23,15 @@ return require('lib/tap')(function (test)
     local constrained = nil
     if uv.get_constrained_memory then
       constrained = uv.get_constrained_memory()
+      assert(constrained >= 0)
+    end
+    local available = nil
+    if uv.get_available_memory then
+      available = uv.get_available_memory()
+      assert(available >= 0)
     end
     local free = uv.get_free_memory()
-    p{rss=rss,total=total,free=free, constrained=constrained}
+    p{rss=rss,total=total,free=free,available=available,constrained=constrained}
     assert(rss < total)
   end)
 
@@ -181,5 +187,17 @@ return require('lib/tap')(function (test)
       assert(v >= 0, k)
     end
   end)
+
+  test("uv.cpumask_size", function(print, p, expect, uv)
+    -- The result can vary per-platform and is only supported on some platforms,
+    -- so just test that the function exists and behaves coherently.
+    local size, err = uv.cpumask_size()
+    p(size, err)
+    if err then
+      assert(not size)
+    else
+      assert(size >= 0)
+    end
+  end, "1.45.0")
 
 end)
