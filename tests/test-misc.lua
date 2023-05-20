@@ -200,4 +200,17 @@ return require('lib/tap')(function (test)
     end
   end, "1.45.0")
 
+  test("uv.clock_gettime", function(print, p, expect, uv)
+    for _, clock_id in ipairs({"monotonic", "realtime"}) do
+      local timespec, err = uv.clock_gettime("monotonic")
+      p(clock_id, timespec, err)
+      if err then
+        assert(not timespec)
+      else
+        assert(timespec.sec >= 0)
+        assert(timespec.nsec >= 0)
+      end
+    end
+  end, "1.45.0")
+
 end)

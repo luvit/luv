@@ -763,4 +763,22 @@ static int luv_get_available_memory(lua_State* L) {
   lua_pushinteger(L, uv_get_available_memory());
   return 1;
 }
+
+// These are the same order as uv_membership which also starts at 0
+static const char *const luv_clock_id_opts[] = {
+  "monotonic", "realtime", NULL
+};
+
+static int luv_clock_gettime(lua_State* L) {
+  uv_clock_id clock_id = (uv_clock_id)luaL_checkoption(L, 1, NULL, luv_clock_id_opts);
+  uv_timespec64_t timespec;
+  int ret = uv_clock_gettime(clock_id, &timespec);
+  if (ret < 0) return luv_error(L, ret);
+  lua_createtable(L, 0, 2);
+  lua_pushinteger(L, timespec.tv_sec);
+  lua_setfield(L, -2, "sec");
+  lua_pushinteger(L, timespec.tv_nsec);
+  lua_setfield(L, -2, "nsec");
+  return 1;
+}
 #endif
