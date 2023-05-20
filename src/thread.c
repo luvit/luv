@@ -394,7 +394,7 @@ static int luv_thread_getaffinity(lua_State* L) {
     return luaL_argerror(L, 2, lua_pushfstring(L, "cpumask size must be >= %d (from cpumask_size()), got %d", default_mask_size, mask_size));
   }
   char* cpumask = malloc(mask_size);
-  int ret = uv_thread_getaffinity(tid, cpumask, mask_size);
+  int ret = uv_thread_getaffinity(&tid->handle, cpumask, mask_size);
   if (ret < 0) {
     free(cpumask);
     return luv_error(L, ret);
@@ -428,7 +428,7 @@ static int luv_thread_setaffinity(lua_State* L) {
     lua_pop(L, 1);
   }
   char* oldmask = get_old_mask ? malloc(mask_size) : NULL;
-  int ret = uv_thread_setaffinity(tid, cpumask, oldmask, mask_size);
+  int ret = uv_thread_setaffinity(&tid->handle, cpumask, oldmask, mask_size);
   // Done with cpumask at this point
   free(cpumask);
   if (ret < 0) {
