@@ -750,3 +750,17 @@ static int luv_random(lua_State* L) {
   }
 }
 #endif
+
+#if LUV_UV_VERSION_GEQ(1, 45, 0)
+static int luv_cpumask_size(lua_State* L) {
+  int ret = uv_cpumask_size();
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, ret);
+  return 1;
+}
+
+static int luv_get_available_memory(lua_State* L) {
+  lua_pushinteger(L, uv_get_available_memory());
+  return 1;
+}
+#endif

@@ -108,4 +108,47 @@ return require('lib/tap')(function (test)
     collectgarbage('collect')
     collectgarbage('collect')
   end)
+
+  test("thread_getcpu", function(print, p, expect, uv)
+    local cpu, err = uv.thread_getcpu()
+    if not cpu then
+      print(err, "skipping")
+      return
+    end
+    -- starts at 1 to match the tables used by getaffinity/setaffinity
+    assert(cpu >= 1)
+  end, "1.45.0")
+
+  test("getaffinity, setaffinity", function(print, p, expect, uv)
+    local mask_size, err = uv.cpumask_size()
+    if not mask_size then
+      print(err, "skipping")
+      return
+    end
+    uv.new_thread(function(cpumask_size)
+      local _uv = require('luv')
+      local thread = _uv.thread_self()
+      local affinity = assert(thread:getaffinity())
+      assert(#affinity == cpumask_size)
+
+      -- set every cpu's affinity to false except the current cpu
+      local cur_cpu = _uv.thread_getcpu()
+      local affinity_to_set = {}
+      for i=1,cpumask_size do
+        affinity_to_set[i] = i == cur_cpu
+      end
+      local prev_affinity = assert(thread:setaffinity(affinity_to_set, true))
+      -- the returned affinity should match the original affinity
+      assert(#prev_affinity == #affinity)
+      for i=1,#affinity do
+        assert(prev_affinity[i] == affinity[i])
+      end
+
+      local new_affinity = thread:getaffinity()
+      assert(#new_affinity == #affinity_to_set)
+      for i=1,#new_affinity do
+        assert(new_affinity[i] == affinity_to_set[i])
+      end
+    end, mask_size):join()
+  end, "1.45.0")
 end)
