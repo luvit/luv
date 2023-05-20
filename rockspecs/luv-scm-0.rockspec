@@ -79,6 +79,9 @@ build = {
             'userenv';
             'ws2_32';
             'advapi32';
+            'Dbghelp';
+            "Ole32";
+            "Shell32";
           };
         };
       };
