@@ -70,7 +70,7 @@ jobs:
     - name: Build
       run: make
     - name: Test
-      run: valgrind --suppressions=.ci/pthread_create.supp --error-exitcode=1 --leak-check=full --child-silent-after-fork=yes --keep-debuginfo=yes ./build/lua -e "collectgarbage('setpause', 0); collectgarbage('setstepmul', 10000000000000)" tests/run.lua
+      run: valgrind --suppressions=.ci/valgrind_mem.supp --error-exitcode=1 --leak-check=full --child-silent-after-fork=yes --keep-debuginfo=yes ./build/lua -e "collectgarbage('setpause', 0); collectgarbage('setstepmul', 10000000000000)" tests/run.lua
 
   process-cleanup-test:
     runs-on: ubuntu-latest
