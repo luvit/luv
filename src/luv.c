@@ -392,6 +392,9 @@ static const luaL_Reg luv_functions[] = {
 #if LUV_UV_VERSION_GEQ(1, 39, 0)
   {"metrics_idle_time", luv_metrics_idle_time},
 #endif
+#if LUV_UV_VERSION_GEQ(1, 45, 0)
+  {"metrics_info", luv_metrics_info},
+#endif
 
   {NULL, NULL}
 };
