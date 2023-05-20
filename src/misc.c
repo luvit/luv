@@ -760,7 +760,7 @@ static int luv_cpumask_size(lua_State* L) {
 }
 
 static int luv_get_available_memory(lua_State* L) {
-  lua_pushinteger(L, uv_get_available_memory());
+  lua_pushnumber(L, uv_get_available_memory());
   return 1;
 }
 

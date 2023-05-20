@@ -28,7 +28,7 @@ return require('lib/tap')(function (test)
     local available = nil
     if uv.get_available_memory then
       available = uv.get_available_memory()
-      assert(available >= 0)
+      assert(available >= 0, available)
     end
     local free = uv.get_free_memory()
     p{rss=rss,total=total,free=free,available=available,constrained=constrained}
