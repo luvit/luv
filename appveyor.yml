@@ -64,7 +64,7 @@ for:
   - luarocks remove luv
     # Test the alternate rockspec
   - mkdir build\lib
-  - cp build.luarocks\deps\libuv\Release\uv_a.lib build\lib\uv.lib
+  - cp build.luarocks\deps\libuv\Release\libuv.lib build\lib\uv.lib
   - cp -a deps\libuv\include build
   - ps: luarocks make rockspecs\$(ls rockspecs) LIBUV_DIR=build LUA_COMPAT53_INCDIR=deps/lua-compat-5.3/c-api CFLAGS="/nologo /MT /O2"
   - ps: if("$(Get-Location)" -eq $(lua -e "print(require'luv'.cwd())")) { "LuaRocks test OK" } else { "LuaRocks test failed"; exit 1 }
