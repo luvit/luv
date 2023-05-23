@@ -3828,19 +3828,15 @@ time until calling `loop_configure` with `"metrics_idle_time"`.
 
 ### `uv.metrics_info()`
 
-Get the metrics table from current set of event loop metrics.
+Get the metrics table from current set of event loop metrics. It is recommended
+to retrieve these metrics in a `prepare` callback (see `uv.new_prepare`,
+`uv.prepare_start`) in order to make sure there are no inconsistencies with the
+metrics counters.
 
 **Returns:** `table`
-
-The table contains event loop metrics. It is recommended to retrieve these
-metrics in a uv_prepare_cb in order to make sure there are no inconsistencies
-with the metrics counters.
-
 - `loop_count` : `integer`
 - `events` : `integer`
 - `events_waiting` : `integer`
-
-**Note**: New in libuv version 1.45.0.
 
 ---
 
