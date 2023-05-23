@@ -133,10 +133,12 @@ return require('lib/tap')(function (test)
 
       -- set every cpu's affinity to false except the current cpu
       local cur_cpu = _uv.thread_getcpu()
-      local affinity_to_set = {}
-      for i=1,cpumask_size do
-        affinity_to_set[i] = i == cur_cpu
-      end
+      -- even though this table may not be a full array-like table,
+      -- this still works because `setaffinity` will treat any missing
+      -- CPU numbers up to cpumask_size as having a setting of `false`
+      local affinity_to_set = {
+        [cur_cpu] = true,
+      }
       local prev_affinity = assert(thread:setaffinity(affinity_to_set, true))
       -- the returned affinity should match the original affinity
       assert(#prev_affinity == #affinity)
@@ -145,9 +147,10 @@ return require('lib/tap')(function (test)
       end
 
       local new_affinity = thread:getaffinity()
-      assert(#new_affinity == #affinity_to_set)
+      assert(#new_affinity == cpumask_size)
       for i=1,#new_affinity do
-        assert(new_affinity[i] == affinity_to_set[i])
+        local expected_setting = i == cur_cpu
+        assert(new_affinity[i] == expected_setting)
       end
     end, mask_size):join()
   end, "1.45.0")
