@@ -764,7 +764,7 @@ static int luv_get_available_memory(lua_State* L) {
   return 1;
 }
 
-// These are the same order as uv_membership which also starts at 0
+// These are the same order as uv_clock_id which also starts at 0
 static const char *const luv_clock_id_opts[] = {
   "monotonic", "realtime", NULL
 };
