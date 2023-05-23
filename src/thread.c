@@ -417,8 +417,11 @@ static int luv_thread_setaffinity(lua_State* L) {
     return luv_error(L, min_mask_size);
   }
   int mask_size = lua_rawlen(L, 2);
+  // If the provided table's length is not at least min_mask_size,
+  // we'll use the min_mask_size and fill in any missing values with
+  // false.
   if (mask_size < min_mask_size) {
-    return luaL_argerror(L, 2, lua_pushfstring(L, "cpumask size must be >= %d (from cpumask_size()), got %d", min_mask_size, mask_size));
+    mask_size = min_mask_size;
   }
   char* cpumask = malloc(mask_size);
   for (int i = 0; i < mask_size; i++) {

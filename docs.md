@@ -3299,8 +3299,9 @@ equivalent to the `__eq` metamethod.
 Sets the specified thread's affinity setting. `affinity` must be an array-like
 table where each of the keys correspond to a CPU number and the values are
 booleans that represent whether the `thread` should be eligible to run on that
-CPU. The length of the `affinity` table must be greater than or equal to
-`uv.cpumask_size()`. If `get_old_affinity` is `true`, the previous affinity
+CPU. If the length of the `affinity` table is not greater than or equal to
+`uv.cpumask_size()`, any CPU numbers missing from the table will have their
+affinity set to `false`. If `get_old_affinity` is `true`, the previous affinity
 settings for the `thread` will be returned. Otherwise, `true` is returned after
 a successful call.
 
