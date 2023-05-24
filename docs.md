@@ -3296,14 +3296,19 @@ equivalent to the `__eq` metamethod.
   - `[1, 2, 3, ..., n]` : `boolean`
 - `get_old_affinity`: `boolean`
 
-Sets the specified thread's affinity setting. `affinity` must be an array-like
-table where each of the keys correspond to a CPU number and the values are
-booleans that represent whether the `thread` should be eligible to run on that
-CPU. If the length of the `affinity` table is not greater than or equal to
-`uv.cpumask_size()`, any CPU numbers missing from the table will have their
-affinity set to `false`. If `get_old_affinity` is `true`, the previous affinity
-settings for the `thread` will be returned. Otherwise, `true` is returned after
-a successful call.
+Sets the specified thread's affinity setting.
+
+`affinity` must be a table where each of the keys are a CPU number and the
+values are booleans that represent whether the `thread` should be eligible to
+run on that CPU. If the length of the `affinity` table is not greater than or
+equal to `uv.cpumask_size()`, any CPU numbers missing from the table will have
+their affinity set to `false`. If setting the affinity of more than
+`uv.cpumask_size()` CPUs is desired, `affinity` must be an array-like table
+with no gaps, since `#affinity` will be used as the `cpumask_size` if it is
+greater than `uv.cpumask_size()`.
+
+If `get_old_affinity` is `true`, the previous affinity settings for the `thread`
+will be returned. Otherwise, `true` is returned after a successful call.
 
 **Note:** Thread affinity setting is not atomic on Windows. Unsupported on macOS.
 
