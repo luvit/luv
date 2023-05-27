@@ -104,6 +104,7 @@ static void luv_call_callback(lua_State* L, luv_handle_t* data, luv_callback_id 
 
 static void luv_unref_handle(lua_State* L, luv_handle_t* data) {
   luaL_unref(L, LUA_REGISTRYINDEX, data->ref);
+  data->ref = LUA_NOREF;
   luaL_unref(L, LUA_REGISTRYINDEX, data->callbacks[0]);
   luaL_unref(L, LUA_REGISTRYINDEX, data->callbacks[1]);
 }
