@@ -6,17 +6,17 @@
 local uv = require('luv')
 
 local function setTimeout(callback, ms)
-    local timer = uv.new_timer()
-    timer:start(ms, 0, function()
-        timer:stop()
-        timer:close()
-        callback()
-    end)
-    return timer
+  local timer = uv.new_timer()
+  timer:start(ms, 0, function()
+    timer:stop()
+    timer:close()
+    callback()
+  end)
+  return timer
 end
 
 setTimeout(function()
-    os.exit(5, true)
+  os.exit(5, true)
 end, 1000)
 
 uv.run()

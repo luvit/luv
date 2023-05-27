@@ -88,13 +88,19 @@ static int luv_is_closing(lua_State* L) {
   return 1;
 }
 
+static void luv_handle_free(uv_handle_t* handle);
+
 static void luv_close_cb(uv_handle_t* handle) {
   lua_State* L;
   luv_handle_t* data = (luv_handle_t*)handle->data;
   if (!data) return;
   L = data->ctx->L;
-  luv_call_callback(L, data, LUV_CLOSED, 0);
-  luv_unref_handle(L, data);
+  if(data->ref > 0) {
+    luv_call_callback(L, data, LUV_CLOSED, 0);
+    luv_unref_handle(L, data);
+  } else {
+    luv_handle_free(handle);
+  }
 }
 
 static int luv_close(lua_State* L) {
@@ -127,12 +133,13 @@ static void luv_gc_cb(uv_handle_t* handle) {
 static int luv_handle_gc(lua_State* L) {
   uv_handle_t** udata = (uv_handle_t**)lua_touserdata(L, 1);
   uv_handle_t* handle = *udata;
+  luv_handle_t* data = (luv_handle_t*)handle->data;
 
   // Only cleanup if the handle hasn't been cleaned up yet.
-  if (handle) {
+  if (data->ref == LUA_NOREF) {
     if (!uv_is_closing(handle)) {
       // If the handle is not closed yet, close it first before freeing memory.
-      uv_close(handle, luv_gc_cb);
+      uv_close(handle, luv_handle_free);
     }
     else {
       // Otherwise, free the memory right away.
@@ -140,6 +147,10 @@ static int luv_handle_gc(lua_State* L) {
     }
     // Mark as cleaned up by wiping the dangling pointer.
     *udata = NULL;
+  } else {
+    // os.exit maybe cause gc before close_cb
+    // use LUA_REFNIL to tell close_cb to free memory.
+    data->ref = LUA_REFNIL;
   }
 
   return 0;
