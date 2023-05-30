@@ -73,6 +73,22 @@ static int luv_constants(lua_State* L) {
   lua_pushinteger(L, O_TRUNC);
   lua_setfield(L, -2, "O_TRUNC");
 #endif
+#ifdef R_OK
+  lua_pushinteger(L, R_OK);
+  lua_setfield(L, -2, "R_OK");
+#endif
+#ifdef W_OK
+  lua_pushinteger(L, W_OK);
+  lua_setfield(L, -2, "W_OK");
+#endif
+#ifdef X_OK
+  lua_pushinteger(L, X_OK);
+  lua_setfield(L, -2, "X_OK");
+#endif
+#ifdef F_OK
+  lua_pushinteger(L, F_OK);
+  lua_setfield(L, -2, "F_OK");
+#endif
 
   // Socket types SOCK_*
 #ifdef SOCK_STREAM
