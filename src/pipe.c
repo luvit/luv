@@ -62,6 +62,31 @@ static int luv_pipe_connect(lua_State* L) {
   return 1;
 }
 
+
+#if LUV_UV_VERSION_GEQ(1,46,0)
+static int luv_pipe_bind2(lua_State* L) {
+  size_t namelen;
+  uv_pipe_t* handle = luv_check_pipe(L, 1);
+  const char* name = luaL_checklstring(L, 2, &namelen);
+  unsigned int flags = luaL_optinteger(L, 3, 0);
+  int ret = uv_pipe_bind2(handle, name, namelen, flags);
+  return luv_result(L, ret);
+}
+
+static int luv_pipe_connect2(lua_State* L) {
+  size_t namelen;
+  luv_ctx_t* ctx = luv_context(L);
+  uv_pipe_t* handle = luv_check_pipe(L, 1);
+  const char* name = luaL_checklstring(L, 2, &namelen);
+  unsigned int flags = luaL_optinteger(L, 3, 0);
+  int ref = luv_check_continuation(L, 4);
+  uv_connect_t* req = (uv_connect_t*)lua_newuserdata(L, uv_req_size(UV_CONNECT));
+  req->data = luv_setup_req(L, ctx, ref);
+  uv_pipe_connect2(req, handle, name, namelen, flags, luv_connect_cb);
+  return 1;
+}
+#endif
+
 static int luv_pipe_getsockname(lua_State* L) {
   uv_pipe_t* handle = luv_check_pipe(L, 1);
   size_t len = 2*PATH_MAX;

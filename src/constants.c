@@ -341,6 +341,10 @@ static int luv_constants(lua_State* L) {
   lua_setfield(L, -2, "UDP_IPV6ONLY");
   lua_pushinteger(L, UV_TCP_IPV6ONLY);
   lua_setfield(L, -2, "TCP_IPV6ONLY");
+#if LUV_UV_VERSION_GEQ(1, 46, 0)
+  lua_pushinteger(L, UV_PIPE_NO_TRUNCATE);
+  lua_setfield(L, -2, "PIPE_NO_TRUNCATE");
+#endif
   return 1;
 }
 
