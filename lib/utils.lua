@@ -19,11 +19,11 @@ if _G.jit and _G.jit.os then
 else
   -- Normal lua will only have \ for path separator on windows.
   utils.isWindows = package.config:find("\\") and true or false
-  local f = io.popen('uname', 'r')
-  if f then
-    local line = f:read("*l")
-    utils.isLinux = line == 'Linux'
-    f:close()
+  if not utils.isWindows then
+    local _os = os.getenv('RUNNER_OS') or os.getenv('OSTYPE')
+    if (_os and _os:lower():match('linux')) then
+      utils.isLinux = true
+    end
   end
 end
 
