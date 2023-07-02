@@ -95,4 +95,63 @@ return require('lib/tap')(function (test)
 
     assert(pipe_handle:is_closing())
   end, "1.41.0")
+
+  test("pipe getsockname abstract", function(print, p, expect, uv)
+    local isWindows = require('lib/utils').isWindows
+    local isLinux = require('lib/utils').isLinux
+
+    local pipe_name = isWindows and "\\\\.\\pipe\\uv-test"
+                                or "/tmp/uv-test-sock"
+
+    local close_cnt, connected_cb = 0, 0
+
+    local function close_cb()
+      close_cnt = close_cnt + 1
+    end
+
+    local server = assert(uv.new_pipe(false))
+
+    if isLinux then
+      assert(server:bind2('\0' .. pipe_name))
+      local name = server:getsockname()
+      assert(#name > #pipe_name + 1 )
+      assert(name:sub(1, #pipe_name + 1) == '\0' .. pipe_name)
+      pipe_name = name
+    else
+      local _, err = server:bind2('\0' .. pipe_name)
+      assert(err:match("^EINVAL:"))
+    end
+
+    server:listen(128, function(err)
+      assert(not err, err)
+      local cli = uv.new_tcp()
+      assert(uv.accept(server, cli))
+      cli:close()
+      server:close(close_cb)
+      connected_cb = connected_cb + 1
+    end)
+
+    local client = assert(uv.new_pipe(false))
+
+    client:connect2(pipe_name, nil, function(err)
+      if isLinux then
+        assert(not err, err)
+      else
+        assert(err == 'ENOENT', err)
+      end
+      client:close(close_cb)
+    end)
+
+    if not isLinux then
+      server:close(close_cb)
+    end
+    uv.run()
+    assert(close_cnt == 2)
+    if isLinux then
+      assert(connected_cb == 1)
+    else
+      assert(connected_cb == 0)
+    end
+  end, "1.46.0")
+
 end)

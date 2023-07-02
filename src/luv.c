@@ -184,6 +184,10 @@ static const luaL_Reg luv_functions[] = {
   {"pipe_chmod", luv_pipe_chmod},
 #endif
   {"pipe_connect", luv_pipe_connect},
+#if LUV_UV_VERSION_GEQ(1, 46, 0)
+  {"pipe_bind2", luv_pipe_bind2},
+  {"pipe_connect2", luv_pipe_connect2},
+#endif
   {"pipe_getsockname", luv_pipe_getsockname},
 #if LUV_UV_VERSION_GEQ(1, 3, 0)
   {"pipe_getpeername", luv_pipe_getpeername},
@@ -485,6 +489,10 @@ static const luaL_Reg luv_pipe_methods[] = {
   {"chmod", luv_pipe_chmod},
 #endif
   {"connect", luv_pipe_connect},
+#if LUV_UV_VERSION_GEQ(1, 46, 0)
+  {"bind2", luv_pipe_bind2},
+  {"connect2", luv_pipe_connect2},
+#endif
   {"getsockname", luv_pipe_getsockname},
 #if LUV_UV_VERSION_GEQ(1, 3, 0)
   {"getpeername", luv_pipe_getpeername},

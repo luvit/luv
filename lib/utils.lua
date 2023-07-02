@@ -15,9 +15,16 @@ end
 if _G.jit and _G.jit.os then
   -- Luajit provides explicit platform detection
   utils.isWindows = _G.jit.os == "Windows"
+  utils.isLinux = _G.jit.os == 'Linux'
 else
   -- Normal lua will only have \ for path separator on windows.
   utils.isWindows = package.config:find("\\") and true or false
+  local f = io.popen('uname', 'r')
+  if f then
+    local line = f:read("*l")
+    utils.isLinux = line == 'Linux'
+    f:close()
+  end
 end
 
 local colors = {
