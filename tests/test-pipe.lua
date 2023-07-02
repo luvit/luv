@@ -97,6 +97,7 @@ return require('lib/tap')(function (test)
   end, "1.41.0")
 
   test("pipe getsockname abstract", function(print, p, expect, uv)
+    -- https://github.com/libuv/libuv/blob/v1.x/test/test-pipe-getsockname.c#L164-L210
     local isWindows = require('lib/utils').isWindows
     local isLinux = require('lib/utils').isLinux
 
