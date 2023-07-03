@@ -64,11 +64,27 @@ static int luv_pipe_connect(lua_State* L) {
 
 
 #if LUV_UV_VERSION_GEQ(1,46,0)
+static int luv_pipe_optflags(lua_State *L, int i, unsigned int flags) {
+  // flags param can be nil, an integer, or a table
+  if (lua_type(L, i) == LUA_TNUMBER || lua_isnoneornil(L, i)) {
+    flags = (unsigned int)luaL_optinteger(L, i, flags);
+  }
+  else if (lua_type(L, i) == LUA_TTABLE) {
+    lua_getfield(L, i, "no_truncate");
+    if (lua_toboolean(L, -1)) flags |= UV_PIPE_NO_TRUNCATE;
+    lua_pop(L, 1);
+  }
+  else {
+    return luaL_argerror(L, i, "expected nil, integer, or table");
+  }
+  return flags;
+}
+
 static int luv_pipe_bind2(lua_State* L) {
   size_t namelen;
   uv_pipe_t* handle = luv_check_pipe(L, 1);
   const char* name = luaL_checklstring(L, 2, &namelen);
-  unsigned int flags = luaL_optinteger(L, 3, 0);
+  unsigned int flags = luv_pipe_optflags(L, 3, 0);
   int ret = uv_pipe_bind2(handle, name, namelen, flags);
   return luv_result(L, ret);
 }
@@ -78,7 +94,7 @@ static int luv_pipe_connect2(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
   uv_pipe_t* handle = luv_check_pipe(L, 1);
   const char* name = luaL_checklstring(L, 2, &namelen);
-  unsigned int flags = luaL_optinteger(L, 3, 0);
+  unsigned int flags = luv_pipe_optflags(L, 3, 0);
   int ref = luv_check_continuation(L, 4);
   uv_connect_t* req = (uv_connect_t*)lua_newuserdata(L, uv_req_size(UV_CONNECT));
   req->data = luv_setup_req(L, ctx, ref);
