@@ -1943,24 +1943,32 @@ read_pipe:read_start(function(err, chunk)
   print(chunk)
 end)
 ```
+
 ### `uv.pipe_bind2(pipe, name, [flags])`
 
 > method form `pipe:bind2(name, [flags])`
 
 **Parameters:**
+
 - `pipe`: `uv_pipe_t userdata`
 - `name`: `string`
-- `flags`: `integer`(default: 0) 
+- `flags`: `integer` or `table` or `nil`(default: 0)
 
 Bind the pipe to a file path (Unix) or a name (Windows).
 
-`Flags` must be zero or `uv.constants.PIPE_NO_TRUNCATE`. Returns `EINVAL` for unsupported flags without performing the bind operation.
+`Flags`:
+
+- If `type(flags)` is `number`, it must be `0` or `uv.constants.PIPE_NO_TRUNCATE`.
+- If `type(flags)` is `table`, it must be `{}` or `{ no_trunate = true|false }`.
+- If `type(flags)` is `nil`, it use default value `0`.
+- Returns `EINVAL` for unsupported flags without performing the bind operation.
 
 Supports Linux abstract namespace sockets. namelen must include the leading '\0' byte but not the trailing nul byte.
 
 **Returns:** `0` or `fail`
 
 **Note**:
+
 1. Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes,
 typically between 92 and 108 bytes.
 2. New in version 1.46.0.
@@ -1970,21 +1978,28 @@ typically between 92 and 108 bytes.
 > method form `pipe:connect2(name, [flags], [callback])`
 
 **Parameters:**
+
 - `pipe`: `uv_pipe_t userdata`
 - `name`: `string`
-- `flags`: `integer`(default: 0)
+- `flags`: `integer` or `table` or `nil`(default: 0)
 - `callback`: `callable` or `nil`
   - `err`: `nil` or `string`
 
 Connect to the Unix domain socket or the named pipe.
 
-`Flags` must be zero or `uv.constants.PIPE_NO_TRUNCATE`. Returns `EINVAL` for unsupported flags without performing the bind operation.
+`Flags`:
+
+- If `type(flags)` is `number`, it must be `0` or `uv.constants.PIPE_NO_TRUNCATE`.
+- If `type(flags)` is `table`, it must be `{}` or `{ no_trunate = true|false }`.
+- If `type(flags)` is `nil`, it use default value `0`.
+- Returns `EINVAL` for unsupported flags without performing the bind operation.
 
 Supports Linux abstract namespace sockets. namelen must include the leading nul byte but not the trailing nul byte.
 
 **Returns:** `uv_connect_t userdata` or `fail`
 
 **Note**:
+
 1. Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes,
 typically between 92 and 108 bytes.
 2. New in version 1.46.0.
