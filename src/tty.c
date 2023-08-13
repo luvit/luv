@@ -39,9 +39,25 @@ static int luv_new_tty(lua_State* L) {
   return 1;
 }
 
+static int luv_check_tty_mode(lua_State *L, int i) {
+  const char* modes[] = { "normal", "raw", "io", NULL};
+  int mode;
+
+  if (lua_isnumber(L, i))
+    mode = lua_tonumber(L, i);
+  else
+    mode = luaL_checkoption(L, i, NULL, modes);
+
+#if LUV_UV_VERSION_GEQ(1, 2, 0)
+  luaL_argcheck(L, mode >= UV_TTY_MODE_NORMAL && mode <= UV_TTY_MODE_IO,
+      i, "Unknown tty mode value");
+#endif
+  return mode;
+}
+
 static int luv_tty_set_mode(lua_State* L) {
   uv_tty_t* handle = luv_check_tty(L, 1);
-  int mode = luaL_checkinteger(L, 2);
+  int mode = luv_check_tty_mode(L, 2);
   int ret = uv_tty_set_mode(handle, mode);
   return luv_result(L, ret);
 }
