@@ -269,6 +269,24 @@ return require('lib/tap')(function (test)
     end
   end, "1.28.0")
 
+  test("fs.{open,read,close}dir ref check", function(print, p, expect, uv)
+    local dir = assert(uv.fs_opendir('.', nil, 50))
+
+    local function readdir_cb(err, dirs)
+      assert(not err)
+      if dirs then
+        p(dirs)
+      end
+    end
+
+    uv.fs_readdir(dir, readdir_cb)
+    dir = nil
+    collectgarbage()
+    collectgarbage()
+    collectgarbage()
+
+  end, "1.28.0")
+
   test("fs.statfs sync", function (print, p, expect, uv)
     local stat = assert(uv.fs_statfs("."))
     p(stat)
