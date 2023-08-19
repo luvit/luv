@@ -67,6 +67,10 @@
 #define LUVF_CALLBACK_NOTRACEBACK  0x02       // Don't traceback when error
 #define LUVF_CALLBACK_NOERRMSG     0x04       // Don't output err message
 
+#ifndef LUVF_CALLBACK_FLAGS
+#define LUVF_CALLBACK_FLAGS LUVF_CALLBACK_NOEXIT
+#endif
+
 /* Prototype of external callback routine.
  * The caller and the implementer exchanges data by the lua vm stack.
  * The caller push a lua function and nargs values onto the stack, then call it.

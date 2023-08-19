@@ -170,7 +170,7 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
 
   lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->after_work_cb);
   i = luv_thread_arg_push(L, &work->rets, LUVF_THREAD_SIDE_MAIN);
-  lctx->cb_pcall(L, i, 0, 0);
+  lctx->cb_pcall(L, i, 0, LUVF_CALLBACK_FLAGS);
 
   //ref down to ctx, up in luv_queue_work()
   luaL_unref(L, LUA_REGISTRYINDEX, work->ref);
