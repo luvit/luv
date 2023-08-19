@@ -363,6 +363,9 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
       return 1;
     }
     case UV_FS_READDIR: {
+      luaL_unref(L, LUA_REGISTRYINDEX, data->data_ref);
+      data->data_ref = LUA_NOREF;
+
       if(req->result > 0) {
         size_t i;
         uv_dir_t *dir = (uv_dir_t*)req->ptr;
@@ -938,6 +941,11 @@ static int luv_fs_readdir(lua_State* L) {
 
   req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
+
+  // ref the luv_dir_t so it doesn't get garbage collected before the readdir cb
+  lua_pushvalue(L, 1);
+  ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
   FS_CALL(uv_fs_readdir, req, dir->handle);
 }
 
