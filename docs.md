@@ -1279,7 +1279,7 @@ When the child process exits, `on_exit` is called with an exit code and signal.
 
 **Parameters:**
 - `process`: `uv_process_t userdata`
-- `signum`: `integer` or `string`
+- `signum`: `integer` or `string` or `nil` (default: `sigterm`)
 
 Sends the specified signal to the given process handle. Check the documentation
 on `uv_signal_t` for signal support, specially on Windows.
