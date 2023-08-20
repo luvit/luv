@@ -706,7 +706,8 @@ LUALIB_API int luv_cfpcall(lua_State* L, int nargs, int nresult, int flags) {
     break;
   case LUA_ERRMEM:
     if ((flags & LUVF_CALLBACK_NOERRMSG) == 0)
-      fprintf(stderr, "System Error: %s\n", lua_tostring(L, -1));
+      fprintf(stderr, "System Error: %s\n",
+              luaL_tolstring(L, lua_absindex(L, -1), NULL));
     if ((flags & LUVF_CALLBACK_NOEXIT) == 0)
       exit(-1);
     lua_pop(L, 1);
@@ -716,7 +717,8 @@ LUALIB_API int luv_cfpcall(lua_State* L, int nargs, int nresult, int flags) {
   case LUA_ERRERR:
   default:
     if ((flags & LUVF_CALLBACK_NOERRMSG) == 0)
-      fprintf(stderr, "Uncaught Error: %s\n", lua_tostring(L, -1));
+      fprintf(stderr, "Uncaught Error: %s\n",
+              luaL_tolstring(L, lua_absindex(L, -1), NULL));
     if ((flags & LUVF_CALLBACK_NOEXIT) == 0)
       exit(-1);
     lua_pop(L, 1);
