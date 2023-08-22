@@ -3771,7 +3771,12 @@ Sets the environmental variable specified by `name` with the string `value`.
 
 **Warning:** This function is not thread safe.
 
-### `uv.os_unsetenv()`
+### `uv.os_unsetenv(name)`
+
+**Parameters:**
+- `name`: `string`
+
+Unsets the environmental variable specified by `name`.
 
 **Returns:** `boolean` or `fail`
 
