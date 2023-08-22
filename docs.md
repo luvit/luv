@@ -1290,7 +1290,7 @@ on `uv_signal_t` for signal support, specially on Windows.
 
 **Parameters:**
 - `pid`: `integer`
-- `signum`: `integer` or `string`
+- `signum`: `integer` or `string` or `nil` (default: `sigterm`)
 
 Sends the specified signal to the given PID. Check the documentation on
 `uv_signal_t` for signal support, specially on Windows.
