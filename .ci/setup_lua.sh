@@ -49,8 +49,6 @@ if [ "$LUAJIT" == "yes" ]; then
 
   if [ "$LUA" == "luajit2.1" ]; then
     git checkout v2.1;
-    # force the INSTALL_TNAME to be luajit
-    perl -i -pe 's/INSTALL_TNAME=.+/INSTALL_TNAME= luajit/' Makefile
   fi
 
   make && make install PREFIX="$LUA_HOME_DIR"
