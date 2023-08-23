@@ -255,9 +255,25 @@ if(MINILUA_USE_LIBM)
   TARGET_LINK_LIBRARIES(minilua m)
 endif()
 
+set(GIT_FORMAT %ct)
+if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+  set(GIT_FORMAT %%ct)
+endif()
+add_custom_command(OUTPUT ${LUAJIT_DIR}/src/luajit_relver.txt
+  COMMAND git show -s --format=${GIT_FORMAT} > ${LUAJIT_DIR}/src/luajit_relver.txt
+  WORKING_DIRECTORY ${LUAJIT_DIR}
+)
+
+add_custom_command(OUTPUT ${LUAJIT_DIR}/src/luajit.h
+  COMMAND minilua host/genversion.lua
+  WORKING_DIRECTORY ${LUAJIT_DIR}/src
+  DEPENDS ${LUAJIT_DIR}/src/luajit_rolling.h
+  DEPENDS ${LUAJIT_DIR}/src/luajit_relver.txt
+)
+
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/buildvm_arch.h
   COMMAND minilua ${LUAJIT_DIR}/dynasm/dynasm.lua ${DASM_FLAGS} -o ${CMAKE_CURRENT_BINARY_DIR}/buildvm_arch.h ${LUAJIT_DIR}/src/vm_${DASM_ARCH}.dasc
-  DEPENDS ${LUAJIT_DIR}/dynasm/dynasm.lua minilua
+  DEPENDS ${LUAJIT_DIR}/dynasm/dynasm.lua minilua ${LUAJIT_DIR}/src/luajit.h
 )
 
 ## Source Lists
