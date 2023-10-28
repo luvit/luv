@@ -1181,7 +1181,7 @@ a better job on Windows than it does on Unix.
 
 Initializes the process handle and starts the process. If the process is
 successfully spawned, this function will return the handle and pid of the child
-process.
+process. Throws an error if the process fails to spawn.
 
 Possible reasons for failing to spawn would include (but not be limited to) the
 file to execute not existing, not having permissions to use the setuid or setgid
