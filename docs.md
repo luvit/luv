@@ -779,7 +779,7 @@ end)
 Creates and initializes a new `uv_prepare_t`. Returns the Lua userdata wrapping
 it.
 
-**Returns:** `uv_prepare_t userdata` or `fail`
+**Returns:** `uv_prepare_t userdata`
 
 ### `uv.prepare_start(prepare, callback)`
 
@@ -825,7 +825,7 @@ end)
 Creates and initializes a new `uv_check_t`. Returns the Lua userdata wrapping
 it.
 
-**Returns:** `uv_check_t userdata` or `fail`
+**Returns:** `uv_check_t userdata`
 
 ### `uv.check_start(check, callback)`
 
@@ -878,7 +878,7 @@ end)
 Creates and initializes a new `uv_idle_t`. Returns the Lua userdata wrapping
 it.
 
-**Returns:** `uv_idle_t userdata` or `fail`
+**Returns:** `uv_idle_t userdata`
 
 ### `uv.idle_start(idle, callback)`
 
@@ -1783,7 +1783,7 @@ Creates and initializes a new `uv_pipe_t`. Returns the Lua userdata wrapping
 it. The `ipc` argument is a boolean to indicate if this pipe will be used for
 handle passing between processes.
 
-**Returns:** `uv_pipe_t userdata` or `fail`
+**Returns:** `uv_pipe_t userdata`
 
 ### `uv.pipe_open(pipe, fd)`
 
@@ -2431,7 +2431,7 @@ handle uses the best backend for the job on each platform.
 Creates and initializes a new `uv_fs_event_t`. Returns the Lua userdata wrapping
 it.
 
-**Returns:** `uv_fs_event_t userdata` or `fail`
+**Returns:** `uv_fs_event_t userdata`
 
 ### `uv.fs_event_start(fs_event, path, flags, callback)`
 
@@ -2487,7 +2487,7 @@ they can work on file systems where fs event handles can't.
 Creates and initializes a new `uv_fs_poll_t`. Returns the Lua userdata wrapping
 it.
 
-**Returns:** `uv_fs_poll_t userdata` or `fail`
+**Returns:** `uv_fs_poll_t userdata`
 
 ### `uv.fs_poll_start(fs_poll, path, interval, callback)`
 
@@ -3330,7 +3330,7 @@ a Lua function or a string containing Lua code or bytecode dumped from a functio
 are passed to the `entry` function and an optional `options` table may be
 provided. Currently accepted `option` fields are `stack_size`.
 
-**Returns:** `luv_thread_t userdata` or `fail`
+**Returns:** `luv_thread_t userdata`
 
 **Note:** unsafe, please make sure the thread end of life before Lua state close.
 
