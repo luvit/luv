@@ -3330,7 +3330,7 @@ a Lua function or a string containing Lua code or bytecode dumped from a functio
 are passed to the `entry` function and an optional `options` table may be
 provided. Currently accepted `option` fields are `stack_size`.
 
-**Returns:** `luv_thread_t userdata`
+**Returns:** `luv_thread_t userdata` or `fail`
 
 **Note:** unsafe, please make sure the thread end of life before Lua state close.
 
