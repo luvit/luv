@@ -922,14 +922,14 @@ end)
 async:send()
 ```
 
-### `uv.new_async([callback])`
+### `uv.new_async(callback)`
 
 **Parameters:**
-- `callback`: `callable` or `nil`
+- `callback`: `callable`
   - `...`: `threadargs` passed to/from `uv.async_send(async, ...)`
 
 Creates and initializes a new `uv_async_t`. Returns the Lua userdata wrapping
-it. A `nil` callback is allowed.
+it.
 
 **Returns:** `uv_async_t userdata` or `fail`
 
