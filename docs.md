@@ -2431,7 +2431,7 @@ handle uses the best backend for the job on each platform.
 Creates and initializes a new `uv_fs_event_t`. Returns the Lua userdata wrapping
 it.
 
-**Returns:** `uv_fs_event_t userdata`
+**Returns:** `uv_fs_event_t userdata` or `fail`
 
 ### `uv.fs_event_start(fs_event, path, flags, callback)`
 
