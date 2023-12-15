@@ -1783,7 +1783,7 @@ Creates and initializes a new `uv_pipe_t`. Returns the Lua userdata wrapping
 it. The `ipc` argument is a boolean to indicate if this pipe will be used for
 handle passing between processes.
 
-**Returns:** `uv_pipe_t userdata`
+**Returns:** `uv_pipe_t userdata` or `fail`
 
 ### `uv.pipe_open(pipe, fd)`
 
@@ -2487,7 +2487,7 @@ they can work on file systems where fs event handles can't.
 Creates and initializes a new `uv_fs_poll_t`. Returns the Lua userdata wrapping
 it.
 
-**Returns:** `uv_fs_poll_t userdata`
+**Returns:** `uv_fs_poll_t userdata` or `fail`
 
 ### `uv.fs_poll_start(fs_poll, path, interval, callback)`
 
