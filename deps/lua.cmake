@@ -120,6 +120,7 @@ IF(WIN32)
 ELSE()
   target_link_libraries(lua lualib ${LIBS})
   SET_TARGET_PROPERTIES(lua PROPERTIES ENABLE_EXPORTS ON)
+  target_compile_options(lua PRIVATE -DLUA_USE_POSIX)
 ENDIF(WIN32)
 
 MACRO(LUA_add_custom_commands luajit_target)

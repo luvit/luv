@@ -19,10 +19,15 @@ if _G.jit and _G.jit.os then
 else
   -- Normal lua will only have \ for path separator on windows.
   utils.isWindows = package.config:find("\\") and true or false
+  utils.isLinux = false
+
   if not utils.isWindows then
-    local _os = os.getenv('RUNNER_OS') or os.getenv('OSTYPE')
-    if (_os and _os:lower():match('linux')) then
-      utils.isLinux = true
+    -- TODO Use uv.os_uname() when the minimum required libuv provides it
+    local popen_handle = io.popen('uname -s')
+    if popen_handle then
+      local uname_os = assert(popen_handle:read('*a'))
+      popen_handle:close()
+      utils.isLinux = uname_os:lower() == 'linux'
     end
   end
 end
