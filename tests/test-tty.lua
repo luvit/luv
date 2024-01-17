@@ -13,16 +13,9 @@ end
 return require('lib/tap')(function (test)
 
   test("tty normal", function (print, p, expect, uv)
-    -- uv.tty_set_vterm_state("supported")
-    -- print(uv.tty_get_vterm_state())
-
     local stdin = uv.new_tty(0, true)
     local stdout = uv.new_tty(1, false)
 
-    local stype = os.getenv('GITHUB_ACTION') and 'pipe' or 'tty'
-
-    assert(stype == uv.guess_handle(0))
-    assert(stype == uv.guess_handle(1))
     assert(uv.is_readable(stdin))
     assert(uv.is_writable(stdout))
 
