@@ -1960,7 +1960,7 @@ Bind the pipe to a file path (Unix) or a name (Windows).
 `Flags`:
 
 - If `type(flags)` is `number`, it must be `0` or `uv.constants.PIPE_NO_TRUNCATE`.
-- If `type(flags)` is `table`, it must be `{}` or `{ no_trunate = true|false }`.
+- If `type(flags)` is `table`, it must be `{}` or `{ no_truncate = true|false }`.
 - If `type(flags)` is `nil`, it use default value `0`.
 - Returns `EINVAL` for unsupported flags without performing the bind operation.
 
@@ -1991,7 +1991,7 @@ Connect to the Unix domain socket or the named pipe.
 `Flags`:
 
 - If `type(flags)` is `number`, it must be `0` or `uv.constants.PIPE_NO_TRUNCATE`.
-- If `type(flags)` is `table`, it must be `{}` or `{ no_trunate = true|false }`.
+- If `type(flags)` is `table`, it must be `{}` or `{ no_truncate = true|false }`.
 - If `type(flags)` is `nil`, it use default value `0`.
 - Returns `EINVAL` for unsupported flags without performing the bind operation.
 
