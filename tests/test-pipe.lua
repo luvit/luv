@@ -115,7 +115,7 @@ return require('lib/tap')(function (test)
     if isLinux then
       assert(server:bind2('\0' .. pipe_name))
       local name = server:getsockname()
-      assert(#name > #pipe_name + 1 )
+      assert(#name == #pipe_name + 1 )
       assert(name:sub(1, #pipe_name + 1) == '\0' .. pipe_name)
       pipe_name = name
     else
