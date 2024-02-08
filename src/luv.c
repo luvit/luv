@@ -392,6 +392,10 @@ static const luaL_Reg luv_functions[] = {
   {"thread_setaffinity", luv_thread_setaffinity},
   {"thread_getcpu", luv_thread_getcpu},
 #endif
+#if LUV_UV_VERSION_GEQ(1, 48, 0)
+  {"thread_getpriority", luv_thread_getpriority},
+  {"thread_setpriority", luv_thread_setpriority},
+#endif
 
   // work.c
   {"new_work", luv_new_work},
