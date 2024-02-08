@@ -154,4 +154,27 @@ return require('lib/tap')(function (test)
       end
     end, mask_size):join()
   end, "1.45.0")
+
+  test("getpriority, setpriority", function(_, p, _, uv)
+    assert(type(uv.constants.THREAD_PRIORITY_HIGHEST)=='number')
+    assert(type(uv.constants.THREAD_PRIORITY_ABOVE_NORMAL)=='number')
+    assert(type(uv.constants.THREAD_PRIORITY_NORMAL)=='number')
+    assert(type(uv.constants.THREAD_PRIORITY_BELOW_NORMAL)=='number')
+    assert(type(uv.constants.THREAD_PRIORITY_LOWEST)=='number')
+
+    local thread = uv.new_thread(function()
+      local _uv = require('luv')
+      local self = _uv.thread_self()
+      local priority = assert(self:getpriority())
+      print('priority in thread', priority)
+    end)
+
+    local priority = assert(thread:getpriority())
+    print('default priority', priority)
+
+    assert(thread:setpriority(uv.constants.THREAD_PRIORITY_LOWEST))
+    priority = assert(thread:getpriority())
+    print('priority after change', priority)
+    thread:join()
+  end, "1.48.0")
 end)

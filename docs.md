@@ -3407,6 +3407,43 @@ the number to correspond with the table keys used in `uv.thread_getaffinity` and
 
 **Returns:** `integer` or `fail`
 
+### `uv.thread_setpriority(thread, priority)`
+
+> method form `thread:setpriority(priority)`
+
+**Parameters:**
+- `thread`: `luv_thread_t userdata`
+- `priority`: ``number`
+
+Sets the specified thread's scheduling priority setting. It requires elevated
+privilege to set specific priorities on some platforms.
+
+The priority can be set to the following constants.
+
+- uv.constants.THREAD_PRIORITY_HIGHEST
+- uv.constants.THREAD_PRIORITY_ABOVE_NORMAL
+- uv.constants.THREAD_PRIORITY_NORMAL
+- uv.constants.THREAD_PRIORITY_BELOW_NORMAL
+- uv.constants.THREAD_PRIORITY_LOWEST
+
+**Returns:** `boolean` or `fail`
+
+### `uv.thread_getpriority(thread)
+
+> method form `thread:getpriority()`
+
+**Parameters:**
+- `thread`: `luv_thread_t userdata`
+
+Gets the  thread's priority setting.
+
+Retrieves the scheduling priority of the specified thread. The returned priority
+value is platform dependent.
+
+For Linux, when schedule policy is SCHED_OTHER (default), priority is 0.
+
+**Returns:** `number` or `fail`
+
 ### `uv.thread_self()`
 
 Returns the handle for the thread in which this is called.

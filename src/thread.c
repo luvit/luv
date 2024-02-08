@@ -463,6 +463,26 @@ static int luv_thread_getcpu(lua_State* L) {
 }
 #endif
 
+#if LUV_UV_VERSION_GEQ(1, 48, 0)
+static int luv_thread_getpriority(lua_State* L) {
+  int priority;
+  luv_thread_t* tid = luv_check_thread(L, 1);
+  int ret = uv_thread_getpriority(tid->handle, &priority);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushinteger(L, priority);
+  return 1;
+}
+
+static int luv_thread_setpriority(lua_State* L) {
+  luv_thread_t* tid = luv_check_thread(L, 1);
+  int priority = luaL_checkinteger(L, 2);
+  int ret = uv_thread_setpriority(tid->handle, priority);
+  if (ret < 0) return luv_error(L, ret);
+  lua_pushboolean(L, 1);
+  return 1;
+}
+#endif
+
 static int luv_thread_join(lua_State* L) {
   luv_thread_t* tid = luv_check_thread(L, 1);
   int ret = uv_thread_join(&tid->handle);
@@ -498,6 +518,11 @@ static const luaL_Reg luv_thread_methods[] = {
 #if LUV_UV_VERSION_GEQ(1, 45, 0)
   {"getaffinity", luv_thread_getaffinity},
   {"setaffinity", luv_thread_setaffinity},
+  {"getcpu", luv_thread_getcpu},
+#endif
+#if LUV_UV_VERSION_GEQ(1, 48, 0)
+  {"getpriority", luv_thread_getpriority},
+  {"setpriority", luv_thread_setpriority},
 #endif
   {NULL, NULL}
 };
