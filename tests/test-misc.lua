@@ -184,7 +184,13 @@ return require('lib/tap')(function (test)
   test("uv constants", function(print, p, expect, uv)
     assert(type(uv.constants)=='table')
     for k, v in pairs(uv.constants) do
-      assert(v >= 0, k)
+      if k=='THREAD_PRIORITY_LOWEST' then
+        assert(v == -2)
+      elseif k=='THREAD_PRIORITY_BELOW_NORMAL' then
+        assert(v == -1)
+      else
+        assert(v >= 0, k)
+      end
     end
   end)
 
