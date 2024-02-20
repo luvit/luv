@@ -8,6 +8,7 @@ return require('lib/tap')(function (test)
       or err == "EAI_NONAME"  -- IRIX returns this for "https"
       or err == "EAI_SERVICE" -- Solaris returns this for "http"/"https"
       or err == "EAI_NODATA"  -- AIX returns this for "https"
+      or (isWindows and err == "ENOENT") -- Windows returns this for WSANO_DATA
   end
 
   test("Get all local http addresses", function (print, p, expect, uv)

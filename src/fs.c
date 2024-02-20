@@ -498,12 +498,6 @@ static void luv_fs_cb(uv_fs_t* req) {
   return nargs;                                           \
 }
 
-#define FS_CALL_WRITE(func, req, ...) {                   \
-  int nargs;                                              \
-  FS_CALL_NORETURN(func, req, free(bufs), __VA_ARGS__)    \
-  return nargs;                                           \
-}
-
 static int luv_fs_close(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
   uv_file file = luaL_checkinteger(L, 1);
@@ -581,8 +575,7 @@ static int luv_fs_write(lua_State* L) {
   size_t count;
   uv_buf_t* bufs = luv_check_bufs(L, 2, &count, (luv_req_t*)req->data);
   int nargs;
-  FS_CALL_NORETURN(uv_fs_write, req, file, bufs, count, offset);
-  free(bufs);
+  FS_CALL_NORETURN(uv_fs_write, req, { free(bufs); }, file, bufs, count, offset);
   return nargs;
 }
 

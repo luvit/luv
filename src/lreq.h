@@ -34,7 +34,6 @@ typedef struct {
   lua_rawgeti(L, LUA_REGISTRYINDEX, (data)->callback_ref); \
   lua_State *th = lua_tothread(L, -1);                   \
   lua_pop(L, 1);                                         \
-                                                         \
   if (th)                                                \
     return lua_yield(th, 0);
 
