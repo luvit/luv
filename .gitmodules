@@ -1,12 +1,16 @@
 [submodule "libuv"]
 	path = deps/libuv
 	url = https://github.com/libuv/libuv.git
+	branch = v1.x
 [submodule "luajit"]
 	path = deps/luajit
 	url = https://github.com/LuaJIT/LuaJIT.git
+	branch = v2.1
 [submodule "lua"]
 	path = deps/lua
 	url = https://github.com/lua/lua
+	branch = v5.4
 [submodule "lua-compat-5.3"]
 	path = deps/lua-compat-5.3
 	url = https://github.com/keplerproject/lua-compat-5.3.git
+	branch = master
