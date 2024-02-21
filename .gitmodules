@@ -10,9 +10,9 @@
 [submodule "lua"]
 	path = deps/lua
 	url = https://github.com/lua/lua
-	branch = v5.4
+	branch = master
+	tag = v5.4.6
 [submodule "lua-compat-5.3"]
 	path = deps/lua-compat-5.3
 	url = https://github.com/keplerproject/lua-compat-5.3.git
 	branch = master
-	tag = v0.12
