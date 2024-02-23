@@ -470,6 +470,9 @@ static void luv_fs_cb(uv_fs_t* req) {
       luv_cleanup_req(L, lreq);                           \
       req->data = NULL;                                   \
       uv_fs_req_cleanup(req);                             \
+    } else {                                              \
+      luaL_unref(L, LUA_REGISTRYINDEX, lreq->req_ref);    \
+      lreq->req_ref = LUA_NOREF;                          \
     }                                                     \
   }                                                       \
   else {                                                  \
