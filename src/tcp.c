@@ -121,18 +121,19 @@ static int luv_tcp_bind(lua_State* L) {
 static void parse_sockaddr(lua_State* L, struct sockaddr_storage* address) {
   char ip[INET6_ADDRSTRLEN];
   int port = 0;
+  const struct sockaddr* addr = (const struct sockaddr*)address;
   lua_newtable(L);
-  if (address->ss_family == AF_INET) {
+  if (addr->sa_family == AF_INET) {
     struct sockaddr_in* addrin = (struct sockaddr_in*)address;
     uv_inet_ntop(AF_INET, &(addrin->sin_addr), ip, INET6_ADDRSTRLEN);
     port = ntohs(addrin->sin_port);
-  } else if (address->ss_family == AF_INET6) {
+  } else if (addr->sa_family == AF_INET6) {
     struct sockaddr_in6* addrin6 = (struct sockaddr_in6*)address;
     uv_inet_ntop(AF_INET6, &(addrin6->sin6_addr), ip, INET6_ADDRSTRLEN);
     port = ntohs(addrin6->sin6_port);
   }
 
-  lua_pushstring(L, luv_af_num_to_string(address->ss_family));
+  lua_pushstring(L, luv_af_num_to_string(addr->sa_family));
   lua_setfield(L, -2, "family");
   lua_pushinteger(L, port);
   lua_setfield(L, -2, "port");
