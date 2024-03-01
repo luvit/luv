@@ -28,7 +28,7 @@ jobs:
       with:
         submodules: recursive
     - name: Build
-      run: CMAKE_OPTIONS="-DCMAKE_C_FLAGS=-fsanitize=address,undefined" make
+      run: CMAKE_OPTIONS="-DCMAKE_C_FLAGS='-fsanitize=address,undefined -fno-sanitize-recover=all'" make
     - name: Test
       run: make test
     - name: Test with Aggressive GC
