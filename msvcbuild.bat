@@ -1,7 +1,7 @@
 @echo off
 Setlocal EnableDelayedExpansion
 
-if not defined VS set VS=16
+if not defined VS set VS=17
 if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2022" (set VS=17)
 if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2019" (set VS=16)
 if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" (set VS=15)
