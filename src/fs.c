@@ -24,9 +24,14 @@ typedef struct {
 } luv_dir_t;
 #endif
 
+typedef struct {
+  uv_fs_t* req;
+} luv_fs_scandir_t;
+
 static uv_fs_t* luv_check_fs(lua_State* L, int index) {
-  if (luaL_testudata(L, index, "uv_fs") != NULL) {
-    return (uv_fs_t*)lua_touserdata(L, index);
+  if (luaL_testudata(L, index, "uv_fs_scandir") != NULL) {
+    luv_fs_scandir_t* scandir_req = (luv_fs_scandir_t*)lua_touserdata(L, index);
+    return (uv_fs_t*)(scandir_req->req);
   }
   uv_fs_t* req = (uv_fs_t*)luaL_checkudata(L, index, "uv_req");
   luaL_argcheck(L, req->type == UV_FS && req->data, index, "Expected uv_fs_t");
@@ -251,6 +256,13 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
   }
 
   if (req->result < 0) {
+    if (req->fs_type == UV_FS_SCANDIR) {
+      // We need to unref the luv_fs_scandir_t userdata to allow it to be garbage collected.
+      // The scandir callback can only be called once, so we now know that the
+      // req can be safely garbage collected.
+      luaL_unref(L, LUA_REGISTRYINDEX, data->data_ref);
+      data->data_ref = LUA_NOREF;
+    }
     lua_pushnil(L);
     if (fs_req_has_dest_path(req)) {
       lua_rawgeti(L, LUA_REGISTRYINDEX, data->data_ref);
@@ -336,8 +348,15 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
       return 1;
 
     case UV_FS_SCANDIR:
-      // Expose the userdata for the request.
-      lua_rawgeti(L, LUA_REGISTRYINDEX, data->req_ref);
+      // The luv_fs_scandir_t userdata is stored in data_ref.
+      // We want to return this instead of the uv_req_t because the
+      // luv_fs_scandir_t userdata has a gc method.
+      lua_rawgeti(L, LUA_REGISTRYINDEX, data->data_ref);
+      // We now want to unref the userdata to allow it to be garbage collected.
+      // The scandir callback can only be called once, so we now know that the
+      // req can be safely garbage collected.
+      luaL_unref(L, LUA_REGISTRYINDEX, data->data_ref);
+      data->data_ref = LUA_NOREF;
       return 1;
 
 #if LUV_UV_VERSION_GEQ(1, 28, 0)
@@ -470,9 +489,6 @@ static void luv_fs_cb(uv_fs_t* req) {
       luv_cleanup_req(L, lreq);                           \
       req->data = NULL;                                   \
       uv_fs_req_cleanup(req);                             \
-    } else {                                              \
-      luaL_unref(L, LUA_REGISTRYINDEX, lreq->req_ref);    \
-      lreq->req_ref = LUA_NOREF;                          \
     }                                                     \
   }                                                       \
   else {                                                  \
@@ -614,8 +630,34 @@ static int luv_fs_scandir(lua_State* L) {
   int flags = 0; // TODO: find out what these flags are.
   int ref = luv_check_continuation(L, 2);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
-  req->data = luv_setup_req_with_mt(L, ctx, ref, "uv_fs");
-  FS_CALL(uv_fs_scandir, req, path, flags);
+  req->data = luv_setup_req(L, ctx, ref);
+  int sync = ref == LUA_NOREF;
+
+  // Wrap the req in a garbage-collectable wrapper.
+  // This allows us to separate the lifetime of the uv_req_t from the lifetime
+  // of the userdata that gets returned here, since otherwise the returned uv_req_t
+  // would hold a reference to itself making it ineligible for garbage collection before
+  // the process ends.
+  luv_fs_scandir_t* scandir_req = (luv_fs_scandir_t*)lua_newuserdata(L, sizeof(luv_fs_scandir_t));
+  scandir_req->req = req;
+  luaL_getmetatable(L, "uv_fs_scandir");
+  lua_setmetatable(L, -2);
+  int scandir_req_index = lua_gettop(L);
+
+  int nargs;
+  FS_CALL_NORETURN(uv_fs_scandir, req, path, flags);
+  // This indicates an error, so we want to return immediately
+  if (nargs != 1) return nargs;
+
+  // Ref the return if this is async, since we don't want this to be garbage collected
+  // before the callback is called.
+  if (!sync) {
+    lua_pushvalue(L, scandir_req_index);
+    ((luv_req_t*)req->data)->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+  }
+
+  lua_pushvalue(L, scandir_req_index);
+  return 1;
 }
 
 static int luv_fs_scandir_next(lua_State* L) {
