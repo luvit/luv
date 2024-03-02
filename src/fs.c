@@ -256,6 +256,13 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
   }
 
   if (req->result < 0) {
+    if (req->fs_type == UV_FS_SCANDIR) {
+      // We need to unref the luv_fs_scandir_t userdata to allow it to be garbage collected.
+      // The scandir callback can only be called once, so we now know that the
+      // req can be safely garbage collected.
+      luaL_unref(L, LUA_REGISTRYINDEX, data->data_ref);
+      data->data_ref = LUA_NOREF;
+    }
     lua_pushnil(L);
     if (fs_req_has_dest_path(req)) {
       lua_rawgeti(L, LUA_REGISTRYINDEX, data->data_ref);
