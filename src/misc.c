@@ -680,19 +680,20 @@ static int luv_sleep(lua_State* L) {
 static void luv_random_cb(uv_random_t* req, int status, void* buf, size_t buflen) {
   luv_req_t* data = (luv_req_t*)req->data;
   lua_State* L = data->ctx->L;
-  int nargs;
 
   if (status < 0) {
-    luv_status(L, status);
-    nargs = 1;
+    luv_fulfill_req_status(L, (luv_req_t*)req->data, status);
   }
   else {
-    lua_pushnil(L);
+    int nargs = 1;
+    if (!luv_is_sync_req(L, data)) {
+      lua_pushnil(L);
+      nargs = 2;
+    }
     lua_pushlstring(L, (const char*)buf, buflen);
-    nargs = 2;
+    luv_fulfill_req(L, (luv_req_t*)req->data, nargs);
   }
 
-  luv_fulfill_req(L, (luv_req_t*)req->data, nargs);
   luv_cleanup_req(L, (luv_req_t*)req->data);
   req->data = NULL;
 }
@@ -746,6 +747,7 @@ static int luv_random(lua_State* L) {
       lua_pop(L, 1);
       return luv_error(L, ret);
     }
+    luv_yield_req(L, (luv_req_t*)req->data);
     return luv_result(L, ret);
   }
 }

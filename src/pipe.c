@@ -59,6 +59,7 @@ static int luv_pipe_connect(lua_State* L) {
   uv_connect_t* req = (uv_connect_t*)lua_newuserdata(L, uv_req_size(UV_CONNECT));
   req->data = luv_setup_req(L, ctx, ref);
   uv_pipe_connect(req, handle, name, luv_connect_cb);
+  luv_yield_req(L, (luv_req_t*)req->data);
   return 1;
 }
 

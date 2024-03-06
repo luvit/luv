@@ -23,18 +23,18 @@ return require('lib/tap')(function (test)
     uv.close(stdout)
   end)
 
-  test("tty pty", function (print, p, expect, uv)
-    ffi.cdef[[
-        struct winsize {
-          unsigned short ws_row;
-          unsigned short ws_col;
-          unsigned short ws_xpixel;   /* unused */
-          unsigned short ws_ypixel;   /* unused */
-        };
-        int openpty(int *amaster, int *aslave, char *name,
-          const void* termp, const struct winsize* winp);
-        ]]
+  ffi.cdef[[
+    struct winsize {
+      unsigned short ws_row;
+      unsigned short ws_col;
+      unsigned short ws_xpixel;   /* unused */
+      unsigned short ws_ypixel;   /* unused */
+    };
+    int openpty(int *amaster, int *aslave, char *name,
+                const void* termp, const struct winsize* winp);
+  ]]
 
+  test("tty pty", function (print, p, expect, uv)
     local master_fd = ffi.new('int[1]')
     local slave_fd = ffi.new('int[1]')
     local winp = ffi.new('struct winsize[1]')
@@ -59,11 +59,12 @@ return require('lib/tap')(function (test)
     slave_tty:close()
   end)
 
+  ffi.cdef[[
+    typedef unsigned mode_t;
+    int open(const char *pathname, int flags, mode_t mode);
+  ]]
+
   test("tty device", function (print, p, expect, uv)
-    ffi.cdef[[
-        typedef unsigned mode_t;
-        int open(const char *pathname, int flags, mode_t mode);
-        ]]
 
     local ttyin_fd = ffi.C.open("/dev/tty", uv.constants.O_RDONLY, 0);
     if tonumber(ttyin_fd) == -1 and ffi.errno() == 6 then

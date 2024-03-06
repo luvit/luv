@@ -63,18 +63,21 @@ static void luv_pushaddrinfo(lua_State* L, struct addrinfo* res) {
 static void luv_getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res) {
   luv_req_t* data = (luv_req_t*)req->data;
   lua_State* L = data->ctx->L;
-  int nargs;
+
 
   if (status < 0) {
-    luv_status(L, status);
-    nargs = 1;
+    luv_fulfill_req_status(L, data, status);
   }
   else {
-    lua_pushnil(L);
+    int nargs = 1;
+    if (!luv_is_sync_req(L, data)) {
+      lua_pushnil(L);
+      nargs = 2;
+    }
+
     luv_pushaddrinfo(L, res);
-    nargs = 2;
+    luv_fulfill_req(L, (luv_req_t*)req->data, nargs);
   }
-  luv_fulfill_req(L, (luv_req_t*)req->data, nargs);
   luv_cleanup_req(L, (luv_req_t*)req->data);
   req->data = NULL;
   if (res) uv_freeaddrinfo(res);
@@ -207,28 +210,32 @@ static int luv_getaddrinfo(lua_State* L) {
     luv_pushaddrinfo(L, req->addrinfo);
     uv_freeaddrinfo(req->addrinfo);
     luv_cleanup_req(L, (luv_req_t*)req->data);
+    return 1;
   }
 #endif
+  luv_yield_req(L, (luv_req_t*)req->data);
   return 1;
 }
 
 static void luv_getnameinfo_cb(uv_getnameinfo_t* req, int status, const char* hostname, const char* service) {
   luv_req_t* data = (luv_req_t*)req->data;
   lua_State* L = data->ctx->L;
-  int nargs;
 
   if (status < 0) {
-    luv_status(L, status);
-    nargs = 1;
+    luv_fulfill_req_status(L, data, status);
   }
   else {
-    lua_pushnil(L);
+    int nargs = 2;
+    if (!luv_is_sync_req(L, data)) {
+      lua_pushnil(L);
+      nargs = 3;
+    }
+
     lua_pushstring(L, hostname);
     lua_pushstring(L, service);
-    nargs = 3;
+    luv_fulfill_req(L, (luv_req_t*)req->data, nargs);
   }
 
-  luv_fulfill_req(L, (luv_req_t*)req->data, nargs);
   luv_cleanup_req(L, (luv_req_t*)req->data);
   req->data = NULL;
 }
@@ -311,5 +318,6 @@ static int luv_getnameinfo(lua_State* L) {
     luv_cleanup_req(L, (luv_req_t*)req->data);
     return 2;
   }
+  luv_yield_req(L, (luv_req_t*)req->data);
   return 1;
 }
