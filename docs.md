@@ -2591,7 +2591,7 @@ Equivalent to `close(2)`.
 **Parameters:**
 - `path`: `string`
 - `flags`: `string` or `integer`
-- `mode`: `integer`
+- `mode`: `integer` (octal `chmod(1)` mode, e.g. `tonumber('644', 8)`)
 - `callback`: `callable` (async version) or `nil` (sync version)
   - `err`: `nil` or `string`
   - `fd`: `integer` or `nil`
@@ -2666,7 +2666,7 @@ If `offset` is nil or omitted, it will default to `-1`, which indicates 'use and
 
 **Parameters:**
 - `path`: `string`
-- `mode`: `integer`
+- `mode`: `integer` (octal `chmod(1)` mode, e.g. `tonumber('755', 8)`)
 - `callback`: `callable` (async version) or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
@@ -2897,7 +2897,7 @@ Limited equivalent to `sendfile(2)`. Returns the number of bytes written.
 
 **Parameters:**
 - `path`: `string`
-- `mode`: `integer`
+- `mode`: `string`  (a combination of the `'r'`, `'w'` and `'x'` characters denoting the symbolic mode as per `chmod(1)`)
 - `callback`: `callable` (async version) or `nil` (sync version)
   - `err`: `nil` or `string`
   - `permission`: `boolean` or `nil`
@@ -2914,7 +2914,7 @@ Returns `true` or `false` indicating access permission.
 
 **Parameters:**
 - `path`: `string`
-- `mode`: `integer`
+- `mode`: `integer` (octal `chmod(1)` mode, e.g. `tonumber('644', 8)`)
 - `callback`: `callable` (async version) or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
