@@ -2666,7 +2666,7 @@ If `offset` is nil or omitted, it will default to `-1`, which indicates 'use and
 
 **Parameters:**
 - `path`: `string`
-- `mode`: `integer` (octal representation of `chmod(1)` mode)
+- `mode`: `integer` (octal `chmod(1)` mode, e.g. `tonumber('755', 8)`)
 - `callback`: `callable` (async version) or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
@@ -2914,7 +2914,7 @@ Returns `true` or `false` indicating access permission.
 
 **Parameters:**
 - `path`: `string`
-- `mode`: `integer` (octal representation of `chmod(1)` mode)
+- `mode`: `integer` (octal `chmod(1)` mode, e.g. `tonumber('644', 8)`)
 - `callback`: `callable` (async version) or `nil` (sync version)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
