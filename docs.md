@@ -2591,7 +2591,7 @@ Equivalent to `close(2)`.
 **Parameters:**
 - `path`: `string`
 - `flags`: `string` or `integer`
-- `mode`: `integer` (octal representation of `chmod(1)` mode)
+- `mode`: `integer` (octal `chmod(1)` mode, e.g. `tonumber('644', 8)`)
 - `callback`: `callable` (async version) or `nil` (sync version)
   - `err`: `nil` or `string`
   - `fd`: `integer` or `nil`
