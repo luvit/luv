@@ -218,11 +218,14 @@ return require('lib/tap')(function (test)
           timeout:close()
         else
           -- udp_set_source_membership added in 1.32.0
-          -- Temporarily disabled on macOS CI, see https://github.com/luvit/luv/issues/704
-          if uvVersionGEQ("1.32.0") and uv.os_getenv("RUNNER_OS") ~= "macOS" then
+          if uvVersionGEQ("1.32.0") then
             local source_addr = addr.ip
             assert(server:set_membership(multicast_addr, interface_addr, "leave"))
             _, err, errname = server:set_source_membership(multicast_addr, interface_addr, source_addr, "join")
+            -- handle 'EBUSY' error accidentally on macOS macOS CI, see https://github.com/luvit/luv/issues/704
+            while errname == 'EBUSY' do
+              _, err, errname = server:set_source_membership(multicast_addr, interface_addr, source_addr, "join")
+            end
             if errname == "ENOSYS" then
               -- not all systems support set_source_membership, so rejoin the previous group and continue on
               assert(server:set_membership(multicast_addr, interface_addr, "join"))
