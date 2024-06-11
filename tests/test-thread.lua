@@ -26,16 +26,65 @@ return require('lib/tap')(function (test)
   test("test thread create with arguments", function(print, p, expect, uv)
     uv.update_time()
     local before = uv.now()
-    local args = {500, 'string', nil, false, 5, "helloworld"}
+    local args = {500, 'string', nil, false, 5, "helloworld", {111, 222}}
     local unpack = unpack or table.unpack
-    uv.new_thread(function(num,s,null,bool,five,hw)
+    uv.new_thread(function(num,s,null,bool,five,hw,t)
       assert(type(num) == "number")
       assert(type(s) == "string")
       assert(null == nil)
       assert(bool == false)
       assert(five == 5)
       assert(hw == 'helloworld')
+      assert(#t == 2 and t[1] == 111 and t[2] == 222)
       require('luv').sleep(100)
+    end, unpack(args)):join()
+    uv.update_time()
+    local elapsed = uv.now() - before
+    assert(elapsed >= 100, "elapsed should be at least delay ")
+  end)
+
+  test("test thread create table arguments", function(print, p, expect, uv)
+    uv.update_time()
+    local before = uv.now()
+
+    local recursive = { 500 }
+    recursive.foo = recursive
+
+    local same = { 1, 2 }
+    same = setmetatable(same, same)
+
+    local Class = {}
+    Class.__index = Class
+    function Class:add(x)
+      self.x = self.x + x
+    end
+
+    local args = {
+      { 500, hw = "helloworld", nest = { 1 } },
+      setmetatable({}, {}),
+      same,
+      setmetatable({ false }, { __index = {
+        add = function(x)
+          return x + 1
+        end,
+      } }),
+      recursive,
+      setmetatable({ x = 10 }, Class),
+    }
+
+    local unpack = unpack or table.unpack
+    uv.new_thread(function(t, empty, same, meta, rec, cls)
+      assert(type(t) == "table")
+      assert(t[1] == 500 and t.hw == "helloworld" and t.nest[1] == 1 and getmetatable(t) == nil)
+      assert(#empty == 0 and #getmetatable(empty) == 0)
+      assert(same == getmetatable(same))
+      assert(meta[1] == false)
+      assert(meta.add(10) == 11)
+      assert(rec[1] == 500 and rec.foo == rec)
+      assert(getmetatable(cls) == getmetatable(cls).__index)
+      cls:add(1)
+      assert(cls.x == 11)
+      require("luv").sleep(100)
     end, unpack(args)):join()
     uv.update_time()
     local elapsed = uv.now() - before

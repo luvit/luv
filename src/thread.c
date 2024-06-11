@@ -62,75 +62,145 @@ static const char* luv_getmtname(lua_State *L, int idx) {
   return name;
 }
 
-static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int top, int flags) {
-  int i;
+static const size_t luv_table_len(lua_State *L, int idx) {
+  size_t len = 0;
+  lua_pushnil(L);
+  while (lua_next(L, idx) != 0) {
+    len++;
+    lua_pop(L, 1); // remove value, keep key for next iteration
+  }
+  return len;
+}
+
+static int thread_arg_table_set(lua_State* L, int idx, luv_table_t** table, int cache_idx, int flags);
+static void thread_arg_table_clear(lua_State* L, luv_table_t* table, int cache_idx, int args_flags, int flags);
+static void thread_arg_table_push(lua_State* L, luv_table_t* table, int cache_idx, int flags);
+
+static int thread_arg_set(lua_State* L, int idx, luv_val_t* arg, int cache_idx, int flags) {
   int side = LUVF_THREAD_SIDE(flags);
   int async = LUVF_THREAD_ASYNC(flags);
 
-  idx = idx > 0 ? idx : 1;
-  i = idx;
-  args->flags = flags;
-  while (i <= top && i < LUV_THREAD_MAXNUM_ARG + idx)
+  arg->type = lua_type(L, idx);
+  arg->ref[0] = arg->ref[1] = LUA_NOREF;
+  switch (arg->type)
   {
-    luv_val_t *arg = args->argv + (i - idx);
-    arg->type = lua_type(L, i);
-    arg->ref[0] = arg->ref[1] = LUA_NOREF;
-    switch (arg->type)
-    {
     case LUA_TNIL:
       break;
     case LUA_TBOOLEAN:
-      arg->val.boolean = lua_toboolean(L, i);
+      arg->val.boolean = lua_toboolean(L, idx);
       break;
     case LUA_TNUMBER:
-      arg->val.num = lua_tonumber(L, i);
+      arg->val.num = lua_tonumber(L, idx);
       break;
     case LUA_TSTRING:
       if (async)
       {
-        const char* p = lua_tolstring(L, i, &arg->val.str.len);
+        const char* p = lua_tolstring(L, idx, &arg->val.str.len);
         arg->val.str.base = malloc(arg->val.str.len);
         memcpy((void*)arg->val.str.base, p, arg->val.str.len);
       } else {
-        arg->val.str.base = lua_tolstring(L, i, &arg->val.str.len);
-        lua_pushvalue(L, i);
+        arg->val.str.base = lua_tolstring(L, idx, &arg->val.str.len);
+        lua_pushvalue(L, idx);
         arg->ref[side] = luaL_ref(L, LUA_REGISTRYINDEX);
       }
+      break;
+    case LUA_TFUNCTION:
+      luv_thread_dumped(L, idx);
+      arg->val.function.len = lua_rawlen(L, -1);
+      arg->val.function.code = malloc(arg->val.function.len);
+      memcpy((void*)arg->val.function.code, lua_tostring(L, -1), arg->val.function.len);
+      lua_pop(L, 1);
       break;
     case LUA_TUSERDATA:
-      arg->val.udata.data = lua_topointer(L, i);
-      arg->val.udata.size = lua_rawlen(L, i);
-      arg->val.udata.metaname = luv_getmtname(L, i);
+      arg->val.udata.data = lua_topointer(L, idx);
+      arg->val.udata.size = lua_rawlen(L, idx);
+      arg->val.udata.metaname = luv_getmtname(L, idx);
 
       if (arg->val.udata.size) {
-        lua_pushvalue(L, i);
+        lua_pushvalue(L, idx);
         arg->ref[side] = luaL_ref(L, LUA_REGISTRYINDEX);
       }
       break;
+    case LUA_TTABLE: {
+      if (thread_arg_table_set(L, idx, &arg->val.table, cache_idx, flags)) return 1;
+      break;
+    }
     default:
+      return 1;
+  }
+  return 0;
+}
+
+static int thread_arg_table_set(lua_State* L, int idx, luv_table_t** table, int cache_idx, int flags) {
+  // check if the table is reused.
+  lua_pushvalue(L, idx);
+  lua_gettable(L, cache_idx);
+  if (!lua_isnil(L, -1)) {
+    *table = lua_touserdata(L, -1);
+    lua_pop(L, 1);
+    return 0;
+  }
+  lua_pop(L, 1);
+
+  size_t len = luv_table_len(L, idx);
+  *table = malloc(sizeof(**table) + len * sizeof(luv_table_pair_t));
+  (*table)->len = len;
+
+  // set the cache before recursion to poperly support self referencing tables.
+  lua_pushvalue(L, idx);
+  lua_pushlightuserdata(L, *table);
+  lua_settable(L, cache_idx);
+
+  int top = lua_gettop(L);
+  int i = 0;
+  lua_pushnil(L);
+  while (lua_next(L, idx) != 0) {
+    if (thread_arg_set(L, top + 1, &(*table)->pairs[i].key, cache_idx, flags)) return 1;
+    if (thread_arg_set(L, top + 2, &(*table)->pairs[i].value, cache_idx, flags)) return 1;
+    lua_pop(L, 1);
+    i++;
+  }
+
+  if (lua_getmetatable(L, idx)) {
+    if (thread_arg_table_set(L, top + 1, &(*table)->metatable, cache_idx, flags)) return 1;
+    lua_pop(L, 1);
+  } else {
+    (*table)->metatable = NULL;
+  }
+  return 0;
+}
+
+static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int top, int flags) {
+  idx = idx > 0 ? idx : 1;
+  int i = idx;
+  args->flags = flags;
+  luv_val_t* arg = args->argv;
+
+  lua_newtable(L);
+  int cache_idx = lua_gettop(L);
+
+  while (i <= top && i < LUV_THREAD_MAXNUM_ARG + idx) {
+    if (thread_arg_set(L, i, arg, cache_idx, flags)) {
       args->argc = i - idx;
+      lua_settop(L, cache_idx - 1);
       lua_pushinteger(L, arg->type);
       lua_pushinteger(L, i - idx + 1);
       return -1;
     }
     i++;
+    arg++;
   }
+  lua_remove(L, cache_idx);
   args->argc = i - idx;
   return args->argc;
 }
 
-static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags) {
-  int i;
+static void thread_arg_clear(lua_State* L, luv_val_t* arg, int cache_idx, int args_flags, int flags) {
   int side = LUVF_THREAD_SIDE(flags);
-  int set = LUVF_THREAD_SIDE(args->flags);
-  int async = LUVF_THREAD_ASYNC(args->flags);
+  int set = LUVF_THREAD_SIDE(args_flags);
+  int async = LUVF_THREAD_ASYNC(args_flags);
 
-  if (args->argc == 0)
-    return;
-
-  for (i = 0; i < args->argc; i++) {
-    luv_val_t* arg = args->argv + i;
-    switch (arg->type) {
+  switch (arg->type) {
     case LUA_TSTRING:
       if (arg->ref[side] != LUA_NOREF)
       {
@@ -145,6 +215,12 @@ static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags
         }
       }
       break;
+    case LUA_TFUNCTION:
+      if (set != side) {
+        free((void*)arg->val.function.code);
+        arg->val.function.code = NULL;
+      }
+      break;
     case LUA_TUSERDATA:
       if (arg->ref[side]!=LUA_NOREF)
       {
@@ -154,26 +230,62 @@ static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags
           lua_rawgeti(L, LUA_REGISTRYINDEX, arg->ref[side]);
           lua_pushnil(L);
           lua_setmetatable(L, -2);
-          lua_pop(L, -1);
+          lua_pop(L, 1);
         }
         luaL_unref(L, LUA_REGISTRYINDEX, arg->ref[side]);
         arg->ref[side] = LUA_NOREF;
       }
       break;
+    case LUA_TTABLE:
+      if (side != set) {
+        thread_arg_table_clear(L, arg->val.table, cache_idx, args_flags, flags);
+      }
+      break;
     default:
       break;
-    }
   }
 }
 
-// called only in thread
-static int luv_thread_arg_push(lua_State* L, luv_thread_arg_t* args, int flags) {
-  int i = 0;
+static void thread_arg_table_clear(lua_State* L, luv_table_t* table, int cache_idx, int args_flags, int flags) {
+  // check if the table is already freed (for reused tables).
+  lua_pushlightuserdata(L, table);
+  lua_gettable(L, cache_idx);
+  if (!lua_isnil(L, -1)) {
+    lua_pop(L, 1);
+    return;
+  }
+  lua_pop(L, 1);
+
+  lua_pushlightuserdata(L, table);
+  lua_pushboolean(L, 1);
+  lua_settable(L, cache_idx);
+
+  if (table->metatable) {
+    thread_arg_table_clear(L, table->metatable, cache_idx, args_flags, flags);
+  }
+  for (int i = 0; i < table->len; i++) {
+    thread_arg_clear(L, &table->pairs[i].key, cache_idx, args_flags, flags);
+    thread_arg_clear(L, &table->pairs[i].value, cache_idx, args_flags, flags);
+  }
+  free(table);
+}
+
+static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags) {
+  if (args->argc == 0)
+    return;
+
+  lua_newtable(L);
+  int cache_idx = lua_gettop(L);
+  for (int i = 0; i < args->argc; i++) {
+    thread_arg_clear(L, args->argv + i, cache_idx, args->flags, flags);
+  }
+  lua_remove(L, cache_idx);
+}
+
+static int thread_arg_push(lua_State* L, luv_val_t* arg, int cache_idx, int flags) {
   int side = LUVF_THREAD_SIDE(flags);
 
-  while (i < args->argc) {
-    luv_val_t* arg = args->argv + i;
-    switch (arg->type) {
+  switch (arg->type) {
     case LUA_TNIL:
       lua_pushnil(L);
       break;
@@ -185,6 +297,9 @@ static int luv_thread_arg_push(lua_State* L, luv_thread_arg_t* args, int flags) 
       break;
     case LUA_TSTRING:
       lua_pushlstring(L, arg->val.str.base, arg->val.str.len);
+      break;
+    case LUA_TFUNCTION:
+      luaL_loadbuffer(L, arg->val.function.code, arg->val.function.len, "=thread");
       break;
     case LUA_TUSERDATA:
       if (arg->val.udata.size)
@@ -202,12 +317,49 @@ static int luv_thread_arg_push(lua_State* L, luv_thread_arg_t* args, int flags) 
         lua_pushlightuserdata(L, (void*)arg->val.udata.data);
       }
       break;
+    case LUA_TTABLE:
+      thread_arg_table_push(L, arg->val.table, cache_idx, flags);
+      break;
     default:
-      fprintf(stderr, "Error: thread arg not support type %s at %d",
-        lua_typename(L, arg->type), i + 1);
-    }
+      fprintf(stderr, "Error: thread arg not support type %s", lua_typename(L, arg->type));
+  }
+  return 0;
+}
+
+static void thread_arg_table_push(lua_State* L, luv_table_t* table, int cache_idx, int flags) {
+  lua_pushlightuserdata(L, table);
+  lua_gettable(L, cache_idx);
+  if (!lua_isnil(L, -1)) {
+    return;
+  }
+  lua_pop(L, 1);
+
+  lua_newtable(L);
+
+  lua_pushlightuserdata(L, table);
+  lua_pushvalue(L, -2); // duplicate the result table
+  lua_settable(L, cache_idx);
+
+  for (int i = 0; i < table->len; i++) {
+    thread_arg_push(L, &table->pairs[i].key, cache_idx, flags);
+    thread_arg_push(L, &table->pairs[i].value, cache_idx, flags);
+    lua_settable(L, -3);
+  }
+  if (table->metatable) {
+    thread_arg_table_push(L, table->metatable, cache_idx, flags);
+    lua_setmetatable(L, -2);
+  }
+}
+
+static int luv_thread_arg_push(lua_State* L, luv_thread_arg_t* args, int flags) {
+  lua_newtable(L);
+  int cache_idx = lua_gettop(L);
+  int i = 0;
+  while (i < args->argc) {
+    thread_arg_push(L, args->argv + i, cache_idx, flags);
     i++;
-  };
+  }
+  lua_remove(L, cache_idx);
   return i;
 }
 

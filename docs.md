@@ -73,7 +73,7 @@ used here to facilitate documenting consistent behavior:
   metamethod
 - `buffer`: a `string` or a sequential `table` of `string`s
 - `threadargs`: variable arguments (`...`) of type `nil`, `boolean`, `number`,
-  `string`, or `userdata`, numbers of argument limited to 9.
+  `string`, `userdata`, `function`, or `table`, numbers of argument limited to 9.
 
 ## Contents
 
