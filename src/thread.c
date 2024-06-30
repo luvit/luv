@@ -62,12 +62,22 @@ static const char* luv_getmtname(lua_State *L, int idx) {
   return name;
 }
 
-static const size_t luv_table_len(lua_State *L, int idx) {
+static const size_t luv_table_len(lua_State* L, int idx) {
   size_t len = 0;
   lua_pushnil(L);
   while (lua_next(L, idx) != 0) {
     len++;
     lua_pop(L, 1); // remove value, keep key for next iteration
+  }
+  return len;
+}
+
+// Count the number of upvalues of the closure at idx.
+static const size_t luv_upvalues_len(lua_State* L, int idx) {
+  size_t len = 0;
+  while (lua_getupvalue(L, idx, len + 1) != NULL) {
+    lua_pop(L, 1);  // Remove the upvalue from the stack
+    len++;
   }
   return len;
 }
@@ -104,13 +114,6 @@ static int thread_arg_set(lua_State* L, int idx, luv_val_t* arg, int cache_idx, 
         arg->ref[side] = luaL_ref(L, LUA_REGISTRYINDEX);
       }
       break;
-    case LUA_TFUNCTION:
-      luv_thread_dumped(L, idx);
-      arg->val.function.len = lua_rawlen(L, -1);
-      arg->val.function.code = malloc(arg->val.function.len);
-      memcpy((void*)arg->val.function.code, lua_tostring(L, -1), arg->val.function.len);
-      lua_pop(L, 1);
-      break;
     case LUA_TUSERDATA:
       arg->val.udata.data = lua_topointer(L, idx);
       arg->val.udata.size = lua_rawlen(L, idx);
@@ -119,6 +122,47 @@ static int thread_arg_set(lua_State* L, int idx, luv_val_t* arg, int cache_idx, 
       if (arg->val.udata.size) {
         lua_pushvalue(L, idx);
         arg->ref[side] = luaL_ref(L, LUA_REGISTRYINDEX);
+      }
+      break;
+    case LUA_TFUNCTION:
+      if (lua_iscfunction(L, idx)) {
+        arg->val.function.code_len = 0;
+        arg->val.function.code = lua_topointer(L, idx);
+        break;
+      }
+
+      lua_pushvalue(L, idx);
+      lua_gettable(L, cache_idx);
+      if (!lua_isnil(L, -1)) {
+        arg->val.function.code_len = 1;
+        arg->val.function.code = lua_touserdata(L, -1);
+        lua_pop(L, 1);
+        break;
+      }
+      lua_pop(L, 1);
+
+      luv_thread_dumped(L, idx);
+      arg->val.function.code_len = lua_rawlen(L, -1);
+      arg->val.function.code = malloc(arg->val.function.code_len);
+      memcpy((void*)arg->val.function.code, lua_tostring(L, -1), arg->val.function.code_len);
+      lua_pop(L, 1);
+
+      lua_pushvalue(L, idx);
+      lua_pushlightuserdata(L, (void*)arg->val.function.code);
+      lua_settable(L, cache_idx);
+
+      arg->val.function.upvalues_len = luv_upvalues_len(L, idx);
+      if (arg->val.function.upvalues_len) {
+        arg->val.function.upvalues = malloc(arg->val.function.upvalues_len * sizeof(luv_val_t));
+        int top = lua_gettop(L);
+        int i = 0;
+        while(lua_getupvalue(L, idx, i + 1) != NULL) {
+          if (thread_arg_set(L, top + 1, arg->val.function.upvalues + i, cache_idx, flags)) return 1;
+          lua_pop(L, 1);
+          i++;
+        }
+      } else {
+        arg->val.function.upvalues = NULL;
       }
       break;
     case LUA_TTABLE: {
@@ -215,12 +259,6 @@ static void thread_arg_clear(lua_State* L, luv_val_t* arg, int cache_idx, int ar
         }
       }
       break;
-    case LUA_TFUNCTION:
-      if (set != side) {
-        free((void*)arg->val.function.code);
-        arg->val.function.code = NULL;
-      }
-      break;
     case LUA_TUSERDATA:
       if (arg->ref[side]!=LUA_NOREF)
       {
@@ -234,6 +272,30 @@ static void thread_arg_clear(lua_State* L, luv_val_t* arg, int cache_idx, int ar
         }
         luaL_unref(L, LUA_REGISTRYINDEX, arg->ref[side]);
         arg->ref[side] = LUA_NOREF;
+      }
+      break;
+    case LUA_TFUNCTION:
+      if (set != side && arg->val.function.code_len) {
+        lua_pushlightuserdata(L, (void*)arg->val.function.code);
+        lua_gettable(L, cache_idx);
+        if (!lua_isnil(L, -1)) {
+          lua_pop(L, 1);
+          break;
+        }
+        lua_pop(L, 1);
+
+        lua_pushlightuserdata(L, (void*)arg->val.function.code);
+        lua_pushboolean(L, 1);
+        lua_settable(L, cache_idx);
+
+        free((void*)arg->val.function.code);
+        arg->val.function.code = NULL;
+        for (int i = 0; i < arg->val.function.upvalues_len; i++) {
+          thread_arg_clear(L, arg->val.function.upvalues + i, cache_idx, args_flags, flags);
+        }
+        if (arg->val.function.upvalues_len) {
+          free(arg->val.function.upvalues);
+        }
       }
       break;
     case LUA_TTABLE:
@@ -298,9 +360,6 @@ static int thread_arg_push(lua_State* L, luv_val_t* arg, int cache_idx, int flag
     case LUA_TSTRING:
       lua_pushlstring(L, arg->val.str.base, arg->val.str.len);
       break;
-    case LUA_TFUNCTION:
-      luaL_loadbuffer(L, arg->val.function.code, arg->val.function.len, "=thread");
-      break;
     case LUA_TUSERDATA:
       if (arg->val.udata.size)
       {
@@ -315,6 +374,29 @@ static int thread_arg_push(lua_State* L, luv_val_t* arg, int cache_idx, int flag
         arg->ref[side] = luaL_ref(L, LUA_REGISTRYINDEX);
       }else{
         lua_pushlightuserdata(L, (void*)arg->val.udata.data);
+      }
+      break;
+    case LUA_TFUNCTION:
+      if (!arg->val.function.code_len) {
+        lua_pushcfunction(L, arg->val.function.code);
+      } else {
+        lua_pushlightuserdata(L, (void*)arg->val.function.code);
+        lua_gettable(L, cache_idx);
+        if (!lua_isnil(L, -1)) {
+          break;
+        }
+        lua_pop(L, 1);
+
+        luaL_loadbuffer(L, arg->val.function.code, arg->val.function.code_len, "=thread");
+
+        lua_pushlightuserdata(L, (void*)arg->val.function.code);
+        lua_pushvalue(L, -2);
+        lua_settable(L, cache_idx);
+
+        for (int i = 0; i < arg->val.function.upvalues_len; i++) {
+          thread_arg_push(L, arg->val.function.upvalues + i, cache_idx, flags);
+          lua_setupvalue(L, -2, i + 1);
+        }
       }
       break;
     case LUA_TTABLE:

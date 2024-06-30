@@ -59,6 +59,13 @@ return require('lib/tap')(function (test)
       self.x = self.x + x
     end
 
+    local function closure(x)
+      if x == 1 then
+        return 1
+      end
+      return x * closure(x - 1)
+    end
+
     local args = {
       { 500, hw = "helloworld", nest = { 1 } },
       setmetatable({}, {}),
@@ -70,10 +77,11 @@ return require('lib/tap')(function (test)
       } }),
       recursive,
       setmetatable({ x = 10 }, Class),
+      closure
     }
 
     local unpack = unpack or table.unpack
-    uv.new_thread(function(t, empty, same, meta, rec, cls)
+    uv.new_thread(function(t, empty, same, meta, rec, cls, closure)
       assert(type(t) == "table")
       assert(t[1] == 500 and t.hw == "helloworld" and t.nest[1] == 1 and getmetatable(t) == nil)
       assert(#empty == 0 and #getmetatable(empty) == 0)
@@ -84,6 +92,7 @@ return require('lib/tap')(function (test)
       assert(getmetatable(cls) == getmetatable(cls).__index)
       cls:add(1)
       assert(cls.x == 11)
+      assert(closure(3) == 6)
       require("luv").sleep(100)
     end, unpack(args)):join()
     uv.update_time()
