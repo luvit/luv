@@ -33,7 +33,7 @@ jobs:
       run: make test
     - name: Test with Aggressive GC
       # Run with extremely aggressive garbage collection to potentially find more problems
-      run: ./build/lua -e "collectgarbage('setpause', 0); collectgarbage('setstepmul', 10000000000000)" tests/run.lua
+      run: ./build/lua -e "collectgarbage('incremental', 0, 10000000000000)" tests/run.lua
 
   clang-tsan:
     runs-on: ubuntu-latest
@@ -52,7 +52,7 @@ jobs:
       run: make test
     - name: Test with Aggressive GC
       # Run with extremely aggressive garbage collection to potentially find more problems
-      run: ./build/lua -e "collectgarbage('setpause', 0); collectgarbage('setstepmul', 10000000000000)" tests/run.lua
+      run: ./build/lua -e "collectgarbage('incremental', 0, 10000000000000)" tests/run.lua
 
   valgrind:
     runs-on: ubuntu-latest
@@ -70,7 +70,7 @@ jobs:
     - name: Build
       run: make
     - name: Test
-      run: valgrind --suppressions=.ci/valgrind_mem.supp --error-exitcode=1 --leak-check=full --child-silent-after-fork=yes --keep-debuginfo=yes --track-origins=yes ./build/lua -e "collectgarbage('setpause', 0); collectgarbage('setstepmul', 10000000000000)" tests/run.lua
+      run: valgrind --suppressions=.ci/valgrind_mem.supp --error-exitcode=1 --leak-check=full --child-silent-after-fork=yes --keep-debuginfo=yes --track-origins=yes ./build/lua -e "collectgarbage('incremental', 0, 10000000000000)" tests/run.lua
 
   process-cleanup-test:
     runs-on: ubuntu-latest
