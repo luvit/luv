@@ -3415,7 +3415,7 @@ See [Constants][] for supported address `family` input values.
 
 [Threading and synchronization utilities]: #threading-and-synchronization-utilities
 
-Libuv provides cross-platform implementations for multiple threading an
+Libuv provides cross-platform implementations for multiple threading and
  synchronization primitives. The API largely follows the pthreads API.
 
 ### `uv.new_thread([options], entry, ...)`
