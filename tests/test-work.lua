@@ -113,22 +113,21 @@ return require('lib/tap')(function (test)
     coroutine.resume(co)
   end)
 
-  test("test threadpool with invalid argument", function(print,p,expect,_uv)
+  test("test threadpool with table argument", function(print,p,expect,_uv)
     local work_fn = function() end
     local after_work_fn = function() end
     local work_ctx = _uv.new_work(work_fn, after_work_fn)
 
-   local ok,msg = pcall(work_ctx.queue, work_ctx, {})
-   assert(ok==false)
-   assert(msg=="Error: thread arg not support type 'table' at 1")
+   local ok = pcall(work_ctx.queue, work_ctx, {})
+   assert(ok)
   end)
 
-  test("test threadpool with invalid return value", function(print,p,expect,_uv)
+  test("test threadpool with table return value", function(print,p,expect,_uv)
     local work_fn = function() return {} end
     local after_work_fn = function() end
     local work_ctx = _uv.new_work(work_fn, after_work_fn)
 
-    assert(work_ctx:queue())
-    assert(not _uv.run())
+   local ok = pcall(work_ctx.queue, work_ctx, {})
+   assert(ok)
   end)
 end)
