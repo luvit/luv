@@ -219,4 +219,16 @@ return require('lib/tap')(function (test)
     end
   end, "1.45.0")
 
+  test("uv.wtf8 and utf8 conversion", function(print, p, expect, uv)
+    -- default encoding is utf8/wtf8
+    local utf8 = string.char(0xe4, 0xb8, 0xad, 0xe6, 0x96, 0x87)
+    -- The utf8 content is "中文"
+    local utf16 = uv.wtf8_to_utf16(utf8)
+    assert(#utf16==4, #utf16)
+    assert(utf16==string.char(0x2d, 0x4e, 0x87, 0x65))
+    assert(uv.utf16_length_as_wtf8(utf16) == 6, uv.utf16_length_as_wtf8(utf16))
+    utf8 = uv.utf16_to_wtf8(utf16)
+    assert(utf8=='中文', utf8)
+  end, "1.49.0")
+
 end)

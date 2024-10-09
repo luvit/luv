@@ -397,6 +397,13 @@ static const luaL_Reg luv_functions[] = {
   {"thread_setpriority", luv_thread_setpriority},
 #endif
 
+#if LUV_UV_VERSION_GEQ(1, 49, 0)
+  {"utf16_length_as_wtf8", luv_utf16_length_as_wtf8},
+  {"utf16_to_wtf8", luv_utf16_to_wtf8},
+  {"wtf8_length_as_utf16", luv_wtf8_length_as_utf16},
+  {"wtf8_to_utf16", luv_wtf8_to_utf16},
+#endif
+
   // work.c
   {"new_work", luv_new_work},
   {"queue_work", luv_queue_work},
