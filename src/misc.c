@@ -790,7 +790,6 @@ static int luv_utf16_length_as_wtf8(lua_State* L) {
   const uint16_t *utf16 = (const uint16_t *)luaL_checklstring(L, 1, &sz);
   ssize_t utf16_len = sz/2;
   sz = uv_utf16_length_as_wtf8(utf16, utf16_len);
-  /* The returned length includes a NUL terminator, but we use Lua style string */
   lua_pushinteger(L, sz);
   return 1;
 }
@@ -801,9 +800,12 @@ static int luv_utf16_to_wtf8(lua_State *L) {
   char *wtf8;
   const uint16_t *utf16 = (const uint16_t *)luaL_checklstring(L, 1, &sz);
   ssize_t utf16_len = sz/2;
+  /* Note: Since `utf16_len` is provided, `sz` does not include a NUL terminator */
   sz = uv_utf16_length_as_wtf8(utf16, utf16_len);
+  /* The wtf8_ptr must contain an extra space for an extra NUL after the result */
   wtf8 = malloc(sz + 1);
   if (wtf8 == NULL) return luaL_error(L, "failed to allocate %zu bytes", sz + 1);
+  /* Note: On success, *sz will not be modified */
   ret = uv_utf16_to_wtf8(utf16, utf16_len, &wtf8, &sz);
   if (ret == 0) {
     lua_pushlstring(L, wtf8, sz);
@@ -816,37 +818,25 @@ static int luv_utf16_to_wtf8(lua_State *L) {
 }
 
 static int luv_wtf8_length_as_utf16(lua_State *L) {
-  size_t sz;
-  ssize_t ssz;
-  const char* utf8 = luaL_checklstring(L, 1, &sz);
-  char *s = malloc(sz+1);
-  if (s == NULL) return luaL_error(L, "failed to allocate %zu bytes", sz + 1);
-  memcpy(s, utf8, sz);
-  s[sz] = '\0';
-  ssz = uv_wtf8_length_as_utf16(s);
-  free(s);
-  /* The returned length should not include NUL terminator, we use Lua style string */
+  /* checkstring is guaranteed to return a NUL terminated string */
+  const char* wtf8 = luaL_checkstring(L, 1);
+  ssize_t ssz = uv_wtf8_length_as_utf16(wtf8);
+  /* The length includes a NUL terminator, but we return the length without the NUL terminator */
   lua_pushinteger(L, ssz - 1);
   return 1;
 }
 
 static int luv_wtf8_to_utf16(lua_State *L) {
   size_t sz;
-  ssize_t ssz;
   uint16_t *utf16;
-  const char* utf8 = luaL_checklstring(L, 1, &sz);
-  char *s = malloc(sz+1);
-  if (s == NULL) return luaL_error(L, "failed to allocate %zu bytes", sz + 1);
-  memcpy(s, utf8, sz);
-  s[sz] = '\0';
-  ssz = uv_wtf8_length_as_utf16(s);
+  const char* wtf8 = luaL_checklstring(L, 1, &sz);
+  ssize_t ssz = uv_wtf8_length_as_utf16(wtf8);
   utf16 = malloc(ssz * 2);
   if (utf16 == NULL) return luaL_error(L, "failed to allocate %zu bytes", ssz * 2);
-  uv_wtf8_to_utf16(s, utf16, ssz);
+  uv_wtf8_to_utf16(wtf8, utf16, ssz);
   /* The returned string includes a NUL terminator, but we use Lua style string */
   lua_pushlstring(L, (const char*)utf16, (ssz-1) * 2);
   free(utf16);
-  free(s);
   return 1;
 }
 
