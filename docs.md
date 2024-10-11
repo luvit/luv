@@ -4058,40 +4058,37 @@ These string utilities are needed internally for dealing with Windows, and are e
 **Notes**:
 
 1. New in luv version 1.49.0.
-2. A UTF-16 character is 2 bytes, and a UTF-8 character is 1 byte.
-3. Luv use Lua style string, which means that all inputs and return values (UTF-8 or UTF-16 strings) not include NUL terminated.
+2. See [the WTF-8 spec](https://simonsapin.github.io/wtf-8/) for information about WTF-8.
+3. Luv uses Lua-style strings, which means that all inputs and return values (UTF-8 or UTF-16 strings) do not include a NUL terminator.
 
-### `uv.utf16_length_as_wtf8()`
+### `uv.utf16_length_as_wtf8(utf16)`
 
-Get the length of a UTF-16 (or UCS-2) string `utf16` value after converting it to WTF-8.
+Get the length (in bytes) of a UTF-16 (or UCS-2) string `utf16` value after converting it to WTF-8.
 
 **Parameters:**
 - `utf16`: `string`
-- `len`: `integer` or `nil` (default: `#utf16/2`)
 
 **Returns:** `integer`
 
-### `uv.utf16_to_wtf8()`
+### `uv.utf16_to_wtf8(utf16)`
 
-Convert UTF-16 (or UCS-2) string `utf16` to UTF-8 string. The `len` count (in characters)
-gives the length of utf16.
+Convert UTF-16 (or UCS-2) string `utf16` to WTF-8 string.
 
 **Parameters:**
 - `utf16`: `string`
-- `len`: `integer` or `nil` (default: `#utf16/2`)
 
 **Returns:** `string`
 
-### `uv.wtf8_length_as_utf16()`
+### `uv.wtf8_length_as_utf16(wtf8)`
 
-Get the length in characters of a WTF-8 `wtf8` value after converting it to UTF-16 (or UCS-2).
+Get the length (in UTF-16 code units) of a WTF-8 `wtf8` value after converting it to UTF-16 (or UCS-2). Note: The number of bytes needed for a UTF-16 (or UCS-2) string is `<number of code units> * 2`.
 
 **Parameters:**
 - `wtf8`: `string`
 
 **Returns:** `integer`
 
-### `uv.wtf8_to_utf16()`
+### `uv.wtf8_to_utf16(wtf8)`
 
 Convert WTF-8 string in `wtf8` to UTF-16 (or UCS-2) string.
 
