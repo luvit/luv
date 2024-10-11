@@ -788,16 +788,10 @@ static int luv_clock_gettime(lua_State* L) {
 static int luv_utf16_length_as_wtf8(lua_State* L) {
   size_t sz;
   const uint16_t *utf16 = (const uint16_t *)luaL_checklstring(L, 1, &sz);
-  ssize_t utf16_len = luaL_optinteger(L, 2, sz/2);
-  /* pad NUL terminator */
-  uint16_t *ws = malloc(sz+2);
-  if (ws== NULL) return luaL_error(L, "failed to allocate %zu bytes", sz + 2);
-  memcpy(ws, utf16, sz);
-  ws[sz/2] = 0;
-  sz = uv_utf16_length_as_wtf8(ws, utf16_len+1);
-  /* The returned length not include NUL terminator, we use Lua style string */
-  lua_pushinteger(L, sz - 1);
-  free(ws);
+  ssize_t utf16_len = sz/2;
+  sz = uv_utf16_length_as_wtf8(utf16, utf16_len);
+  /* The returned length includes a NUL terminator, but we use Lua style string */
+  lua_pushinteger(L, sz);
   return 1;
 }
 
@@ -806,25 +800,18 @@ static int luv_utf16_to_wtf8(lua_State *L) {
   size_t sz;
   char *wtf8;
   const uint16_t *utf16 = (const uint16_t *)luaL_checklstring(L, 1, &sz);
-  ssize_t utf16_len = luaL_optinteger(L, 2, sz/2);
-  /* pad NUL terminator */
-  uint16_t *ws = malloc(2*(utf16_len+1));
-  if (ws== NULL) return luaL_error(L, "failed to allocate %zu bytes", 2*(utf16_len+1));
-  memcpy(ws, utf16, 2*utf16_len);
-  ws[utf16_len] = 0;
-  sz = uv_utf16_length_as_wtf8(ws, utf16_len+1);
+  ssize_t utf16_len = sz/2;
+  sz = uv_utf16_length_as_wtf8(utf16, utf16_len);
   wtf8 = malloc(sz + 1);
   if (wtf8 == NULL) return luaL_error(L, "failed to allocate %zu bytes", sz + 1);
-  ret = uv_utf16_to_wtf8(ws, utf16_len+1, &wtf8, &sz);
+  ret = uv_utf16_to_wtf8(utf16, utf16_len, &wtf8, &sz);
   if (ret == 0) {
-    /* The returned string include NUL terminator, we use Lua style string */
-    lua_pushlstring(L, wtf8, sz - 1);
+    lua_pushlstring(L, wtf8, sz);
     ret = 1;
   } else {
     ret = luv_error(L, ret);
   }
   free(wtf8);
-  free(ws);
   return ret;
 }
 
@@ -838,7 +825,7 @@ static int luv_wtf8_length_as_utf16(lua_State *L) {
   s[sz] = '\0';
   ssz = uv_wtf8_length_as_utf16(s);
   free(s);
-  /* The returned length not include NUL terminator, we use Lua style string */
+  /* The returned length should not include NUL terminator, we use Lua style string */
   lua_pushinteger(L, ssz - 1);
   return 1;
 }
@@ -856,7 +843,7 @@ static int luv_wtf8_to_utf16(lua_State *L) {
   utf16 = malloc(ssz * 2);
   if (utf16 == NULL) return luaL_error(L, "failed to allocate %zu bytes", ssz * 2);
   uv_wtf8_to_utf16(s, utf16, ssz);
-  /* The returned string include NUL terminator, we use Lua style string */
+  /* The returned string includes a NUL terminator, but we use Lua style string */
   lua_pushlstring(L, (const char*)utf16, (ssz-1) * 2);
   free(utf16);
   free(s);

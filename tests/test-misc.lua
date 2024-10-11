@@ -219,7 +219,7 @@ return require('lib/tap')(function (test)
     end
   end, "1.45.0")
 
-  test("uv.wtf8 and utf8 conversion", function(print, p, expect, uv)
+  test("uv.wtf8 and utf16 conversion", function(print, p, expect, uv)
     -- default encoding is utf8/wtf8
     local utf8 = string.char(0xe4, 0xb8, 0xad, 0xe6, 0x96, 0x87)
     -- The utf8 content is "中文"
@@ -229,6 +229,27 @@ return require('lib/tap')(function (test)
     assert(uv.utf16_length_as_wtf8(utf16) == 6, uv.utf16_length_as_wtf8(utf16))
     utf8 = uv.utf16_to_wtf8(utf16)
     assert(utf8=='中文', utf8)
+  end, "1.49.0")
+
+  test("uv.wtf8<->utf16 unpaired surrogate", function(print, p, expect, uv)
+    -- WTF-8 encoding of the surrogate codepoint U+D83D (surrogate codepoints
+    -- don't have a valid UTF-8 encoding, but can be encoded as WTF-8)
+    local wtf8 = string.char(0xed, 0xa0, 0xbd)
+    local utf16 = uv.wtf8_to_utf16(wtf8)
+    assert(#utf16==2, #utf16)
+    -- U+D83D as little-endian WTF-16
+    assert(utf16==string.char(0x3d, 0xd8))
+    assert(uv.utf16_length_as_wtf8(utf16) == #wtf8, uv.utf16_length_as_wtf8(utf16))
+    assert(uv.wtf8_length_as_utf16(wtf8) == 1, uv.wtf8_length_as_utf16(wtf8))
+    local roundtrip_wtf8 = uv.utf16_to_wtf8(utf16)
+    assert(roundtrip_wtf8==wtf8, roundtrip_wtf8)
+  end, "1.49.0")
+
+  test("uv.wtf8<->utf16 empty strings", function(print, p, expect, uv)
+    assert(uv.wtf8_to_utf16("") == "")
+    assert(uv.utf16_to_wtf8("") == "")
+    assert(uv.wtf8_length_as_utf16("") == 0)
+    assert(uv.utf16_length_as_wtf8("") == 0)
   end, "1.49.0")
 
 end)
