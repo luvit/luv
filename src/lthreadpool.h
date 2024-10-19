@@ -21,8 +21,11 @@
 
 #define LUV_THREAD_MAXNUM_ARG 9
 
-typedef struct {
-  // support basic lua type LUA_TNIL, LUA_TBOOLEAN, LUA_TNUMBER, LUA_TSTRING
+typedef struct luv_table luv_table_t;
+typedef struct luv_val luv_val_t;
+
+struct luv_val {
+  // support lua types of LUA_TNIL, LUA_TBOOLEAN, LUA_TNUMBER, LUA_TSTRING, LUA_TTABLE
   // and support uv_handle_t userdata
   int type;
   union
@@ -38,9 +41,29 @@ typedef struct {
       size_t size;
       const char* metaname;
     } udata;
+    struct {
+      // if `code_len` == 0 then `code` is a pointer to C function.
+      size_t code_len;
+      const void* code;
+      size_t upvalues_len;
+      luv_val_t* upvalues;
+    } function;
+    luv_table_t* table;
   } val;
   int ref[2];          // ref of string or userdata
-} luv_val_t;
+};
+
+typedef struct {
+  luv_val_t key;
+  luv_val_t value;
+} luv_table_pair_t;
+
+// A Lua table including its metatable.
+struct luv_table {
+  luv_table_t* metatable; // NULL if no metatable
+  size_t len; // number of pairs in the table
+  luv_table_pair_t pairs[];
+};
 
 typedef struct {
   int argc;
