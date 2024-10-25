@@ -55,8 +55,13 @@ static int luv_async_send(lua_State* L) {
   int ret;
   uv_async_t* handle = luv_check_async(L, 1);
   luv_thread_arg_t* arg = (luv_thread_arg_t *)((luv_handle_t*) handle->data)->extra;
-
-  luv_thread_arg_set(L, arg, 2, lua_gettop(L), LUVF_THREAD_MODE_ASYNC|LUVF_THREAD_SIDE_CHILD);
+  int top = lua_gettop(L);
+  if (arg->flags != 0 && // if not the first call
+      (arg->argc != 0 || top != 1)) // if arguments have been or are used
+  {
+    return luaL_error(L, "Invalid multiple calls with arguments");
+  }
+  luv_thread_arg_set(L, arg, 2, top, LUVF_THREAD_MODE_ASYNC|LUVF_THREAD_SIDE_CHILD);
   ret = uv_async_send(handle);
   luv_thread_arg_clear(L, arg, LUVF_THREAD_SIDE_CHILD);
   return luv_result(L, ret);
