@@ -148,14 +148,6 @@ static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags
     case LUA_TUSERDATA:
       if (arg->ref[side]!=LUA_NOREF)
       {
-        if (side != set)
-        {
-          // avoid custom gc
-          lua_rawgeti(L, LUA_REGISTRYINDEX, arg->ref[side]);
-          lua_pushnil(L);
-          lua_setmetatable(L, -2);
-          lua_pop(L, -1);
-        }
         luaL_unref(L, LUA_REGISTRYINDEX, arg->ref[side]);
         arg->ref[side] = LUA_NOREF;
       }
@@ -193,8 +185,11 @@ static int luv_thread_arg_push(lua_State* L, luv_thread_arg_t* args, int flags) 
         memcpy(p, arg->val.udata.data, arg->val.udata.size);
         if (arg->val.udata.metaname)
         {
-          luaL_getmetatable(L, arg->val.udata.metaname);
+          char *n = malloc(strlen(arg->val.udata.metaname) + 5);
+          sprintf(n, "%s_ref", arg->val.udata.metaname);
+          luaL_getmetatable(L, n);
           lua_setmetatable(L, -2);
+          free(n);
         }
         lua_pushvalue(L, -1);
         arg->ref[side] = luaL_ref(L, LUA_REGISTRYINDEX);

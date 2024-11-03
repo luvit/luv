@@ -17,7 +17,12 @@
 #include "private.h"
 
 static uv_async_t* luv_check_async(lua_State* L, int index) {
-  uv_async_t* handle = (uv_async_t*)luv_checkudata(L, index, "uv_async");
+  void* p = luaL_testudata(L, index, "uv_async");
+  if (p == NULL) {
+    p = luaL_testudata(L, index, "uv_async_ref");
+  }
+  luaL_argexpected(L, p != NULL, index, "uv_async");
+  uv_async_t* handle = *(uv_async_t**)p;
   luaL_argcheck(L, handle->type == UV_ASYNC && handle->data, index, "Expected uv_async_t");
   return handle;
 }
@@ -60,4 +65,34 @@ static int luv_async_send(lua_State* L) {
   ret = uv_async_send(handle);
   luv_thread_arg_clear(L, arg, LUVF_THREAD_SIDE_CHILD);
   return luv_result(L, ret);
+}
+
+// handle.c
+static int luv_is_closing(lua_State* L);
+static int luv_handle_tostring(lua_State* L);
+#if LUV_UV_VERSION_GEQ(1, 19, 0)
+static int luv_handle_get_type(lua_State* L);
+#endif
+
+static const luaL_Reg luv_async_ref_methods[] = {
+  // handle.c
+  {"is_closing", luv_is_closing},
+#if LUV_UV_VERSION_GEQ(1, 19, 0)
+  {"get_type", luv_handle_get_type},
+#endif
+  {"send", luv_async_send},
+  {NULL, NULL}
+};
+
+static void luv_async_init(lua_State* L) {
+  lua_getfield(L, LUA_REGISTRYINDEX, "uv_handle");
+  luaL_newmetatable(L, "uv_async_ref");
+  lua_pushcfunction(L, luv_handle_tostring);
+  lua_setfield(L, -2, "__tostring");
+  lua_newtable(L);
+  luaL_setfuncs(L, luv_async_ref_methods, 0);
+  lua_setfield(L, -2, "__index");
+  lua_pushboolean(L, 1);
+  lua_rawset(L, -3);
+  lua_pop(L, 1);
 }
