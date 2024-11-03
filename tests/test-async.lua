@@ -19,15 +19,18 @@ return require('lib/tap')(function (test)
   end)
 
   test("test pass back async between threads", function(p, p, expect, uv)
-    local rasync
     local async
     async = uv.new_async(expect(function (a)
       uv.close(async)
       p('in async notify callback')
       p(a)
       assert(type(a)=='userdata')
-      assert(uv.async_send(a,'a',true,250)==0)
-      rasync = a
+      local timer = uv.new_timer()
+      uv.timer_start(timer, 10, 0, expect(function()
+        uv.close(timer)
+        p("timeout", timer)
+        assert(uv.async_send(a,'a',true,250)==0)
+      end))
     end))
     local t = uv.new_thread(function(asy)
       local uv = require'luv'
@@ -44,7 +47,6 @@ return require('lib/tap')(function (test)
     end, async)
     uv.run()
     t:join()
-    assert(rasync, 'thread async not received')
   end)
 
 end)
