@@ -70,8 +70,11 @@ return require('lib/tap')(function (test)
       assert(null == nil)
       assert(bool == false)
       assert(five == 5)
-      assert(math.type(five) == 'integer')
-      assert(pi == 3.14)
+      assert(tostring(five) == '5', 'invalid integer to string ('..tostring(five)..')')
+      if math.type then
+        assert(math.type(five) == 'integer', 'invalid integer')
+      end
+      assert(pi == 3.14, 'invalid decimal number')
       assert(hw == 'helloworld')
       require('luv').sleep(delay)
     end, unpack(args)):join()
