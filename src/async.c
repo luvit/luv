@@ -33,15 +33,24 @@ static void luv_async_cb(uv_async_t* handle) {
 static int luv_new_async(lua_State* L) {
   uv_async_t* handle;
   luv_handle_t* data;
+  luv_ref_t *ref;
   int ret;
   luv_ctx_t* ctx = luv_context(L);
   luaL_checktype(L, 1, LUA_TFUNCTION);
-  handle = (uv_async_t*)luv_newuserdata(L, uv_handle_size(UV_ASYNC));
-  ret = uv_async_init(ctx->loop, handle, luv_async_cb);
+  ref = (luv_ref_t*)luv_newuserdata(L, sizeof(luv_ref_t));
+  handle = &ref->handle.async;
+  ret = uv_mutex_init(&ref->mutex);
   if (ret < 0) {
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
+  ret = uv_async_init(ctx->loop, handle, luv_async_cb);
+  if (ret < 0) {
+    uv_mutex_destroy(&ref->mutex);
+    lua_pop(L, 1);
+    return luv_error(L, ret);
+  }
+  ref->count = 1;
   data = luv_setup_handle(L, ctx);
   data->extra = (luv_thread_arg_t*)malloc(sizeof(luv_thread_arg_t));
   data->extra_gc = free;
@@ -49,6 +58,22 @@ static int luv_new_async(lua_State* L) {
   handle->data = data;
   luv_check_callback(L, (luv_handle_t*)handle->data, LUV_ASYNC, 1);
   return 1;
+}
+
+static int luv_handle_gc(lua_State* L);
+
+static int luv_async_gc(lua_State* L) {
+  luv_ref_t** udata = (luv_ref_t**)lua_touserdata(L, 1);
+  luv_ref_t* ref = *udata;
+  uv_mutex_t *mutex = &ref->mutex;
+  uv_mutex_lock(mutex);
+  ref->count--;
+  uv_mutex_unlock(mutex);
+  if (ref->count > 0) {
+    return 0;
+  }
+  uv_mutex_destroy(mutex);
+  return luv_handle_gc(L);
 }
 
 static int luv_async_send(lua_State* L) {
@@ -60,4 +85,11 @@ static int luv_async_send(lua_State* L) {
   ret = uv_async_send(handle);
   luv_thread_arg_clear(L, arg, LUVF_THREAD_SIDE_CHILD);
   return luv_result(L, ret);
+}
+
+static void luv_async_init(lua_State* L) {
+  luaL_getmetatable(L, "uv_async");
+  lua_pushcfunction(L, luv_async_gc);
+  lua_setfield(L, -2, "__gc");
+  lua_pop(L, 1);
 }

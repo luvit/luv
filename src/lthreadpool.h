@@ -49,6 +49,14 @@ typedef struct {
   luv_val_t argv[LUV_THREAD_MAXNUM_ARG];
 } luv_thread_arg_t;
 
+typedef struct {
+  union {
+    uv_async_t async;
+  } handle;
+  uv_mutex_t mutex;
+  int count;
+} luv_ref_t;
+
 //luajit miss LUA_OK
 #ifndef LUA_OK
 #define LUA_OK 0
