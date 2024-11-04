@@ -66,10 +66,12 @@ static int luv_async_gc(lua_State* L) {
   luv_ref_t** udata = (luv_ref_t**)lua_touserdata(L, 1);
   luv_ref_t* ref = *udata;
   uv_mutex_t *mutex = &ref->mutex;
+  int count;
   uv_mutex_lock(mutex);
   ref->count--;
+  count = ref->count;
   uv_mutex_unlock(mutex);
-  if (ref->count > 0) {
+  if (count > 0) {
     return 0;
   }
   uv_mutex_destroy(mutex);
