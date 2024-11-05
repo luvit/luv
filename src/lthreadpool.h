@@ -27,7 +27,13 @@ typedef struct {
   int type;
   union
   {
-    lua_Number num;
+    struct {
+      int isinteger;
+      union {
+        lua_Number n;
+        lua_Integer i;
+      } value;
+    } num;
     int boolean;
     struct {
       const char* base;
