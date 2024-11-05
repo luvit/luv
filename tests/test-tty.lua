@@ -1,12 +1,12 @@
 -- come from https://github.com/libuv/libuv/blob/v1.x/test/test-tty.c
-local _, ffi = pcall(require, 'ffi')
-if not ffi then
-  print('skip, without luajit ffi')
+local success, ffi = pcall(require, 'ffi')
+if not success then
+  print('Skipped test-tty: LuaJIT FFI not found')
   return
 end
 
 if not (ffi.os == "Linux" or ffi.os == "OSX") then
-  print('skip, not on linux or macos')
+  print('Skipped test-tty: Not on Linux or macOS')
   return
 end
 
