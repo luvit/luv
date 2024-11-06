@@ -95,7 +95,7 @@ static void luv_walk_cb(uv_handle_t* handle, void* arg) {
 
   // Sanity check
   // Most invalid values are large and refs are small, 0x1000000 is arbitrary.
-  assert(data && data->ref < 0x1000000);
+  if(!data || data->ref >= 0x1000000) return;
 
   lua_pushvalue(L, 1);           // Copy the function
   luv_find_handle(L, data);      // Get the userdata
