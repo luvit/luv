@@ -49,7 +49,7 @@ static int luv_new_socket_poll(lua_State* L) {
 }
 
 static const char *const luv_pollevents[] = {
-  "r", "w", "rw",
+  "", "r", "w", "rw",
 #if LUV_UV_VERSION_GEQ(1, 9, 0)
   "d", "rd", "wd", "rwd",
 #endif
@@ -102,24 +102,25 @@ static int luv_poll_start(lua_State* L) {
   uv_poll_t* handle = luv_check_poll(L, 1);
   int events, ret;
   switch (luaL_checkoption(L, 2, "rw", luv_pollevents)) {
-    case 0: events = UV_READABLE; break;
-    case 1: events = UV_WRITABLE; break;
-    case 2: events = UV_READABLE | UV_WRITABLE; break;
+    case 0: events = 0; break;
+    case 1: events = UV_READABLE; break;
+    case 2: events = UV_WRITABLE; break;
+    case 3: events = UV_READABLE | UV_WRITABLE; break;
 #if LUV_UV_VERSION_GEQ(1, 9, 0)
-    case 3: events = UV_DISCONNECT; break;
-    case 4: events = UV_READABLE|UV_DISCONNECT; break;
-    case 5: events = UV_WRITABLE|UV_DISCONNECT; break;
-    case 6: events = UV_READABLE|UV_WRITABLE|UV_DISCONNECT; break;
+    case 4: events = UV_DISCONNECT; break;
+    case 5: events = UV_READABLE|UV_DISCONNECT; break;
+    case 6: events = UV_WRITABLE|UV_DISCONNECT; break;
+    case 7: events = UV_READABLE|UV_WRITABLE|UV_DISCONNECT; break;
 #endif
 #if LUV_UV_VERSION_GEQ(1, 14, 0)
-    case 7: events = UV_PRIORITIZED; break;
-    case 8: events = UV_READABLE|UV_PRIORITIZED; break;
-    case 9: events = UV_WRITABLE|UV_PRIORITIZED; break;
-    case 10: events = UV_READABLE|UV_WRITABLE|UV_PRIORITIZED; break;
-    case 11: events = UV_DISCONNECT|UV_PRIORITIZED; break;
-    case 12: events = UV_READABLE|UV_DISCONNECT|UV_PRIORITIZED; break;
-    case 13: events = UV_WRITABLE|UV_DISCONNECT|UV_PRIORITIZED; break;
-    case 14: events = UV_READABLE|UV_WRITABLE|UV_DISCONNECT|UV_PRIORITIZED; break;
+    case 8: events = UV_PRIORITIZED; break;
+    case 9: events = UV_READABLE|UV_PRIORITIZED; break;
+    case 10: events = UV_WRITABLE|UV_PRIORITIZED; break;
+    case 11: events = UV_READABLE|UV_WRITABLE|UV_PRIORITIZED; break;
+    case 12: events = UV_DISCONNECT|UV_PRIORITIZED; break;
+    case 13: events = UV_READABLE|UV_DISCONNECT|UV_PRIORITIZED; break;
+    case 14: events = UV_WRITABLE|UV_DISCONNECT|UV_PRIORITIZED; break;
+    case 15: events = UV_READABLE|UV_WRITABLE|UV_DISCONNECT|UV_PRIORITIZED; break;
 #endif
     default: events = 0; /* unreachable */
   }
