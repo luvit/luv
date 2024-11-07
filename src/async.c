@@ -121,7 +121,7 @@ static int luv_async_send(lua_State* L) {
   if (asarg->L) {
     if (asarg->L != L) {
       uv_mutex_unlock(argmutex);
-      return luaL_error(L, "Unable to clear the pending send not a the current Lua state");
+      return luaL_error(L, "Unable to clear pending send not owned by the current Lua state");
     }
     luv_thread_arg_clear(L, &asarg->targ, LUVF_THREAD_SIDE_CHILD);
     asarg->L = NULL;
