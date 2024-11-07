@@ -159,7 +159,7 @@ static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags
           lua_rawgeti(L, LUA_REGISTRYINDEX, arg->ref[side]);
           lua_pushnil(L);
           lua_setmetatable(L, -2);
-          lua_pop(L, -1);
+          lua_pop(L, 1);
         }
         luaL_unref(L, LUA_REGISTRYINDEX, arg->ref[side]);
         arg->ref[side] = LUA_NOREF;
@@ -198,15 +198,25 @@ static int luv_thread_arg_push(lua_State* L, luv_thread_arg_t* args, int flags) 
     case LUA_TUSERDATA:
       if (arg->val.udata.size)
       {
+        int r = 1;
         char *p = lua_newuserdata(L, arg->val.udata.size);
         memcpy(p, arg->val.udata.data, arg->val.udata.size);
         if (arg->val.udata.metaname)
         {
           luaL_getmetatable(L, arg->val.udata.metaname);
           lua_setmetatable(L, -2);
+          if (strcmp(arg->val.udata.metaname, "uv_async") == 0) {
+            luv_ref_t* ref = *(luv_ref_t**)p;
+            uv_mutex_lock(&ref->mutex);
+            ref->count++;
+            uv_mutex_unlock(&ref->mutex);
+            r = 0;
+          }
         }
-        lua_pushvalue(L, -1);
-        arg->ref[side] = luaL_ref(L, LUA_REGISTRYINDEX);
+        if (r) {
+          lua_pushvalue(L, -1);
+          arg->ref[side] = luaL_ref(L, LUA_REGISTRYINDEX);
+        }
       }else{
         lua_pushlightuserdata(L, (void*)arg->val.udata.data);
       }
