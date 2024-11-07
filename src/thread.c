@@ -154,7 +154,7 @@ static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags
           lua_rawgeti(L, LUA_REGISTRYINDEX, arg->ref[side]);
           lua_pushnil(L);
           lua_setmetatable(L, -2);
-          lua_pop(L, -1);
+          lua_pop(L, 1);
         }
         luaL_unref(L, LUA_REGISTRYINDEX, arg->ref[side]);
         arg->ref[side] = LUA_NOREF;
