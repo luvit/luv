@@ -92,11 +92,14 @@ return require('lib/tap')(function (test)
       args[i] = i
     end
     local unpack = unpack or table.unpack
-    uv.new_thread(function(...)
+    local t = uv.new_thread(function(...)
       local arg = {...}
       assert(#arg == 9)
       arg[1]:send(#arg)
-    end, unpack(args)):join()
+      require('luv').sleep(10)
+    end, unpack(args))
+    uv.run()
+    t:join()
     assert(#args==10)
   end)
 
