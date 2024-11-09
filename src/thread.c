@@ -83,7 +83,12 @@ static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int
       arg->val.boolean = lua_toboolean(L, i);
       break;
     case LUA_TNUMBER:
-      arg->val.num = lua_tonumber(L, i);
+      arg->val.num.isinteger = lua_isinteger(L, i);
+      if (arg->val.num.isinteger) {
+        arg->val.num.value.i = lua_tointeger(L, i);
+      } else {
+        arg->val.num.value.n = lua_tonumber(L, i);
+      }
       break;
     case LUA_TSTRING:
       if (async) {
@@ -200,7 +205,11 @@ static int luv_thread_arg_push(lua_State* L, luv_thread_arg_t* args, int flags) 
       lua_pushboolean(L, arg->val.boolean);
       break;
     case LUA_TNUMBER:
-      lua_pushnumber(L, arg->val.num);
+      if (arg->val.num.isinteger) {
+        lua_pushinteger(L, arg->val.num.value.i);
+      } else {
+        lua_pushnumber(L, arg->val.num.value.n);
+      }
       break;
     case LUA_TSTRING:
       lua_pushlstring(L, arg->val.str.base, arg->val.str.len);
