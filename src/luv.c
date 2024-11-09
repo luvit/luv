@@ -770,6 +770,9 @@ LUALIB_API luv_ctx_t* luv_context(lua_State* L) {
     ctx = (luv_ctx_t*)lua_newuserdata(L, sizeof(*ctx));
     memset(ctx, 0, sizeof(*ctx));
     lua_rawset(L, LUA_REGISTRYINDEX);
+    // create table to contain internal handle
+    lua_newtable(L);
+    ctx->ht_ref = luaL_ref(L, LUA_REGISTRYINDEX);
   } else {
     ctx = (luv_ctx_t*)lua_touserdata(L, -1);
   }
