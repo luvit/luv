@@ -81,6 +81,13 @@ static int luv_new_async(lua_State* L) {
   return 1;
 }
 
+static void luv_async_arg_clear_child(lua_State* L, luv_async_arg_t* asarg) {
+  if (asarg->L) {
+    luv_thread_arg_clear(L == asarg->L ? L : NULL, &asarg->targ, LUVF_THREAD_SIDE_CHILD);
+    asarg->L = NULL;
+  }
+}
+
 static int luv_handle_gc(lua_State* L);
 
 static int luv_async_gc(lua_State* L) {
@@ -90,13 +97,6 @@ static int luv_async_gc(lua_State* L) {
   luv_async_arg_t* asarg = (luv_async_arg_t *)data->extra;
   uv_mutex_t *argmutex = &asarg->mutex;
   int count;
-  // clear arg if we are the sender
-  uv_mutex_lock(argmutex);
-  if (asarg->L == L) {
-    luv_thread_arg_clear(L, &asarg->targ, LUVF_THREAD_SIDE_CHILD);
-    asarg->L = NULL;
-  }
-  uv_mutex_unlock(argmutex);
   // decrease reference count
   uv_mutex_lock(refmutex);
   ref->count--;
@@ -105,6 +105,10 @@ static int luv_async_gc(lua_State* L) {
   if (count > 0) {
     return 0;
   }
+  uv_mutex_lock(argmutex);
+  luv_async_arg_clear_child(L, asarg);
+  uv_mutex_unlock(argmutex);
+  // destroy
   uv_mutex_destroy(argmutex);
   uv_mutex_destroy(refmutex);
   return luv_handle_gc(L);
@@ -117,15 +121,7 @@ static int luv_async_send(lua_State* L) {
   uv_mutex_t *argmutex = &asarg->mutex;
   int n;
   uv_mutex_lock(argmutex);
-  // clear pending arg if any and if owner
-  if (asarg->L) {
-    if (asarg->L != L) {
-      uv_mutex_unlock(argmutex);
-      return luaL_error(L, "Unable to clear pending send not owned by the current Lua state");
-    }
-    luv_thread_arg_clear(L, &asarg->targ, LUVF_THREAD_SIDE_CHILD);
-    asarg->L = NULL;
-  }
+  luv_async_arg_clear_child(L, asarg);
   n = luv_thread_arg_set(L, &asarg->targ, 2, lua_gettop(L), LUVF_THREAD_MODE_ASYNC|LUVF_THREAD_SIDE_CHILD);
   if (n >= 0) {
     asarg->L = L;
