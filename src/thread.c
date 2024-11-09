@@ -220,23 +220,25 @@ static int luv_thread_arg_push(lua_State* L, luv_thread_arg_t* args, int flags) 
         memcpy(p, arg->val.udata.data, arg->val.udata.size);
         if (arg->val.udata.metaname) {
           int setmt = !async;
+          int needref = setmt;
           if (luv_thread_can_reference(arg->val.udata.metaname)) {
             luv_ref_t* ref = *(luv_ref_t**)p;
             uv_mutex_lock(&ref->mutex);
             if (ref->count > 0) {
               ref->count++;
               setmt = 1;
+              needref = 0;
             }
             uv_mutex_unlock(&ref->mutex);
           }
           if (setmt) {
             luaL_getmetatable(L, arg->val.udata.metaname);
             lua_setmetatable(L, -2);
+            if (needref) {
+              lua_pushvalue(L, -1);
+              arg->ref[side] = luaL_ref(L, LUA_REGISTRYINDEX);
+            }
           }
-        }
-        if (!async) {
-          lua_pushvalue(L, -1);
-          arg->ref[side] = luaL_ref(L, LUA_REGISTRYINDEX);
         }
       }
       break;
