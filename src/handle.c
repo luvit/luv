@@ -118,6 +118,14 @@ static int luv_close(lua_State* L) {
 static void luv_handle_free(uv_handle_t* handle) {
   luv_handle_t* data = (luv_handle_t*)handle->data;
   if (data) {
+    luv_ctx_t* ctx = data->ctx;
+    lua_State* L = ctx->L;
+    // release handle in ht_ref
+    lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->ht_ref);
+    lua_pushnil(L);
+    lua_rawsetp(L, -2, data);
+    lua_pop(L, 1);
+
     if (data->extra_gc)
       data->extra_gc(data->extra);
     free(data);
