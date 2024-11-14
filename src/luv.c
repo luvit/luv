@@ -835,6 +835,15 @@ static int loop_gc(lua_State *L) {
 }
 
 LUALIB_API int luaopen_luv (lua_State* L) {
+#ifdef LUA_RIDX_MAINTHREAD
+  // Lua 5.2+ - resolve the main thread of the current Lua state, even if
+  // we were loaded from a different thread (which may become suspended/dead).
+  lua_geti(L, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+  lua_State* ctxL = lua_tothread(L, -1);
+  lua_pop(L, 1);
+#else
+  lua_State* ctxL = L;
+#endif
   luv_ctx_t* ctx = luv_context(L);
 
   luaL_newlib(L, luv_functions);
@@ -862,7 +871,7 @@ LUALIB_API int luaopen_luv (lua_State* L) {
     lua_rawset(L, -3);
 
     ctx->loop = loop;
-    ctx->L = L;
+    ctx->L = ctxL;
     ctx->mode = -1;
 
     ret = uv_loop_init(loop);
