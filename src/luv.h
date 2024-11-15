@@ -100,6 +100,8 @@ typedef struct {
   luv_CFcpcall thrd_cpcall; /* luv thread c function in protected mode*/
 
   int          mode;        /* the mode used to run the loop (-1 if not running) */
+  int          ht_ref;      /* bookkeeping: maintain table of luv_handle_t pointers,
+                               to distinguish between internal and external handles */
 
   void* extra;              /* extra data */
 } luv_ctx_t;

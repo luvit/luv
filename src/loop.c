@@ -90,8 +90,17 @@ static int luv_update_time(lua_State* L) {
 }
 
 static void luv_walk_cb(uv_handle_t* handle, void* arg) {
-  lua_State* L = (lua_State*)arg;
+  luv_ctx_t* ctx = (luv_ctx_t*)arg;
+  lua_State* L = ctx->L;
   luv_handle_t* data = (luv_handle_t*)handle->data;
+
+  // Skip foreign handles (shared event loop)
+  lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->ht_ref);
+  lua_rawgetp(L, -1, data);
+  if (lua_isnil(L, -1)) {
+    lua_pop(L, 2);
+    return;
+  }
 
   // Sanity check
   // Most invalid values are large and refs are small, 0x1000000 is arbitrary.
@@ -103,8 +112,9 @@ static void luv_walk_cb(uv_handle_t* handle, void* arg) {
 }
 
 static int luv_walk(lua_State* L) {
+  luv_ctx_t* ctx = luv_context(L);
   luaL_checktype(L, 1, LUA_TFUNCTION);
-  uv_walk(luv_loop(L), luv_walk_cb, L);
+  uv_walk(luv_loop(L), luv_walk_cb, ctx);
   return 0;
 }
 
