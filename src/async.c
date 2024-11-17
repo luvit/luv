@@ -16,6 +16,13 @@
  */
 #include "private.h"
 
+typedef struct {
+  luv_thread_arg_t targ;
+  uv_mutex_t mutex;
+} luv_async_arg_t;
+
+#define luv_get_async_arg_from_handle(H) ((luv_async_arg_t *) ((luv_handle_t*) (H)->data)->extra)
+
 static uv_async_t* luv_check_async(lua_State* L, int index) {
   uv_async_t* handle = (uv_async_t*)luv_checkudata(L, index, "uv_async");
   luaL_argcheck(L, handle->type == UV_ASYNC && handle->data, index, "Expected uv_async_t");
@@ -25,9 +32,19 @@ static uv_async_t* luv_check_async(lua_State* L, int index) {
 static void luv_async_cb(uv_async_t* handle) {
   luv_handle_t* data = (luv_handle_t*)handle->data;
   lua_State* L = data->ctx->L;
-  int n = luv_thread_arg_push(L, (luv_thread_arg_t*)data->extra, LUVF_THREAD_SIDE_MAIN);
-  luv_call_callback(L, data, LUV_ASYNC, n);
-  luv_thread_arg_clear(L, (luv_thread_arg_t*)data->extra, LUVF_THREAD_SIDE_MAIN);
+  luv_async_arg_t* asarg = luv_get_async_arg_from_handle(handle);
+  uv_mutex_t *argmutex = &asarg->mutex;
+  luv_thread_arg_t targcpy;
+  int n;
+  uv_mutex_lock(argmutex);
+  targcpy = asarg->targ; // work on a copy of the arguments
+  asarg->targ.argc = 0; // empty the original, nothing to clear
+  uv_mutex_unlock(argmutex);
+  n = luv_thread_arg_push(L, &targcpy, LUVF_THREAD_SIDE_MAIN);
+  if (n >= 0) {
+    luv_call_callback(L, data, LUV_ASYNC, n);
+  }
+  luv_thread_arg_clear(L, &targcpy, LUVF_THREAD_SIDE_MAIN); // clear the copy
 }
 
 static int luv_new_async(lua_State* L) {
@@ -43,21 +60,53 @@ static int luv_new_async(lua_State* L) {
     return luv_error(L, ret);
   }
   data = luv_setup_handle(L, ctx);
-  data->extra = (luv_thread_arg_t*)malloc(sizeof(luv_thread_arg_t));
+  luv_async_arg_t* asarg = (luv_async_arg_t*)malloc(sizeof(luv_async_arg_t));
+  memset(asarg, 0, sizeof(luv_async_arg_t));
+  ret = uv_mutex_init(&asarg->mutex);
+  if (ret < 0) { // unlikely
+    abort();
+  }
+  data->extra = asarg;
   data->extra_gc = free;
-  memset(data->extra, 0, sizeof(luv_thread_arg_t));
   handle->data = data;
   luv_check_callback(L, (luv_handle_t*)handle->data, LUV_ASYNC, 1);
   return 1;
 }
 
+
+static int luv_handle_gc(lua_State* L);
+
+static int luv_async_gc(lua_State* L) {
+  uv_async_t* handle = *(uv_async_t**)lua_touserdata(L, 1);
+  luv_async_arg_t* asarg = luv_get_async_arg_from_handle(handle);
+  uv_mutex_t *argmutex = &asarg->mutex;
+  uv_mutex_lock(argmutex);
+  luv_thread_arg_clear(L, &asarg->targ, LUVF_THREAD_SIDE_CHILD); // in case of a pending send, set side to avoid unref
+  uv_mutex_unlock(argmutex);
+  uv_mutex_destroy(argmutex);
+  return luv_handle_gc(L);
+}
+
 static int luv_async_send(lua_State* L) {
   int ret;
   uv_async_t* handle = luv_check_async(L, 1);
-  luv_thread_arg_t* arg = (luv_thread_arg_t *)((luv_handle_t*) handle->data)->extra;
-
-  luv_thread_arg_set(L, arg, 2, lua_gettop(L), LUVF_THREAD_MODE_ASYNC|LUVF_THREAD_SIDE_CHILD);
+  luv_async_arg_t* asarg = luv_get_async_arg_from_handle(handle);
+  uv_mutex_t *argmutex = &asarg->mutex;
+  int n;
+  uv_mutex_lock(argmutex);
+  luv_thread_arg_clear(L, &asarg->targ, LUVF_THREAD_SIDE_CHILD); // in case of a pending send
+  n = luv_thread_arg_set(L, &asarg->targ, 2, lua_gettop(L), LUVF_THREAD_MODE_ASYNC|LUVF_THREAD_SIDE_CHILD);
+  uv_mutex_unlock(argmutex);
+  if (n < 0) {
+    return luv_thread_arg_error(L);
+  }
   ret = uv_async_send(handle);
-  luv_thread_arg_clear(L, arg, LUVF_THREAD_SIDE_CHILD);
   return luv_result(L, ret);
+}
+
+static void luv_async_init(lua_State* L) {
+  luaL_getmetatable(L, "uv_async");
+  lua_pushcfunction(L, luv_async_gc);
+  lua_setfield(L, -2, "__gc");
+  lua_pop(L, 1);
 }

@@ -908,6 +908,7 @@ LUALIB_API int luaopen_luv (lua_State* L) {
 
   luv_req_init(L);
   luv_handle_init(L);
+  luv_async_init(L);
 #if LUV_UV_VERSION_GEQ(1, 28, 0)
   luv_dir_init(L);
 #endif
