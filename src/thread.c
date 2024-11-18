@@ -151,7 +151,7 @@ static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags
   /*
    * clear is safe to be called multiple times, values are set to LUA_NOREF or NULL, argc is preserved.
    * thread unrefs per side.
-   * async frees values on the first calling side.
+   * async frees values on the push side.
    */
   for (i = 0; i < args->argc; i++) {
     luv_val_t* arg = args->argv + i;
@@ -161,7 +161,7 @@ static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags
         luaL_unref(L, LUA_REGISTRYINDEX, arg->ref[side]);
         arg->ref[side] = LUA_NOREF;
       }
-      if (async) {
+      if (async && side != setside) {
         free((void*)arg->val.str.base);
         arg->val.str.base = NULL;
       }
@@ -178,7 +178,7 @@ static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags
         luaL_unref(L, LUA_REGISTRYINDEX, arg->ref[side]);
         arg->ref[side] = LUA_NOREF;
       }
-      if (async) {
+      if (async && side != setside) {
         if (arg->val.udata.size > 0) {
           free((void*)arg->val.udata.data);
           arg->val.udata.data = NULL;

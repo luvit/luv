@@ -81,7 +81,7 @@ static int luv_async_gc(lua_State* L) {
   luv_async_arg_t* asarg = luv_get_async_arg_from_handle(handle);
   uv_mutex_t *argmutex = &asarg->mutex;
   uv_mutex_lock(argmutex);
-  luv_thread_arg_clear(L, &asarg->targ, LUVF_THREAD_SIDE_CHILD); // in case of a pending send, set side to avoid unref
+  luv_thread_arg_clear(L, &asarg->targ, LUVF_THREAD_SIDE_MAIN); // in case of a pending send
   uv_mutex_unlock(argmutex);
   uv_mutex_destroy(argmutex);
   return luv_handle_gc(L);
@@ -94,7 +94,7 @@ static int luv_async_send(lua_State* L) {
   uv_mutex_t *argmutex = &asarg->mutex;
   int n;
   uv_mutex_lock(argmutex);
-  luv_thread_arg_clear(L, &asarg->targ, LUVF_THREAD_SIDE_CHILD); // in case of a pending send
+  luv_thread_arg_clear(L, &asarg->targ, LUVF_THREAD_SIDE_MAIN); // in case of a pending send
   n = luv_thread_arg_set(L, &asarg->targ, 2, lua_gettop(L), LUVF_THREAD_MODE_ASYNC|LUVF_THREAD_SIDE_CHILD);
   uv_mutex_unlock(argmutex);
   if (n < 0) {
