@@ -34,6 +34,27 @@ return require('lib/tap')(function (test)
     end, async):join()
   end)
 
+  test("test async queue send", function(p, p, expect, uv)
+    local async
+    async = uv.new_async(expect(function (v)
+      p('in async notify callback')
+      if v == 'close' then
+        async:close()
+      else
+        assert(v=='ok')
+      end
+    end, 3), 3)
+    uv.new_thread(function(asy)
+      local uv = require('luv')
+      assert(type(asy)=='userdata')
+      assert(asy:send('ok')==0)
+      assert(asy:send('ok')==0)
+      assert(asy:send('close')==0)
+      assert(select(3, asy:send('not ok'))=='ENOSPC')
+      uv.sleep(10)
+    end, async):join()
+  end)
+
   test("test async send from same thread", function(p, p, expect, uv)
     local async
     async = uv.new_async(expect(function (v)
