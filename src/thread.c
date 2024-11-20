@@ -66,11 +66,7 @@ static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int
   int i;
   int side = LUVF_THREAD_SIDE(flags);
   int async = LUVF_THREAD_ASYNC(flags);
-  /*
-   * thread works by reference.
-   * async works by copy, a use case consists in sending just before the thread ends,
-   * it results that the callback will be called after the thread/async life.
-   */
+  // thread works by reference, async works by copy.
   idx = idx > 0 ? idx : 1;
   i = idx;
   args->flags = flags;
@@ -143,16 +139,37 @@ static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int
   return args->argc;
 }
 
+static void luv_thread_arg_free(luv_thread_arg_t* args) {
+  int i;
+  for (i = 0; i < args->argc; i++) {
+    luv_val_t* arg = args->argv + i;
+    switch (arg->type) {
+    case LUA_TSTRING:
+      free((void*)arg->val.str.base);
+      arg->val.str.base = NULL;
+      break;
+    case LUA_TUSERDATA:
+      if (arg->val.udata.size > 0) {
+        free((void*)arg->val.udata.data);
+        arg->val.udata.data = NULL;
+      }
+      free((void*)arg->val.udata.metaname);
+      arg->val.udata.metaname = NULL;
+      break;
+    }
+  }
+}
+
 static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags) {
   int i;
   int side = LUVF_THREAD_SIDE(flags);
   int setside = LUVF_THREAD_SIDE(args->flags);
   int async = LUVF_THREAD_ASYNC(args->flags);
-  /*
-   * clear is safe to be called multiple times, values are set to LUA_NOREF or NULL, argc is preserved.
-   * thread unrefs per side.
-   * async frees values on the push side.
-   */
+
+  // clear is safe to be called multiple times from multiple sides.
+  if (args->argc <= 0) {
+    return;
+  }
   for (i = 0; i < args->argc; i++) {
     luv_val_t* arg = args->argv + i;
     switch (arg->type) {
@@ -160,10 +177,6 @@ static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags
       if (arg->ref[side] != LUA_NOREF) {
         luaL_unref(L, LUA_REGISTRYINDEX, arg->ref[side]);
         arg->ref[side] = LUA_NOREF;
-      }
-      if (async && side != setside) {
-        free((void*)arg->val.str.base);
-        arg->val.str.base = NULL;
       }
       break;
     case LUA_TUSERDATA:
@@ -178,18 +191,13 @@ static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags
         luaL_unref(L, LUA_REGISTRYINDEX, arg->ref[side]);
         arg->ref[side] = LUA_NOREF;
       }
-      if (async && side != setside) {
-        if (arg->val.udata.size > 0) {
-          free((void*)arg->val.udata.data);
-          arg->val.udata.data = NULL;
-        }
-        free((void*)arg->val.udata.metaname);
-        arg->val.udata.metaname = NULL;
-      }
       break;
     default:
       break;
     }
+  }
+  if (async && side != setside) {
+    luv_thread_arg_free(args);
   }
 }
 
