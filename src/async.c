@@ -24,7 +24,7 @@ typedef struct luv_async_send_s {
 typedef struct {
   luv_thread_arg_t targ;
   uv_mutex_t mutex;
-  int max; // FIFO queue in case of max > 1
+  int max; // FIFO queue in case of max > 0
   int count;
   luv_async_send_t* first;
   luv_async_send_t* last;
@@ -38,7 +38,7 @@ static uv_async_t* luv_check_async(lua_State* L, int index) {
   return handle;
 }
 
-#define luv_is_async_queue(AA) ((AA)->max > 1)
+#define luv_is_async_queue(AA) ((AA)->max > 0)
 
 static luv_async_send_t* luv_async_pop(luv_async_arg_t* asarg) {
   luv_async_send_t* sendarg = asarg->first;
