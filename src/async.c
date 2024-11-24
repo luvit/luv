@@ -54,14 +54,16 @@ static luv_async_send_t* luv_async_pop(luv_async_arg_t* asarg) {
 
 static luv_async_send_t* luv_async_push(luv_async_arg_t* asarg) {
   luv_async_send_t* sendarg = (luv_async_send_t*)malloc(sizeof(luv_async_send_t));
-  memset(sendarg, 0, sizeof(luv_async_send_t));
-  asarg->count++;
-  if (asarg->last != NULL) {
-    asarg->last->next = sendarg;
-  }
-  asarg->last = sendarg;
-  if (asarg->first == NULL) {
-    asarg->first = sendarg;
+  if (sendarg != NULL) {
+    memset(sendarg, 0, sizeof(luv_async_send_t));
+    asarg->count++;
+    if (asarg->last != NULL) {
+      asarg->last->next = sendarg;
+    }
+    asarg->last = sendarg;
+    if (asarg->first == NULL) {
+      asarg->first = sendarg;
+    }
   }
   return sendarg;
 }
@@ -154,25 +156,33 @@ static int luv_async_send(lua_State* L) {
   uv_async_t* handle = luv_check_async(L, 1);
   luv_async_arg_t* asarg = luv_get_async_arg_from_handle(handle);
   uv_mutex_t *argmutex = &asarg->mutex;
-  luv_thread_arg_t* args;
-  int n;
-  uv_mutex_lock(argmutex);
-  if (luv_is_async_queue(asarg)) {
-    if (asarg->count >= asarg->max) {
-      uv_mutex_unlock(argmutex);
-      return luv_error(L, UV_ENOSPC);
-    }
-    luv_async_send_t* sendarg = luv_async_push(asarg);
-    args = &sendarg->targ;
-  } else {
-    luv_thread_arg_free(&asarg->targ); // in case of a pending send
-    args = &asarg->targ;
-  }
-  n = luv_thread_arg_set(L, args, 2, lua_gettop(L), LUVF_THREAD_MODE_ASYNC|LUVF_THREAD_SIDE_CHILD);
-  uv_mutex_unlock(argmutex);
-  if (n < 0) {
+  luv_thread_arg_t targcpy;
+  ret = luv_thread_arg_set(L, &targcpy, 2, lua_gettop(L), LUVF_THREAD_MODE_ASYNC|LUVF_THREAD_SIDE_CHILD);
+  if (ret < 0) {
+    luv_thread_arg_free(&targcpy);
     return luv_thread_arg_error(L);
   }
+  uv_mutex_lock(argmutex);
+  if (luv_is_async_queue(asarg)) {
+    luv_async_send_t* sendarg = NULL;
+    ret = UV_ENOSPC;
+    if (asarg->count < asarg->max) {
+      sendarg = luv_async_push(asarg);
+      if (sendarg == NULL) {
+        ret = UV_ENOMEM;
+      }
+    }
+    if (sendarg == NULL) {
+      uv_mutex_unlock(argmutex);
+      luv_thread_arg_free(&targcpy);
+      return luv_error(L, ret);
+    }
+    sendarg->targ = targcpy;
+  } else {
+    luv_thread_arg_free(&asarg->targ); // in case of a pending send
+    asarg->targ = targcpy;
+  }
+  uv_mutex_unlock(argmutex);
   ret = uv_async_send(handle);
   return luv_result(L, ret);
 }

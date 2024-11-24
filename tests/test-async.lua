@@ -28,7 +28,7 @@ return require('lib/tap')(function (test)
     end))
     uv.new_thread(function(asy)
       assert(type(asy)=='userdata')
-      assert(asy:send('not ok')==0) -- will be ignored but its ok
+      assert(asy:send('not ok')==0) -- will be ignored but it's ok
       assert(asy:send('ok')==0)
       require('luv').sleep(10)
     end, async):join()
@@ -62,8 +62,9 @@ return require('lib/tap')(function (test)
       assert(v=='ok')
       async:close()
     end))
-    assert(async:send('not ok')==0) -- will be ignored but its ok
+    assert(async:send('not ok')==0) -- will be ignored but it's ok
     assert(async:send('ok')==0)
+    assert(pcall(uv.async_send, 'not ok', function() end)==false) -- will fail
     uv.run()
   end)
 

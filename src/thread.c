@@ -62,6 +62,13 @@ static const char* luv_getmtname(lua_State *L, int idx) {
   return name;
 }
 
+static int luv_thread_arg_set_error(lua_State* L, luv_thread_arg_t* args, int type, int index) {
+  args->argc = index;
+  lua_pushinteger(L, type);
+  lua_pushinteger(L, index + 1);
+  return -1;
+}
+
 static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int top, int flags) {
   int i;
   int side = LUVF_THREAD_SIDE(flags);
@@ -72,7 +79,8 @@ static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int
   args->flags = flags;
   while (i <= top && i < LUV_THREAD_MAXNUM_ARG + idx)
   {
-    luv_val_t *arg = args->argv + (i - idx);
+    int ii = i - idx;
+    luv_val_t *arg = args->argv + ii;
     arg->type = lua_type(L, i);
     arg->ref[0] = arg->ref[1] = LUA_NOREF;
     switch (arg->type)
@@ -95,6 +103,9 @@ static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int
         size_t l = 0;
         const char* p = lua_tolstring(L, i, &l);
         void* b = malloc(l + 1);
+        if (b == NULL) {
+          return luv_thread_arg_set_error(L, args, LUA_TNONE, ii);
+        }
         arg->val.str.base = memcpy((void*)b, p, l + 1);
         arg->val.str.len = l;
       } else {
@@ -111,11 +122,17 @@ static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int
         if (async) {
           if (l > 0) {
             void* b = malloc(l);
+            if (b == NULL) {
+              return luv_thread_arg_set_error(L, args, LUA_TNONE, ii);
+            }
             p = (const void*)memcpy(b, p, l);
           }
           if (mtname != NULL) {
             size_t ml = strlen(mtname) + 1;
             char* b = malloc(ml);
+            if (b == NULL) {
+              return luv_thread_arg_set_error(L, args, LUA_TNONE, ii);
+            }
             mtname = (const void*)memcpy(b, mtname, ml);
           }
         } else {
@@ -128,10 +145,7 @@ static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int
       }
       break;
     default:
-      args->argc = i - idx;
-      lua_pushinteger(L, arg->type);
-      lua_pushinteger(L, i - idx + 1);
-      return -1;
+      return luv_thread_arg_set_error(L, args, arg->type, ii);
     }
     i++;
   }
@@ -251,6 +265,9 @@ static int luv_thread_arg_error(lua_State *L) {
   int type = lua_tointeger(L, -2);
   int pos = lua_tointeger(L, -1);
   lua_pop(L, 2);
+  if (type == LUA_TNONE) {
+    return luaL_error(L, "Error: thread arg failure at %d", pos);
+  }
   return luaL_error(L, "Error: thread arg not support type '%s' at %d",
     lua_typename(L, type), pos);
 }
