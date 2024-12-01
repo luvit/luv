@@ -111,9 +111,7 @@ static void call_walk(uv_timer_t* handle) {
 int main(int argc, char *argv[]) {
 
   lua_State* L;
-  int index;
   int res;
-  int errfunc;
   uv_loop_t loop;
   uv_timer_t timer_handle;
 
