@@ -113,7 +113,7 @@ static int luv_work_cb(lua_State* L) {
         return luv_thread_arg_error(L);
       }
       lua_pop(L, i);  // pop all returned value
-      luv_thread_arg_clear(L, &work->rets, LUVF_THREAD_MODE_ASYNC|LUVF_THREAD_SIDE_CHILD);
+      luv_thread_arg_clear(L, &work->rets, LUVF_THREAD_SIDE_CHILD);
     }
     luv_thread_arg_clear(L, &work->args, LUVF_THREAD_SIDE_CHILD);
   } else {
@@ -154,7 +154,7 @@ static void luv_work_cb_wrapper(uv_work_t* req) {
   // uv__threadpool_cleanup, so exit is not called in luv_cfpcall.
   int i = lctx->thrd_cpcall(L, luv_work_cb, (void*)req, LUVF_CALLBACK_NOEXIT);
   if (i != LUA_OK) {
-    luv_thread_arg_clear(L, &work->rets, LUVF_THREAD_MODE_ASYNC|LUVF_THREAD_SIDE_CHILD);
+    luv_thread_arg_clear(L, &work->rets, LUVF_THREAD_SIDE_CHILD);
     luv_thread_arg_clear(L, &work->args, LUVF_THREAD_SIDE_CHILD);
   }
 }
@@ -177,7 +177,7 @@ static void luv_after_work_cb(uv_work_t* req, int status) {
   work->ref = LUA_NOREF;
 
   luv_thread_arg_clear(L, &work->args, LUVF_THREAD_SIDE_MAIN);
-  luv_thread_arg_clear(L, &work->rets, LUVF_THREAD_MODE_ASYNC|LUVF_THREAD_SIDE_MAIN);
+  luv_thread_arg_clear(L, &work->rets, LUVF_THREAD_SIDE_MAIN);
   free(work);
 }
 
