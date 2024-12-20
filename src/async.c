@@ -102,10 +102,15 @@ static void luv_async_cb(uv_async_t* handle) {
 static int luv_new_async(lua_State* L) {
   uv_async_t* handle;
   luv_handle_t* data;
+  uv_mutex_t argmutex;
   int ret;
   luv_ctx_t* ctx = luv_context(L);
   int max = luaL_optinteger(L, 2, 0);
   luaL_checktype(L, 1, LUA_TFUNCTION);
+  ret = uv_mutex_init(&argmutex);
+  if (ret < 0) {
+    return luv_error(L, ret);
+  }
   handle = (uv_async_t*)luv_newuserdata(L, uv_handle_size(UV_ASYNC));
   ret = uv_async_init(ctx->loop, handle, luv_async_cb);
   if (ret < 0) {
@@ -116,10 +121,7 @@ static int luv_new_async(lua_State* L) {
   luv_async_arg_t* asarg = (luv_async_arg_t*)malloc(sizeof(luv_async_arg_t));
   memset(asarg, 0, sizeof(luv_async_arg_t));
   asarg->max = max;
-  ret = uv_mutex_init(&asarg->mutex);
-  if (ret < 0) { // unlikely
-    abort();
-  }
+  asarg->mutex = argmutex;
   data->extra = asarg;
   data->extra_gc = free;
   handle->data = data;
