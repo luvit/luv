@@ -63,7 +63,7 @@ static lua_State *vm_acquire(uv_loop_t* loop) {
 static void vm_release(lua_State* L) { lua_close(L); }
 
 
-static lua_State* luv_thread_acquire_vm() {
+static lua_State* luv_thread_acquire_vm(void) {
   lua_State* L = vm_acquire(NULL);  /* create state */
 
   lua_pushboolean(L, 1);
