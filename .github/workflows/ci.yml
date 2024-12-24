@@ -55,7 +55,7 @@ jobs:
       run: ./build/lua -e "collectgarbage('incremental', 0, 10000000000000)" tests/run.lua
 
   valgrind:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       BUILD_TYPE: Debug
       WITH_LUA_ENGINE: Lua
