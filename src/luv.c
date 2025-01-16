@@ -227,6 +227,9 @@ static const luaL_Reg luv_functions[] = {
   {"udp_set_ttl", luv_udp_set_ttl},
   {"udp_send", luv_udp_send},
   {"udp_try_send", luv_udp_try_send},
+#if LUV_UV_VERSION_GEQ(1, 50, 0)
+  {"udp_try_send2", luv_udp_try_send2},
+#endif
   {"udp_recv_start", luv_udp_recv_start},
   {"udp_recv_stop", luv_udp_recv_stop},
 #if LUV_UV_VERSION_GEQ(1, 27, 0)
@@ -330,6 +333,9 @@ static const luaL_Reg luv_functions[] = {
   {"setgid", luv_setgid},
 #endif
   {"getrusage", luv_getrusage},
+#if LUV_UV_VERSION_GEQ(1, 50, 0)
+  {"getrusage_thread", luv_getrusage_thread},
+#endif
   {"guess_handle", luv_guess_handle},
   {"hrtime", luv_hrtime},
   {"interface_addresses", luv_interface_addresses},
@@ -395,6 +401,11 @@ static const luaL_Reg luv_functions[] = {
 #if LUV_UV_VERSION_GEQ(1, 48, 0)
   {"thread_getpriority", luv_thread_getpriority},
   {"thread_setpriority", luv_thread_setpriority},
+#endif
+#if LUV_UV_VERSION_GEQ(1, 50, 0)
+  {"thread_detach", luv_thread_detach},
+  {"thread_getname", luv_thread_getname},
+  {"thread_setname", luv_thread_setname},
 #endif
 
 #if LUV_UV_VERSION_GEQ(1, 49, 0)
@@ -585,6 +596,9 @@ static const luaL_Reg luv_udp_methods[] = {
   {"set_ttl", luv_udp_set_ttl},
   {"send", luv_udp_send},
   {"try_send", luv_udp_try_send},
+#if LUV_UV_VERSION_GEQ(1, 50, 0)
+  {"try_send2", luv_udp_try_send2},
+#endif
   {"recv_start", luv_udp_recv_start},
   {"recv_stop", luv_udp_recv_stop},
 #if LUV_UV_VERSION_GEQ(1, 27, 0)
