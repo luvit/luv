@@ -48,8 +48,8 @@ return require('lib/tap')(function (test)
     end)))
   end)
 
-  -- FIXME: this test always fails on AppVeyor for some reason
-  if isWindows and not os.getenv'APPVEYOR' then
+  -- FIXME: this test always fails on Windows/AppVeyor with ENOENT for some reason
+  if not isWindows then
     test("Get only ipv6 tcp adresses for luvit.io", function (print, p, expect, uv)
       assert(uv.getaddrinfo("luvit.io", nil, {
         socktype = "stream",
