@@ -27,7 +27,7 @@ Setlocal EnableDelayedExpansion EnableExtensions
 
 if not defined LUAROCKS_URL set LUAROCKS_URL=https://luarocks.github.io/luarocks/releases
 if not defined LUAROCKS_REPO set LUAROCKS_REPO=https://luarocks.org
-if not defined LUA_URL set LUA_URL=http://www.lua.org/ftp
+if not defined LUA_URL set LUA_URL=https://www.lua.org/ftp
 if defined NOCOMPAT (
 	set COMPATFLAG=--nocompat
 ) else (
