@@ -324,6 +324,74 @@ static int luv_udp_try_send(lua_State* L) {
   return 1;
 }
 
+#if LUV_UV_VERSION_GEQ(1, 50, 0)
+static int luv_udp_try_send2(lua_State* L) {
+  uv_udp_t* handle = luv_check_udp(L, 1);
+  int err_or_num_datagrams_sent;
+  unsigned int num_msgs;
+  // to-be-allocated with the length of num_msgs
+  struct sockaddr_storage* addrs;
+  struct sockaddr** addr_ptrs;
+  unsigned int* counts;
+  uv_buf_t** bufs;
+  unsigned int flags = 0;
+
+  luaL_checktype(L, 2, LUA_TTABLE);
+  num_msgs = lua_rawlen(L, 2);
+  
+  // flags param can be nil, an integer, or a table
+  if (lua_type(L, 3) == LUA_TNUMBER || lua_isnoneornil(L, 3)) {
+    flags = (unsigned int)luaL_optinteger(L, 3, 0);
+  }
+  else if (lua_type(L, 3) == LUA_TTABLE) {
+    // this is for forwards-compatibility: if flags ever get added,
+    // we want to be able to take a table
+  }
+  else {
+    return luaL_argerror(L, 3, "expected nil, integer, or table");
+  }
+
+  addrs = malloc(sizeof(struct sockaddr_storage) * num_msgs);
+  addr_ptrs = malloc(sizeof(struct sockaddr_storage*) * num_msgs);
+  counts = malloc(sizeof(unsigned int) * num_msgs);
+  bufs = malloc(sizeof(uv_buf_t*) * num_msgs);
+  for (unsigned int i=0; i<num_msgs; i++) {
+    lua_rawgeti(L, 2, i+1);
+    int element_index = lua_gettop(L);
+    lua_getfield(L, element_index, "data");
+    size_t count;
+    bufs[i] = luv_check_bufs_noref(L, -1, &count);
+    if (count > UINT_MAX)
+      return luaL_error(L, "data at index %d contains too many bufs (max is %d)", UINT_MAX);
+    counts[i] = count;
+    lua_pop(L, 1);
+    lua_getfield(L, element_index, "addr");
+    int addr_index = lua_gettop(L);
+    if (!lua_isnoneornil(L, addr_index)) {
+      lua_getfield(L, addr_index, "ip");
+      lua_getfield(L, addr_index, "port");
+      addr_ptrs[i] = luv_check_addr(L, &addrs[i], -2, -1);
+      lua_pop(L, 4); // ip, port, addr, and current array element
+    }
+    else {
+      addr_ptrs[i] = NULL;
+      lua_pop(L, 2); // addr and current array element
+    }
+  }
+  err_or_num_datagrams_sent = uv_udp_try_send2(handle, num_msgs, bufs, counts, addr_ptrs, flags);
+  free(addrs);
+  free(addr_ptrs);
+  free(counts);
+  for (unsigned int i=0; i<num_msgs; i++)
+    free(bufs[i]);
+  free(bufs);
+
+  if (err_or_num_datagrams_sent < 0) return luv_error(L, err_or_num_datagrams_sent);
+  lua_pushinteger(L, err_or_num_datagrams_sent);
+  return 1;
+}
+#endif
+
 static void luv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags) {
   luv_handle_t* data = (luv_handle_t*)handle->data;
   lua_State* L = data->ctx->L;

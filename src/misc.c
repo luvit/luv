@@ -165,61 +165,75 @@ static void luv_push_timeval_table(lua_State* L, const uv_timeval_t* t) {
   lua_setfield(L, -2, "usec");
 }
 
+static void luv_push_rusage_table(lua_State* L, const uv_rusage_t* rusage) {
+  lua_createtable(L, 0, 16);
+  // user CPU time used
+  luv_push_timeval_table(L, &rusage->ru_utime);
+  lua_setfield(L, -2, "utime");
+  // system CPU time used
+  luv_push_timeval_table(L, &rusage->ru_stime);
+  lua_setfield(L, -2, "stime");
+  // maximum resident set size
+  lua_pushinteger(L, rusage->ru_maxrss);
+  lua_setfield(L, -2, "maxrss");
+  // integral shared memory size
+  lua_pushinteger(L, rusage->ru_ixrss);
+  lua_setfield(L, -2, "ixrss");
+  // integral unshared data size
+  lua_pushinteger(L, rusage->ru_idrss);
+  lua_setfield(L, -2, "idrss");
+  // integral unshared stack size
+  lua_pushinteger(L, rusage->ru_isrss);
+  lua_setfield(L, -2, "isrss");
+  // page reclaims (soft page faults)
+  lua_pushinteger(L, rusage->ru_minflt);
+  lua_setfield(L, -2, "minflt");
+  // page faults (hard page faults)
+  lua_pushinteger(L, rusage->ru_majflt);
+  lua_setfield(L, -2, "majflt");
+  // swaps
+  lua_pushinteger(L, rusage->ru_nswap);
+  lua_setfield(L, -2, "nswap");
+  // block input operations
+  lua_pushinteger(L, rusage->ru_inblock);
+  lua_setfield(L, -2, "inblock");
+  // block output operations
+  lua_pushinteger(L, rusage->ru_oublock);
+  lua_setfield(L, -2, "oublock");
+  // IPC messages sent
+  lua_pushinteger(L, rusage->ru_msgsnd);
+  lua_setfield(L, -2, "msgsnd");
+  // IPC messages received
+  lua_pushinteger(L, rusage->ru_msgrcv);
+  lua_setfield(L, -2, "msgrcv");
+  // signals received
+  lua_pushinteger(L, rusage->ru_nsignals);
+  lua_setfield(L, -2, "nsignals");
+  // voluntary context switches
+  lua_pushinteger(L, rusage->ru_nvcsw);
+  lua_setfield(L, -2, "nvcsw");
+  // involuntary context switches
+  lua_pushinteger(L, rusage->ru_nivcsw);
+  lua_setfield(L, -2, "nivcsw");
+}
+
 static int luv_getrusage(lua_State* L) {
   uv_rusage_t rusage;
   int ret = uv_getrusage(&rusage);
   if (ret < 0) return luv_error(L, ret);
-  lua_createtable(L, 0, 16);
-  // user CPU time used
-  luv_push_timeval_table(L, &rusage.ru_utime);
-  lua_setfield(L, -2, "utime");
-  // system CPU time used
-  luv_push_timeval_table(L, &rusage.ru_stime);
-  lua_setfield(L, -2, "stime");
-  // maximum resident set size
-  lua_pushinteger(L, rusage.ru_maxrss);
-  lua_setfield(L, -2, "maxrss");
-  // integral shared memory size
-  lua_pushinteger(L, rusage.ru_ixrss);
-  lua_setfield(L, -2, "ixrss");
-  // integral unshared data size
-  lua_pushinteger(L, rusage.ru_idrss);
-  lua_setfield(L, -2, "idrss");
-  // integral unshared stack size
-  lua_pushinteger(L, rusage.ru_isrss);
-  lua_setfield(L, -2, "isrss");
-  // page reclaims (soft page faults)
-  lua_pushinteger(L, rusage.ru_minflt);
-  lua_setfield(L, -2, "minflt");
-  // page faults (hard page faults)
-  lua_pushinteger(L, rusage.ru_majflt);
-  lua_setfield(L, -2, "majflt");
-  // swaps
-  lua_pushinteger(L, rusage.ru_nswap);
-  lua_setfield(L, -2, "nswap");
-  // block input operations
-  lua_pushinteger(L, rusage.ru_inblock);
-  lua_setfield(L, -2, "inblock");
-  // block output operations
-  lua_pushinteger(L, rusage.ru_oublock);
-  lua_setfield(L, -2, "oublock");
-  // IPC messages sent
-  lua_pushinteger(L, rusage.ru_msgsnd);
-  lua_setfield(L, -2, "msgsnd");
-  // IPC messages received
-  lua_pushinteger(L, rusage.ru_msgrcv);
-  lua_setfield(L, -2, "msgrcv");
-  // signals received
-  lua_pushinteger(L, rusage.ru_nsignals);
-  lua_setfield(L, -2, "nsignals");
-  // voluntary context switches
-  lua_pushinteger(L, rusage.ru_nvcsw);
-  lua_setfield(L, -2, "nvcsw");
-  // involuntary context switches
-  lua_pushinteger(L, rusage.ru_nivcsw);
-  lua_setfield(L, -2, "nivcsw");
+  luv_push_rusage_table(L, &rusage);
   return 1;
 }
+
+#if LUV_UV_VERSION_GEQ(1, 50, 0)
+static int luv_getrusage_thread(lua_State *L) {
+  uv_rusage_t rusage;
+  int ret = uv_getrusage_thread(&rusage);
+  if (ret < 0) return luv_error(L, ret);
+  luv_push_rusage_table(L, &rusage);
+  return 1;
+}
+#endif
 
 #if LUV_UV_VERSION_GEQ(1, 44, 0)
 static int luv_available_parallelism(lua_State* L) {

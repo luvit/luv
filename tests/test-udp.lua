@@ -344,4 +344,81 @@ return require('lib/tap')(function (test)
       assert(sender:try_send("PING", "127.0.0.1", TEST_PORT))
     end
   end, "1.39.0")
+
+  local function udp_try_send2_test(should_connect)
+    return function(print, p, expect, uv)
+      -- If udp_connect is called on the sender, then addr cannot be specified in any messages.
+      -- Otherwise, it *must* be specified in every message.
+      local send_addr = { ip = "127.0.0.1", port = TEST_PORT }
+      local msgs_to_send = {
+        { data = "PING", addr = send_addr },
+        { data = "PING", addr = send_addr },
+        { data = "PING", addr = send_addr },
+        -- Add in a message that goes to a different address to ensure that
+        -- messages having a different address are allowed (when not connected)
+        { data = "PING", addr = { ip = "127.0.0.1", port = TEST_PORT + 1 } },
+        { data = { "P", "I", "N", "G" }, addr = send_addr },
+      }
+      local expected_msgs = #msgs_to_send
+      if not should_connect then
+        expected_msgs = expected_msgs - 1
+      end
+      -- Remove addr from the messages if we are calling udp_connect
+      if should_connect then
+        for _,v in ipairs(msgs_to_send) do
+          v.addr = nil
+        end
+      end
+
+      local recver = uv.new_udp()
+      assert(recver:bind("0.0.0.0", TEST_PORT))
+
+      local sender = uv.new_udp()
+      if should_connect then
+        assert(uv.udp_connect(sender, send_addr.ip, send_addr.port))
+      else
+        -- bind must be called; try_send2 doesn't automatically bind
+        assert(sender:bind("0.0.0.0", TEST_PORT+2))
+      end
+
+      local msgs_recved = 0
+      local recv_cb = function(err, data, addr, flags)
+        assert(not err, err)
+        p(data, addr)
+
+        -- empty callback can happen, just return early
+        if data == nil and addr == nil then
+          return
+        end
+
+        assert(addr)
+        assert(data == "PING")
+
+        msgs_recved = msgs_recved + 1
+        if msgs_recved == expected_msgs then
+          sender:close()
+          recver:close()
+        end
+      end
+
+      assert(recver:recv_start(recv_cb))
+      while #msgs_to_send > 0 do
+        local num_sent = assert(sender:try_send2(msgs_to_send))
+        print('sent '..num_sent..' out of '..#msgs_to_send..', expecting '..expected_msgs..' to be received')
+        for _=1,num_sent do
+          table.remove(msgs_to_send, 1)
+        end
+      end
+    end
+  end
+
+  test("udp try_send2 not connected", function(print, p, expect, uv)
+    local testfn = udp_try_send2_test(false)
+    return testfn(print, p, expect, uv)
+  end, "1.50.0")
+
+  test("udp try_send2 connected", function(print, p, expect, uv)
+    local testfn = udp_try_send2_test(true)
+    return testfn(print, p, expect, uv)
+  end, "1.50.0")
 end)
