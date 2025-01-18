@@ -1,5 +1,4 @@
 image:
-  - Visual Studio 2015
   - Visual Studio 2022
 
 platform:
@@ -22,9 +21,6 @@ matrix:
   exclude:
     # Skip x86 for LuaRocks tests
     - platform: x86
-      LUAROCKS_VER: 3.8.0
-    # Only test LuaRocks with latest MSVC
-    - image: Visual Studio 2015
       LUAROCKS_VER: 3.8.0
 
 cache:

@@ -63,7 +63,7 @@ static lua_State *vm_acquire(uv_loop_t* loop) {
 static void vm_release(lua_State* L) { lua_close(L); }
 
 
-static lua_State* luv_thread_acquire_vm() {
+static lua_State* luv_thread_acquire_vm(void) {
   lua_State* L = vm_acquire(NULL);  /* create state */
 
   lua_pushboolean(L, 1);
@@ -111,9 +111,7 @@ static void call_walk(uv_timer_t* handle) {
 int main(int argc, char *argv[]) {
 
   lua_State* L;
-  int index;
   int res;
-  int errfunc;
   uv_loop_t loop;
   uv_timer_t timer_handle;
 

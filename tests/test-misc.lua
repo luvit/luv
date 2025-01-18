@@ -45,6 +45,11 @@ return require('lib/tap')(function (test)
     p(rusage)
   end)
 
+  test("uv.getrusage_thread", function (print, p, expect, uv)
+    local rusage = assert(uv.getrusage_thread())
+    p(rusage)
+  end, "1.50.0")
+
   test("uv.available_parallelism", function (print, p, expect, uv)
     local available_parallelism = assert(uv.available_parallelism())
     p(available_parallelism)
