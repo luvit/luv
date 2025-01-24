@@ -4176,7 +4176,7 @@ These string utilities are needed internally for dealing with Windows, and are e
 
 ### `uv.utf16_length_as_wtf8(utf16)`
 
-Get the length (in bytes) of a UTF-16 (or UCS-2) string `utf16` value after converting it to WTF-8.
+Get the length (in bytes) of a UTF-16 (or UCS-2) string `utf16` value after converting it to WTF-8. The endianness of the UTF-16 (or UCS-2) string is assumed to be the same as the native endianness of the platform.
 
 **Parameters:**
 - `utf16`: `string`
@@ -4185,7 +4185,7 @@ Get the length (in bytes) of a UTF-16 (or UCS-2) string `utf16` value after conv
 
 ### `uv.utf16_to_wtf8(utf16)`
 
-Convert UTF-16 (or UCS-2) string `utf16` to WTF-8 string.
+Convert UTF-16 (or UCS-2) string `utf16` to WTF-8 string. The endianness of the UTF-16 (or UCS-2) string is assumed to be the same as the native endianness of the platform.
 
 **Parameters:**
 - `utf16`: `string`
@@ -4203,7 +4203,7 @@ Get the length (in UTF-16 code units) of a WTF-8 `wtf8` value after converting i
 
 ### `uv.wtf8_to_utf16(wtf8)`
 
-Convert WTF-8 string in `wtf8` to UTF-16 (or UCS-2) string.
+Convert WTF-8 string in `wtf8` to UTF-16 (or UCS-2) string. The endianness of the UTF-16 (or UCS-2) string will be the same as the native endianness of the platform.
 
 **Parameters:**
 - `wtf8`: `string`
