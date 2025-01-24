@@ -70,10 +70,8 @@ clean:
 
 test: luv
 	${LUABIN} tests/run.lua
-	@if [ -f $(BUILD_DIR)/test ]; then \
-		echo "$(BUILD_DIR)/test exists."; \
-		$(BUILD_DIR)/test tests/manual-test-external-loop.lua; \
-	fi
+	$(MAKE) -C $(BUILD_DIR) test
+	$(BUILD_DIR)/test tests/manual-test-external-loop.lua
 
 reset:
 	git submodule update --init --recursive && \
