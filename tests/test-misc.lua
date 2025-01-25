@@ -230,7 +230,8 @@ return require('lib/tap')(function (test)
     -- The utf8 content is "中文"
     local utf16 = uv.wtf8_to_utf16(utf8)
     assert(#utf16==4, #utf16)
-    assert(utf16==string.char(0x2d, 0x4e, 0x87, 0x65))
+    -- little-endian or big-endian
+    assert(utf16==string.char(0x2d, 0x4e, 0x87, 0x65) or utf16==string.char(0x4e, 0x2d, 0x65, 0x87))
     assert(uv.utf16_length_as_wtf8(utf16) == 6, uv.utf16_length_as_wtf8(utf16))
     utf8 = uv.utf16_to_wtf8(utf16)
     assert(utf8=='中文', utf8)
@@ -242,8 +243,8 @@ return require('lib/tap')(function (test)
     local wtf8 = string.char(0xed, 0xa0, 0xbd)
     local utf16 = uv.wtf8_to_utf16(wtf8)
     assert(#utf16==2, #utf16)
-    -- U+D83D as little-endian WTF-16
-    assert(utf16==string.char(0x3d, 0xd8))
+    -- U+D83D as little-endian or big-endian WTF-16
+    assert(utf16==string.char(0x3d, 0xd8) or utf16==string.char(0xd8, 0x3d))
     assert(uv.utf16_length_as_wtf8(utf16) == #wtf8, uv.utf16_length_as_wtf8(utf16))
     assert(uv.wtf8_length_as_utf16(wtf8) == 1, uv.wtf8_length_as_utf16(wtf8))
     local roundtrip_wtf8 = uv.utf16_to_wtf8(utf16)
