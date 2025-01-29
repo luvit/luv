@@ -287,12 +287,12 @@ static void luv_key_init_once(void)
   idx_vms = 0;
 }
 
-static void luv_work_cleanup(void)
+static int luv_work_gc(lua_State *L)
 {
   unsigned int i;
 
   if (nvms == 0)
-    return;
+    return 0;
 
   for (i = 0; i < nvms && vms[i]; i++)
     release_vm_cb(vms[i]);
@@ -302,9 +302,10 @@ static void luv_work_cleanup(void)
 
   uv_mutex_destroy(&vm_mutex);
   nvms = 0;
+  return 0;
 }
 
-static void luv_work_init(lua_State* L) {
+static void luv_work_init(lua_State* L, int is_main) {
   luaL_newmetatable(L, "luv_work_ctx");
   lua_pushcfunction(L, luv_work_ctx_tostring);
   lua_setfield(L, -2, "__tostring");
@@ -313,6 +314,16 @@ static void luv_work_init(lua_State* L) {
   luaL_newlib(L, luv_work_ctx_methods);
   lua_setfield(L, -2, "__index");
   lua_pop(L, 1);
+
+  // do cleanup in main thread
+  if (is_main) {
+    lua_newuserdata(L, 0);
+    luaL_newmetatable(L, "luv_work.meta");
+    lua_pushcfunction(L, luv_work_gc);
+    lua_setfield(L, -2, "__gc");
+    lua_setmetatable(L, -2);
+    lua_setfield(L, LUA_REGISTRYINDEX, "luv_work");
+  }
 
   uv_once(&once_vmkey, luv_key_init_once);
 }

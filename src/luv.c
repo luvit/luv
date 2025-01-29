@@ -852,11 +852,6 @@ static int loop_gc(lua_State *L) {
   while (uv_loop_close(loop)) {
     uv_run(loop, UV_RUN_DEFAULT);
   }
-  /* do cleanup in main thread */
-  lua_getglobal(L, "_THREAD");
-  if (lua_isnil(L, -1))
-    luv_work_cleanup();
-  lua_pop(L, 1);
   return 0;
 }
 
@@ -925,7 +920,11 @@ LUALIB_API int luaopen_luv (lua_State* L) {
   luv_dir_init(L);
 #endif
   luv_thread_init(L);
-  luv_work_init(L);
+
+  lua_getglobal(L, "_THREAD");
+  int is_main = lua_isnil(L, -1);
+  lua_pop(L, 1);
+  luv_work_init(L, is_main);
 
   luv_constants(L);
   lua_setfield(L, -2, "constants");
