@@ -815,6 +815,11 @@ LUALIB_API void luv_set_loop(lua_State* L, uv_loop_t* loop) {
   ctx->mode = -1;
 }
 
+// Clean up luv resources when using an external loop, after the loop has stopped.
+LUALIB_API void luv_cleanup(void) {
+  luv_work_cleanup();
+}
+
 // Set an external event callback routine, before luaopen_luv
 LUALIB_API void luv_set_callback(lua_State* L, luv_CFpcall pcall) {
   luv_ctx_t* ctx = luv_context(L);
@@ -855,7 +860,7 @@ static int loop_gc(lua_State *L) {
   /* do cleanup in main thread */
   lua_getglobal(L, "_THREAD");
   if (lua_isnil(L, -1))
-    luv_work_cleanup();
+    luv_cleanup();
   lua_pop(L, 1);
   return 0;
 }

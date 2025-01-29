@@ -127,6 +127,13 @@ LUALIB_API uv_loop_t* luv_loop(lua_State* L);
 */
 LUALIB_API void luv_set_loop(lua_State* L, uv_loop_t* loop);
 
+/* Free all non-garbaged-collected resources allocated by luv. This function
+   must be called when using an external uv_loop_t, it is called during garbage
+   collection of the Lua userdata for the uv_loop_t otherwise. This must only
+   be called after all lua_States using luv have stopped their uv_loop_t.
+*/
+LUALIB_API void luv_cleanup(void);
+
 /* Set or clear an external c routine for luv event callback
    When using a custom/external function, this must be called before luaopen_luv
    (otherwise luv will use the default callback function: luv_cfpcall)
