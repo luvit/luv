@@ -46,9 +46,9 @@ return require('lib/tap')(function (test)
     local delay = 100
     uv.update_time()
     local before = uv.now()
-    print('Runing', uv.thread_self())
+    print('Running', uv.thread_self())
     uv.sleep(delay)
-    print('Runing', uv.thread_self())
+    print('Running', uv.thread_self())
     uv.update_time()
     local elapsed = uv.now() - before
     p({
