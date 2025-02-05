@@ -275,7 +275,7 @@ return require('lib/tap')(function (test)
   -- TODO This might be overkill, but the multicast
   -- tests seem to rely on external interfaces being
   -- available on some platforms. So, we use this to skip
-  -- the tests when there are no relevant exernal interfaces
+  -- the tests when there are no relevant external interfaces
   -- available. Note: The Libuv multicast join test does use this
   -- same check for skipping the ipv6 test; we just expanded it to
   -- the ipv4 test as well.

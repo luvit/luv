@@ -210,7 +210,7 @@ lowercase option strings are listed below.
 
 In libuv, errors are represented by negative numbered constants. While these
 constants are made available in the `uv.errno` table, they are not returned by
-luv funtions and the libuv functions used to handle them are not exposed.
+luv functions and the libuv functions used to handle them are not exposed.
 Instead, if an internal error is encountered, the failing luv function will
 return to the caller an assertable `nil, err, name` tuple:
 
@@ -3447,7 +3447,7 @@ looked up using the `getprotobyname(3)` function. Examples: `"ip"`, `"icmp"`,
   - `port`: `integer` or `nil`
   - `family`: `string` or `integer` or `nil`
 - `callback`: `callable` (async version) or `nil` (sync version)
-  - `err`: `nil` or `sring`
+  - `err`: `nil` or `string`
   - `host`: `string` or `nil`
   - `service`: `string` or `nil`
 
