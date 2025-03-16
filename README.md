@@ -115,7 +115,7 @@ package is good for this.
 On OSX, you probably want XCode which comes with `clang` and `make` and friends.
 
 For windows the free Visual Studio Express works.  If you get the 2013 edition,
-make sure to get the `Windows Deskop` edition.  The `Windows` version doesn't
+make sure to get the `Windows Desktop` edition.  The `Windows` version doesn't
 include a working C compiler.  Make sure to run all of setup including getting a
 free license.
 

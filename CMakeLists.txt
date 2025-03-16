@@ -44,7 +44,7 @@ endif (NOT WITH_LUA_ENGINE)
 
 if (NOT LUA_BUILD_TYPE)
   set(LUA_BUILD_TYPE "Static"
-    CACHE STRING "Build Lua/LuaJIT as static, dynamic libary, or use system one" FORCE)
+    CACHE STRING "Build Lua/LuaJIT as static, dynamic library, or use system one" FORCE)
   set_property(CACHE LUA_BUILD_TYPE
     PROPERTY STRINGS  "Static;Dynamic;System")
 endif (NOT LUA_BUILD_TYPE)

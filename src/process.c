@@ -146,7 +146,7 @@ static int luv_spawn(lua_State* L) {
     }
     for (i = 0; i < len; ++i) {
       lua_rawgeti(L, -1, i + 1);
-      // integers are assumed to be file descripters
+      // integers are assumed to be file descriptors
       if (lua_type(L, -1) == LUA_TNUMBER) {
         options.stdio[i].flags = UV_INHERIT_FD;
         options.stdio[i].data.fd = lua_tointeger(L, -1);

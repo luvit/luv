@@ -1,7 +1,7 @@
 --come from https://github.com/luvit/luv/issues/599
 
 -- run `lua manual-test-exit.lua || echo $?`
--- it shoud print `5`
+-- it should print `5`
 
 local uv = require('luv')
 

@@ -27,7 +27,7 @@ local thread = uv.new_thread(function(delay)
   local t2 = uv.thread_self()
   assert(t1:equal(t2))
   assert(tostring(t1)==tostring(t2))
-  _G.print('Runing', uv.thread_self())
+  _G.print('Running', uv.thread_self())
 
   assert(_THREAD)
 

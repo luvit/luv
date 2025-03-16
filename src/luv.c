@@ -852,11 +852,6 @@ static int loop_gc(lua_State *L) {
   while (uv_loop_close(loop)) {
     uv_run(loop, UV_RUN_DEFAULT);
   }
-  /* do cleanup in main thread */
-  lua_getglobal(L, "_THREAD");
-  if (lua_isnil(L, -1))
-    luv_work_cleanup();
-  lua_pop(L, 1);
   return 0;
 }
 

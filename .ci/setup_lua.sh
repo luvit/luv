@@ -88,7 +88,7 @@ lua -v
 
 LUAROCKS_BASE=luarocks-$LUAROCKS
 
-# retry 5 times, connection to luarocks.org seems to timeout occassionally
+# retry 5 times, connection to luarocks.org seems to timeout occasionally
 curl --silent --location --retry 5 "https://luarocks.org/releases/$LUAROCKS_BASE.tar.gz" | tar xz
 
 cd "$LUAROCKS_BASE"
