@@ -1272,7 +1272,49 @@ a better job on Windows than it does on Unix.
 
 **Parameters:**
 - `path`: `string`
-- `options`: `table` (see below)
+- `options`: `table`
+  - `args`: `string[]` or `nil`
+    Command line arguments as a list of strings. The first
+    string should *not* be the path to the program, since that is already
+    provided via `path`. On Windows, this uses CreateProcess which concatenates
+    the arguments into a string. This can cause some strange errors
+    (see `options.verbatim` below for Windows).
+  - `stdio`: `table` or `nil`
+    Set the file descriptors that will be made available to
+    the child process. The convention is that the first entries are stdin, stdout,
+    and stderr.
+
+    The entries can take many shapes.
+    - If `integer`, then the child process inherits that same zero-indexed
+      fd from the parent process.
+    - If `uv_stream_t` handles are passed in, those are used as a read-write pipe
+      or inherited stream depending if the stream has a valid fd.
+    - If `nil`, means to ignore that fd in the child process.
+
+    **Note**: On Windows, file descriptors after the third are
+    available to the child process only if the child processes uses the MSVCRT
+    runtime.
+    - `[1, 2, 3, ..., n]`: `integer` or `userdata` for sub-type of `uv_stream_t` or `nil`
+  - `env`: `table` or `nil` Set environment variables for the new process.
+    - `[string]`: `string`
+  - `cwd`: `string` or `nil` Set the current working directory for the sub-process.
+  - `uid`: `string` or `nil` Set the child process' user id.
+  - `gid`: `string` or `nil` Set the child process' group id.
+  - `verbatim`: `boolean` or `nil`
+    If true, do not wrap any arguments in quotes, or
+    perform any other escaping, when converting the argument list into a command
+    line string. This option is only meaningful on Windows systems. On Unix it is
+    silently ignored.
+  - `detached`: `boolean` or `nil`
+    If true, spawn the child process in a detached state -
+    this will make it a process group leader, and will effectively enable the
+    child to keep running after the parent exits. Note that the child process
+    will still keep the parent's event loop alive unless the parent process calls
+    `uv.unref()` on the child's process handle.
+  - `hide`: `boolean` or `nil`
+    If true, hide the subprocess console window that would
+    normally be created. This option is only meaningful on Windows systems. On
+    Unix it is silently ignored.
 - `on_exit`: `callable`
   - `code`: `integer`
   - `signal`: `integer`
@@ -1330,43 +1372,6 @@ uv.shutdown(stdin, function()
   end)
 end)
 ```
-
-The `options` table accepts the following fields:
-
-  - `options.args` - Command line arguments as a list of strings. The first
-  string should *not* be the path to the program, since that is already
-  provided via `path`. On Windows, this uses CreateProcess which concatenates
-  the arguments into a string. This can cause some strange errors
-  (see `options.verbatim` below for Windows).
-  - `options.stdio` - Set the file descriptors that will be made available to
-  the child process. The convention is that the first entries are stdin, stdout,
-  and stderr. (**Note**: On Windows, file descriptors after the third are
-  available to the child process only if the child processes uses the MSVCRT
-  runtime.)
-  - `options.env` - Set environment variables for the new process.
-  - `options.cwd` - Set the current working directory for the sub-process.
-  - `options.uid` - Set the child process' user id.
-  - `options.gid` - Set the child process' group id.
-  - `options.verbatim` - If true, do not wrap any arguments in quotes, or
-  perform any other escaping, when converting the argument list into a command
-  line string. This option is only meaningful on Windows systems. On Unix it is
-  silently ignored.
-  - `options.detached` - If true, spawn the child process in a detached state -
-  this will make it a process group leader, and will effectively enable the
-  child to keep running after the parent exits. Note that the child process
-  will still keep the parent's event loop alive unless the parent process calls
-  `uv.unref()` on the child's process handle.
-  - `options.hide` - If true, hide the subprocess console window that would
-  normally be created. This option is only meaningful on Windows systems. On
-  Unix it is silently ignored.
-
-The `options.stdio` entries can take many shapes.
-
-  - If they are numbers, then the child process inherits that same zero-indexed
-  fd from the parent process.
-  - If `uv_stream_t` handles are passed in, those are used as a read-write pipe
-  or inherited stream depending if the stream has a valid fd.
-  - Including `nil` placeholders means to ignore that fd in the child process.
 
 When the child process exits, `on_exit` is called with an exit code and signal.
 
