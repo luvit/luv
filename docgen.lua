@@ -39,6 +39,32 @@ local function dedent(str, indent)
   return ret
 end
 
+--- Enumerates key-value pairs of a table, ordered by key.
+--- @generic T: table, K, V
+--- @param t T Dict-like table
+--- @return fun(table: table<K, V>, index?: K):K, V # |for-in| iterator over sorted keys and their values
+--- @return T
+local function spairs(t)
+  --- @cast t table<any,any>
+
+  -- collect the keys
+  local keys = {}
+  for k in pairs(t) do
+    table.insert(keys, k)
+  end
+  table.sort(keys)
+
+  -- Return the iterator function.
+  local i = 0
+  return function()
+    i = i + 1
+    if keys[i] then
+      return keys[i], t[keys[i]]
+    end
+  end,
+    t
+end
+
 --- @param ty Doc.Type
 --- @return Doc.Type
 local function remove_nil(ty)
@@ -55,6 +81,82 @@ local function remove_nil(ty)
     return r[1][1]
   end
   return r
+end
+
+--- @type table<Doc.Type, string>
+local gtypes = {}
+
+--- @param nm string
+--- @param ty Doc.Type
+local function add_gtype(nm, ty)
+  if gtypes[ty] then
+    error('Type already exists: ' .. nm)
+  end
+  gtypes[ty] = nm
+  types[nm] = ty
+end
+
+--- @param ns string
+--- @param nm? string
+--- @param ty Doc.Type
+local function gen_type(ns, nm, ty)
+  ty = remove_nil(ty)
+
+  if type(ty) ~= 'table' or gtypes[ty] then
+    return
+  end
+
+  local ty_nm = nm and ('%s.%s'):format(ns, nm) or ns
+
+  if ty.kind == 'function' then
+    if #ty.args > 2 then
+      add_gtype(ty_nm, ty)
+    end
+    for _, f in ipairs(ty.args) do
+      local arg_nm, arg_ty = f[1], f[2]
+      gen_type(ty_nm, arg_nm, arg_ty)
+    end
+  elseif ty.kind == 'union' then
+    local nonstrtys = 0
+    for _, uty in ipairs(ty[1]) do
+      if type(uty) == 'table' and not types[uty] then
+        nonstrtys = nonstrtys + 1
+      end
+    end
+
+    for i, uty in ipairs(ty[1]) do
+      gen_type(ty_nm, nonstrtys > 1 and '_' .. i or nil, uty)
+    end
+  elseif ty.kind == 'dict' then
+    gen_type(ty_nm, types[ty_nm] and 'value' or nil, ty.value)
+  elseif ty.kind == 'table' then
+    if #ty.fields > 2 or (#ty.fields > 0 and ty.fields[1][4]) then
+      add_gtype(ty_nm, ty)
+    end
+    for _, f in ipairs(ty.fields) do
+      local field_nm, field_ty = f[1], f[2]
+      gen_type(ty_nm, field_nm, field_ty)
+    end
+  end
+end
+
+--- @param section Doc
+local function gen_types_for_doc(section)
+  for _, method in ipairs(section.methods or {}) do
+    for _, p in ipairs(method.params or {}) do
+      gen_type(method.name, p.name, p.type)
+    end
+    local returns = method.returns or method.returns_sync
+    if type(returns) == 'table' then
+      for _, p in ipairs(returns) do
+        gen_type(method.name, p[2], p[1])
+      end
+    end
+  end
+
+  for _, subsection in ipairs(section.sections or {}) do
+    gen_types_for_doc(subsection)
+  end
 end
 
 local Doc = {}
@@ -411,9 +513,322 @@ do -- doc
   end
 end
 
+local Meta = {}
+
+do -- meta
+  --- @param x string
+  --- @return string
+  local function id(x)
+    if x == 'repeat' then
+      x = 'repeat_'
+    end
+    return (x:gsub(' ', '_'))
+  end
+
+  --- @param method Doc.Method
+  --- @return string
+  local function sig(method)
+    local args = {} --- @type string[]
+    for _, param in ipairs(method.params or {}) do
+      if not (method.returns_async and param.name == 'callback') then
+        args[#args + 1] = id(param.name)
+      end
+    end
+    return ('function uv.%s(%s) end'):format(method.name, table.concat(args, ', '))
+  end
+
+  --- @param ty Doc.Type
+  --- @param no_gtypes? boolean
+  --- @return string
+  function Meta.ty(ty, no_gtypes)
+    if type(ty) == 'string' then
+      if types[ty] then
+        ty = 'uv.' .. ty
+      end
+      return ty
+    end
+
+    if not no_gtypes and gtypes[ty] then
+      return 'uv.' .. gtypes[ty]
+    end
+
+    if ty.kind == 'dict' then
+      return ('table<%s, %s>'):format(ty.key, Meta.ty(ty.value))
+    elseif ty.kind == 'function' then
+      local r = {} --- @type string[]
+      for _, arg in pairs(ty.args) do
+        local arg_nm, arg_ty = arg[1], arg[2]
+        r[#r + 1] = ('%s: %s'):format(arg_nm, Meta.ty(arg_ty))
+      end
+      return ('fun(%s)'):format(table.concat(r, ', '))
+    elseif ty.kind == 'table' then
+      if #ty.fields == 0 then
+        return '{}'
+      end
+      local r = {} --- @type string[]
+      for _, arg in pairs(ty.fields) do
+        local field_nm, field_ty = arg[1], arg[2]
+        r[#r + 1] = ('%s: %s'):format(field_nm, Meta.ty(field_ty))
+      end
+      return ('{ %s }'):format(table.concat(r, ', '))
+    elseif ty.kind == 'union' then
+      local r = {} --- @type string[]
+      local add_optional = false
+      for i, uty in ipairs(ty[1]) do
+        if i == #ty[1] and uty == 'nil' then
+          add_optional = true
+        else
+          r[#r + 1] = Meta.ty(uty)
+        end
+      end
+      return table.concat(r, '|') .. (add_optional and '?' or '')
+    end
+
+    error('unknown type: ' .. ty)
+  end
+
+  --- @param out file*
+  --- @param x string|Doc.Method.Return[]?
+  local function write_return(out, x)
+    if type(x) == 'string' then
+      out:write('--- @return ', Meta.ty(x), '\n')
+    elseif type(x) == 'table' then
+      for _, ret in ipairs(x) do
+        out:write('--- @return ', Meta.ty(ret[1]))
+        if ret[2] then
+          out:write(' ', id(ret[2]))
+        end
+        out:write('\n')
+      end
+    end
+  end
+
+  --- @param out file*
+  --- @param method Doc.Method
+  --- @param x string|Doc.Method.Return[]
+  local function write_async_overload(out, method, x)
+    if type(x) == 'string' then
+      x = { { x } }
+    end
+
+    out:write('--- @overload fun(')
+    local args = {} --- @type string[]
+    for _, arg in ipairs(method.params) do
+      local ty = arg.type
+      if arg.name == 'callback' then
+        ty = remove_nil(ty)
+      end
+      args[#args + 1] = ('%s: %s'):format(id(arg.name), Meta.ty(ty))
+    end
+    out:write(table.concat(args, ', '), '): ')
+
+    local ret = {} --- @type string[]
+    for _, r in ipairs(x) do
+      ret[#ret + 1] = Meta.ty(r[1])
+    end
+    out:write(table.concat(ret, ', '), '\n')
+  end
+
+  --- @param out file*
+  --- @param str string
+  local function write_comment(out, str)
+    --- @diagnostic disable-next-line: no-unknown
+    for line, nl in str:gmatch('([^\r\n]*)([\n\r]?)') do
+      if line ~= '' then
+        out:write('--- ', line, '\n')
+      elseif nl ~= '' then
+        out:write('---\n')
+      end
+    end
+  end
+
+  local types_written = {} --- @type table<string,true>
+
+  --- @param out file*
+  --- @param nm string
+  --- @param ty Doc.Type
+  local function write_type(out, nm, ty)
+    if types_written[nm] then
+      return
+    end
+    types_written[nm] = true
+
+    if type(ty) == 'string' then
+      out:write('--- @alias ', Meta.ty(nm), ' ', Meta.ty(ty), '\n\n')
+    end
+
+    if ty.kind == 'dict' then
+      if type(ty.value) == 'string' then
+        out:write(
+          '--- @alias ',
+          Meta.ty(nm),
+          ' table<',
+          Meta.ty(ty.key),
+          ',',
+          Meta.ty(ty.value),
+          '>\n\n'
+        )
+      else
+        out:write('--- @class ', Meta.ty(nm), '\n')
+        out:write('--- @field [', Meta.ty(ty.key), '] ', Meta.ty(ty.value), '\n\n')
+      end
+    elseif ty.kind == 'table' then
+      out:write('--- @class ', Meta.ty(nm))
+      if ty.extends then
+        out:write(' : ', Meta.ty(ty.extends))
+      end
+      out:write('\n')
+      for _, arg in pairs(ty.fields) do
+        local name, aty, desc = arg[1], arg[2], arg[4]
+        if desc then
+          out:write('---\n')
+          write_comment(out, dedent(desc))
+        end
+        out:write('--- @field ', name, ' ', Meta.ty(aty))
+        out:write('\n')
+      end
+      out:write('\n')
+    elseif ty.kind == 'union' then
+      local tys = ty[1]
+      out:write('--- @alias ', Meta.ty(nm), '\n')
+      for _, uty in ipairs(tys) do
+        out:write('--- | ', Meta.ty(uty), '\n')
+      end
+      out:write('\n')
+    elseif ty.kind == 'function' then
+      out:write('--- @alias ', Meta.ty(nm), '\n')
+      out:write('--- | ', Meta.ty(ty, true), '\n\n')
+    else
+      error('unknown')
+    end
+  end
+
+  --- @param out file*
+  --- @param method Doc.Method
+  local function write_method(out, method)
+    for nm, ty in spairs(types) do
+      if nm:sub(1, #method.name) == method.name then
+        write_type(out, nm, ty)
+      end
+    end
+
+    if method.deprecated then
+      out:write('--- @deprecated ', dedent(method.deprecated), '\n')
+    end
+
+    if method.desc then
+      write_comment(out, dedent(method.desc))
+    end
+
+    if method.example then
+      out:write('--- Example\n')
+      write_comment(out, dedent(method.example))
+    end
+
+    for _, note in ipairs(method.notes or {}) do
+      local notes = dedent(note)
+      out:write('--- **Note**:\n')
+      write_comment(out, notes)
+    end
+
+    for _, warn in ipairs(method.warnings or {}) do
+      out:write('--- **Warning**:\n')
+      write_comment(out, dedent(warn))
+    end
+
+    -- if method.see then
+    --   out:write(('--- @see %s\n'):format(method.see))
+    -- end
+
+    -- if method.since then
+    --   out:write(('**Note**: New in libuv version %s.\n\n'):format(method.since))
+    -- end
+
+    if method.params then
+      for _, param in ipairs(method.params) do
+        if not (method.returns_async and param.name == 'callback') then
+          out:write('--- @param ', id(param.name), ' ', Meta.ty(param.type))
+          if param.desc then
+            if param.desc:match('\n') then
+              write_comment(out, param.desc)
+            else
+              out:write(' ', param.desc)
+            end
+          end
+          out:write('\n')
+        end
+      end
+    end
+
+    write_return(out, method.returns or method.returns_sync)
+    if method.returns_async then
+      write_async_overload(out, method, method.returns_async)
+    end
+
+    out:write(sig(method), '\n\n')
+  end
+
+  --- @param out file*
+  --- @param doc Doc
+  local function write_doc(out, doc)
+    if doc.title then
+      out:write('--- # ', doc.title, '\n')
+    end
+
+    if doc.desc then
+      if doc.title then
+        out:write('---\n')
+      end
+      write_comment(out, dedent(doc.desc))
+    end
+
+    for _, constant in ipairs(doc.constants or {}) do
+      out:write(("uv.constants.%s = '%s'\n"):format(constant[1], constant[2]))
+    end
+
+    if doc.methods then
+      out:write('\n')
+      for _, method in ipairs(doc.methods or {}) do
+        write_method(out, method)
+      end
+    end
+
+    if doc.sections then
+      out:write('\n')
+      for _, subsection in ipairs(doc.sections) do
+        write_doc(out, subsection)
+      end
+    end
+
+    out:write('\n')
+  end
+
+  --- @param out file*
+  --- @param doc Doc
+  function Meta.write(out, doc)
+    out:write('--- @meta\n')
+    out:write('--- @class uv\n')
+    out:write('local uv = {}\n')
+    out:write('uv.constants = {}\n')
+    out:write('\n')
+
+    write_doc(out, doc)
+
+    for nm, ty in spairs(types) do
+      write_type(out, nm, ty)
+    end
+  end
+end
+
 local function main()
+  -- Generate types for large inline types
+  gen_types_for_doc(doctop)
+
   local outdoc = assert(io.open('docs.md', 'w'))
   Doc.write(outdoc, doctop)
+
+  local outmeta = assert(io.open('meta.lua', 'w'))
+  Meta.write(outmeta, doctop)
 end
 
 main()
