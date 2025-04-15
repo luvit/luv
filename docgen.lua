@@ -142,14 +142,14 @@ end
 
 --- @param section Doc
 local function gen_types_for_doc(section)
-  for _, method in ipairs(section.methods or {}) do
-    for _, p in ipairs(method.params or {}) do
-      gen_type(method.name, p.name, p.type)
+  for _, funcs in ipairs(section.funcs or {}) do
+    for _, p in ipairs(funcs.params or {}) do
+      gen_type(funcs.name, p.name, p.type)
     end
-    local returns = method.returns or method.returns_sync
+    local returns = funcs.returns or funcs.returns_sync
     if type(returns) == 'table' then
       for _, p in ipairs(returns) do
-        gen_type(method.name, p[2], p[1])
+        gen_type(funcs.name, p[2], p[1])
       end
     end
   end
@@ -345,7 +345,7 @@ do -- doc
   end
 
   --- @param out file*
-  --- @param param Doc.Method.Param
+  --- @param param Doc.Func.Param
   local function write_param(out, param)
     out:write(('- `%s`:'):format(param.name))
     local ty = param.type
@@ -361,7 +361,7 @@ do -- doc
   end
 
   --- @param out file*
-  --- @param x string|Doc.Method.Return[]
+  --- @param x string|Doc.Func.Return[]
   --- @param variant? string
   local function write_return(out, x, variant)
     local variant_str = variant and (' (%s version)'):format(variant) or ''
@@ -398,81 +398,81 @@ do -- doc
     out:write(r, '\n\n')
   end
 
-  --- @param method Doc.Method
+  --- @param func Doc.Func
   --- @return string
-  local function sig(method)
+  local function sig(func)
     local args = {} --- @type string[]
-    for _, param in ipairs(method.params or {}) do
+    for _, param in ipairs(func.params or {}) do
       local nm = param.name
       if isoptional(param.type) then
         nm = '[' .. nm .. ']'
       end
       args[#args + 1] = nm
     end
-    return ('`uv.%s(%s)`'):format(method.name, table.concat(args, ', '))
+    return ('`uv.%s(%s)`'):format(func.name, table.concat(args, ', '))
   end
 
   --- @param out file*
-  --- @param method Doc.Method
+  --- @param func Doc.Func
   --- @param lvl integer
-  local function write_method(out, method, lvl)
-    out:write(heading(lvl, sig(method)), '\n\n')
+  local function write_func(out, func, lvl)
+    out:write(heading(lvl, sig(func)), '\n\n')
 
-    if method.method_form then
-      out:write(('> method form `%s`\n\n'):format(method.method_form))
+    if func.method_form then
+      out:write(('> method form `%s`\n\n'):format(func.method_form))
     end
 
-    if method.deprecated then
-      out:write('**Deprecated:** ', dedent(method.deprecated), '\n\n')
+    if func.deprecated then
+      out:write('**Deprecated:** ', dedent(func.deprecated), '\n\n')
       return
     end
 
-    if method.params then
+    if func.params then
       out:write('**Parameters:**\n')
-      for _, param in ipairs(method.params) do
+      for _, param in ipairs(func.params) do
         write_param(out, param)
       end
       out:write('\n')
     end
 
-    if method.desc then
-      out:write(dedent(method.desc), '\n\n')
+    if func.desc then
+      out:write(dedent(func.desc), '\n\n')
     end
 
-    if method.returns_doc then
-      write_return_doc(out, method.returns_doc)
-    elseif method.returns_sync and method.returns_async then
-      if method.returns_sync_doc then
-        write_return_doc(out, method.returns_sync_doc, 'sync')
+    if func.returns_doc then
+      write_return_doc(out, func.returns_doc)
+    elseif func.returns_sync and func.returns_async then
+      if func.returns_sync_doc then
+        write_return_doc(out, func.returns_sync_doc, 'sync')
       else
-        write_return(out, method.returns_sync, 'sync')
+        write_return(out, func.returns_sync, 'sync')
       end
-      write_return(out, method.returns_async, 'async')
+      write_return(out, func.returns_async, 'async')
     else
-      write_return(out, method.returns)
+      write_return(out, func.returns)
     end
 
-    if method.example then
-      out:write(dedent(method.example), '\n\n')
+    if func.example then
+      out:write(dedent(func.example), '\n\n')
     end
 
-    if method.see then
-      out:write(('See [%s][].\n\n'):format(method.see))
+    if func.see then
+      out:write(('See [%s][].\n\n'):format(func.see))
     end
 
-    for _, note in ipairs(method.notes or {}) do
+    for _, note in ipairs(func.notes or {}) do
       local notes = dedent(note)
       out:write('**Note**:')
       out:write(notes:sub(1, 3) == '1. ' and '\n' or ' ')
       out:write(notes, '\n\n')
     end
 
-    for _, warn in ipairs(method.warnings or {}) do
+    for _, warn in ipairs(func.warnings or {}) do
       out:write(('**Warning**: %s\n\n'):format(dedent(warn)))
     end
 
-    if method.since then
-      out:write(('**Note**: New in libuv version %s.\n\n'):format(method.since))
+    if func.since then
+      out:write(('**Note**: New in libuv version %s.\n\n'):format(func.since))
     end
   end
 
@@ -503,8 +503,8 @@ do -- doc
       out:write('\n')
     end
 
-    for _, method in ipairs(doc.methods or {}) do
-      write_method(out, method, lvl + 1)
+    for _, func in ipairs(doc.funcs or {}) do
+      write_func(out, func, lvl + 1)
     end
 
     for _, subsection in ipairs(doc.sections or {}) do
@@ -525,16 +525,20 @@ do -- meta
     return (x:gsub(' ', '_'))
   end
 
-  --- @param method Doc.Method
+  --- @param func Doc.Func
+  --- @param method? {class: string, name: string}
   --- @return string
-  local function sig(method)
+  local function sig(func, method)
     local args = {} --- @type string[]
-    for _, param in ipairs(method.params or {}) do
-      if not (method.returns_async and param.name == 'callback') then
+    for i, param in ipairs(func.params or {}) do
+      if not (func.returns_async and param.name == 'callback') and (not method or i > 1) then
         args[#args + 1] = id(param.name)
       end
     end
-    return ('function uv.%s(%s) end'):format(method.name, table.concat(args, ', '))
+    if method then
+      return ('function %s:%s(%s) end'):format(method.class, method.name, table.concat(args, ', '))
+    end
+    return ('function uv.%s(%s) end'):format(func.name, table.concat(args, ', '))
   end
 
   --- @param ty Doc.Type
@@ -588,7 +592,7 @@ do -- meta
   end
 
   --- @param out file*
-  --- @param x string|Doc.Method.Return[]?
+  --- @param x string|Doc.Func.Return[]?
   local function write_return(out, x)
     if type(x) == 'string' then
       out:write('--- @return ', Meta.ty(x), '\n')
@@ -604,16 +608,16 @@ do -- meta
   end
 
   --- @param out file*
-  --- @param method Doc.Method
-  --- @param x string|Doc.Method.Return[]
-  local function write_async_overload(out, method, x)
+  --- @param func Doc.Func
+  --- @param x string|Doc.Func.Return[]
+  local function write_async_overload(out, func, x)
     if type(x) == 'string' then
       x = { { x } }
     end
 
     out:write('--- @overload fun(')
     local args = {} --- @type string[]
-    for _, arg in ipairs(method.params) do
+    for _, arg in ipairs(func.params) do
       local ty = arg.type
       if arg.name == 'callback' then
         ty = remove_nil(ty)
@@ -647,9 +651,11 @@ do -- meta
   --- @param out file*
   --- @param nm string
   --- @param ty Doc.Type
-  local function write_type(out, nm, ty)
+  --- @param nonl? boolean
+  --- @return boolean
+  local function write_type(out, nm, ty, nonl)
     if types_written[nm] then
-      return
+      return false
     end
     types_written[nm] = true
 
@@ -666,11 +672,11 @@ do -- meta
           Meta.ty(ty.key),
           ',',
           Meta.ty(ty.value),
-          '>\n\n'
+          '>\n'
         )
       else
         out:write('--- @class ', Meta.ty(nm), '\n')
-        out:write('--- @field [', Meta.ty(ty.key), '] ', Meta.ty(ty.value), '\n\n')
+        out:write('--- @field [', Meta.ty(ty.key), '] ', Meta.ty(ty.value), '\n')
       end
     elseif ty.kind == 'table' then
       out:write('--- @class ', Meta.ty(nm))
@@ -684,54 +690,57 @@ do -- meta
           out:write('---\n')
           write_comment(out, dedent(desc))
         end
-        out:write('--- @field ', name, ' ', Meta.ty(aty))
-        out:write('\n')
+        out:write('--- @field ', name, ' ', Meta.ty(aty), '\n')
       end
-      out:write('\n')
     elseif ty.kind == 'union' then
       local tys = ty[1]
       out:write('--- @alias ', Meta.ty(nm), '\n')
       for _, uty in ipairs(tys) do
         out:write('--- | ', Meta.ty(uty), '\n')
       end
-      out:write('\n')
     elseif ty.kind == 'function' then
       out:write('--- @alias ', Meta.ty(nm), '\n')
-      out:write('--- | ', Meta.ty(ty, true), '\n\n')
+      out:write('--- | ', Meta.ty(ty, true), '\n')
     else
       error('unknown')
     end
+    if not nonl then
+      out:write('\n')
+    end
+
+    return true
   end
 
   --- @param out file*
-  --- @param method Doc.Method
-  local function write_method(out, method)
+  --- @param func Doc.Func
+  --- @param method? { class: string, name: string }
+  local function write_func(out, func, method)
     for nm, ty in spairs(types) do
-      if nm:sub(1, #method.name) == method.name then
+      if nm:sub(1, #func.name) == func.name then
         write_type(out, nm, ty)
       end
     end
 
-    if method.deprecated then
-      out:write('--- @deprecated ', dedent(method.deprecated), '\n')
+    if func.deprecated then
+      out:write('--- @deprecated ', dedent(func.deprecated), '\n')
     end
 
-    if method.desc then
-      write_comment(out, dedent(method.desc))
+    if func.desc then
+      write_comment(out, dedent(func.desc))
     end
 
-    if method.example then
+    if func.example then
       out:write('--- Example\n')
-      write_comment(out, dedent(method.example))
+      write_comment(out, dedent(func.example))
     end
 
-    for _, note in ipairs(method.notes or {}) do
+    for _, note in ipairs(func.notes or {}) do
       local notes = dedent(note)
       out:write('--- **Note**:\n')
       write_comment(out, notes)
     end
 
-    for _, warn in ipairs(method.warnings or {}) do
+    for _, warn in ipairs(func.warnings or {}) do
       out:write('--- **Warning**:\n')
       write_comment(out, dedent(warn))
     end
@@ -744,9 +753,9 @@ do -- meta
     --   out:write(('**Note**: New in libuv version %s.\n\n'):format(method.since))
     -- end
 
-    if method.params then
-      for _, param in ipairs(method.params) do
-        if not (method.returns_async and param.name == 'callback') then
+    if func.params then
+      for i, param in ipairs(func.params) do
+        if not (func.returns_async and param.name == 'callback') and (not method or i > 1) then
           out:write('--- @param ', id(param.name), ' ', Meta.ty(param.type))
           if param.desc then
             if param.desc:match('\n') then
@@ -760,12 +769,12 @@ do -- meta
       end
     end
 
-    write_return(out, method.returns or method.returns_sync)
-    if method.returns_async then
-      write_async_overload(out, method, method.returns_async)
+    write_return(out, func.returns or func.returns_sync)
+    if func.returns_async then
+      write_async_overload(out, func, func.returns_async)
     end
 
-    out:write(sig(method), '\n\n')
+    out:write(sig(func, method), '\n\n')
   end
 
   --- @param out file*
@@ -782,14 +791,29 @@ do -- meta
       write_comment(out, dedent(doc.desc))
     end
 
+    if doc.class then
+      assert(write_type(out, doc.class, types[doc.class], true))
+      out:write('local ', doc.class, ' = {}\n')
+    end
+
     for _, constant in ipairs(doc.constants or {}) do
       out:write(("uv.constants.%s = '%s'\n"):format(constant[1], constant[2]))
     end
 
-    if doc.methods then
+    if doc.funcs then
       out:write('\n')
-      for _, method in ipairs(doc.methods or {}) do
-        write_method(out, method)
+      for _, func in ipairs(doc.funcs or {}) do
+        write_func(out, func)
+        if func.method_form then
+          assert(func.params, func.name)
+          local name = func.method_form:match('^[%w_]+%:([%w_]+)%(')
+          local class = func.params[1].type
+          assert(type(class) == 'string')
+          if write_type(out, class, types[class], true) then
+            out:write('local ', class, ' = {}\n\n')
+          end
+          write_func(out, func, { class = class, name = name })
+        end
       end
     end
 

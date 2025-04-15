@@ -1637,9 +1637,12 @@ when the blocking mode is changed after write requests have already been
 submitted. Therefore it is recommended to set the blocking mode immediately
 after opening or creating the stream.
 
-### `uv.stream_get_write_queue_size()`
+### `uv.stream_get_write_queue_size(stream)`
 
 > method form `stream:get_write_queue_size()`
+
+**Parameters:**
+- `stream`: `userdata` for sub-type of `uv_stream_t`
 
 Returns the stream's write queue size.
 
@@ -2250,17 +2253,23 @@ calling `uv_udp_init_ex`.
 
 **Returns:** `uv_udp_t userdata` or `fail`
 
-### `uv.udp_get_send_queue_size()`
+### `uv.udp_get_send_queue_size(udp)`
 
 > method form `udp:get_send_queue_size()`
+
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
 
 Returns the handle's send queue size.
 
 **Returns:** `integer`
 
-### `uv.udp_get_send_queue_count()`
+### `uv.udp_get_send_queue_count(udp)`
 
 > method form `udp:get_send_queue_count()`
+
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
 
 Returns the handle's send queue count.
 
@@ -2605,17 +2614,23 @@ for changes.
 
 **Returns:** `0` or `fail`
 
-### `uv.fs_event_stop()`
+### `uv.fs_event_stop(fs_event)`
 
 > method form `fs_event:stop()`
+
+**Parameters:**
+- `fs_event`: `uv_fs_event_t userdata`
 
 Stop the handle, the callback will no longer be called.
 
 **Returns:** `0` or `fail`
 
-### `uv.fs_event_getpath()`
+### `uv.fs_event_getpath(fs_event)`
 
 > method form `fs_event:getpath()`
+
+**Parameters:**
+- `fs_event`: `uv_fs_event_t userdata`
 
 Get the path being monitored by the handle.
 
@@ -2658,17 +2673,23 @@ intervals will not detect all changes on many file systems.
 
 **Returns:** `0` or `fail`
 
-### `uv.fs_poll_stop()`
+### `uv.fs_poll_stop(fs_poll)`
 
 > method form `fs_poll:stop()`
+
+**Parameters:**
+- `fs_poll`: `uv_fs_poll_t userdata`
 
 Stop the handle, the callback will no longer be called.
 
 **Returns:** `0` or `fail`
 
-### `uv.fs_poll_getpath()`
+### `uv.fs_poll_getpath(fs_poll)`
 
 > method form `fs_poll:getpath()`
+
+**Parameters:**
+- `fs_poll`: `uv_fs_poll_t userdata`
 
 Get the path being monitored by the handle.
 

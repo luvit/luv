@@ -34,23 +34,23 @@
 --- | Doc.Type.Dict
 --- | Doc.Type.Union
 
---- @class (exact) Doc.Method.Param
+--- @class (exact) Doc.Func.Param
 --- @field name string
 --- @field type Doc.Type
 --- @field desc? string
 --- @field default? string
 
---- @alias Doc.Method.Return [Doc.Type, string]
+--- @alias Doc.Func.Return [Doc.Type, string]
 
---- @class (exact) Doc.Method
+--- @class (exact) Doc.Func
 --- @field name string
 --- @field desc? string
 --- @field deprecated? string
 --- @field since? string
---- @field params? Doc.Method.Param[]
---- @field returns? string|Doc.Method.Return[]
---- @field returns_sync? string|Doc.Method.Return[]
---- @field returns_async? string|Doc.Method.Return[]
+--- @field params? Doc.Func.Param[]
+--- @field returns? string|Doc.Func.Return[]
+--- @field returns_sync? string|Doc.Func.Return[]
+--- @field returns_async? string|Doc.Func.Return[]
 --- @field returns_doc? string
 --- @field returns_sync_doc? string
 --- @field notes? string[]
@@ -63,8 +63,9 @@
 --- @field title? string
 --- @field desc? string
 --- @field id? string
+--- @field class? string
 --- @field sections? Doc[]
---- @field methods? Doc.Method[]
+--- @field funcs? Doc.Func[]
 --- @field constants? [string,string][]>
 
 --- @param ... Doc.Type
@@ -140,7 +141,7 @@ end
 --- @param args? [string, Doc.Type, string?][]
 --- @param optional? boolean
 --- @param desc? string
---- @return Doc.Method.Param
+--- @return Doc.Func.Param
 local function cb(args, optional, desc)
   --- @type Doc.Type
   local ty = fun(args or {})
@@ -157,7 +158,7 @@ end
 --- @param args? [string, Doc.Type, string?][]
 --- @param optional? boolean
 --- @param desc? string
---- @return Doc.Method.Param
+--- @return Doc.Func.Param
 local function cb_err(args, optional, desc)
   return cb({
     { 'err', opt_str },
@@ -166,7 +167,7 @@ local function cb_err(args, optional, desc)
 end
 
 --- @param args? [string, Doc.Type, string?][]
---- @return Doc.Method.Param
+--- @return Doc.Func.Param
 local function async_cb(args)
   args = args or { { 'success', opt_bool } }
   return cb_err(args, true, '(async if provided, sync if `nil`)')
@@ -644,7 +645,7 @@ local doc = {
     {
       title = 'Version Checking',
       id = 'version-checking',
-      methods = {
+      funcs = {
         {
           name = 'version',
           desc = [[
@@ -677,7 +678,7 @@ local doc = {
         has it's own Lua state with its corresponding own uv loop. This loop is not
         directly exposed to users in the Lua module.
       ]],
-      methods = {
+      funcs = {
         {
           name = 'loop_close',
           desc = [[
@@ -856,8 +857,9 @@ local doc = {
     {
       title = '`uv_req_t` - Base request',
       id = 'uv_req_t--base-request',
+      class = 'uv_req_t',
       desc = '`uv_req_t` is the base type for all libuv request types.',
-      methods = {
+      funcs = {
         {
           name = 'cancel',
           method_form = 'req:cancel()',
@@ -891,11 +893,12 @@ local doc = {
     {
       title = '`uv_handle_t` - Base handle',
       id = 'uv_handle_t--base-handle',
+      class = 'uv_handle_t',
       desc = [[
         `uv_handle_t` is the base type for all libuv handle types. All API functions
         defined here work with any handle type.
       ]],
-      methods = {
+      funcs = {
         {
           name = 'is_active',
           method_form = 'handle:is_active()',
@@ -1106,12 +1109,13 @@ local doc = {
     {
       title = '`uv_timer_t` - Timer handle',
       id = 'uv_timer_t--timer-handle',
+      class = 'uv_timer_t',
       desc = [[
         > [`uv_handle_t`][] functions also apply.
 
         Timer handles are used to schedule callbacks to be called in the future.
       ]],
-      methods = {
+      funcs = {
         {
           name = 'new_timer',
           desc = [[
@@ -1233,6 +1237,7 @@ local doc = {
     {
       title = '`uv_prepare_t` - Prepare handle',
       id = 'uv_prepare_t--prepare-handle',
+      class = 'uv_prepare_t',
       desc = [[
         > [`uv_handle_t`][] functions also apply.
 
@@ -1246,7 +1251,7 @@ local doc = {
         end)
         ```
       ]],
-      methods = {
+      funcs = {
         {
           name = 'new_prepare',
           desc = [[
@@ -1279,6 +1284,7 @@ local doc = {
     {
       title = '`uv_check_t` - Check handle',
       id = 'uv_check_t--check-handle',
+      class = 'uv_check_t',
       desc = [[
         > [`uv_handle_t`][] functions also apply.
 
@@ -1292,7 +1298,7 @@ local doc = {
         end)
         ```
       ]],
-      methods = {
+      funcs = {
         {
           name = 'new_check',
           desc = [[
@@ -1325,6 +1331,7 @@ local doc = {
     {
       title = '`uv_idle_t` - Idle handle',
       id = 'uv_idle_t--idle-handle',
+      class = 'uv_idle_t',
       desc = [[
         > [`uv_handle_t`][] functions also apply.
 
@@ -1345,7 +1352,7 @@ local doc = {
         end)
         ```
       ]],
-      methods = {
+      funcs = {
         {
           name = 'new_idle',
           desc = [[
@@ -1378,6 +1385,7 @@ local doc = {
     {
       title = '`uv_async_t` - Async handle',
       id = 'uv_async_t--async-handle',
+      class = 'uv_async_t',
       desc = [[
         > [`uv_handle_t`][] functions also apply.
 
@@ -1394,7 +1402,7 @@ local doc = {
         async:send()
         ```
       ]],
-      methods = {
+      funcs = {
         {
           name = 'new_async',
           desc = [[
@@ -1447,6 +1455,7 @@ local doc = {
     {
       title = '`uv_poll_t` - Poll handle',
       id = 'uv_poll_t--poll-handle',
+      class = 'uv_poll_t',
       desc = [[
         > [`uv_handle_t`][] functions also apply.
 
@@ -1475,7 +1484,7 @@ local doc = {
         **Note**: On windows only sockets can be polled with poll handles. On Unix any
         file descriptor that would be accepted by poll(2) can be used.
       ]],
-      methods = {
+      funcs = {
         {
           name = 'new_poll',
           desc = [[
@@ -1552,6 +1561,7 @@ local doc = {
     {
       title = '`uv_signal_t` - Signal handle',
       id = 'uv_signal_t--signal-handle',
+      class = 'uv_signal_t',
       desc = [[
         > [`uv_handle_t`][] functions also apply.
 
@@ -1600,7 +1610,7 @@ local doc = {
         end)
         ```
       ]],
-      methods = {
+      funcs = {
         {
           name = 'new_signal',
           desc = [[
@@ -1659,13 +1669,14 @@ local doc = {
     {
       title = '`uv_process_t` - Process handle',
       id = 'uv_process_t--process-handle',
+      class = 'uv_process_t',
       desc = [[
         > [`uv_handle_t`][] functions also apply.
 
         Process handles will spawn a new process and allow the user to control it and
         establish communication channels with it using streams.
       ]],
-      methods = {
+      funcs = {
         {
           name = 'disable_stdio_inheritance',
           desc = [[
@@ -1893,6 +1904,7 @@ local doc = {
     {
       title = '`uv_stream_t` - Stream handle',
       id = 'uv_stream_t--stream-handle',
+      class = 'uv_stream_t',
       desc = [[
         > [`uv_handle_t`][] functions also apply.
 
@@ -1900,7 +1912,7 @@ local doc = {
         [`uv_stream_t`][] is an abstract type, libuv provides 3 stream implementations
         in the form of [`uv_tcp_t`][], [`uv_pipe_t`][] and [`uv_tty_t`][].
       ]],
-      methods = {
+      funcs = {
         {
           name = 'shutdown',
           method_form = 'stream:shutdown([callback])',
@@ -2120,6 +2132,9 @@ local doc = {
           name = 'stream_get_write_queue_size',
           method_form = 'stream:get_write_queue_size()',
           desc = "Returns the stream's write queue size.",
+          params = {
+            { name = 'stream', type = 'uv_stream_t' },
+          },
           returns = 'integer',
         },
       },
@@ -2127,12 +2142,13 @@ local doc = {
     {
       title = '`uv_tcp_t` - TCP handle',
       id = 'uv_tcp_t--tcp-handle',
+      class = 'uv_tcp_t',
       desc = [[
         > [`uv_handle_t`][] and [`uv_stream_t`][] functions also apply.
 
         TCP handles are used to represent both TCP streams and servers.
       ]],
-      methods = {
+      funcs = {
         {
           name = 'new_tcp',
           desc = [[
@@ -2356,6 +2372,7 @@ local doc = {
     {
       title = '`uv_pipe_t` - Pipe handle',
       id = 'uv_pipe_t--pipe-handle',
+      class = 'uv_pipe_t',
       desc = [[
         > [`uv_handle_t`][] and [`uv_stream_t`][] functions also apply.
 
@@ -2374,7 +2391,7 @@ local doc = {
         end)
         ```
       ]],
-      methods = {
+      funcs = {
         {
           name = 'new_pipe',
           desc = [[
@@ -2619,6 +2636,7 @@ local doc = {
     {
       title = '`uv_tty_t` - TTY handle',
       id = 'uv_tty_t--tty-handle',
+      class = 'uv_tty_t',
       desc = [[
         > [`uv_handle_t`][] and [`uv_stream_t`][] functions also apply.
 
@@ -2640,7 +2658,7 @@ local doc = {
         end)
         ```
       ]],
-      methods = {
+      funcs = {
         {
           name = 'new_tty',
           desc = [[
@@ -2736,12 +2754,13 @@ local doc = {
     {
       title = '`uv_udp_t` - UDP handle',
       id = 'uv_udp_t--udp-handle',
+      class = 'uv_udp_t',
       desc = [[
         > [`uv_handle_t`][] functions also apply.
 
         UDP handles encapsulate UDP communication for both clients and servers.
       ]],
-      methods = {
+      funcs = {
         {
           name = 'new_udp',
           desc = [[
@@ -2775,12 +2794,18 @@ local doc = {
           name = 'udp_get_send_queue_size',
           method_form = 'udp:get_send_queue_size()',
           desc = "Returns the handle's send queue size.",
+          params = {
+            { name = 'udp', type = 'uv_udp_t' },
+          },
           returns = 'integer',
         },
         {
           name = 'udp_get_send_queue_count',
           method_form = 'udp:get_send_queue_count()',
           desc = "Returns the handle's send queue count.",
+          params = {
+            { name = 'udp', type = 'uv_udp_t' },
+          },
           returns = 'integer',
         },
         {
@@ -3089,6 +3114,7 @@ local doc = {
     {
       title = '`uv_fs_event_t` - FS Event handle',
       id = 'uv_fs_event_t--fs-event-handle',
+      class = 'uv_fs_event_t',
       desc = [[
         > [`uv_handle_t`][] functions also apply.
 
@@ -3096,7 +3122,7 @@ local doc = {
         example, if the file was renamed or there was a generic change in it. This
         handle uses the best backend for the job on each platform.
       ]],
-      methods = {
+      funcs = {
         {
           name = 'new_fs_event',
           desc = [[
@@ -3134,12 +3160,18 @@ local doc = {
           name = 'fs_event_stop',
           method_form = 'fs_event:stop()',
           desc = 'Stop the handle, the callback will no longer be called.',
+          params = {
+            { name = 'fs_event', type = 'uv_fs_event_t' },
+          },
           returns = success_ret,
         },
         {
           name = 'fs_event_getpath',
           method_form = 'fs_event:getpath()',
           desc = 'Get the path being monitored by the handle.',
+          params = {
+            { name = 'fs_event', type = 'uv_fs_event_t' },
+          },
           returns = ret_or_fail('string', 'path'),
         },
       },
@@ -3147,6 +3179,7 @@ local doc = {
     {
       title = '`uv_fs_poll_t` - FS Poll handle',
       id = 'uv_fs_poll_t--fs-poll-handle',
+      class = 'uv_fs_poll_t',
       desc = [[
         > [`uv_handle_t`][] functions also apply.
 
@@ -3154,7 +3187,7 @@ local doc = {
         `uv_fs_event_t`, fs poll handles use `stat` to detect when a file has changed so
         they can work on file systems where fs event handles can't.
       ]],
-      methods = {
+      funcs = {
         {
           name = 'new_fs_poll',
           desc = [[
@@ -3187,12 +3220,18 @@ local doc = {
           name = 'fs_poll_stop',
           method_form = 'fs_poll:stop()',
           desc = 'Stop the handle, the callback will no longer be called.',
+          params = {
+            { name = 'fs_poll', type = 'uv_fs_poll_t' },
+          },
           returns = success_ret,
         },
         {
           name = 'fs_poll_getpath',
           method_form = 'fs_poll:getpath()',
           desc = 'Get the path being monitored by the handle.',
+          params = {
+            { name = 'fs_poll', type = 'uv_fs_poll_t' },
+          },
           returns = ret_or_fail('string', 'path'),
         },
       },
@@ -3244,7 +3283,7 @@ local doc = {
         end)
         ```
         ]],
-      methods = {
+      funcs = {
         {
           name = 'fs_close',
           desc = 'Equivalent to `close(2)`.',
@@ -3788,7 +3827,7 @@ local doc = {
         ```
 
       ]],
-      methods = {
+      funcs = {
         {
           name = 'new_work',
           desc = [[
@@ -3835,7 +3874,7 @@ local doc = {
     {
       title = 'DNS utility functions',
       id = 'dns-utility-functions',
-      methods = {
+      funcs = {
         {
           name = 'getaddrinfo',
           desc = [[
@@ -3909,7 +3948,7 @@ local doc = {
         Libuv provides cross-platform implementations for multiple threading and
          synchronization primitives. The API largely follows the pthreads API.
       ]],
-      methods = {
+      funcs = {
         {
           name = 'new_thread',
           desc = [[
@@ -4105,7 +4144,7 @@ local doc = {
     {
       title = 'Miscellaneous utilities',
       id = 'miscellaneous-utilities',
-      methods = {
+      funcs = {
         {
           name = 'exepath',
           desc = 'Returns the executable path.',
@@ -4582,7 +4621,7 @@ local doc = {
     {
       title = 'Metrics operations',
       id = 'metrics-operations',
-      methods = {
+      funcs = {
         {
           name = 'metrics_idle_time',
           desc = [[
@@ -4629,7 +4668,7 @@ local doc = {
         2. See [the WTF-8 spec](https://simonsapin.github.io/wtf-8/) for information about WTF-8.
         3. Luv uses Lua-style strings, which means that all inputs and return values (UTF-8 or UTF-16 strings) do not include a NUL terminator.
       ]],
-      methods = {
+      funcs = {
         {
           name = 'utf16_length_as_wtf8',
           desc = 'Get the length (in bytes) of a UTF-16 (or UCS-2) string `utf16` value after converting it to WTF-8.',

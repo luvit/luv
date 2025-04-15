@@ -467,6 +467,8 @@ function uv.walk(callback) end
 --- # `uv_req_t` - Base request
 ---
 --- `uv_req_t` is the base type for all libuv request types.
+--- @class uv.uv_req_t : userdata
+local uv_req_t = {}
 
 --- Cancel a pending request. Fails if the request is executing or has finished
 --- executing. Only cancellation of `uv_fs_t`, `uv_getaddrinfo_t`,
@@ -477,6 +479,14 @@ function uv.walk(callback) end
 --- @return string? err_name
 function uv.cancel(req) end
 
+--- Cancel a pending request. Fails if the request is executing or has finished
+--- executing. Only cancellation of `uv_fs_t`, `uv_getaddrinfo_t`,
+--- `uv_getnameinfo_t` and `uv_work_t` requests is currently supported.
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_req_t:cancel() end
+
 --- Returns the name of the struct for a given request (e.g. `"fs"` for `uv_fs_t`)
 --- and the libuv enum integer for the request's type (`uv_req_type`).
 --- @param req uv.uv_req_t
@@ -484,11 +494,19 @@ function uv.cancel(req) end
 --- @return integer enum
 function uv.req_get_type(req) end
 
+--- Returns the name of the struct for a given request (e.g. `"fs"` for `uv_fs_t`)
+--- and the libuv enum integer for the request's type (`uv_req_type`).
+--- @return string type
+--- @return integer enum
+function uv_req_t:get_type() end
+
 
 --- # `uv_handle_t` - Base handle
 ---
 --- `uv_handle_t` is the base type for all libuv handle types. All API functions
 --- defined here work with any handle type.
+--- @class uv.uv_handle_t : userdata
+local uv_handle_t = {}
 
 --- Returns `true` if the handle is active, `false` if it's inactive. What "active”
 --- means depends on the type of handle:
@@ -511,6 +529,26 @@ function uv.req_get_type(req) end
 --- @return string? err_name
 function uv.is_active(handle) end
 
+--- Returns `true` if the handle is active, `false` if it's inactive. What "active”
+--- means depends on the type of handle:
+---
+---   - A [`uv_async_t`][] handle is always active and cannot be deactivated, except
+---   by closing it with `uv.close()`.
+---
+---   - A [`uv_pipe_t`][], [`uv_tcp_t`][], [`uv_udp_t`][], etc. handle - basically
+---   any handle that deals with I/O - is active when it is doing something that
+---   involves I/O, like reading, writing, connecting, accepting new connections,
+---   etc.
+---
+---   - A [`uv_check_t`][], [`uv_idle_t`][], [`uv_timer_t`][], etc. handle is active
+---   when it has been started with a call to `uv.check_start()`, `uv.idle_start()`,
+---   `uv.timer_start()` etc. until it has been stopped with a call to its
+---   respective stop function.
+--- @return boolean? active
+--- @return string? err
+--- @return string? err_name
+function uv_handle_t:is_active() end
+
 --- Returns `true` if the handle is closing or closed, `false` otherwise.
 --- **Note**:
 --- This function should only be used between the initialization of the
@@ -520,6 +558,15 @@ function uv.is_active(handle) end
 --- @return string? err
 --- @return string? err_name
 function uv.is_closing(handle) end
+
+--- Returns `true` if the handle is closing or closed, `false` otherwise.
+--- **Note**:
+--- This function should only be used between the initialization of the
+--- handle and the arrival of the close callback.
+--- @return boolean? closing
+--- @return string? err
+--- @return string? err_name
+function uv_handle_t:is_closing() end
 
 --- Request handle to be closed. `callback` will be called asynchronously after this
 --- call. This MUST be called on each handle before memory is released.
@@ -534,15 +581,35 @@ function uv.is_closing(handle) end
 --- @param callback fun()?
 function uv.close(handle, callback) end
 
+--- Request handle to be closed. `callback` will be called asynchronously after this
+--- call. This MUST be called on each handle before memory is released.
+---
+--- Handles that wrap file descriptors are closed immediately but `callback` will
+--- still be deferred to the next iteration of the event loop. It gives you a chance
+--- to free up any resources associated with the handle.
+---
+--- In-progress requests, like `uv_connect_t` or `uv_write_t`, are cancelled and
+--- have their callbacks called asynchronously with `ECANCELED`.
+--- @param callback fun()?
+function uv_handle_t:close(callback) end
+
 --- Reference the given handle. References are idempotent, that is, if a handle is
 --- already referenced calling this function again will have no effect.
 --- @param handle uv.uv_handle_t
 function uv.ref(handle) end
 
+--- Reference the given handle. References are idempotent, that is, if a handle is
+--- already referenced calling this function again will have no effect.
+function uv_handle_t:ref() end
+
 --- Un-reference the given handle. References are idempotent, that is, if a handle
 --- is not referenced calling this function again will have no effect.
 --- @param handle uv.uv_handle_t
 function uv.unref(handle) end
+
+--- Un-reference the given handle. References are idempotent, that is, if a handle
+--- is not referenced calling this function again will have no effect.
+function uv_handle_t:unref() end
 
 --- Returns `true` if the handle referenced, `false` if not.
 --- @param handle uv.uv_handle_t
@@ -550,6 +617,12 @@ function uv.unref(handle) end
 --- @return string? err
 --- @return string? err_name
 function uv.has_ref(handle) end
+
+--- Returns `true` if the handle referenced, `false` if not.
+--- @return boolean? has_ref
+--- @return string? err
+--- @return string? err_name
+function uv_handle_t:has_ref() end
 
 --- Gets or sets the size of the send buffer that the operating system uses for the
 --- socket.
@@ -568,6 +641,22 @@ function uv.has_ref(handle) end
 --- @return string? err_name
 function uv.send_buffer_size(handle, size) end
 
+--- Gets or sets the size of the send buffer that the operating system uses for the
+--- socket.
+---
+--- If `size` is omitted (or `0`), this will return the current send buffer size; otherwise, this will use `size` to set the new send buffer size.
+---
+--- This function works for TCP, pipe and UDP handles on Unix and for TCP and UDP
+--- handles on Windows.
+--- **Note**:
+--- Linux will set double the size and return double the size of the
+--- original set value.
+--- @param size integer?
+--- @return integer? success
+--- @return string? err
+--- @return string? err_name
+function uv_handle_t:send_buffer_size(size) end
+
 --- Gets or sets the size of the receive buffer that the operating system uses for
 --- the socket.
 ---
@@ -585,6 +674,22 @@ function uv.send_buffer_size(handle, size) end
 --- @return string? err_name
 function uv.recv_buffer_size(handle, size) end
 
+--- Gets or sets the size of the receive buffer that the operating system uses for
+--- the socket.
+---
+--- If `size` is omitted (or `0`), this will return the current send buffer size; otherwise, this will use `size` to set the new send buffer size.
+---
+--- This function works for TCP, pipe and UDP handles on Unix and for TCP and UDP
+--- handles on Windows.
+--- **Note**:
+--- Linux will set double the size and return double the size of the
+--- original set value.
+--- @param size integer?
+--- @return integer? success
+--- @return string? err
+--- @return string? err_name
+function uv_handle_t:recv_buffer_size(size) end
+
 --- Gets the platform dependent file descriptor equivalent.
 ---
 --- The following handles are supported: TCP, pipes, TTY, UDP and poll. Passing any
@@ -601,12 +706,33 @@ function uv.recv_buffer_size(handle, size) end
 --- @return string? err_name
 function uv.fileno(handle) end
 
+--- Gets the platform dependent file descriptor equivalent.
+---
+--- The following handles are supported: TCP, pipes, TTY, UDP and poll. Passing any
+--- other handle type will fail with `EINVAL`.
+---
+--- If a handle doesn't have an attached file descriptor yet or the handle itself
+--- has been closed, this function will return `EBADF`.
+--- **Warning**:
+--- Be very careful when using this function. libuv assumes it's in
+--- control of the file descriptor so any change to it may lead to malfunction.
+--- @return integer? fileno
+--- @return string? err
+--- @return string? err_name
+function uv_handle_t:fileno() end
+
 --- Returns the name of the struct for a given handle (e.g. `"pipe"` for `uv_pipe_t`)
 --- and the libuv enum integer for the handle's type (`uv_handle_type`).
 --- @param handle uv.uv_handle_t
 --- @return string type
 --- @return integer enum
 function uv.handle_get_type(handle) end
+
+--- Returns the name of the struct for a given handle (e.g. `"pipe"` for `uv_pipe_t`)
+--- and the libuv enum integer for the handle's type (`uv_handle_type`).
+--- @return string type
+--- @return integer enum
+function uv_handle_t:get_type() end
 
 
 --- # Reference counting
@@ -627,6 +753,8 @@ function uv.handle_get_type(handle) end
 --- > [`uv_handle_t`][] functions also apply.
 ---
 --- Timer handles are used to schedule callbacks to be called in the future.
+--- @class uv.uv_timer_t : uv.uv_handle_t
+local uv_timer_t = {}
 
 --- Creates and initializes a new `uv_timer_t`. Returns the Lua userdata wrapping
 --- it.
@@ -677,12 +805,31 @@ function uv.new_timer() end
 --- @return string? err_name
 function uv.timer_start(timer, timeout, repeat_, callback) end
 
+--- Start the timer. `timeout` and `repeat` are in milliseconds.
+---
+--- If `timeout` is zero, the callback fires on the next event loop iteration. If
+--- `repeat` is non-zero, the callback fires first after `timeout` milliseconds and
+--- then repeatedly after `repeat` milliseconds.
+--- @param timeout integer
+--- @param repeat_ integer
+--- @param callback fun()
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_timer_t:start(timeout, repeat_, callback) end
+
 --- Stop the timer, the callback will not be called anymore.
 --- @param timer uv.uv_timer_t
 --- @return 0? success
 --- @return string? err
 --- @return string? err_name
 function uv.timer_stop(timer) end
+
+--- Stop the timer, the callback will not be called anymore.
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_timer_t:stop() end
 
 --- Stop the timer, and if it is repeating restart it using the repeat value as the
 --- timeout. If the timer has never been started before it raises `EINVAL`.
@@ -691,6 +838,13 @@ function uv.timer_stop(timer) end
 --- @return string? err
 --- @return string? err_name
 function uv.timer_again(timer) end
+
+--- Stop the timer, and if it is repeating restart it using the repeat value as the
+--- timeout. If the timer has never been started before it raises `EINVAL`.
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_timer_t:again() end
 
 --- Set the repeat interval value in milliseconds. The timer will be scheduled to
 --- run on the given interval, regardless of the callback execution duration, and
@@ -704,15 +858,34 @@ function uv.timer_again(timer) end
 --- @param repeat_ integer
 function uv.timer_set_repeat(timer, repeat_) end
 
+--- Set the repeat interval value in milliseconds. The timer will be scheduled to
+--- run on the given interval, regardless of the callback execution duration, and
+--- will follow normal timer semantics in the case of a time-slice overrun.
+---
+--- For example, if a 50 ms repeating timer first runs for 17 ms, it will be
+--- scheduled to run again 33 ms later. If other tasks consume more than the 33 ms
+--- following the first timer callback, then the callback will run as soon as
+--- possible.
+--- @param repeat_ integer
+function uv_timer_t:set_repeat(repeat_) end
+
 --- Get the timer repeat value.
 --- @param timer uv.uv_timer_t
 --- @return integer repeat_
 function uv.timer_get_repeat(timer) end
 
+--- Get the timer repeat value.
+--- @return integer repeat_
+function uv_timer_t:get_repeat() end
+
 --- Get the timer due value or 0 if it has expired. The time is relative to `uv.now()`.
 --- @param timer uv.uv_timer_t
 --- @return integer due_in
 function uv.timer_get_due_in(timer) end
+
+--- Get the timer due value or 0 if it has expired. The time is relative to `uv.now()`.
+--- @return integer due_in
+function uv_timer_t:get_due_in() end
 
 
 --- # `uv_prepare_t` - Prepare handle
@@ -728,6 +901,8 @@ function uv.timer_get_due_in(timer) end
 ---   print("Before I/O polling")
 --- end)
 --- ```
+--- @class uv.uv_prepare_t : uv.uv_handle_t
+local uv_prepare_t = {}
 
 --- Creates and initializes a new `uv_prepare_t`. Returns the Lua userdata wrapping
 --- it.
@@ -742,12 +917,25 @@ function uv.new_prepare() end
 --- @return string? err_name
 function uv.prepare_start(prepare, callback) end
 
+--- Start the handle with the given callback.
+--- @param callback fun()
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_prepare_t:start(callback) end
+
 --- Stop the handle, the callback will no longer be called.
 --- @param prepare uv.uv_prepare_t
 --- @return 0? success
 --- @return string? err
 --- @return string? err_name
 function uv.prepare_stop(prepare) end
+
+--- Stop the handle, the callback will no longer be called.
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_prepare_t:stop() end
 
 
 --- # `uv_check_t` - Check handle
@@ -763,6 +951,8 @@ function uv.prepare_stop(prepare) end
 ---   print("After I/O polling")
 --- end)
 --- ```
+--- @class uv.uv_check_t : uv.uv_handle_t
+local uv_check_t = {}
 
 --- Creates and initializes a new `uv_check_t`. Returns the Lua userdata wrapping
 --- it.
@@ -777,12 +967,25 @@ function uv.new_check() end
 --- @return string? err_name
 function uv.check_start(check, callback) end
 
+--- Start the handle with the given callback.
+--- @param callback fun()
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_check_t:start(callback) end
+
 --- Stop the handle, the callback will no longer be called.
 --- @param check uv.uv_check_t
 --- @return 0? success
 --- @return string? err
 --- @return string? err_name
 function uv.check_stop(check) end
+
+--- Stop the handle, the callback will no longer be called.
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_check_t:stop() end
 
 
 --- # `uv_idle_t` - Idle handle
@@ -805,6 +1008,8 @@ function uv.check_stop(check) end
 ---   print("Before I/O polling, no blocking")
 --- end)
 --- ```
+--- @class uv.uv_idle_t : uv.uv_handle_t
+local uv_idle_t = {}
 
 --- Creates and initializes a new `uv_idle_t`. Returns the Lua userdata wrapping
 --- it.
@@ -819,12 +1024,25 @@ function uv.new_idle() end
 --- @return string? err_name
 function uv.idle_start(idle, callback) end
 
+--- Start the handle with the given callback.
+--- @param callback fun()
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_idle_t:start(callback) end
+
 --- Stop the handle, the callback will no longer be called.
 --- @param idle uv.uv_idle_t
 --- @return 0? success
 --- @return string? err
 --- @return string? err_name
 function uv.idle_stop(idle) end
+
+--- Stop the handle, the callback will no longer be called.
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_idle_t:stop() end
 
 
 --- # `uv_async_t` - Async handle
@@ -843,6 +1061,8 @@ function uv.idle_stop(idle) end
 ---
 --- async:send()
 --- ```
+--- @class uv.uv_async_t : uv.uv_handle_t
+local uv_async_t = {}
 
 --- Creates and initializes a new `uv_async_t`. Returns the Lua userdata wrapping
 --- it.
@@ -871,6 +1091,22 @@ function uv.new_async(callback) end
 --- @return string? err
 --- @return string? err_name
 function uv.async_send(async, ...) end
+
+--- Wakeup the event loop and call the async handle's callback.
+--- **Note**:
+--- It's safe to call this function from any thread. The callback will be
+--- called on the loop thread.
+--- **Warning**:
+--- libuv will coalesce calls to `uv.async_send(async)`, that is, not
+--- every call to it will yield an execution of the callback. For example: if
+--- `uv.async_send()` is called 5 times in a row before the callback is called, the
+--- callback will only be called once. If `uv.async_send()` is called again after
+--- the callback was called, it will be called again.
+--- @param ... uv.threadargs
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_async_t:send(...) end
 
 
 --- # `uv_poll_t` - Poll handle
@@ -901,6 +1137,8 @@ function uv.async_send(async, ...) end
 ---
 --- **Note**: On windows only sockets can be polled with poll handles. On Unix any
 --- file descriptor that would be accepted by poll(2) can be used.
+--- @class uv.uv_poll_t : uv.uv_handle_t
+local uv_poll_t = {}
 
 --- Initialize the handle using a file descriptor.
 ---
@@ -942,12 +1180,38 @@ function uv.new_socket_poll(fd) end
 --- @return string? err_name
 function uv.poll_start(poll, events, callback) end
 
+--- Starts polling the file descriptor. `events` are: `"r"`, `"w"`, `"rw"`, `"d"`,
+--- `"rd"`, `"wd"`, `"rwd"`, `"p"`, `"rp"`, `"wp"`, `"rwp"`, `"dp"`, `"rdp"`,
+--- `"wdp"`, or `"rwdp"` where `r` is `READABLE`, `w` is `WRITABLE`, `d` is
+--- `DISCONNECT`, and `p` is `PRIORITIZED`. As soon as an event is detected
+--- the callback will be called with status set to 0, and the detected events set on
+--- the events field.
+---
+--- The user should not close the socket while the handle is active. If the user
+--- does that anyway, the callback may be called reporting an error status, but this
+--- is not guaranteed.
+--- **Note**:
+--- Calling `uv.poll_start()` on a handle that is already active is fine.
+--- Doing so will update the events mask that is being watched for.
+--- @param events string?
+--- @param callback fun(err: string?, events: string?)
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_poll_t:start(events, callback) end
+
 --- Stop polling the file descriptor, the callback will no longer be called.
 --- @param poll uv.uv_poll_t
 --- @return 0? success
 --- @return string? err
 --- @return string? err_name
 function uv.poll_stop(poll) end
+
+--- Stop polling the file descriptor, the callback will no longer be called.
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_poll_t:stop() end
 
 
 --- # `uv_signal_t` - Signal handle
@@ -998,6 +1262,8 @@ function uv.poll_stop(poll) end
 ---   os.exit(1)
 --- end)
 --- ```
+--- @class uv.uv_signal_t : uv.uv_handle_t
+local uv_signal_t = {}
 
 --- Creates and initializes a new `uv_signal_t`. Returns the Lua userdata wrapping
 --- it.
@@ -1017,6 +1283,16 @@ function uv.new_signal() end
 --- @return string? err_name
 function uv.signal_start(signal, signame, callback) end
 
+--- Start the handle with the given callback, watching for the given signal.
+---
+--- See [Constants][] for supported `signame` input and output values.
+--- @param signame string|integer
+--- @param callback fun(signame: string)
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_signal_t:start(signame, callback) end
+
 --- Same functionality as `uv.signal_start()` but the signal handler is reset the moment the signal is received.
 ---
 --- See [Constants][] for supported `signame` input and output values.
@@ -1028,12 +1304,28 @@ function uv.signal_start(signal, signame, callback) end
 --- @return string? err_name
 function uv.signal_start_oneshot(signal, signame, callback) end
 
+--- Same functionality as `uv.signal_start()` but the signal handler is reset the moment the signal is received.
+---
+--- See [Constants][] for supported `signame` input and output values.
+--- @param signame string|integer
+--- @param callback fun(signame: string)
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_signal_t:start_oneshot(signame, callback) end
+
 --- Stop the handle, the callback will no longer be called.
 --- @param signal uv.uv_signal_t
 --- @return 0? success
 --- @return string? err
 --- @return string? err_name
 function uv.signal_stop(signal) end
+
+--- Stop the handle, the callback will no longer be called.
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_signal_t:stop() end
 
 
 --- # `uv_process_t` - Process handle
@@ -1042,6 +1334,8 @@ function uv.signal_stop(signal) end
 ---
 --- Process handles will spawn a new process and allow the user to control it and
 --- establish communication channels with it using streams.
+--- @class uv.uv_process_t : uv.uv_handle_t
+local uv_process_t = {}
 
 --- Disables inheritance for file descriptors / handles that this process inherited
 --- from its parent. The effect is that child processes spawned by this process
@@ -1183,6 +1477,16 @@ function uv.spawn(path, options, on_exit) end
 --- @return string? err_name
 function uv.process_kill(process, signame) end
 
+--- Sends the specified signal to the given process handle. Check the documentation
+--- on `uv_signal_t` for signal support, specially on Windows.
+---
+--- See [Constants][] for supported `signame` input values.
+--- @param signame string|integer?
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_process_t:kill(signame) end
+
 --- Sends the specified signal to the given PID. Check the documentation on
 --- `uv_signal_t` for signal support, specially on Windows.
 ---
@@ -1199,6 +1503,10 @@ function uv.kill(pid, signame) end
 --- @return integer
 function uv.process_get_pid(process) end
 
+--- Returns the handle's pid.
+--- @return integer
+function uv_process_t:get_pid() end
+
 
 --- # `uv_stream_t` - Stream handle
 ---
@@ -1207,6 +1515,8 @@ function uv.process_get_pid(process) end
 --- Stream handles provide an abstraction of a duplex communication channel.
 --- [`uv_stream_t`][] is an abstract type, libuv provides 3 stream implementations
 --- in the form of [`uv_tcp_t`][], [`uv_pipe_t`][] and [`uv_tty_t`][].
+--- @class uv.uv_stream_t : uv.uv_handle_t
+local uv_stream_t = {}
 
 --- Shutdown the outgoing (write) side of a duplex stream. It waits for pending
 --- write requests to complete. The callback is called after shutdown is complete.
@@ -1216,6 +1526,14 @@ function uv.process_get_pid(process) end
 --- @return string? err
 --- @return string? err_name
 function uv.shutdown(stream, callback) end
+
+--- Shutdown the outgoing (write) side of a duplex stream. It waits for pending
+--- write requests to complete. The callback is called after shutdown is complete.
+--- @param callback fun(err: string?)?
+--- @return uv.uv_shutdown_t? shutdown
+--- @return string? err
+--- @return string? err_name
+function uv_stream_t:shutdown(callback) end
 
 --- Start listening for incoming connections. `backlog` indicates the number of
 --- connections the kernel might queue, same as `listen(2)`. When a new incoming
@@ -1227,6 +1545,16 @@ function uv.shutdown(stream, callback) end
 --- @return string? err
 --- @return string? err_name
 function uv.listen(stream, backlog, callback) end
+
+--- Start listening for incoming connections. `backlog` indicates the number of
+--- connections the kernel might queue, same as `listen(2)`. When a new incoming
+--- connection is received the callback is called.
+--- @param backlog integer
+--- @param callback fun(err: string?)
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_stream_t:listen(backlog, callback) end
 
 --- This call is used in conjunction with `uv.listen()` to accept incoming
 --- connections. Call this function after receiving a callback to accept the
@@ -1250,6 +1578,27 @@ function uv.listen(stream, backlog, callback) end
 --- @return string? err_name
 function uv.accept(stream, client_stream) end
 
+--- This call is used in conjunction with `uv.listen()` to accept incoming
+--- connections. Call this function after receiving a callback to accept the
+--- connection.
+---
+--- When the connection callback is called it is guaranteed that this function
+--- will complete successfully the first time. If you attempt to use it more than
+--- once, it may fail. It is suggested to only call this function once per
+--- connection call.
+--- Example
+--- ```lua
+--- server:listen(128, function (err)
+---   local client = uv.new_tcp()
+---   server:accept(client)
+--- end)
+--- ```
+--- @param client_stream uv.uv_stream_t
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_stream_t:accept(client_stream) end
+
 --- Read data from an incoming stream. The callback will be made several times until
 --- there is no more data to read or `uv.read_stop()` is called. When we've reached
 --- EOF, `data` will be `nil`.
@@ -1272,6 +1621,27 @@ function uv.accept(stream, client_stream) end
 --- @return string? err_name
 function uv.read_start(stream, callback) end
 
+--- Read data from an incoming stream. The callback will be made several times until
+--- there is no more data to read or `uv.read_stop()` is called. When we've reached
+--- EOF, `data` will be `nil`.
+--- Example
+--- ```lua
+--- stream:read_start(function (err, chunk)
+---   if err then
+---     -- handle read error
+---   elseif chunk then
+---     -- handle data
+---   else
+---     -- handle disconnect
+---   end
+--- end)
+--- ```
+--- @param callback fun(err: string?, data: string?)
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_stream_t:read_start(callback) end
+
 --- Stop reading data from the stream. The read callback will no longer be called.
 ---
 --- This function is idempotent and may be safely called on a stopped stream.
@@ -1280,6 +1650,14 @@ function uv.read_start(stream, callback) end
 --- @return string? err
 --- @return string? err_name
 function uv.read_stop(stream) end
+
+--- Stop reading data from the stream. The read callback will no longer be called.
+---
+--- This function is idempotent and may be safely called on a stopped stream.
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_stream_t:read_stop() end
 
 --- Write data to stream.
 ---
@@ -1294,6 +1672,19 @@ function uv.read_stop(stream) end
 --- @return string? err
 --- @return string? err_name
 function uv.write(stream, data, callback) end
+
+--- Write data to stream.
+---
+--- `data` can either be a Lua string or a table of strings. If a table is passed
+--- in, the C backend will use writev to send all strings in a single system call.
+---
+--- The optional `callback` is for knowing when the write is complete.
+--- @param data uv.buffer
+--- @param callback fun(err: string?)?
+--- @return uv.uv_write_t? write
+--- @return string? err
+--- @return string? err_name
+function uv_stream_t:write(data, callback) end
 
 --- Extended write function for sending handles over a pipe. The pipe must be
 --- initialized with `ipc` option `true`.
@@ -1310,6 +1701,20 @@ function uv.write(stream, data, callback) end
 --- @return string? err_name
 function uv.write2(stream, data, send_handle, callback) end
 
+--- Extended write function for sending handles over a pipe. The pipe must be
+--- initialized with `ipc` option `true`.
+--- **Note**:
+--- `send_handle` must be a TCP socket or pipe, which is a server or a
+--- connection (listening or connected state). Bound sockets or pipes will be
+--- assumed to be servers.
+--- @param data uv.buffer
+--- @param send_handle uv.uv_stream_t
+--- @param callback fun(err: string?)?
+--- @return uv.uv_write_t? write
+--- @return string? err
+--- @return string? err_name
+function uv_stream_t:write2(data, send_handle, callback) end
+
 --- Same as `uv.write()`, but won't queue a write request if it can't be completed
 --- immediately.
 ---
@@ -1320,6 +1725,16 @@ function uv.write2(stream, data, send_handle, callback) end
 --- @return string? err
 --- @return string? err_name
 function uv.try_write(stream, data) end
+
+--- Same as `uv.write()`, but won't queue a write request if it can't be completed
+--- immediately.
+---
+--- Will return number of bytes written (can be less than the supplied buffer size).
+--- @param data uv.buffer
+--- @return integer? bytes_written
+--- @return string? err
+--- @return string? err_name
+function uv_stream_t:try_write(data) end
 
 --- Like `uv.write2()`, but with the properties of `uv.try_write()`. Not supported on Windows, where it returns `UV_EAGAIN`.
 ---
@@ -1332,15 +1747,33 @@ function uv.try_write(stream, data) end
 --- @return string? err_name
 function uv.try_write2(stream, data, send_handle) end
 
+--- Like `uv.write2()`, but with the properties of `uv.try_write()`. Not supported on Windows, where it returns `UV_EAGAIN`.
+---
+--- Will return number of bytes written (can be less than the supplied buffer size).
+--- @param data uv.buffer
+--- @param send_handle uv.uv_stream_t
+--- @return integer? bytes_written
+--- @return string? err
+--- @return string? err_name
+function uv_stream_t:try_write2(data, send_handle) end
+
 --- Returns `true` if the stream is readable, `false` otherwise.
 --- @param stream uv.uv_stream_t
 --- @return boolean
 function uv.is_readable(stream) end
 
+--- Returns `true` if the stream is readable, `false` otherwise.
+--- @return boolean
+function uv_stream_t:is_readable() end
+
 --- Returns `true` if the stream is writable, `false` otherwise.
 --- @param stream uv.uv_stream_t
 --- @return boolean
 function uv.is_writable(stream) end
+
+--- Returns `true` if the stream is writable, `false` otherwise.
+--- @return boolean
+function uv_stream_t:is_writable() end
 
 --- Enable or disable blocking mode for a stream.
 ---
@@ -1361,9 +1794,32 @@ function uv.is_writable(stream) end
 --- @return string? err_name
 function uv.stream_set_blocking(stream, blocking) end
 
+--- Enable or disable blocking mode for a stream.
+---
+--- When blocking mode is enabled all writes complete synchronously. The interface
+--- remains unchanged otherwise, e.g. completion or failure of the operation will
+--- still be reported through a callback which is made asynchronously.
+--- **Warning**:
+--- Relying too much on this API is not recommended. It is likely to
+--- change significantly in the future. Currently this only works on Windows and
+--- only for `uv_pipe_t` handles. Also libuv currently makes no ordering guarantee
+--- when the blocking mode is changed after write requests have already been
+--- submitted. Therefore it is recommended to set the blocking mode immediately
+--- after opening or creating the stream.
+--- @param blocking boolean
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_stream_t:set_blocking(blocking) end
+
+--- Returns the stream's write queue size.
+--- @param stream uv.uv_stream_t
+--- @return integer
+function uv.stream_get_write_queue_size(stream) end
+
 --- Returns the stream's write queue size.
 --- @return integer
-function uv.stream_get_write_queue_size() end
+function uv_stream_t:get_write_queue_size() end
 
 
 --- # `uv_tcp_t` - TCP handle
@@ -1371,6 +1827,8 @@ function uv.stream_get_write_queue_size() end
 --- > [`uv_handle_t`][] and [`uv_stream_t`][] functions also apply.
 ---
 --- TCP handles are used to represent both TCP streams and servers.
+--- @class uv.uv_tcp_t : uv.uv_stream_t
+local uv_tcp_t = {}
 
 --- Creates and initializes a new `uv_tcp_t`. Returns the Lua userdata wrapping it.
 ---
@@ -1392,6 +1850,15 @@ function uv.new_tcp(flags) end
 --- @return string? err_name
 function uv.tcp_open(tcp, sock) end
 
+--- Open an existing file descriptor or SOCKET as a TCP handle.
+--- **Note**:
+--- The passed file descriptor or SOCKET is not checked for its type, but it's required that it represents a valid stream socket.
+--- @param sock integer
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_tcp_t:open(sock) end
+
 --- Enable / disable Nagle's algorithm.
 --- @param tcp uv.uv_tcp_t
 --- @param enable boolean
@@ -1399,6 +1866,13 @@ function uv.tcp_open(tcp, sock) end
 --- @return string? err
 --- @return string? err_name
 function uv.tcp_nodelay(tcp, enable) end
+
+--- Enable / disable Nagle's algorithm.
+--- @param enable boolean
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_tcp_t:nodelay(enable) end
 
 --- Enable / disable TCP keep-alive. `delay` is the initial delay in seconds,
 --- ignored when enable is `false`.
@@ -1409,6 +1883,15 @@ function uv.tcp_nodelay(tcp, enable) end
 --- @return string? err
 --- @return string? err_name
 function uv.tcp_keepalive(tcp, enable, delay) end
+
+--- Enable / disable TCP keep-alive. `delay` is the initial delay in seconds,
+--- ignored when enable is `false`.
+--- @param enable boolean
+--- @param delay integer?
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_tcp_t:keepalive(enable, delay) end
 
 --- Enable / disable simultaneous asynchronous accept requests that are queued by
 --- the operating system when listening for new TCP connections.
@@ -1423,6 +1906,19 @@ function uv.tcp_keepalive(tcp, enable, delay) end
 --- @return string? err
 --- @return string? err_name
 function uv.tcp_simultaneous_accepts(tcp, enable) end
+
+--- Enable / disable simultaneous asynchronous accept requests that are queued by
+--- the operating system when listening for new TCP connections.
+---
+--- This setting is used to tune a TCP server for the desired performance. Having
+--- simultaneous accepts can significantly improve the rate of accepting connections
+--- (which is why it is enabled by default) but may lead to uneven load distribution
+--- in multi-process setups.
+--- @param enable boolean
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_tcp_t:simultaneous_accepts(enable) end
 
 --- Bind the handle to an host and port. `host` should be an IP address and
 --- not a domain name. Any `flags` are set with a table with field `ipv6only`
@@ -1444,6 +1940,25 @@ function uv.tcp_simultaneous_accepts(tcp, enable) end
 --- @return string? err_name
 function uv.tcp_bind(tcp, host, port, flags) end
 
+--- Bind the handle to an host and port. `host` should be an IP address and
+--- not a domain name. Any `flags` are set with a table with field `ipv6only`
+--- equal to `true` or `false`.
+---
+--- When the port is already taken, you can expect to see an `EADDRINUSE` error
+--- from either `uv.tcp_bind()`, `uv.listen()` or `uv.tcp_connect()`. That is, a
+--- successful call to this function does not guarantee that the call to `uv.listen()`
+--- or `uv.tcp_connect()` will succeed as well.
+---
+--- Use a port of `0` to let the OS assign an ephemeral port.  You can look it up
+--- later using `uv.tcp_getsockname()`.
+--- @param host string
+--- @param port integer
+--- @param flags { ipv6only: boolean }?
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_tcp_t:bind(host, port, flags) end
+
 --- Get the address of the peer connected to the handle.
 ---
 --- See [Constants][] for supported address `family` output values.
@@ -1453,6 +1968,14 @@ function uv.tcp_bind(tcp, host, port, flags) end
 --- @return string? err_name
 function uv.tcp_getpeername(tcp) end
 
+--- Get the address of the peer connected to the handle.
+---
+--- See [Constants][] for supported address `family` output values.
+--- @return uv.socketinfo? address
+--- @return string? err
+--- @return string? err_name
+function uv_tcp_t:getpeername() end
+
 --- Get the current address to which the handle is bound.
 ---
 --- See [Constants][] for supported address `family` output values.
@@ -1461,6 +1984,14 @@ function uv.tcp_getpeername(tcp) end
 --- @return string? err
 --- @return string? err_name
 function uv.tcp_getsockname(tcp) end
+
+--- Get the current address to which the handle is bound.
+---
+--- See [Constants][] for supported address `family` output values.
+--- @return uv.socketinfo? address
+--- @return string? err
+--- @return string? err_name
+function uv_tcp_t:getsockname() end
 
 --- Establish an IPv4 or IPv6 TCP connection.
 --- Example
@@ -1479,9 +2010,28 @@ function uv.tcp_getsockname(tcp) end
 --- @return string? err_name
 function uv.tcp_connect(tcp, host, port, callback) end
 
+--- Establish an IPv4 or IPv6 TCP connection.
+--- Example
+--- ```lua
+--- local client = uv.new_tcp()
+--- client:connect("127.0.0.1", 8080, function (err)
+---   -- check error and carry on.
+--- end)
+--- ```
+--- @param host string
+--- @param port integer
+--- @param callback fun(err: string?)
+--- @return uv.uv_connect_t? connect
+--- @return string? err
+--- @return string? err_name
+function uv_tcp_t:connect(host, port, callback) end
+
 --- @deprecated Please use `uv.stream_get_write_queue_size()` instead.
 --- @param tcp uv.uv_tcp_t
 function uv.tcp_write_queue_size(tcp) end
+
+--- @deprecated Please use `uv.stream_get_write_queue_size()` instead.
+function uv_tcp_t:write_queue_size() end
 
 --- Resets a TCP connection by sending a RST packet. This is accomplished by setting
 --- the SO_LINGER socket option with a linger interval of zero and then calling
@@ -1493,6 +2043,16 @@ function uv.tcp_write_queue_size(tcp) end
 --- @return string? err
 --- @return string? err_name
 function uv.tcp_close_reset(tcp, callback) end
+
+--- Resets a TCP connection by sending a RST packet. This is accomplished by setting
+--- the SO_LINGER socket option with a linger interval of zero and then calling
+--- `uv.close()`. Due to some platform inconsistencies, mixing of `uv.shutdown()`
+--- and `uv.tcp_close_reset()` calls is not allowed.
+--- @param callback fun()?
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_tcp_t:close_reset(callback) end
 
 --- Create a pair of connected sockets with the specified properties. The resulting handles can be passed to `uv.tcp_open`, used with `uv.spawn`, or for any other purpose.
 ---
@@ -1549,6 +2109,8 @@ function uv.socketpair(socktype, protocol, flags1, flags2) end
 ---   client:close()
 --- end)
 --- ```
+--- @class uv.uv_pipe_t : uv.uv_stream_t
+local uv_pipe_t = {}
 
 --- Creates and initializes a new `uv_pipe_t`. Returns the Lua userdata wrapping
 --- it. The `ipc` argument is a boolean to indicate if this pipe will be used for
@@ -1569,6 +2131,15 @@ function uv.new_pipe(ipc) end
 --- @return string? err_name
 function uv.pipe_open(pipe, fd) end
 
+--- Open an existing file descriptor or [`uv_handle_t`][] as a pipe.
+--- **Note**:
+--- The file descriptor is set to non-blocking mode.
+--- @param fd integer
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_pipe_t:open(fd) end
+
 --- Bind the pipe to a file path (Unix) or a name (Windows).
 --- **Note**:
 --- Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes,
@@ -1579,6 +2150,16 @@ function uv.pipe_open(pipe, fd) end
 --- @return string? err
 --- @return string? err_name
 function uv.pipe_bind(pipe, name) end
+
+--- Bind the pipe to a file path (Unix) or a name (Windows).
+--- **Note**:
+--- Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes,
+--- typically between 92 and 108 bytes.
+--- @param name string
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_pipe_t:bind(name) end
 
 --- Connect to the Unix domain socket or the named pipe.
 --- **Note**:
@@ -1592,12 +2173,29 @@ function uv.pipe_bind(pipe, name) end
 --- @return string? err_name
 function uv.pipe_connect(pipe, name, callback) end
 
+--- Connect to the Unix domain socket or the named pipe.
+--- **Note**:
+--- Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes,
+--- typically between 92 and 108 bytes.
+--- @param name string
+--- @param callback fun(err: string?)?
+--- @return uv.uv_connect_t? connect
+--- @return string? err
+--- @return string? err_name
+function uv_pipe_t:connect(name, callback) end
+
 --- Get the name of the Unix domain socket or the named pipe.
 --- @param pipe uv.uv_pipe_t
 --- @return string? name
 --- @return string? err
 --- @return string? err_name
 function uv.pipe_getsockname(pipe) end
+
+--- Get the name of the Unix domain socket or the named pipe.
+--- @return string? name
+--- @return string? err
+--- @return string? err_name
+function uv_pipe_t:getsockname() end
 
 --- Get the name of the Unix domain socket or the named pipe to which the handle is
 --- connected.
@@ -1607,6 +2205,13 @@ function uv.pipe_getsockname(pipe) end
 --- @return string? err_name
 function uv.pipe_getpeername(pipe) end
 
+--- Get the name of the Unix domain socket or the named pipe to which the handle is
+--- connected.
+--- @return string? name
+--- @return string? err
+--- @return string? err_name
+function uv_pipe_t:getpeername() end
+
 --- Set the number of pending pipe instance handles when the pipe server is waiting
 --- for connections.
 --- **Note**:
@@ -1615,10 +2220,21 @@ function uv.pipe_getpeername(pipe) end
 --- @param count integer
 function uv.pipe_pending_instances(pipe, count) end
 
+--- Set the number of pending pipe instance handles when the pipe server is waiting
+--- for connections.
+--- **Note**:
+--- This setting applies to Windows only.
+--- @param count integer
+function uv_pipe_t:pending_instances(count) end
+
 --- Returns the pending pipe count for the named pipe.
 --- @param pipe uv.uv_pipe_t
 --- @return integer
 function uv.pipe_pending_count(pipe) end
+
+--- Returns the pending pipe count for the named pipe.
+--- @return integer
+function uv_pipe_t:pending_count() end
 
 --- Used to receive handles over IPC pipes.
 ---
@@ -1629,6 +2245,14 @@ function uv.pipe_pending_count(pipe) end
 --- @return string
 function uv.pipe_pending_type(pipe) end
 
+--- Used to receive handles over IPC pipes.
+---
+--- First - call `uv.pipe_pending_count()`, if it's > 0 then initialize a handle of
+--- the given type, returned by `uv.pipe_pending_type()` and call
+--- `uv.accept(pipe, handle)`.
+--- @return string
+function uv_pipe_t:pending_type() end
+
 --- Alters pipe permissions, allowing it to be accessed from processes run by different users.
 --- Makes the pipe writable or readable by all users. `flags` are: `"r"`, `"w"`, `"rw"`, or `"wr"`
 --- where `r` is `READABLE` and `w` is `WRITABLE`. This function is blocking.
@@ -1638,6 +2262,15 @@ function uv.pipe_pending_type(pipe) end
 --- @return string? err
 --- @return string? err_name
 function uv.pipe_chmod(pipe, flags) end
+
+--- Alters pipe permissions, allowing it to be accessed from processes run by different users.
+--- Makes the pipe writable or readable by all users. `flags` are: `"r"`, `"w"`, `"rw"`, or `"wr"`
+--- where `r` is `READABLE` and `w` is `WRITABLE`. This function is blocking.
+--- @param flags string
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_pipe_t:chmod(flags) end
 
 --- @class uv.pipe.fds
 ---
@@ -1699,6 +2332,27 @@ function uv.pipe(read_flags, write_flags) end
 --- @return string? err_name
 function uv.pipe_bind2(pipe, name, flags) end
 
+--- Bind the pipe to a file path (Unix) or a name (Windows).
+---
+--- `Flags`:
+---
+--- - If `type(flags)` is `number`, it must be `0` or `uv.constants.PIPE_NO_TRUNCATE`.
+--- - If `type(flags)` is `table`, it must be `{}` or `{ no_truncate = true|false }`.
+--- - If `type(flags)` is `nil`, it use default value `0`.
+--- - Returns `EINVAL` for unsupported flags without performing the bind operation.
+---
+--- Supports Linux abstract namespace sockets. namelen must include the leading '\0' byte but not the trailing nul byte.
+--- **Note**:
+--- 1. Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes,
+--- typically between 92 and 108 bytes.
+--- 2. New in version 1.46.0.
+--- @param name string
+--- @param flags integer|table?
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_pipe_t:bind2(name, flags) end
+
 --- Connect to the Unix domain socket or the named pipe.
 ---
 --- `Flags`:
@@ -1722,6 +2376,28 @@ function uv.pipe_bind2(pipe, name, flags) end
 --- @return string? err_name
 function uv.pipe_connect2(pipe, name, flags, callback) end
 
+--- Connect to the Unix domain socket or the named pipe.
+---
+--- `Flags`:
+---
+--- - If `type(flags)` is `number`, it must be `0` or `uv.constants.PIPE_NO_TRUNCATE`.
+--- - If `type(flags)` is `table`, it must be `{}` or `{ no_truncate = true|false }`.
+--- - If `type(flags)` is `nil`, it use default value `0`.
+--- - Returns `EINVAL` for unsupported flags without performing the bind operation.
+---
+--- Supports Linux abstract namespace sockets. namelen must include the leading nul byte but not the trailing nul byte.
+--- **Note**:
+--- 1. Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes,
+--- typically between 92 and 108 bytes.
+--- 2. New in version 1.46.0.
+--- @param name string
+--- @param flags integer|table?
+--- @param callback fun(err: string?)?
+--- @return uv.uv_connect_t? connect
+--- @return string? err
+--- @return string? err_name
+function uv_pipe_t:connect2(name, flags, callback) end
+
 
 --- # `uv_tty_t` - TTY handle
 ---
@@ -1744,6 +2420,8 @@ function uv.pipe_connect2(pipe, name, flags, callback) end
 ---   end
 --- end)
 --- ```
+--- @class uv.uv_tty_t : uv.uv_stream_t
+local uv_tty_t = {}
 
 --- Initialize a new TTY stream with the given file descriptor. Usually the file
 --- descriptor will be:
@@ -1777,6 +2455,15 @@ function uv.new_tty(fd, readable) end
 --- @return string? err_name
 function uv.tty_set_mode(tty, mode) end
 
+--- Set the TTY using the specified terminal mode.
+---
+--- See [Constants][] for supported TTY mode input values.
+--- @param mode string|integer
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_tty_t:set_mode(mode) end
+
 --- To be called when the program exits. Resets TTY settings to default values for
 --- the next process to take over.
 ---
@@ -1793,6 +2480,12 @@ function uv.tty_reset_mode() end
 --- @return integer|string height_or_err
 --- @return string? err_name
 function uv.tty_get_winsize(tty) end
+
+--- Gets the current Window width and height.
+--- @return integer? width
+--- @return integer|string height_or_err
+--- @return string? err_name
+function uv_tty_t:get_winsize() end
 
 --- Controls whether console virtual terminal sequences are processed by libuv or
 --- console. Useful in particular for enabling ConEmu support of ANSI X3.64 and
@@ -1819,6 +2512,8 @@ function uv.tty_get_vterm_state() end
 --- > [`uv_handle_t`][] functions also apply.
 ---
 --- UDP handles encapsulate UDP communication for both clients and servers.
+--- @class uv.uv_udp_t : uv.uv_handle_t
+local uv_udp_t = {}
 
 --- Creates and initializes a new `uv_udp_t`. Returns the Lua userdata wrapping
 --- it. The actual socket is created lazily.
@@ -1841,12 +2536,22 @@ function uv.tty_get_vterm_state() end
 function uv.new_udp(flags) end
 
 --- Returns the handle's send queue size.
+--- @param udp uv.uv_udp_t
 --- @return integer
-function uv.udp_get_send_queue_size() end
+function uv.udp_get_send_queue_size(udp) end
+
+--- Returns the handle's send queue size.
+--- @return integer
+function uv_udp_t:get_send_queue_size() end
+
+--- Returns the handle's send queue count.
+--- @param udp uv.uv_udp_t
+--- @return integer
+function uv.udp_get_send_queue_count(udp) end
 
 --- Returns the handle's send queue count.
 --- @return integer
-function uv.udp_get_send_queue_count() end
+function uv_udp_t:get_send_queue_count() end
 
 --- Opens an existing file descriptor or Windows SOCKET as a UDP handle.
 ---
@@ -1866,6 +2571,23 @@ function uv.udp_get_send_queue_count() end
 --- @return string? err_name
 function uv.udp_open(udp, fd) end
 
+--- Opens an existing file descriptor or Windows SOCKET as a UDP handle.
+---
+--- Unix only: The only requirement of the sock argument is that it follows the
+--- datagram contract (works in unconnected mode, supports sendmsg()/recvmsg(),
+--- etc). In other words, other datagram-type sockets like raw sockets or netlink
+--- sockets can also be passed to this function.
+---
+--- The file descriptor is set to non-blocking mode.
+---
+--- Note: The passed file descriptor or SOCKET is not checked for its type, but
+--- it's required that it represents a valid datagram socket.
+--- @param fd integer
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_udp_t:open(fd) end
+
 --- Bind the UDP handle to an IP address and port. Any `flags` are set with a table
 --- with fields `reuseaddr` or `ipv6only` equal to `true` or `false`.
 --- @param udp uv.uv_udp_t
@@ -1877,6 +2599,16 @@ function uv.udp_open(udp, fd) end
 --- @return string? err_name
 function uv.udp_bind(udp, host, port, flags) end
 
+--- Bind the UDP handle to an IP address and port. Any `flags` are set with a table
+--- with fields `reuseaddr` or `ipv6only` equal to `true` or `false`.
+--- @param host string
+--- @param port number
+--- @param flags { ipv6only: boolean?, reuseaddr: boolean? }?
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_udp_t:bind(host, port, flags) end
+
 --- Get the local IP and port of the UDP handle.
 --- @param udp uv.uv_udp_t
 --- @return uv.socketinfo? address
@@ -1884,12 +2616,24 @@ function uv.udp_bind(udp, host, port, flags) end
 --- @return string? err_name
 function uv.udp_getsockname(udp) end
 
+--- Get the local IP and port of the UDP handle.
+--- @return uv.socketinfo? address
+--- @return string? err
+--- @return string? err_name
+function uv_udp_t:getsockname() end
+
 --- Get the remote IP and port of the UDP handle on connected UDP handles.
 --- @param udp uv.uv_udp_t
 --- @return uv.socketinfo? address
 --- @return string? err
 --- @return string? err_name
 function uv.udp_getpeername(udp) end
+
+--- Get the remote IP and port of the UDP handle on connected UDP handles.
+--- @return uv.socketinfo? address
+--- @return string? err
+--- @return string? err_name
+function uv_udp_t:getpeername() end
 
 --- Set membership for a multicast address. `multicast_addr` is multicast address to
 --- set membership for. `interface_addr` is interface address. `membership` can be
@@ -1902,6 +2646,17 @@ function uv.udp_getpeername(udp) end
 --- @return string? err
 --- @return string? err_name
 function uv.udp_set_membership(udp, multicast_addr, interface_addr, membership) end
+
+--- Set membership for a multicast address. `multicast_addr` is multicast address to
+--- set membership for. `interface_addr` is interface address. `membership` can be
+--- the string `"leave"` or `"join"`.
+--- @param multicast_addr string
+--- @param interface_addr string?
+--- @param membership string
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_udp_t:set_membership(multicast_addr, interface_addr, membership) end
 
 --- Set membership for a source-specific multicast group. `multicast_addr` is multicast
 --- address to set membership for. `interface_addr` is interface address. `source_addr`
@@ -1916,6 +2671,18 @@ function uv.udp_set_membership(udp, multicast_addr, interface_addr, membership) 
 --- @return string? err_name
 function uv.udp_set_source_membership(udp, multicast_addr, interface_addr, source_addr, membership) end
 
+--- Set membership for a source-specific multicast group. `multicast_addr` is multicast
+--- address to set membership for. `interface_addr` is interface address. `source_addr`
+--- is source address. `membership` can be the string `"leave"` or `"join"`.
+--- @param multicast_addr string
+--- @param interface_addr string?
+--- @param source_addr string
+--- @param membership string
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_udp_t:set_source_membership(multicast_addr, interface_addr, source_addr, membership) end
+
 --- Set IP multicast loop flag. Makes multicast packets loop back to local
 --- sockets.
 --- @param udp uv.uv_udp_t
@@ -1924,6 +2691,14 @@ function uv.udp_set_source_membership(udp, multicast_addr, interface_addr, sourc
 --- @return string? err
 --- @return string? err_name
 function uv.udp_set_multicast_loop(udp, on) end
+
+--- Set IP multicast loop flag. Makes multicast packets loop back to local
+--- sockets.
+--- @param on boolean
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_udp_t:set_multicast_loop(on) end
 
 --- Set the multicast ttl.
 ---
@@ -1935,6 +2710,15 @@ function uv.udp_set_multicast_loop(udp, on) end
 --- @return string? err_name
 function uv.udp_set_multicast_ttl(udp, ttl) end
 
+--- Set the multicast ttl.
+---
+--- `ttl` is an integer 1 through 255.
+--- @param ttl integer
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_udp_t:set_multicast_ttl(ttl) end
+
 --- Set the multicast interface to send or receive data on.
 --- @param udp uv.uv_udp_t
 --- @param interface_addr string
@@ -1943,6 +2727,13 @@ function uv.udp_set_multicast_ttl(udp, ttl) end
 --- @return string? err_name
 function uv.udp_set_multicast_interface(udp, interface_addr) end
 
+--- Set the multicast interface to send or receive data on.
+--- @param interface_addr string
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_udp_t:set_multicast_interface(interface_addr) end
+
 --- Set broadcast on or off.
 --- @param udp uv.uv_udp_t
 --- @param on boolean
@@ -1950,6 +2741,13 @@ function uv.udp_set_multicast_interface(udp, interface_addr) end
 --- @return string? err
 --- @return string? err_name
 function uv.udp_set_broadcast(udp, on) end
+
+--- Set broadcast on or off.
+--- @param on boolean
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_udp_t:set_broadcast(on) end
 
 --- Set the time to live.
 ---
@@ -1960,6 +2758,15 @@ function uv.udp_set_broadcast(udp, on) end
 --- @return string? err
 --- @return string? err_name
 function uv.udp_set_ttl(udp, ttl) end
+
+--- Set the time to live.
+---
+--- `ttl` is an integer 1 through 255.
+--- @param ttl integer
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_udp_t:set_ttl(ttl) end
 
 --- Send data over the UDP socket. If the socket has not previously been bound
 --- with `uv.udp_bind()` it will be bound to `0.0.0.0` (the "all interfaces" IPv4
@@ -1974,6 +2781,18 @@ function uv.udp_set_ttl(udp, ttl) end
 --- @return string? err_name
 function uv.udp_send(udp, data, host, port, callback) end
 
+--- Send data over the UDP socket. If the socket has not previously been bound
+--- with `uv.udp_bind()` it will be bound to `0.0.0.0` (the "all interfaces" IPv4
+--- address) and a random port number.
+--- @param data uv.buffer
+--- @param host string
+--- @param port integer
+--- @param callback fun(err: string?)
+--- @return uv.uv_udp_send_t? send
+--- @return string? err
+--- @return string? err_name
+function uv_udp_t:send(data, host, port, callback) end
+
 --- Same as `uv.udp_send()`, but won't queue a send request if it can't be
 --- completed immediately.
 --- @param udp uv.uv_udp_t
@@ -1984,6 +2803,16 @@ function uv.udp_send(udp, data, host, port, callback) end
 --- @return string? err
 --- @return string? err_name
 function uv.udp_try_send(udp, data, host, port) end
+
+--- Same as `uv.udp_send()`, but won't queue a send request if it can't be
+--- completed immediately.
+--- @param data uv.buffer
+--- @param host string
+--- @param port integer
+--- @return integer? bytes_sent
+--- @return string? err
+--- @return string? err_name
+function uv_udp_t:try_send(data, host, port) end
 
 --- Like `uv.udp_try_send()`, but can send multiple datagrams.
 --- Lightweight abstraction around `sendmmsg(2)`, with a `sendmsg(2)` fallback loop
@@ -2024,6 +2853,44 @@ function uv.udp_try_send(udp, data, host, port) end
 --- @return string? err_name
 function uv.udp_try_send2(udp, messages, flags, port) end
 
+--- Like `uv.udp_try_send()`, but can send multiple datagrams.
+--- Lightweight abstraction around `sendmmsg(2)`, with a `sendmsg(2)` fallback loop
+--- for platforms that do not support the former. The `udp` handle must be fully
+--- initialized, either from a `uv.udp_bind` call, another call that will bind
+--- automatically (`udp_send`, `udp_try_send`, etc), or from `uv.udp_connect`.
+---
+--- `messages` should be an array-like table, where `addr` must be specified
+--- if the `udp` has not been connected via `udp_connect`. Otherwise, `addr`
+--- must be `nil`.
+---
+--- `flags` is reserved for future extension and must currently be `nil` or `0` or
+--- `{}`.
+---
+--- Returns the number of messages sent successfully. An error will only be returned
+--- if the first datagram failed to be sent.
+--- Example
+--- ```lua
+--- -- If client:connect(...) was not called
+--- local addr = { ip = "127.0.0.1", port = 1234 }
+--- client:try_send2({
+---   { data = "Message 1", addr = addr },
+---   { data = "Message 2", addr = addr },
+--- })
+---
+--- -- If client:connect(...) was called
+--- client:try_send2({
+---   { data = "Message 1" },
+---   { data = "Message 2" },
+--- })
+--- ```
+--- @param messages table<integer, { data: uv.buffer, addr: { ip: string, port: integer } }>
+--- @param flags 0|{}?
+--- @param port integer
+--- @return integer? messages_sent
+--- @return string? err
+--- @return string? err_name
+function uv_udp_t:try_send2(messages, flags, port) end
+
 --- @alias uv.udp_recv_start.callback
 --- | fun(err: string?, data: string?, addr: uv.udp_recv_start.callback.addr?, flags: { partial: boolean?, mmsg_chunk: boolean? })
 
@@ -2044,12 +2911,29 @@ function uv.udp_try_send2(udp, messages, flags, port) end
 --- @return string? err_name
 function uv.udp_recv_start(udp, callback) end
 
+--- Prepare for receiving data. If the socket has not previously been bound with
+--- `uv.udp_bind()` it is bound to `0.0.0.0` (the "all interfaces" IPv4 address)
+--- and a random port number.
+---
+--- See [Constants][] for supported address `family` output values.
+--- @param callback uv.udp_recv_start.callback
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_udp_t:recv_start(callback) end
+
 --- Stop listening for incoming datagrams.
 --- @param udp uv.uv_udp_t
 --- @return 0? success
 --- @return string? err
 --- @return string? err_name
 function uv.udp_recv_stop(udp) end
+
+--- Stop listening for incoming datagrams.
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_udp_t:recv_stop() end
 
 --- Associate the UDP handle to a remote address and port, so every message sent by
 --- this handle is automatically sent to that destination. Calling this function
@@ -2064,6 +2948,18 @@ function uv.udp_recv_stop(udp) end
 --- @return string? err_name
 function uv.udp_connect(udp, host, port) end
 
+--- Associate the UDP handle to a remote address and port, so every message sent by
+--- this handle is automatically sent to that destination. Calling this function
+--- with a NULL addr disconnects the handle. Trying to call `uv.udp_connect()` on an
+--- already connected handle will result in an `EISCONN` error. Trying to disconnect
+--- a handle that is not connected will return an `ENOTCONN` error.
+--- @param host string
+--- @param port integer
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_udp_t:connect(host, port) end
+
 
 --- # `uv_fs_event_t` - FS Event handle
 ---
@@ -2072,6 +2968,8 @@ function uv.udp_connect(udp, host, port) end
 --- FS Event handles allow the user to monitor a given path for changes, for
 --- example, if the file was renamed or there was a generic change in it. This
 --- handle uses the best backend for the job on each platform.
+--- @class uv.uv_fs_event_t : uv.uv_handle_t
+local uv_fs_event_t = {}
 
 --- Creates and initializes a new `uv_fs_event_t`. Returns the Lua userdata wrapping
 --- it.
@@ -2099,17 +2997,41 @@ function uv.new_fs_event() end
 --- @return string? err_name
 function uv.fs_event_start(fs_event, path, flags, callback) end
 
+--- Start the handle with the given callback, which will watch the specified path
+--- for changes.
+--- @param path string
+--- @param flags uv.fs_event_start.flags
+--- @param callback uv.fs_event_start.callback
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_fs_event_t:start(path, flags, callback) end
+
+--- Stop the handle, the callback will no longer be called.
+--- @param fs_event uv.uv_fs_event_t
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv.fs_event_stop(fs_event) end
+
 --- Stop the handle, the callback will no longer be called.
 --- @return 0? success
 --- @return string? err
 --- @return string? err_name
-function uv.fs_event_stop() end
+function uv_fs_event_t:stop() end
+
+--- Get the path being monitored by the handle.
+--- @param fs_event uv.uv_fs_event_t
+--- @return string? path
+--- @return string? err
+--- @return string? err_name
+function uv.fs_event_getpath(fs_event) end
 
 --- Get the path being monitored by the handle.
 --- @return string? path
 --- @return string? err
 --- @return string? err_name
-function uv.fs_event_getpath() end
+function uv_fs_event_t:getpath() end
 
 
 --- # `uv_fs_poll_t` - FS Poll handle
@@ -2119,6 +3041,8 @@ function uv.fs_event_getpath() end
 --- FS Poll handles allow the user to monitor a given path for changes. Unlike
 --- `uv_fs_event_t`, fs poll handles use `stat` to detect when a file has changed so
 --- they can work on file systems where fs event handles can't.
+--- @class uv.uv_fs_poll_t : uv.uv_handle_t
+local uv_fs_poll_t = {}
 
 --- Creates and initializes a new `uv_fs_poll_t`. Returns the Lua userdata wrapping
 --- it.
@@ -2143,17 +3067,43 @@ function uv.new_fs_poll() end
 --- @return string? err_name
 function uv.fs_poll_start(fs_poll, path, interval, callback) end
 
+--- Check the file at `path` for changes every `interval` milliseconds.
+---
+--- **Note:** For maximum portability, use multi-second intervals. Sub-second
+--- intervals will not detect all changes on many file systems.
+--- @param path string
+--- @param interval integer
+--- @param callback uv.fs_poll_start.callback
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv_fs_poll_t:start(path, interval, callback) end
+
+--- Stop the handle, the callback will no longer be called.
+--- @param fs_poll uv.uv_fs_poll_t
+--- @return 0? success
+--- @return string? err
+--- @return string? err_name
+function uv.fs_poll_stop(fs_poll) end
+
 --- Stop the handle, the callback will no longer be called.
 --- @return 0? success
 --- @return string? err
 --- @return string? err_name
-function uv.fs_poll_stop() end
+function uv_fs_poll_t:stop() end
+
+--- Get the path being monitored by the handle.
+--- @param fs_poll uv.uv_fs_poll_t
+--- @return string? path
+--- @return string? err
+--- @return string? err_name
+function uv.fs_poll_getpath(fs_poll) end
 
 --- Get the path being monitored by the handle.
 --- @return string? path
 --- @return string? err
 --- @return string? err_name
-function uv.fs_poll_getpath() end
+function uv_fs_poll_t:getpath() end
 
 
 --- # File system operations
@@ -2584,6 +3534,19 @@ function uv.fs_opendir(path, entries) end
 --- @overload fun(dir: uv.luv_dir_t, callback: fun(err: string?, entries: table<integer, { name: string, type: string }>?)): uv.uv_fs_t
 function uv.fs_readdir(dir) end
 
+--- @class uv.luv_dir_t : userdata
+local luv_dir_t = {}
+
+--- Iterates over the directory stream `luv_dir_t` returned by a successful
+--- `uv.fs_opendir()` call. A table of data tables is returned where the number
+--- of entries `n` is equal to or less than the `entries` parameter used in
+--- the associated `uv.fs_opendir()` call.
+--- @return table<integer, { name: string, type: string  }>? entries
+--- @return string? err
+--- @return string? err_name
+--- @overload fun(dir: uv.luv_dir_t, callback: fun(err: string?, entries: table<integer, { name: string, type: string }>?)): uv.uv_fs_t
+function luv_dir_t:readdir() end
+
 --- Closes a directory stream returned by a successful `uv.fs_opendir()` call.
 --- @param dir uv.luv_dir_t
 --- @return boolean? success
@@ -2591,6 +3554,13 @@ function uv.fs_readdir(dir) end
 --- @return string? err_name
 --- @overload fun(dir: uv.luv_dir_t, callback: fun(err: string?, success: boolean?)): uv.uv_fs_t
 function uv.fs_closedir(dir) end
+
+--- Closes a directory stream returned by a successful `uv.fs_opendir()` call.
+--- @return boolean? success
+--- @return string? err
+--- @return string? err_name
+--- @overload fun(dir: uv.luv_dir_t, callback: fun(err: string?, success: boolean?)): uv.uv_fs_t
+function luv_dir_t:closedir() end
 
 --- Equivalent to `statfs(2)`.
 --- @param path string
@@ -2641,6 +3611,19 @@ function uv.new_work(work_callback, after_work_callback) end
 --- @return string? err
 --- @return string? err_name
 function uv.queue_work(work_ctx, ...) end
+
+--- @class uv.luv_work_ctx_t : userdata
+local luv_work_ctx_t = {}
+
+--- Queues a work request which will run `work_callback` in a new Lua state in a
+--- thread from the threadpool with any additional arguments from `...`. Values
+--- returned from `work_callback` are passed to `after_work_callback`, which is
+--- called in the main loop thread.
+--- @param ... uv.threadargs
+--- @return boolean? success
+--- @return string? err
+--- @return string? err_name
+function luv_work_ctx_t:queue(...) end
 
 
 --- # DNS utility functions
@@ -2723,6 +3706,15 @@ function uv.new_thread(options, entry, ...) end
 --- @return boolean
 function uv.thread_equal(thread, other_thread) end
 
+--- @class uv.luv_thread_t : userdata
+local luv_thread_t = {}
+
+--- Returns a boolean indicating whether two threads are the same. This function is
+--- equivalent to the `__eq` metamethod.
+--- @param other_thread uv.luv_thread_t
+--- @return boolean
+function luv_thread_t:equal(other_thread) end
+
 --- Sets the specified thread's affinity setting.
 ---
 --- `affinity` must be a table where each of the keys are a CPU number and the
@@ -2746,6 +3738,28 @@ function uv.thread_equal(thread, other_thread) end
 --- @return string? err_name
 function uv.thread_setaffinity(thread, affinity, get_old_affinity) end
 
+--- Sets the specified thread's affinity setting.
+---
+--- `affinity` must be a table where each of the keys are a CPU number and the
+--- values are booleans that represent whether the `thread` should be eligible to
+--- run on that CPU. If the length of the `affinity` table is not greater than or
+--- equal to `uv.cpumask_size()`, any CPU numbers missing from the table will have
+--- their affinity set to `false`. If setting the affinity of more than
+--- `uv.cpumask_size()` CPUs is desired, `affinity` must be an array-like table
+--- with no gaps, since `#affinity` will be used as the `cpumask_size` if it is
+--- greater than `uv.cpumask_size()`.
+---
+--- If `get_old_affinity` is `true`, the previous affinity settings for the `thread`
+--- will be returned. Otherwise, `true` is returned after a successful call.
+---
+--- **Note:** Thread affinity setting is not atomic on Windows. Unsupported on macOS.
+--- @param affinity table<integer, boolean>
+--- @param get_old_affinity boolean?
+--- @return table<integer, boolean>? affinity
+--- @return string? err
+--- @return string? err_name
+function luv_thread_t:setaffinity(affinity, get_old_affinity) end
+
 --- Gets the specified thread's affinity setting.
 ---
 --- If `mask_size` is provided, it must be greater than or equal to
@@ -2761,6 +3775,21 @@ function uv.thread_setaffinity(thread, affinity, get_old_affinity) end
 --- @return string? err
 --- @return string? err_name
 function uv.thread_getaffinity(thread, mask_size) end
+
+--- Gets the specified thread's affinity setting.
+---
+--- If `mask_size` is provided, it must be greater than or equal to
+--- `uv.cpumask_size()`. If the `mask_size` parameter is omitted, then the return
+--- of `uv.cpumask_size()` will be used. Returns an array-like table where each of
+--- the keys correspond to a CPU number and the values are booleans that represent
+--- whether the `thread` is eligible to run on that CPU.
+---
+--- **Note:** Thread affinity getting is not atomic on Windows. Unsupported on macOS.
+--- @param mask_size integer?
+--- @return table<integer, boolean>? affinity
+--- @return string? err
+--- @return string? err_name
+function luv_thread_t:getaffinity(mask_size) end
 
 --- Gets the CPU number on which the calling thread is running.
 ---
@@ -2789,6 +3818,22 @@ function uv.thread_getcpu() end
 --- @return string? err_name
 function uv.thread_setpriority(thread, priority) end
 
+--- Sets the specified thread's scheduling priority setting. It requires elevated
+--- privilege to set specific priorities on some platforms.
+---
+--- The priority can be set to the following constants.
+---
+--- - uv.constants.THREAD_PRIORITY_HIGHEST
+--- - uv.constants.THREAD_PRIORITY_ABOVE_NORMAL
+--- - uv.constants.THREAD_PRIORITY_NORMAL
+--- - uv.constants.THREAD_PRIORITY_BELOW_NORMAL
+--- - uv.constants.THREAD_PRIORITY_LOWEST
+--- @param priority integer
+--- @return boolean? success
+--- @return string? err
+--- @return string? err_name
+function luv_thread_t:setpriority(priority) end
+
 --- Gets the  thread's priority setting.
 ---
 --- Retrieves the scheduling priority of the specified thread. The returned priority
@@ -2801,6 +3846,17 @@ function uv.thread_setpriority(thread, priority) end
 --- @return string? err_name
 function uv.thread_getpriority(thread) end
 
+--- Gets the  thread's priority setting.
+---
+--- Retrieves the scheduling priority of the specified thread. The returned priority
+--- value is platform dependent.
+---
+--- For Linux, when schedule policy is SCHED_OTHER (default), priority is 0.
+--- @return integer? priority
+--- @return string? err
+--- @return string? err_name
+function luv_thread_t:getpriority() end
+
 --- Returns the handle for the thread in which this is called.
 --- @return uv.luv_thread_t
 function uv.thread_self() end
@@ -2812,6 +3868,12 @@ function uv.thread_self() end
 --- @return string? err_name
 function uv.thread_join(thread) end
 
+--- Waits for the `thread` to finish executing its entry function.
+--- @return boolean? success
+--- @return string? err
+--- @return string? err_name
+function luv_thread_t:join() end
+
 --- Detaches a thread. Detached threads automatically release their resources upon
 --- termination, eliminating the need for the application to call `uv.thread_join`.
 --- @param thread uv.luv_thread_t
@@ -2819,6 +3881,13 @@ function uv.thread_join(thread) end
 --- @return string? err
 --- @return string? err_name
 function uv.thread_detach(thread) end
+
+--- Detaches a thread. Detached threads automatically release their resources upon
+--- termination, eliminating the need for the application to call `uv.thread_join`.
+--- @return boolean? success
+--- @return string? err
+--- @return string? err_name
+function luv_thread_t:detach() end
 
 --- Sets the name of the current thread. Different platforms define different limits
 --- on the max number of characters a thread name can be: Linux, IBM i (16), macOS
@@ -2836,6 +3905,12 @@ function uv.thread_setname(name) end
 --- @return string? err
 --- @return string? err_name
 function uv.thread_getname(thread) end
+
+--- Gets the name of the thread specified by `thread`.
+--- @return string? name
+--- @return string? err
+--- @return string? err_name
+function luv_thread_t:getname() end
 
 --- Pauses the thread in which this is called for a number of milliseconds.
 --- @param msec integer
@@ -3343,12 +4418,6 @@ function uv.wtf8_to_utf16(wtf8) end
 --- | string
 --- | string[]
 
---- @class uv.luv_dir_t : userdata
-
---- @class uv.luv_thread_t : userdata
-
---- @class uv.luv_work_ctx_t : userdata
-
 --- @class uv.socketinfo
 --- @field ip string
 --- @field family string
@@ -3360,15 +4429,7 @@ function uv.wtf8_to_utf16(wtf8) end
 --- | string
 --- | userdata
 
---- @class uv.uv_async_t : uv.uv_handle_t
-
---- @class uv.uv_check_t : uv.uv_handle_t
-
 --- @class uv.uv_connect_t : uv.uv_req_t
-
---- @class uv.uv_fs_event_t : uv.uv_handle_t
-
---- @class uv.uv_fs_poll_t : uv.uv_handle_t
 
 --- @class uv.uv_fs_t : uv.uv_req_t
 
@@ -3376,35 +4437,9 @@ function uv.wtf8_to_utf16(wtf8) end
 
 --- @class uv.uv_getnameinfo_t : uv.uv_req_t
 
---- @class uv.uv_handle_t : userdata
-
---- @class uv.uv_idle_t : uv.uv_handle_t
-
---- @class uv.uv_pipe_t : uv.uv_stream_t
-
---- @class uv.uv_poll_t : uv.uv_handle_t
-
---- @class uv.uv_prepare_t : uv.uv_handle_t
-
---- @class uv.uv_process_t : uv.uv_handle_t
-
---- @class uv.uv_req_t : userdata
-
 --- @class uv.uv_shutdown_t : uv.uv_req_t
 
---- @class uv.uv_signal_t : uv.uv_handle_t
-
---- @class uv.uv_stream_t : uv.uv_handle_t
-
---- @class uv.uv_tcp_t : uv.uv_stream_t
-
---- @class uv.uv_timer_t : uv.uv_handle_t
-
---- @class uv.uv_tty_t : uv.uv_stream_t
-
 --- @class uv.uv_udp_send_t : uv.uv_req_t
-
---- @class uv.uv_udp_t : uv.uv_handle_t
 
 --- @class uv.uv_work_t : uv.uv_req_t
 
