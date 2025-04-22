@@ -503,6 +503,13 @@ do -- doc
       out:write('\n')
     end
 
+    for _, alias in spairs(doc.aliases or {}) do
+      for _, a in ipairs(alias) do
+        out:write(('- `%s`: %s\n'):format(a[1], a[2]))
+      end
+      out:write('\n')
+    end
+
     for _, func in ipairs(doc.funcs or {}) do
       write_func(out, func, lvl + 1)
     end
@@ -798,6 +805,14 @@ do -- meta
 
     for _, constant in ipairs(doc.constants or {}) do
       out:write(("uv.constants.%s = '%s'\n"):format(constant[1], constant[2]))
+    end
+
+    for name, alias in spairs(doc.aliases or {}) do
+      out:write('\n')
+      out:write(('--- @alias uv.%s\n'):format(name))
+      for _, a in ipairs(alias) do
+        out:write(("--- | '%s' # %s\n"):format(a[1], a[2]))
+      end
     end
 
     if doc.funcs then
