@@ -203,6 +203,12 @@ lowercase option strings are listed below.
 - `TTY_MODE_NORMAL`: "normal"
 - `TTY_MODE_RAW`: "raw"
 - `TTY_MODE_IO`: "io"
+- `TTY_MODE_RAW_VT`: "raw_vt"
+
+### FS Modification Times
+
+- `FS_UTIME_NOW`: "now"
+- `FS_UTIME_OMIT`: "omit"
 
 ## Error Handling
 
@@ -3235,49 +3241,73 @@ Equivalent to `fchmod(2)`.
 
 **Returns (async version):** `uv_fs_t userdata`
 
-### `uv.fs_utime(path, atime, mtime, [callback])`
+### `uv.fs_utime(path, [atime], [mtime], [callback])`
 
 **Parameters:**
 - `path`: `string`
-- `atime`: `number`
-- `mtime`: `number`
+- `atime`: `number` or `string` or `nil`
+- `mtime`: `number` or `string` or `nil`
 - `callback`: `callable` or `nil` (async if provided, sync if `nil`)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
 Equivalent to `utime(2)`.
 
+See [Constants][] for supported FS Modification Time constants.
+
+Passing `"now"` or `uv.constants.FS_UTIME_NOW` as the atime or mtime sets the timestamp to the
+current time.
+
+Passing `nil`, `"omit"`, or `uv.constants.FS_UTIME_OMIT` as the atime or mtime leaves the timestamp
+untouched.
+
 **Returns (sync version):** `boolean` or `fail`
 
 **Returns (async version):** `uv_fs_t userdata`
 
-### `uv.fs_futime(fd, atime, mtime, [callback])`
+### `uv.fs_futime(fd, [atime], [mtime], [callback])`
 
 **Parameters:**
 - `fd`: `integer`
-- `atime`: `number`
-- `mtime`: `number`
+- `atime`: `number` or `string` or `nil`
+- `mtime`: `number` or `string` or `nil`
 - `callback`: `callable` or `nil` (async if provided, sync if `nil`)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
-Equivalent to `futime(2)`.
+Equivalent to `futimes(3)`.
+
+See [Constants][] for supported FS Modification Time constants.
+
+Passing `"now"` or `uv.constants.FS_UTIME_NOW` as the atime or mtime sets the timestamp to the
+current time.
+
+Passing `nil`, `"omit"`, or `uv.constants.FS_UTIME_OMIT` as the atime or mtime leaves the timestamp
+untouched.
 
 **Returns (sync version):** `boolean` or `fail`
 
 **Returns (async version):** `uv_fs_t userdata`
 
-### `uv.fs_lutime(path, atime, mtime, [callback])`
+### `uv.fs_lutime(path, [atime], [mtime], [callback])`
 
 **Parameters:**
 - `path`: `string`
-- `atime`: `number`
-- `mtime`: `number`
+- `atime`: `number` or `string` or `nil`
+- `mtime`: `number` or `string` or `nil`
 - `callback`: `callable` or `nil` (async if provided, sync if `nil`)
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
-Equivalent to `lutime(2)`.
+Equivalent to `lutimes(3)`.
+
+See [Constants][] for supported FS Modification Time constants.
+
+Passing `"now"` or `uv.constants.FS_UTIME_NOW` as the atime or mtime sets the timestamp to the
+current time.
+
+Passing `nil`, `"omit"`, or `uv.constants.FS_UTIME_OMIT` as the atime or mtime leaves the timestamp
+untouched.
 
 **Returns (sync version):** `boolean` or `fail`
 

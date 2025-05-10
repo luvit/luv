@@ -1,3 +1,6 @@
+local uvVersionGEQ = require('lib/utils').uvVersionGEQ
+local isWindows = require('lib/utils').isWindows
+
 return require('lib/tap')(function (test)
 
   test("read a file sync", function (print, p, expect, uv)
@@ -441,4 +444,134 @@ return require('lib/tap')(function (test)
     assert(uv.fs_unlink(path1))
     assert(uv.fs_rmdir(path2))
   end)
+
+  local isfinite = function(v)
+     -- `v == v` rules out nan
+    return v ~= math.huge and v == v
+  end
+
+  local check_utime = function(uv, path, atime, mtime, test_lutime)
+    local statfn = test_lutime and uv.fs_lstat or uv.fs_stat
+    local stat = assert(statfn(path))
+
+    if isfinite(atime) then
+      -- very approximate check, different systems have different precisions
+      assert(stat.atime.sec >= atime - 1)
+      assert(stat.atime.sec <= atime)
+    elseif atime == math.huge then -- "now"
+      -- arbitrary timestamp more recent than the timestamps we use in the tests
+      assert(stat.atime.sec > 1739710000)
+    end
+
+    if isfinite(mtime) then
+      -- very approximate check, different systems have different precisions
+      assert(stat.mtime.sec >= mtime - 1)
+      assert(stat.mtime.sec <= mtime)
+    elseif mtime == math.huge then -- "now"
+      -- arbitrary timestamp more recent than the timestamps we use in the tests
+      assert(stat.mtime.sec > 1739710000)
+    end
+  end
+
+  local function test_utime(utimefn, path, path_or_fd, test_lutime, print, p, expect, uv, cb)
+    local atime = 400497753.25 -- 1982-09-10 11:22:33.25
+    local mtime = atime
+
+    assert(utimefn(path_or_fd, atime, mtime))
+    check_utime(uv, path, atime, mtime, test_lutime)
+
+    if uvVersionGEQ("1.51.0") then
+      -- omit both atime and mtime, using all possible parameter variants
+      assert(utimefn(path_or_fd))
+      check_utime(uv, path, atime, mtime, test_lutime)
+
+      assert(utimefn(path_or_fd, nil, nil))
+      check_utime(uv, path, atime, mtime, test_lutime)
+
+      assert(utimefn(path_or_fd, "omit", "omit"))
+      check_utime(uv, path, atime, mtime, test_lutime)
+
+      assert(utimefn(path_or_fd, uv.constants.FS_UTIME_OMIT, uv.constants.FS_UTIME_OMIT))
+      check_utime(uv, path, atime, mtime, test_lutime)
+
+      -- atime now
+      assert(utimefn(path_or_fd, "now", nil))
+      check_utime(uv, path, uv.constants.FS_UTIME_NOW, mtime, test_lutime)
+
+      -- reset atime/mtime
+      assert(utimefn(path_or_fd, atime, mtime))
+      check_utime(uv, path, atime, mtime, test_lutime)
+
+      -- atime now
+      assert(utimefn(path_or_fd, uv.constants.FS_UTIME_NOW, nil))
+      check_utime(uv, path, uv.constants.FS_UTIME_NOW, mtime, test_lutime)
+
+      -- reset atime/mtime
+      assert(utimefn(path_or_fd, atime, mtime))
+      check_utime(uv, path, atime, mtime, test_lutime)
+
+      -- mtime now
+      assert(utimefn(path_or_fd, nil, "now"))
+      check_utime(uv, path, atime, uv.constants.FS_UTIME_NOW, test_lutime)
+
+      -- reset atime/mtime
+      assert(utimefn(path_or_fd, atime, mtime))
+      check_utime(uv, path, atime, mtime, test_lutime)
+
+      -- mtime now
+      assert(utimefn(path_or_fd, nil, uv.constants.FS_UTIME_NOW))
+      check_utime(uv, path, atime, uv.constants.FS_UTIME_NOW, test_lutime)
+    end
+
+    -- async
+    atime = 1291404900.25; -- 2010-12-03 20:35:00.25
+    mtime = atime
+
+    assert(utimefn(path_or_fd, atime, mtime, expect(function(err)
+      assert(not err, err)
+      check_utime(uv, path, atime, mtime, test_lutime)
+      if cb then cb() end
+    end)))
+  end
+
+  test("fs.utime", function(print, p, expect, uv)
+    local path = "_test_"
+    local fd = assert(uv.fs_open(path, "w+", 438))
+    assert(uv.fs_close(fd))
+
+    test_utime(uv.fs_utime, path, path, false, print, p, expect, uv, function()
+      assert(uv.fs_unlink(path))
+    end)
+  end)
+
+  test("fs.futime", function(print, p, expect, uv)
+    local path = "_test_"
+    local fd = assert(uv.fs_open(path, "w+", 438))
+
+    test_utime(uv.fs_futime, path, fd, false, print, p, expect, uv, function()
+      assert(uv.fs_close(fd))
+      assert(uv.fs_unlink(path))
+    end)
+  end)
+
+  test("fs.lutime", function(print, p, expect, uv)
+    local path = "_test_"
+    local symlink_path = "_test_symlink_"
+    local fd = assert(uv.fs_open(path, "w+", 438))
+    assert(uv.fs_close(fd))
+
+    uv.fs_unlink(symlink_path)
+    local ok, err, errname = uv.fs_symlink(path, symlink_path)
+    if not ok and isWindows and errname == "EPERM" then
+      -- Creating a symlink on Windows can require extra privileges
+      print("Insufficient privileges to create symlink, skipping")
+      return
+    end
+    assert(ok, err)
+
+    test_utime(uv.fs_lutime, symlink_path, symlink_path, true, print, p, expect, uv, function()
+      assert(uv.fs_unlink(symlink_path))
+      assert(uv.fs_unlink(path))
+    end)
+  end, "1.36.0")
 end)

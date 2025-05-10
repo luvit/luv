@@ -779,11 +779,25 @@ static int luv_fs_fchmod(lua_State* L) {
   FS_CALL(uv_fs_fchmod, req, file, mode);
 }
 
+static double luv_fs_check_modification_time(lua_State* L, int index) {
+#if LUV_UV_VERSION_GEQ(1, 51, 0)
+  const char* special_value_strings[] = { "now", "omit", NULL};
+  double special_values[] = { UV_FS_UTIME_NOW, UV_FS_UTIME_OMIT };
+  if (lua_isnoneornil(L, index)) return UV_FS_UTIME_OMIT;
+  if (lua_isnumber(L, index)) return lua_tonumber(L, index);
+
+  int special_value_index = luaL_checkoption(L, index, NULL, special_value_strings);
+  return special_values[special_value_index];
+#else
+  return luaL_checknumber(L, index);
+#endif
+}
+
 static int luv_fs_utime(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
   const char* path = luaL_checkstring(L, 1);
-  double atime = luaL_checknumber(L, 2);
-  double mtime = luaL_checknumber(L, 3);
+  double atime = luv_fs_check_modification_time(L, 2);
+  double mtime = luv_fs_check_modification_time(L, 3);
   int ref = luv_check_continuation(L, 4);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
@@ -793,8 +807,8 @@ static int luv_fs_utime(lua_State* L) {
 static int luv_fs_futime(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
   uv_file file = luaL_checkinteger(L, 1);
-  double atime = luaL_checknumber(L, 2);
-  double mtime = luaL_checknumber(L, 3);
+  double atime = luv_fs_check_modification_time(L, 2);
+  double mtime = luv_fs_check_modification_time(L, 3);
   int ref = luv_check_continuation(L, 4);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);
@@ -805,8 +819,8 @@ static int luv_fs_futime(lua_State* L) {
 static int luv_fs_lutime(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
   const char* path = luaL_checkstring(L, 1);
-  double atime = luaL_checknumber(L, 2);
-  double mtime = luaL_checknumber(L, 3);
+  double atime = luv_fs_check_modification_time(L, 2);
+  double mtime = luv_fs_check_modification_time(L, 3);
   int ref = luv_check_continuation(L, 4);
   uv_fs_t* req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
   req->data = luv_setup_req(L, ctx, ref);

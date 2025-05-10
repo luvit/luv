@@ -355,6 +355,10 @@ static int luv_constants(lua_State* L) {
   lua_setfield(L, -2, "TTY_MODE_RAW");
   lua_pushinteger(L, UV_TTY_MODE_IO);
   lua_setfield(L, -2, "TTY_MODE_IO");
+#if LUV_UV_VERSION_GEQ(1, 51, 0)
+  lua_pushinteger(L, UV_TTY_MODE_RAW_VT);
+  lua_setfield(L, -2, "TTY_MODE_RAW_VT");
+#endif
 #endif
 
 #if LUV_UV_VERSION_GEQ(1, 48, 0)
@@ -368,6 +372,13 @@ static int luv_constants(lua_State* L) {
   lua_setfield(L, -2, "THREAD_PRIORITY_BELOW_NORMAL");
   lua_pushinteger(L, UV_THREAD_PRIORITY_LOWEST);
   lua_setfield(L, -2, "THREAD_PRIORITY_LOWEST");
+#endif
+
+#if LUV_UV_VERSION_GEQ(1, 51, 0)
+  lua_pushnumber(L, UV_FS_UTIME_NOW);
+  lua_setfield(L, -2, "FS_UTIME_NOW");
+  lua_pushnumber(L, UV_FS_UTIME_OMIT);
+  lua_setfield(L, -2, "FS_UTIME_OMIT");
 #endif
 
   return 1;
