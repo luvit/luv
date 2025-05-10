@@ -321,6 +321,11 @@ local constants = {
     { 'TTY_MODE_NORMAL', 'normal' },
     { 'TTY_MODE_RAW', 'raw' },
     { 'TTY_MODE_IO', 'io' },
+    { 'TTY_MODE_RAW_VT', 'raw_vt' },
+  },
+  fs_utime = {
+    { 'FS_UTIME_NOW', 'now' },
+    { 'FS_UTIME_OMIT', 'omit' },
   },
 }
 
@@ -616,6 +621,10 @@ local doc = {
         {
           title = 'TTY Modes',
           constants = constants.tty_modes,
+        },
+        {
+          title = 'FS Modification Times',
+          constants = constants.fs_utime,
         },
       },
     },
@@ -3595,11 +3604,21 @@ local doc = {
         },
         {
           name = 'fs_utime',
-          desc = 'Equivalent to `utime(2)`.',
+          desc = [[
+              Equivalent to `utime(2)`.
+
+              See [Constants][] for supported FS Modification Time constants.
+
+              Passing `"now"` or `uv.constants.FS_UTIME_NOW` as the atime or mtime sets the timestamp to the
+              current time.
+
+              Passing `nil`, `"omit"`, or `uv.constants.FS_UTIME_OMIT` as the atime or mtime leaves the timestamp
+              untouched.
+            ]],
           params = {
             { name = 'path', type = 'string' },
-            { name = 'atime', type = 'number' },
-            { name = 'mtime', type = 'number' },
+            { name = 'atime', type = opt(union('number', 'string')) },
+            { name = 'mtime', type = opt(union('number', 'string')) },
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
@@ -3607,11 +3626,21 @@ local doc = {
         },
         {
           name = 'fs_futime',
-          desc = 'Equivalent to `futime(2)`.',
+          desc = [[
+              Equivalent to `futimes(3)`.
+
+              See [Constants][] for supported FS Modification Time constants.
+
+              Passing `"now"` or `uv.constants.FS_UTIME_NOW` as the atime or mtime sets the timestamp to the
+              current time.
+
+              Passing `nil`, `"omit"`, or `uv.constants.FS_UTIME_OMIT` as the atime or mtime leaves the timestamp
+              untouched.
+            ]],
           params = {
             { name = 'fd', type = 'integer' },
-            { name = 'atime', type = 'number' },
-            { name = 'mtime', type = 'number' },
+            { name = 'atime', type = opt(union('number', 'string')) },
+            { name = 'mtime', type = opt(union('number', 'string')) },
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
@@ -3619,11 +3648,21 @@ local doc = {
         },
         {
           name = 'fs_lutime',
-          desc = 'Equivalent to `lutime(2)`.',
+          desc = [[
+              Equivalent to `lutimes(3)`.
+
+              See [Constants][] for supported FS Modification Time constants.
+
+              Passing `"now"` or `uv.constants.FS_UTIME_NOW` as the atime or mtime sets the timestamp to the
+              current time.
+
+              Passing `nil`, `"omit"`, or `uv.constants.FS_UTIME_OMIT` as the atime or mtime leaves the timestamp
+              untouched.
+            ]],
           params = {
             { name = 'path', type = 'string' },
-            { name = 'atime', type = 'number' },
-            { name = 'mtime', type = 'number' },
+            { name = 'atime', type = opt(union('number', 'string')) },
+            { name = 'mtime', type = opt(union('number', 'string')) },
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),

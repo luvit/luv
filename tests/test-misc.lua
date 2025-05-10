@@ -193,6 +193,10 @@ return require('lib/tap')(function (test)
         assert(v == -2)
       elseif k=='THREAD_PRIORITY_BELOW_NORMAL' then
         assert(v == -1)
+      elseif k=='FS_UTIME_NOW' then
+        assert(v == math.huge)
+      elseif k=='FS_UTIME_OMIT' then
+        assert(v ~= v) -- nan
       else
         assert(v >= 0, k)
       end
