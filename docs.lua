@@ -163,7 +163,7 @@ end
 local function cb_err(args, optional, desc)
   return cb({
     { 'err', opt_str },
-    unpack(args or {}),
+    (_G.table.unpack or unpack)(args or {}),
   }, optional, desc)
 end
 
