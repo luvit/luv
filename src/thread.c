@@ -54,11 +54,11 @@ static void luv_thread_release_vm(lua_State* L) {
 
 static const char* luv_getmtname(lua_State *L, int idx) {
   const char* name;
-  lua_getmetatable(L, idx);
-  lua_pushstring(L, "__name");
-  lua_rawget(L, -2);
-  name = lua_tostring(L, -1);
-  lua_pop(L, 2);
+  if (lua_getmetatable(L, idx)) {
+    lua_getfield(L, -1, "__name");
+    name = lua_tostring(L, -1);
+    lua_pop(L, 2);
+  }
   return name;
 }
 

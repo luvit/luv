@@ -167,12 +167,16 @@ return require('lib/tap')(function (test)
     assert(type(uv.constants.THREAD_PRIORITY_BELOW_NORMAL)=='number')
     assert(type(uv.constants.THREAD_PRIORITY_LOWEST)=='number')
 
-    local thread = uv.new_thread(function()
+    local sem = uv.new_sem(0)
+    local thread = uv.new_thread(function(sem)
       local _uv = require('luv')
       local self = _uv.thread_self()
+      _uv.sem_wait(sem)
       local priority = assert(self:getpriority())
       print('priority in thread', priority)
-    end)
+    end, sem)
+
+    uv.sleep(100)
 
     local priority = assert(thread:getpriority())
     print('default priority', priority)
@@ -180,6 +184,8 @@ return require('lib/tap')(function (test)
     assert(thread:setpriority(uv.constants.THREAD_PRIORITY_LOWEST))
     priority = assert(thread:getpriority())
     print('priority after change', priority)
+
+    sem:post()
     thread:join()
   end, "1.48.0")
 
