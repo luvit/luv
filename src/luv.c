@@ -43,6 +43,7 @@
 #include "signal.c"
 #include "stream.c"
 #include "tcp.c"
+#include "synch.c"
 #include "thread.c"
 #include "timer.c"
 #include "tty.c"
@@ -407,6 +408,12 @@ static const luaL_Reg luv_functions[] = {
   {"thread_getname", luv_thread_getname},
   {"thread_setname", luv_thread_setname},
 #endif
+
+  // synch.c
+  {"new_sem", luv_new_sem},
+  {"sem_post", luv_sem_post},
+  {"sem_wait", luv_sem_wait},
+  {"sem_trywait", luv_sem_trywait},
 
 #if LUV_UV_VERSION_GEQ(1, 49, 0)
   {"utf16_length_as_wtf8", luv_utf16_length_as_wtf8},
@@ -920,6 +927,7 @@ LUALIB_API int luaopen_luv (lua_State* L) {
   luv_dir_init(L);
 #endif
   luv_thread_init(L);
+  luv_synch_init(L);
   luv_work_init(L);
 
   luv_constants(L);

@@ -365,6 +365,7 @@ local types = {
   luv_dir_t = cls('userdata'),
   luv_work_ctx_t = cls('userdata'),
   luv_thread_t = cls('userdata'),
+  luv_sem_t = cls('userdata'),
 
   threadargs = union('number', 'boolean', 'string', 'userdata'),
 
@@ -4181,6 +4182,63 @@ local doc = {
           params = {
             { name = 'msec', type = 'integer' },
           },
+        },
+        {
+          name = 'new_sem',
+          desc = [[
+            Creates a new semaphore with the specified initial value. A semaphore is safe to
+            share across threads. It represents an unsigned integer value that can incremented
+            and decremented atomically but any attempt to make it negative will "wait" until
+            the value can be decremented by another thread incrementing it.
+
+            The initial value must be a non-negative integer.
+          ]],
+          params = {
+            { name = 'value', type = opt_int },
+          },
+          returns = ret_or_fail('luv_sem_t', 'sem'),
+          notes = {
+            [[A semaphore must be shared between threads, any `uv.sem_wait()` on a single thread that blocks will deadlock.]],
+          },
+        },
+        {
+          name = 'sem_post',
+          method_form = 'sem:post()',
+          desc = [[
+            Increments (unlocks) a semaphore, if the semaphore's value consequently becomes
+            greater than zero then another thread blocked in a sem_wait call will be woken
+            and proceed to decrement the semaphore.
+          ]],
+          params = {
+            { name = 'sem', type = 'luv_sem_t' },
+          },
+        },
+        {
+          name = 'sem_wait',
+          method_form = 'sem:wait()',
+          desc = [[
+              Decrements (locks) a semaphore, if the semaphore's value is greater than zero
+              then the value is decremented and the call returns immediately. If the semaphore's
+              value is zero then the call blocks until the semaphore's value rises above zero or
+              the call is interrupted by a signal.
+          ]],
+          params = {
+            { name = 'sem', type = 'luv_sem_t' },
+          },
+        },
+        {
+          name = 'sem_trywait',
+          method_form = 'sem:trywait()',
+          desc = [[
+              The same as `uv.sem_wait()` but returns immediately if the semaphore is not available.
+
+              If the semaphore's value was decremented then `true` is returned, otherwise the semaphore
+              has a value of zero and `false` is returned.
+          ]],
+          params = {
+            { name = 'sem', type = 'luv_sem_t' },
+          },
+          returns = 'boolean',
         },
       },
     },
