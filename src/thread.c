@@ -242,17 +242,26 @@ static int luv_thread_dumped(lua_State* L, int idx) {
   } else {
     int ret, top;
     luaL_Buffer B;
+    top = lua_gettop(L);
 
     // In Lua >= 5.4.3, luaL_buffinit pushes a value onto the stack, so it needs to be called
     // here to ensure that the function is at the top of the stack during the lua_dump call
     luaL_buffinit(L, &B);
     luaL_checktype(L, idx, LUA_TFUNCTION);
     lua_pushvalue(L, idx);
-    top = lua_gettop(L);
     ret = lua_dump(L, thread_dump, &B, 1);
-    lua_remove(L, top);
     if (ret==0) {
       luaL_pushresult(&B);
+      // The goal is to return from this function with the only change to the stack
+      // being the dumped thread pushed onto the top. In Lua >= 5.4.3, this is a bit
+      // tricky because luaL_Buffer pushes its buffer onto the stack and relies on
+      // that stack value's lifetime for its memory. This means that we can't safely
+      // pop that value off the stack until after we have fully dumped the function
+      // and pushed the result. After we push the result (luaL_pushresult), we want
+      // to get rid of any intermediate values and put the result at the new top of
+      // the stack, 1 after the top that we entered with. That's what's happening here:
+      lua_replace(L, top + 1);
+      lua_settop(L, top + 1);
     } else
       luaL_error(L, "Error: unable to dump given function");
   }
