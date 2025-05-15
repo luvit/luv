@@ -2,7 +2,7 @@
 --- the luv project. It processes documentation sections from docs.lua,
 --- and writes the output to markdown (docs.md) and Lua files (meta.lua).
 
-local docs = require('docs')
+local docs = dofile('docs/docs.lua')
 local doctop = docs[1]
 local types = docs[2]
 
@@ -863,10 +863,10 @@ local function main()
   -- Generate types for large inline types
   gen_types_for_doc(doctop)
 
-  local outdoc = assert(io.open('docs.md', 'w'))
+  local outdoc = assert(io.open('docs/docs.md', 'w'))
   Doc.write(outdoc, doctop)
 
-  local outmeta = assert(io.open('meta.lua', 'w'))
+  local outmeta = assert(io.open('docs/meta.lua', 'w'))
   Meta.write(outmeta, doctop)
 end
 

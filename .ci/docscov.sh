@@ -14,7 +14,7 @@ method_definitions=$(tail -n +$after_funcs src/luv.c | sed -n '/luaL_Reg/,/^\};$
 
 for fn in `echo "$func_definitions" | grep -oP "\s+ \{\"\K([^\"]+)(?=\",)"`; do
 	# count instances of '### `uv.fn_name' in the docs
-	count=$(grep -oPc "^#+\s+\`uv\.$fn\b" docs.md)
+	count=$(grep -oPc "^#+\s+\`uv\.$fn\b" docs/docs.md)
 
 	if [ $count -eq 0 ] ; then
 		echo $fn
@@ -24,7 +24,7 @@ done
 
 for fn in `echo "$method_definitions" | grep -oP "\s+ \{\"\K([^\"]+)(?=\",)"`; do
 	# count instances of '> method form something:fn_name' in the docs
-	count=$(grep -oPc "^> method form [^:]+:$fn\b" docs.md)
+	count=$(grep -oPc "^> method form [^:]+:$fn\b" docs/docs.md)
 
 	if [ $count -eq 0 ] ; then
 		echo "$fn (method form)"
