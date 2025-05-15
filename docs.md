@@ -1022,14 +1022,18 @@ end)
 async:send()
 ```
 
-### `uv.new_async(callback)`
+### `uv.new_async(callback, [size])`
 
 **Parameters:**
 - `callback`: `callable`
   - `...`: `threadargs` passed to/from `uv.async_send(async, ...)`
+- `size`: `integer` or `nil` (default: `0`)
 
 Creates and initializes a new `uv_async_t`. Returns the Lua userdata wrapping
 it.
+
+If size is omitted (or 0), each call to send discards any pending one; otherwise, a call to send could fail with `ENOSPC` when there are already `size` pending send.
+
 
 **Returns:** `uv_async_t userdata` or `fail`
 
@@ -1056,6 +1060,7 @@ every call to it will yield an execution of the callback. For example: if
 `uv.async_send()` is called 5 times in a row before the callback is called, the
 callback will only be called once. If `uv.async_send()` is called again after
 the callback was called, it will be called again.
+When specifying a `size` greater than 0, this function will fail when there are pending calls.
 
 ## `uv_poll_t` — Poll handle
 

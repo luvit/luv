@@ -62,17 +62,25 @@ static const char* luv_getmtname(lua_State *L, int idx) {
   return name;
 }
 
+static int luv_thread_arg_set_error(lua_State* L, luv_thread_arg_t* args, int type, int index) {
+  args->argc = index;
+  lua_pushinteger(L, type);
+  lua_pushinteger(L, index + 1);
+  return -1;
+}
+
 static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int top, int flags) {
   int i;
   int side = LUVF_THREAD_SIDE(flags);
   int async = LUVF_THREAD_ASYNC(flags);
-
+  // thread works by reference, async works by copy.
   idx = idx > 0 ? idx : 1;
   i = idx;
   args->flags = flags;
   while (i <= top && i < LUV_THREAD_MAXNUM_ARG + idx)
   {
-    luv_val_t *arg = args->argv + (i - idx);
+    int ii = i - idx;
+    luv_val_t *arg = args->argv + ii;
     arg->type = lua_type(L, i);
     arg->ref[0] = arg->ref[1] = LUA_NOREF;
     switch (arg->type)
@@ -91,11 +99,15 @@ static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int
       }
       break;
     case LUA_TSTRING:
-      if (async)
-      {
-        const char* p = lua_tolstring(L, i, &arg->val.str.len);
-        arg->val.str.base = malloc(arg->val.str.len);
-        memcpy((void*)arg->val.str.base, p, arg->val.str.len);
+      if (async) {
+        size_t l = 0;
+        const char* p = lua_tolstring(L, i, &l);
+        void* b = malloc(l + 1);
+        if (b == NULL) {
+          return luv_thread_arg_set_error(L, args, LUA_TNONE, ii);
+        }
+        arg->val.str.base = memcpy((void*)b, p, l + 1);
+        arg->val.str.len = l;
       } else {
         arg->val.str.base = lua_tolstring(L, i, &arg->val.str.len);
         lua_pushvalue(L, i);
@@ -103,20 +115,37 @@ static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int
       }
       break;
     case LUA_TUSERDATA:
-      arg->val.udata.data = lua_topointer(L, i);
-      arg->val.udata.size = lua_rawlen(L, i);
-      arg->val.udata.metaname = luv_getmtname(L, i);
-
-      if (arg->val.udata.size) {
-        lua_pushvalue(L, i);
-        arg->ref[side] = luaL_ref(L, LUA_REGISTRYINDEX);
+      {
+        const void* p = lua_topointer(L, i);
+        size_t l = lua_rawlen(L, i);
+        const char* mtname = luv_getmtname(L, i);
+        if (async) {
+          if (l > 0) {
+            void* b = malloc(l);
+            if (b == NULL) {
+              return luv_thread_arg_set_error(L, args, LUA_TNONE, ii);
+            }
+            p = (const void*)memcpy(b, p, l);
+          }
+          if (mtname != NULL) {
+            size_t ml = strlen(mtname) + 1;
+            char* b = malloc(ml);
+            if (b == NULL) {
+              return luv_thread_arg_set_error(L, args, LUA_TNONE, ii);
+            }
+            mtname = (const void*)memcpy(b, mtname, ml);
+          }
+        } else {
+          lua_pushvalue(L, i);
+          arg->ref[side] = luaL_ref(L, LUA_REGISTRYINDEX);
+        }
+        arg->val.udata.data = p;
+        arg->val.udata.size = l;
+        arg->val.udata.metaname = mtname;
       }
       break;
     default:
-      args->argc = i - idx;
-      lua_pushinteger(L, arg->type);
-      lua_pushinteger(L, i - idx + 1);
-      return -1;
+      return luv_thread_arg_set_error(L, args, arg->type, ii);
     }
     i++;
   }
@@ -124,42 +153,54 @@ static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int
   return args->argc;
 }
 
-static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags) {
+static void luv_thread_arg_free(luv_thread_arg_t* args) {
   int i;
-  int side = LUVF_THREAD_SIDE(flags);
-  int set = LUVF_THREAD_SIDE(args->flags);
-  int async = LUVF_THREAD_ASYNC(args->flags);
-
-  if (args->argc == 0)
-    return;
-
   for (i = 0; i < args->argc; i++) {
     luv_val_t* arg = args->argv + i;
     switch (arg->type) {
     case LUA_TSTRING:
-      if (arg->ref[side] != LUA_NOREF)
-      {
+      free((void*)arg->val.str.base);
+      arg->val.str.base = NULL;
+      break;
+    case LUA_TUSERDATA:
+      if (arg->val.udata.size > 0) {
+        free((void*)arg->val.udata.data);
+        arg->val.udata.data = NULL;
+      }
+      free((void*)arg->val.udata.metaname);
+      arg->val.udata.metaname = NULL;
+      break;
+    }
+  }
+}
+
+static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags) {
+  int i;
+  int side = LUVF_THREAD_SIDE(flags);
+  int setside = LUVF_THREAD_SIDE(args->flags);
+  int async = LUVF_THREAD_ASYNC(args->flags);
+
+  // clear is safe to be called multiple times from multiple sides.
+  if (args->argc <= 0) {
+    return;
+  }
+  for (i = 0; i < args->argc; i++) {
+    luv_val_t* arg = args->argv + i;
+    switch (arg->type) {
+    case LUA_TSTRING:
+      if (arg->ref[side] != LUA_NOREF) {
         luaL_unref(L, LUA_REGISTRYINDEX, arg->ref[side]);
         arg->ref[side] = LUA_NOREF;
-      } else {
-        if(async && set!=side)
-        {
-          free((void*)arg->val.str.base);
-          arg->val.str.base = NULL;
-          arg->val.str.len = 0;
-        }
       }
       break;
     case LUA_TUSERDATA:
-      if (arg->ref[side]!=LUA_NOREF)
-      {
-        if (side != set)
-        {
+      if (arg->ref[side] != LUA_NOREF) {
+        if (side != setside) {
           // avoid custom gc
           lua_rawgeti(L, LUA_REGISTRYINDEX, arg->ref[side]);
           lua_pushnil(L);
           lua_setmetatable(L, -2);
-          lua_pop(L, -1);
+          lua_pop(L, 1);
         }
         luaL_unref(L, LUA_REGISTRYINDEX, arg->ref[side]);
         arg->ref[side] = LUA_NOREF;
@@ -169,9 +210,11 @@ static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags
       break;
     }
   }
+  if (async && side != setside) {
+    luv_thread_arg_free(args);
+  }
 }
 
-// called only in thread
 static int luv_thread_arg_push(lua_State* L, luv_thread_arg_t* args, int flags) {
   int i = 0;
   int side = LUVF_THREAD_SIDE(flags);
@@ -196,18 +239,16 @@ static int luv_thread_arg_push(lua_State* L, luv_thread_arg_t* args, int flags) 
       lua_pushlstring(L, arg->val.str.base, arg->val.str.len);
       break;
     case LUA_TUSERDATA:
-      if (arg->val.udata.size)
-      {
+      if (arg->val.udata.size > 0) {
         char *p = lua_newuserdata(L, arg->val.udata.size);
         memcpy(p, arg->val.udata.data, arg->val.udata.size);
-        if (arg->val.udata.metaname)
-        {
+        if (arg->val.udata.metaname != NULL) {
           luaL_getmetatable(L, arg->val.udata.metaname);
           lua_setmetatable(L, -2);
         }
         lua_pushvalue(L, -1);
         arg->ref[side] = luaL_ref(L, LUA_REGISTRYINDEX);
-      }else{
+      } else {
         lua_pushlightuserdata(L, (void*)arg->val.udata.data);
       }
       break;
@@ -224,6 +265,9 @@ static int luv_thread_arg_error(lua_State *L) {
   int type = lua_tointeger(L, -2);
   int pos = lua_tointeger(L, -1);
   lua_pop(L, 2);
+  if (type == LUA_TNONE) {
+    return luaL_error(L, "Error: thread arg failure at %d", pos);
+  }
   return luaL_error(L, "Error: thread arg not support type '%s' at %d",
     lua_typename(L, type), pos);
 }
@@ -333,9 +377,11 @@ static void luv_thread_cb(void* varg) {
 
 static void luv_thread_notify_close_cb(uv_handle_t *handle) {
   luv_thread_t *thread = handle->data;
-  if (thread->handle != 0)
-    uv_thread_join(&thread->handle);
-
+  uv_thread_t uvt = thread->handle;
+  if (uvt != 0) {
+    thread->handle = 0;
+    uv_thread_join(&uvt);
+  }
   luaL_unref(thread->L, LUA_REGISTRYINDEX, thread->ref);
   thread->ref = LUA_NOREF;
   thread->L = NULL;
@@ -547,9 +593,12 @@ static int luv_thread_setname(lua_State *L) {
 
 static int luv_thread_join(lua_State* L) {
   luv_thread_t* tid = luv_check_thread(L, 1);
-  int ret = uv_thread_join(&tid->handle);
-  if (ret < 0) return luv_error(L, ret);
-  tid->handle = 0;
+  uv_thread_t uvt = tid->handle;
+  if (uvt != 0) {
+    tid->handle = 0;
+    int ret = uv_thread_join(&uvt);
+    if (ret < 0) return luv_error(L, ret);
+  }
   lua_pushboolean(L, 1);
   return 1;
 }
