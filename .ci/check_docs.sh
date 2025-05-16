@@ -2,7 +2,7 @@
 
 set -e
 
-lua docgen.lua
+lua docs/docgen.lua
 
-git diff --quiet -- docs.md
-git diff --quiet -- meta.lua
+git diff --quiet -- docs/docs.md
+git diff --quiet -- docs/meta.lua

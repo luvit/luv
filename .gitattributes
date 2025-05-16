@@ -1,3 +1,3 @@
-docs.md linguist-documentation
-docs.md linguist-generated
-meta.lua linguist-generated
+docs/docs.md linguist-documentation
+docs/docs.md linguist-generated
+docs/meta.lua linguist-generated
