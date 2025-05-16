@@ -133,11 +133,6 @@ static void luv_handle_free(uv_handle_t* handle) {
   free(handle);
 }
 
-static void luv_gc_cb(uv_handle_t* handle) {
-  luv_close_cb(handle);
-  luv_handle_free(handle);
-}
-
 static int luv_handle_gc(lua_State* L) {
   uv_handle_t** udata = (uv_handle_t**)lua_touserdata(L, 1);
   uv_handle_t* handle = *udata;
