@@ -60,34 +60,36 @@ return require('lib/tap')(function (test)
 
   test("test threadpool with async", function(print,p,expect,_uv)
     local ctx, async
-    async = _uv.new_async(expect(function (a,b,c)
+    local sem = _uv.new_sem(0)
+    async = _uv.new_async(expect(function (a,b,c,sem)
       p('in async notify callback')
       p(a,b,c)
       assert(a=='a')
       assert(b==true)
       assert(c==250)
+      sem:post()
     end))
 
     ctx = _uv.new_work(
-      function(n, s, a)         --work,in threadpool
+      function(n, s, a, sem)    --work,in threadpool
           local uv = require('luv')
           local t = tostring(uv.thread_self())
           if a then
-            assert(uv.async_send(a,'a',true,250)==0)
+            assert(uv.async_send(a,'a',true,250,sem)==0)
           end
-          uv.sleep(10)
-          return n, n*n, t, s
+          return n, n*n, t, s, sem
       end,
-      function(n,r,id, s)       --after work, in loop thread
+      function(n,r,id, s, sem)  --after work, in loop thread
           p(n, r, id, s)
           assert(n*n==r)
           if async then
+            sem:wait()
             _uv.close(async)
           end
           print(id, 'finish', s)
       end
     )
-    _uv.queue_work(ctx,2,'hello',async)
+    _uv.queue_work(ctx,2,'hello',async,sem)
   end)
 
   test("test threadpool with coro", function(_,p,expect,_uv)
