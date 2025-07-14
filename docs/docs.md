@@ -1301,8 +1301,9 @@ a better job on Windows than it does on Unix.
     available to the child process only if the child processes uses the MSVCRT
     runtime.
     - `[1, 2, 3, ..., n]`: `integer` or `userdata` for sub-type of `uv_stream_t` or `nil`
-  - `env`: `table` or `nil` Set environment variables for the new process.
-    - `[string]`: `string`
+  - `env`: `string[]` or `nil`
+    Set environment variables for the new process.
+    Each entry should be a string in the form of `NAME=VALUE`.
   - `cwd`: `string` or `nil` Set the current working directory for the sub-process.
   - `uid`: `string` or `nil` Set the child process' user id.
   - `gid`: `string` or `nil` Set the child process' group id.

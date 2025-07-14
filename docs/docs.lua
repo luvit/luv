@@ -1808,9 +1808,12 @@ local doc = {
                 },
                 {
                   'env',
-                  opt(dict('string', 'string')),
+                  opt('string[]'),
                   nil,
-                  'Set environment variables for the new process.',
+                  [[
+                    Set environment variables for the new process.
+                    Each entry should be a string in the form of `NAME=VALUE`.
+                  ]]
                 },
                 {
                   'cwd',

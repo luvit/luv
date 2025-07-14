@@ -1381,7 +1381,8 @@ function uv.disable_stdio_inheritance() end
 --- @field stdio table<integer, integer|uv.uv_stream_t?>?
 ---
 --- Set environment variables for the new process.
---- @field env table<string, string>?
+--- Each entry should be a string in the form of `NAME=VALUE`.
+--- @field env string[]?
 ---
 --- Set the current working directory for the sub-process.
 --- @field cwd string?
