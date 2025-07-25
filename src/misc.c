@@ -427,7 +427,7 @@ static int luv_get_free_memory(lua_State* L) {
 }
 
 static int luv_hrtime(lua_State* L) {
-  lua_pushnumber(L, uv_hrtime());
+  lua_pushinteger(L, uv_hrtime());
   return 1;
 }
 

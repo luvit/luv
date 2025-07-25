@@ -4428,7 +4428,7 @@ local doc = {
             and therefore not subject to clock drift. The primary use is for measuring
             time between intervals.
           ]],
-          returns = 'number',
+          returns = 'integer',
         },
         {
           name = 'clock_gettime',

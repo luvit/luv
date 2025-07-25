@@ -4204,7 +4204,7 @@ function uv.setgid(id) end
 --- relative to an arbitrary time in the past. It is not related to the time of day
 --- and therefore not subject to clock drift. The primary use is for measuring
 --- time between intervals.
---- @return number
+--- @return integer
 function uv.hrtime() end
 
 --- Obtain the current system time from a high-resolution real-time or monotonic
