@@ -98,7 +98,12 @@ static int luv_pipe_connect2(lua_State* L) {
   int ref = luv_check_continuation(L, 4);
   uv_connect_t* req = (uv_connect_t*)lua_newuserdata(L, uv_req_size(UV_CONNECT));
   req->data = luv_setup_req(L, ctx, ref);
-  uv_pipe_connect2(req, handle, name, namelen, flags, luv_connect_cb);
+  int ret = uv_pipe_connect2(req, handle, name, namelen, flags, luv_connect_cb);
+  if (ret < 0) {
+    luv_cleanup_req(L, (luv_req_t*)req->data);
+    lua_pop(L, 1);
+    return luv_error(L, ret);
+  }
   return 1;
 }
 #endif
