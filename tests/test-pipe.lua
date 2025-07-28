@@ -155,4 +155,17 @@ return require('lib/tap')(function (test)
     end
   end, "1.46.0")
 
+  test("pipe connect2 error", function (print, p, expect, uv)
+    local pipe = assert(uv.new_pipe(false))
+
+    local ran_cb = false
+    local _, err = pipe:connect2("", nil, function()
+      ran_cb = true
+    end)
+    assert(err:match("^EINVAL:"))
+    uv.run()
+    assert(not ran_cb)
+
+    pipe:close()
+  end, "1.46.0")
 end)
