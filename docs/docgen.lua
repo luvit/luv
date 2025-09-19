@@ -538,7 +538,7 @@ do -- meta
   local function sig(func, method)
     local args = {} --- @type string[]
     for i, param in ipairs(func.params or {}) do
-      if not (func.returns_async and param.name == 'callback') and (not method or i > 1) then
+      if not (func.returns_async and param.name == 'callback' and i == #func.params) and (not method or i > 1) then
         args[#args + 1] = id(param.name)
       end
     end
@@ -762,8 +762,9 @@ do -- meta
 
     if func.params then
       for i, param in ipairs(func.params) do
-        if not (func.returns_async and param.name == 'callback') and (not method or i > 1) then
-          out:write('--- @param ', id(param.name), ' ', Meta.ty(param.type))
+        local is_async_callback_param = func.returns_async and param.name == 'callback'
+        if not (is_async_callback_param and i == #func.params) and (not method or i > 1) then
+          out:write('--- @param ', id(param.name), ' ', is_async_callback_param and 'nil' or Meta.ty(param.type))
           if param.desc then
             if param.desc:match('\n') then
               write_comment(out, param.desc)

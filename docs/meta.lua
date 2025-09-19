@@ -3547,12 +3547,13 @@ function uv.fs_copyfile(path, new_path, flags) end
 --- `uv.fs_readdir()`. The `entries` parameter defines the maximum number of entries
 --- that should be returned by each call to `uv.fs_readdir()`.
 --- @param path string
+--- @param callback nil (async if provided, sync if `nil`)
 --- @param entries integer?
 --- @return uv.luv_dir_t? dir
 --- @return string? err
 --- @return uv.error_name? err_name
 --- @overload fun(path: string, callback: fun(err: string?, dir: uv.luv_dir_t?), entries: integer?): uv.uv_fs_t
-function uv.fs_opendir(path, entries) end
+function uv.fs_opendir(path, callback, entries) end
 
 --- Iterates over the directory stream `luv_dir_t` returned by a successful
 --- `uv.fs_opendir()` call. A table of data tables is returned where the number
