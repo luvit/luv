@@ -251,7 +251,10 @@ return require('lib/tap')(function (test)
         -- and for ipv6:
         --  ip6tables --policy OUTPUT DROP
         --  ip6tables -A OUTPUT -s ::1 -j ACCEPT
-        if err == "EPERM" then
+        --
+        -- EHOSTUNREACH was also observed on the macos CI runner
+        -- TODO: Investigate EHOSTUNREACH more: https://github.com/luvit/luv/issues/781
+        if err == "EPERM" or err == "EHOSTUNREACH" then
           print("send to multicast ip was likely denied by firewall, skipping")
           client:close()
           server:close()
