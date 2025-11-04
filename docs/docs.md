@@ -4319,7 +4319,7 @@ Returns a temporary directory.
 
 Returns password file information.
 
-**Returns:** `table`
+**Returns:** `table` or `fail`
 - `username`: `string`
 - `uid`: `integer`
 - `gid`: `integer`

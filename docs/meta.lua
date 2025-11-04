@@ -4374,7 +4374,9 @@ function uv.os_tmpdir() end
 --- @field homedir string
 
 --- Returns password file information.
---- @return uv.os_get_passwd.passwd passwd
+--- @return uv.os_get_passwd.passwd? passwd
+--- @return string? err
+--- @return uv.error_name? err_name
 function uv.os_get_passwd() end
 
 --- Returns the current process ID.

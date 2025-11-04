@@ -4640,18 +4640,16 @@ local doc = {
         {
           name = 'os_get_passwd',
           desc = 'Returns password file information.',
-          returns = {
-            {
-              table({
-                { 'username', 'string' },
-                { 'uid', 'integer' },
-                { 'gid', 'integer' },
-                { 'shell', 'string' },
-                { 'homedir', 'string' },
-              }),
-              'passwd',
-            },
-          },
+          returns = ret_or_fail(
+            table({
+              { 'username', 'string' },
+              { 'uid', 'integer' },
+              { 'gid', 'integer' },
+              { 'shell', 'string' },
+              { 'homedir', 'string' },
+            }),
+            'passwd'
+          )
         },
         {
           name = 'os_getpid',
