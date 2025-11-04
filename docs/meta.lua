@@ -4368,12 +4368,20 @@ function uv.os_tmpdir() end
 
 --- @class uv.os_get_passwd.passwd
 --- @field username string
+---
+--- (-1 on Windows)
 --- @field uid integer
+---
+--- (-1 on Windows)
 --- @field gid integer
---- @field shell string
+---
+--- (nil on Windows)
+--- @field shell string?
 --- @field homedir string
 
---- Returns password file information.
+--- Gets a subset of the password file entry for the current effective uid (not the
+--- real uid). On Windows, uid and gid are set to -1 and have no meaning, and shell
+--- is NULL.
 --- @return uv.os_get_passwd.passwd? passwd
 --- @return string? err
 --- @return uv.error_name? err_name
