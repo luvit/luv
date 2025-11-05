@@ -4641,14 +4641,13 @@ local doc = {
           name = 'os_get_passwd',
           desc = [[
             Gets a subset of the password file entry for the current effective uid (not the
-            real uid). On Windows, uid and gid are set to -1 and have no meaning, and shell
-            is NULL.
+            real uid). On Windows, `uid`, `gid`, and `shell` are set to `nil`.
           ]],
           returns = ret_or_fail(
             table({
               { 'username', 'string' },
-              { 'uid', 'integer', nil, "(-1 on Windows)" },
-              { 'gid', 'integer', nil, "(-1 on Windows)" },
+              { 'uid', 'integer?', nil, "(nil on Windows)" },
+              { 'gid', 'integer?', nil, "(nil on Windows)" },
               { 'shell', 'string?', nil, "(nil on Windows)"},
               { 'homedir', 'string' },
             }),
