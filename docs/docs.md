@@ -4317,13 +4317,14 @@ Returns a temporary directory.
 
 ### `uv.os_get_passwd()`
 
-Returns password file information.
+Gets a subset of the password file entry for the current effective uid (not the
+real uid). On Windows, `uid`, `gid`, and `shell` are set to `nil`.
 
-**Returns:** `table`
+**Returns:** `table` or `fail`
 - `username`: `string`
-- `uid`: `integer`
-- `gid`: `integer`
-- `shell`: `string`
+- `uid`: `integer?` (nil on Windows)
+- `gid`: `integer?` (nil on Windows)
+- `shell`: `string?` (nil on Windows)
 - `homedir`: `string`
 
 ### `uv.os_getpid()`

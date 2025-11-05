@@ -4639,19 +4639,20 @@ local doc = {
         },
         {
           name = 'os_get_passwd',
-          desc = 'Returns password file information.',
-          returns = {
-            {
-              table({
-                { 'username', 'string' },
-                { 'uid', 'integer' },
-                { 'gid', 'integer' },
-                { 'shell', 'string' },
-                { 'homedir', 'string' },
-              }),
-              'passwd',
-            },
-          },
+          desc = [[
+            Gets a subset of the password file entry for the current effective uid (not the
+            real uid). On Windows, `uid`, `gid`, and `shell` are set to `nil`.
+          ]],
+          returns = ret_or_fail(
+            table({
+              { 'username', 'string' },
+              { 'uid', 'integer?', nil, "(nil on Windows)" },
+              { 'gid', 'integer?', nil, "(nil on Windows)" },
+              { 'shell', 'string?', nil, "(nil on Windows)"},
+              { 'homedir', 'string' },
+            }),
+            'passwd'
+          )
         },
         {
           name = 'os_getpid',

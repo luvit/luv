@@ -4368,13 +4368,22 @@ function uv.os_tmpdir() end
 
 --- @class uv.os_get_passwd.passwd
 --- @field username string
---- @field uid integer
---- @field gid integer
---- @field shell string
+---
+--- (nil on Windows)
+--- @field uid integer?
+---
+--- (nil on Windows)
+--- @field gid integer?
+---
+--- (nil on Windows)
+--- @field shell string?
 --- @field homedir string
 
---- Returns password file information.
---- @return uv.os_get_passwd.passwd passwd
+--- Gets a subset of the password file entry for the current effective uid (not the
+--- real uid). On Windows, `uid`, `gid`, and `shell` are set to `nil`.
+--- @return uv.os_get_passwd.passwd? passwd
+--- @return string? err
+--- @return uv.error_name? err_name
 function uv.os_get_passwd() end
 
 --- Returns the current process ID.
