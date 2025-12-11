@@ -579,6 +579,11 @@ static int luv_fs_write(lua_State* L) {
   req->data = luv_setup_req(L, ctx, ref);
   size_t count;
   uv_buf_t* bufs = luv_check_bufs(L, 2, &count, (luv_req_t*)req->data);
+  if (count == 0) {
+    free(bufs);
+    return luv_error(L, UV_EINVAL); // must write at least one buffer
+  }
+
   int nargs;
   FS_CALL_NORETURN(uv_fs_write, req, file, bufs, count, offset);
   free(bufs);

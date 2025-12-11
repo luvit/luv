@@ -161,6 +161,12 @@ static int luv_write(lua_State* L) {
   req->data = (luv_req_t*)luv_setup_req(L, ctx, ref);
   size_t count;
   uv_buf_t* bufs = luv_check_bufs(L, 2, &count, (luv_req_t*)req->data);
+  if (count == 0) {
+    free(bufs);
+    luv_cleanup_req(L, (luv_req_t*)req->data);
+    return luv_error(L, UV_EINVAL); // must write at least one buffer
+  }
+
   ret = uv_write(req, handle, bufs, count, luv_write_cb);
   free(bufs);
   if (ret < 0) {
@@ -183,6 +189,12 @@ static int luv_write2(lua_State* L) {
   req->data = luv_setup_req(L, ctx, ref);
   size_t count;
   uv_buf_t* bufs = luv_check_bufs(L, 2, &count, (luv_req_t*)req->data);
+  if (count == 0) {
+    free(bufs);
+    luv_cleanup_req(L, (luv_req_t*)req->data);
+    return luv_error(L, UV_EINVAL); // must write at least one buffer
+  }
+
   ret = uv_write2(req, handle, bufs, count, send_handle, luv_write_cb);
   free(bufs);
   if (ret < 0) {
@@ -198,6 +210,11 @@ static int luv_try_write(lua_State* L) {
   int err_or_num_bytes;
   size_t count;
   uv_buf_t* bufs = luv_check_bufs_noref(L, 2, &count);
+  if (count == 0) {
+    free(bufs);
+    return luv_error(L, UV_EINVAL); // must write at least one buffer
+  }
+
   err_or_num_bytes = uv_try_write(handle, bufs, count);
   free(bufs);
   if (err_or_num_bytes < 0) return luv_error(L, err_or_num_bytes);
@@ -212,6 +229,11 @@ static int luv_try_write2(lua_State* L) {
   size_t count;
   uv_stream_t* send_handle = luv_check_stream(L, 3);
   uv_buf_t* bufs = luv_check_bufs_noref(L, 2, &count);
+  if (count == 0) {
+    free(bufs);
+    return luv_error(L, UV_EINVAL); // must write at least one buffer
+  }
+
   err_or_num_bytes = uv_try_write2(handle, bufs, count, send_handle);
   free(bufs);
   if (err_or_num_bytes < 0) return luv_error(L, err_or_num_bytes);

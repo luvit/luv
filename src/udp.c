@@ -298,6 +298,12 @@ static int luv_udp_send(lua_State* L) {
   req->data = luv_setup_req(L, lhandle->ctx, ref);
   size_t count;
   uv_buf_t* bufs = luv_check_bufs(L, 2, &count, (luv_req_t*)req->data);
+  if (count == 0) {
+    free(bufs);
+    luv_cleanup_req(L, (luv_req_t*)req->data);
+    return luv_error(L, UV_EINVAL); // must write at least one buffer
+  }
+
   ret = uv_udp_send(req, handle, bufs, count, addr_ptr, luv_udp_send_cb);
   free(bufs);
   if (ret < 0) {
@@ -316,6 +322,11 @@ static int luv_udp_try_send(lua_State* L) {
   struct sockaddr* addr_ptr;
   size_t count;
   uv_buf_t* bufs = luv_check_bufs_noref(L, 2, &count);
+  if (count == 0) {
+    free(bufs);
+    return luv_error(L, UV_EINVAL); // must write at least one buffer
+  }
+
   addr_ptr = luv_check_addr(L, &addr, 3, 4);
   err_or_num_bytes = uv_udp_try_send(handle, bufs, count, addr_ptr);
   free(bufs);
@@ -349,6 +360,10 @@ static int luv_udp_try_send2(lua_State* L) {
   }
   else {
     return luaL_argerror(L, 3, "expected nil, integer, or table");
+  }
+
+  if (num_msgs == 0) {
+    return luv_error(L, UV_EINVAL); // must write at least one buffer
   }
 
   addrs = malloc(sizeof(struct sockaddr_storage) * num_msgs);
