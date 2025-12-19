@@ -57,7 +57,13 @@ static void luv_prep_buf(lua_State *L, int idx, uv_buf_t *pbuf) {
 static uv_buf_t* luv_prep_bufs(lua_State* L, int index, size_t *count, int **refs) {
   uv_buf_t *bufs;
   size_t i;
-  *count = lua_rawlen(L, index);
+  size_t cnt;
+  cnt = lua_rawlen(L, index);
+  if (cnt == 0) {
+    luaL_argerror(L, index, "expected non-empty table of strings");
+    return NULL;
+  }
+  *count = cnt;
   bufs = (uv_buf_t*)malloc(sizeof(uv_buf_t) * *count);
   int *refs_array = NULL;
   if (refs)
