@@ -60,7 +60,7 @@ static uv_buf_t* luv_prep_bufs(lua_State* L, int index, size_t *count, int **ref
   size_t cnt;
   cnt = lua_rawlen(L, index);
   if (cnt == 0) {
-    luaL_argerror(L, index, lua_pushfstring(L, "expected non-empty table of strings"));
+    luaL_argerror(L, index, "expected non-empty table of strings");
     return NULL;
   }
   *count = cnt;
