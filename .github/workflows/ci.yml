@@ -125,7 +125,7 @@ jobs:
           - lua_engine: LuaJIT
             lua_version: luajit2.1
           - lua_engine: Lua
-            lua_version: lua5.4
+            lua_version: lua5.5
     env:
       # For LuaJIT 2.1, see https://github.com/LuaJIT/LuaJIT/commit/8961a92dd1607108760694af3486b4434602f8be
       MACOSX_DEPLOYMENT_TARGET: 10.12

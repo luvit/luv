@@ -10,7 +10,7 @@ environment:
     - FROM_DEPS: true
 
     # LuaRocks 3.x
-    - LUA_VER: 5.4.4
+    - LUA_VER: 5.5.0
       NOCOMPAT: true  # with compatibility flags disabled.
       LUAROCKS_VER: 3.8.0
     - LJ_VER: 2.1

@@ -6,7 +6,7 @@
 # Redistribution and use of this file is allowed according to the terms of the MIT license.
 # Debugged and (now seriously) modified by Ronan Collobert, for Torch7
 
-#project(Lua54 C)
+#project(Lua55 C)
 
 SET(LUA_DIR ${CMAKE_CURRENT_LIST_DIR}/lua CACHE PATH "location of lua sources")
 
@@ -112,7 +112,7 @@ set_target_properties(lualib PROPERTIES
   COMPILE_DEFINITIONS MAKE_LIB=1)
 
 target_link_libraries (lualib ${LIBS} )
-set_target_properties (lualib PROPERTIES OUTPUT_NAME "lua54")
+set_target_properties (lualib PROPERTIES OUTPUT_NAME "lua55")
 
 add_executable(lua ${LUA_DIR}/lua.c)
 IF(WIN32)
