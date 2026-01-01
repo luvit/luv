@@ -8,7 +8,7 @@ rockspec_format = "3.0"
 description = {
   summary = "Bare libuv bindings for lua",
   detailed = [[
-libuv bindings for luajit and lua 5.1/5.2/5.3/5.4.
+libuv bindings for luajit and lua 5.1/5.2/5.3/5.4/5.5.
 
 This library makes libuv available to lua scripts. It was made for the luvit
 project but should usable from nearly any lua project.

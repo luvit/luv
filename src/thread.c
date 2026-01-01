@@ -251,6 +251,9 @@ static int thread_dump (lua_State *L, const void *b, size_t size, void *ud) {
     state->init = 1;
     luaL_buffinit(L, &state->B);
   }
+  // Starting with Lua 5.5.0, lua_dump calls this function with b == NULL to signal
+  // the end of the dump. We don't have to worry about that, though, because size will
+  // also be zero in that case and luaL_addlstring is a no-op when size is zero.
   luaL_addlstring(&state->B, (const char *)b, size);
   return 0;
 }
@@ -261,8 +264,23 @@ static int luv_thread_dumped(lua_State* L, int idx) {
   } else {
     int ret, top;
     struct luv_thread_Writer state;
-    top = lua_gettop(L);
     state.init = 0;
+
+    // The goal is to return from this function with the only change to the stack
+    // being the dumped thread pushed onto the top.
+    //
+    // Different Lua versions have different behaviors around how lua_dump and
+    // luaL_Buffer handle the stack, so the approach used here avoids the need to deal
+    // with those discrepencies.
+    //
+    // The idea is:
+    // - Push `nil` onto the stack as a placeholder for the resulting dumped string
+    // - Call lua_dump and let it and luaL_pushresult push/pop from the stack however
+    //   they wish (we know they will never touch our placeholder).
+    // - Move the result of luaL_pushresult to our placeholder's index and set it as
+    //   the top before returning
+    lua_pushnil(L);
+    top = lua_gettop(L);
 
     // lua_dump needs the function at the top of the stack
     luaL_checktype(L, idx, LUA_TFUNCTION);
@@ -270,16 +288,10 @@ static int luv_thread_dumped(lua_State* L, int idx) {
     ret = lua_dump(L, thread_dump, &state, 1);
     if (ret==0) {
       luaL_pushresult(&state.B);
-      // The goal is to return from this function with the only change to the stack
-      // being the dumped thread pushed onto the top. In Lua >= 5.4.3, this is a bit
-      // tricky because luaL_Buffer pushes its buffer onto the stack and relies on
-      // that stack value's lifetime for its memory. This means that we can't safely
-      // pop that value off the stack until after we have fully dumped the function
-      // and pushed the result. After we push the result (luaL_pushresult), we want
-      // to get rid of any intermediate values and put the result at the new top of
-      // the stack, 1 after the top that we entered with. That's what's happening here:
-      lua_replace(L, top + 1);
-      lua_settop(L, top + 1);
+      // Move the result to our placeholder index and pop off whatever remains from
+      // the lua_dump call.
+      lua_replace(L, top);
+      lua_settop(L, top);
     } else
       luaL_error(L, "Error: unable to dump given function");
   }

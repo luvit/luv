@@ -10,18 +10,18 @@ environment:
     - FROM_DEPS: true
 
     # LuaRocks 3.x
-    - LUA_VER: 5.4.4
+    - LUA_VER: 5.5.0
       NOCOMPAT: true  # with compatibility flags disabled.
-      LUAROCKS_VER: 3.8.0
+      LUAROCKS_VER: 3.13.0
     - LJ_VER: 2.1
-      LUAROCKS_VER: 3.8.0
+      LUAROCKS_VER: 3.13.0
 
 matrix:
   fast_finish: true
   exclude:
     # Skip x86 for LuaRocks tests
     - platform: x86
-      LUAROCKS_VER: 3.8.0
+      LUAROCKS_VER: 3.13.0
 
 cache:
   - c:\lua -> appveyor.yml

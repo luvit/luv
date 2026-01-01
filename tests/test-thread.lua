@@ -26,8 +26,6 @@ return require('lib/tap')(function (test)
   test("test thread create with arguments", function(print, p, expect, uv)
     uv.update_time()
     local before = uv.now()
-    local args = {500, 'string', nil, false, 5, "helloworld"}
-    local unpack = unpack or table.unpack
     uv.new_thread(function(num,s,null,bool,five,hw)
       assert(type(num) == "number")
       assert(type(s) == "string")
@@ -36,7 +34,7 @@ return require('lib/tap')(function (test)
       assert(five == 5)
       assert(hw == 'helloworld')
       require('luv').sleep(100)
-    end, unpack(args)):join()
+    end, 500, 'string', nil, false, 5, "helloworld"):join()
     uv.update_time()
     local elapsed = uv.now() - before
     assert(elapsed >= 100, "elapsed should be at least delay ")
@@ -62,8 +60,6 @@ return require('lib/tap')(function (test)
     local delay = 100
     uv.update_time()
     local before = uv.now()
-    local args = {delay, 'string', nil, false, 5, 3.14, "helloworld"}
-    local unpack = unpack or table.unpack
     uv.new_thread({stack_size=0}, function(delay,s,null,bool,five,pi,hw)
       assert(type(delay) == "number")
       assert(type(s) == "string")
@@ -77,7 +73,7 @@ return require('lib/tap')(function (test)
       assert(pi == 3.14, 'invalid decimal number')
       assert(hw == 'helloworld')
       require('luv').sleep(delay)
-    end, unpack(args)):join()
+    end, delay, 'string', nil, false, 5, 3.14, "helloworld"):join()
     uv.update_time()
     local elapsed = uv.now() - before
     p({

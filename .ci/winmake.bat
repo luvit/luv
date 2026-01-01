@@ -154,33 +154,56 @@ IF NOT EXIST %LUA_H% (
    goto :EXITERROR
 )
 
-findstr /R /C:"#define[ %TABCHAR%][ %TABCHAR%]*LUA_VERSION_MAJOR"  %LUA_H% > NUL
-if NOT %ERRORLEVEL%==0 (
-   rem ECHO We've got a Lua version 5.1
-   rem findstr /R /C:"#define[ %TABCHAR%][ %TABCHAR%]*LUA_VERSION[ %TABCHAR%]"  %LUA_H%
-   SET LUA_VER=5.1
-) else (
-   rem ECHO We've got a Lua version 5.2+
-   rem findstr /R /C:"#define[ %TABCHAR%][ %TABCHAR%]*LUA_VERSION_MAJOR[ %TABCHAR%]"  %LUA_H%
-   rem findstr /R /C:"#define[ %TABCHAR%][ %TABCHAR%]*LUA_VERSION_MINOR[ %TABCHAR%]"  %LUA_H%
+findstr /R /C:"#define[ %TABCHAR%][ %TABCHAR%]*LUA_VERSION_MAJOR_N"  %LUA_H% > NUL
+if %ERRORLEVEL%==0 (
+   rem ECHO We've got a Lua version 5.5+
+   rem findstr /R /C:"#define[ %TABCHAR%][ %TABCHAR%]*LUA_VERSION_MAJOR_N[ %TABCHAR%]"  %LUA_H%
+   rem findstr /R /C:"#define[ %TABCHAR%][ %TABCHAR%]*LUA_VERSION_MINOR_N[ %TABCHAR%]"  %LUA_H%
 
-   for /F "delims=" %%a in ('findstr /R /C:"#define[ %TABCHAR%][ %TABCHAR%]*LUA_VERSION_MAJOR[ %TABCHAR%]"  %LUA_H%') do set LUA_MAJOR=%%a
+   for /F "delims=" %%a in ('findstr /R /C:"#define[ %TABCHAR%][ %TABCHAR%]*LUA_VERSION_MAJOR_N[ %TABCHAR%]"  %LUA_H%') do set LUA_MAJOR=%%a
    SET LUA_MAJOR=!LUA_MAJOR:#define=!
-   SET LUA_MAJOR=!LUA_MAJOR:LUA_VERSION_MAJOR=!
+   SET LUA_MAJOR=!LUA_MAJOR:LUA_VERSION_MAJOR_N=!
    SET LUA_MAJOR=!LUA_MAJOR: =!
    SET LUA_MAJOR=!LUA_MAJOR:%TABCHAR%=!
-   SET LUA_MAJOR=!LUA_MAJOR:"=!
    SET LUA_MAJOR=!LUA_MAJOR:~0,1!
 
-   for /F "delims=" %%a in ('findstr /R /C:"#define[ %TABCHAR%][ %TABCHAR%]*LUA_VERSION_MINOR[ %TABCHAR%]"  %LUA_H%') do set LUA_MINOR=%%a
+   for /F "delims=" %%a in ('findstr /R /C:"#define[ %TABCHAR%][ %TABCHAR%]*LUA_VERSION_MINOR_N[ %TABCHAR%]"  %LUA_H%') do set LUA_MINOR=%%a
    SET LUA_MINOR=!LUA_MINOR:#define=!
-   SET LUA_MINOR=!LUA_MINOR:LUA_VERSION_MINOR=!
+   SET LUA_MINOR=!LUA_MINOR:LUA_VERSION_MINOR_N=!
    SET LUA_MINOR=!LUA_MINOR: =!
    SET LUA_MINOR=!LUA_MINOR:%TABCHAR%=!
-   SET LUA_MINOR=!LUA_MINOR:"=!
    SET LUA_MINOR=!LUA_MINOR:~0,1!
 
    SET LUA_VER=!LUA_MAJOR!.!LUA_MINOR!
+) else (
+   findstr /R /C:"#define[ %TABCHAR%][ %TABCHAR%]*LUA_VERSION_MAJOR"  %LUA_H% > NUL
+   if NOT %ERRORLEVEL%==0 (
+      rem ECHO We've got a Lua version 5.1
+      rem findstr /R /C:"#define[ %TABCHAR%][ %TABCHAR%]*LUA_VERSION[ %TABCHAR%]"  %LUA_H%
+      SET LUA_VER=5.1
+   ) else (
+      rem ECHO We've got a Lua version 5.2+
+      rem findstr /R /C:"#define[ %TABCHAR%][ %TABCHAR%]*LUA_VERSION_MAJOR[ %TABCHAR%]"  %LUA_H%
+      rem findstr /R /C:"#define[ %TABCHAR%][ %TABCHAR%]*LUA_VERSION_MINOR[ %TABCHAR%]"  %LUA_H%
+
+      for /F "delims=" %%a in ('findstr /R /C:"#define[ %TABCHAR%][ %TABCHAR%]*LUA_VERSION_MAJOR[ %TABCHAR%]"  %LUA_H%') do set LUA_MAJOR=%%a
+      SET LUA_MAJOR=!LUA_MAJOR:#define=!
+      SET LUA_MAJOR=!LUA_MAJOR:LUA_VERSION_MAJOR=!
+      SET LUA_MAJOR=!LUA_MAJOR: =!
+      SET LUA_MAJOR=!LUA_MAJOR:%TABCHAR%=!
+      SET LUA_MAJOR=!LUA_MAJOR:"=!
+      SET LUA_MAJOR=!LUA_MAJOR:~0,1!
+
+      for /F "delims=" %%a in ('findstr /R /C:"#define[ %TABCHAR%][ %TABCHAR%]*LUA_VERSION_MINOR[ %TABCHAR%]"  %LUA_H%') do set LUA_MINOR=%%a
+      SET LUA_MINOR=!LUA_MINOR:#define=!
+      SET LUA_MINOR=!LUA_MINOR:LUA_VERSION_MINOR=!
+      SET LUA_MINOR=!LUA_MINOR: =!
+      SET LUA_MINOR=!LUA_MINOR:%TABCHAR%=!
+      SET LUA_MINOR=!LUA_MINOR:"=!
+      SET LUA_MINOR=!LUA_MINOR:~0,1!
+
+      SET LUA_VER=!LUA_MAJOR!.!LUA_MINOR!
+   )
 )
 SET LUA_SVER=!LUA_VER:.=!
 
@@ -224,6 +247,16 @@ if %LUA_SVER%==53 (
    )
 )
 if %LUA_SVER%==54 (
+   set FILES_CORE=lapi lcode lctype ldebug ldo ldump lfunc lgc llex lmem lobject lopcodes lparser lstate lstring ltable ltm lundump lvm lzio lauxlib
+   set FILES_LIB=lbaselib ldblib liolib lmathlib loslib ltablib lstrlib lutf8lib loadlib lcorolib linit
+   set FILES_DLL=lua
+   set FILES_OTH=luac
+   set INSTALL_H=lauxlib.h lua.h lua.hpp luaconf.h lualib.h
+   if "%COMPATFLAG%"=="" (
+      set COMPATFLAG=-DLUA_COMPAT_5_3
+   )
+)
+if %LUA_SVER%==55 (
    set FILES_CORE=lapi lcode lctype ldebug ldo ldump lfunc lgc llex lmem lobject lopcodes lparser lstate lstring ltable ltm lundump lvm lzio lauxlib
    set FILES_LIB=lbaselib ldblib liolib lmathlib loslib ltablib lstrlib lutf8lib loadlib lcorolib linit
    set FILES_DLL=lua

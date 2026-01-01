@@ -11,8 +11,6 @@ return require('lib/tap')(function (test)
       assert(c==250)
       uv.close(async)
     end))
-    local args = {500, 'string', nil, false, 5, "helloworld",async}
-    local unpack = unpack or table.unpack
     uv.new_thread(function(num,s,null,bool,five,hw,asy)
       local uv = require'luv'
       assert(type(num) == "number")
@@ -24,7 +22,7 @@ return require('lib/tap')(function (test)
       assert(type(asy)=='userdata')
       assert(uv.async_send(asy,'a',true,250)==0)
       uv.sleep(1000)
-    end, unpack(args)):join()
+    end, 500, 'string', nil, false, 5, "helloworld",async):join()
     local elapsed = (os.time() - before) * 1000
     assert(elapsed >= 1000, "elapsed should be at least delay ")
   end)
