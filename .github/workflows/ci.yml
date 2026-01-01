@@ -119,7 +119,7 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest]
-        luarocks_version: [3.8.0]
+        luarocks_version: [3.13.0]
         lua_engine: [Lua, LuaJIT]
         include:
           - lua_engine: LuaJIT
@@ -172,7 +172,7 @@ jobs:
     env:
       WITH_LUA_ENGINE: LuaJIT
       LUA: luajit2.1
-      LUAROCKS: 3.8.0
+      LUAROCKS: 3.13.0
     steps:
     - uses: actions/checkout@v2
       with:
