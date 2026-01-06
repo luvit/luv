@@ -1874,8 +1874,9 @@ local doc = {
             },
           },
           returns = {
-            { 'uv_process_t', 'handle' },
-            { 'integer', 'pid' },
+            { opt('uv_process_t'), 'handle' },
+            { union('integer', 'string'), 'pid or err' },
+            { opt('uv.error_name'), 'err_name' },
           },
         },
         {
