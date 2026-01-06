@@ -1382,7 +1382,7 @@ end)
 
 When the child process exits, `on_exit` is called with an exit code and signal.
 
-**Returns:** `uv_process_t userdata`, `integer`
+**Returns:** `uv_process_t userdata` or `nil`, `integer` or `string`, `uv.error_name` or `nil`
 
 ### `uv.process_kill(process, [signame])`
 
