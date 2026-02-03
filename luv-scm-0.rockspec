@@ -32,6 +32,7 @@ build = {
      LUA="$(LUA)",
      LIBDIR="$(LIBDIR)",
      LUADIR="$(LUADIR)",
+     WITH_SHARED_LIBUV="$(WITH_SHARED_LIBUV)",
   },
 }
 
