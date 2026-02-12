@@ -130,6 +130,31 @@ static int luv_udp_open(lua_State* L) {
   return luv_result(L, ret);
 }
 
+#if LUV_UV_VERSION_GEQ(1, 52, 0)
+static int luv_udp_open_ex(lua_State* L) {
+  uv_udp_t* handle = luv_check_udp(L, 1);
+  uv_os_sock_t sock = luaL_checkinteger(L, 2);
+  unsigned int flags = 0;
+  if (!lua_isnoneornil(L, 3)) {
+    if (lua_isinteger(L, 3)) {
+      flags = (unsigned int)lua_tointeger(L, 3);
+    } else if (lua_istable(L, 3)) {
+      lua_getfield(L, 3, "reuseaddr");
+      if (lua_toboolean(L, -1)) flags |= UV_UDP_REUSEADDR;
+      lua_pop(L, 1);
+      lua_getfield(L, 3, "reuseport");
+      if (lua_toboolean(L, -1)) flags |= UV_UDP_REUSEPORT;
+      lua_pop(L, 1);
+    } else {
+      return luaL_argerror(L, 3, "expected integer or table");
+    }
+  }
+
+  int ret = uv_udp_open_ex(handle, sock, flags);
+  return luv_result(L, ret);
+}
+#endif
+
 static int luv_udp_bind(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   const char* host = luaL_checkstring(L, 2);

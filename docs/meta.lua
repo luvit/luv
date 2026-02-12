@@ -1901,6 +1901,31 @@ function uv.tcp_keepalive(tcp, enable, delay) end
 --- @return uv.error_name? err_name
 function uv_tcp_t:keepalive(enable, delay) end
 
+--- Enable / disable TCP keep-alive with all socket options: TCP_KEEPIDLE, TCP_KEEPINTVL and TCP_KEEPCNT. `delay` is the value for TCP_KEEPIDLE, `intvl` is the value for TCP_KEEPINTVL, `cnt` is the value for TCP_KEEPCNT, ignored when `enable` is `false`.
+---
+--- With TCP keep-alive enabled, idle is the time (in seconds) the connection needs to remain idle before TCP starts sending keep-alive probes. intvl is the time (in seconds) between individual keep-alive probes. TCP will drop the connection after sending cnt probes without getting any replies from the peer, then the handle is destroyed with a UV_ETIMEDOUT error passed to the corresponding callback.
+--- @param tcp uv.uv_tcp_t
+--- @param enable boolean
+--- @param delay integer?
+--- @param intvl integer?
+--- @param cnt integer?
+--- @return 0? success
+--- @return string? err
+--- @return uv.error_name? err_name
+function uv.tcp_keepalive_ex(tcp, enable, delay, intvl, cnt) end
+
+--- Enable / disable TCP keep-alive with all socket options: TCP_KEEPIDLE, TCP_KEEPINTVL and TCP_KEEPCNT. `delay` is the value for TCP_KEEPIDLE, `intvl` is the value for TCP_KEEPINTVL, `cnt` is the value for TCP_KEEPCNT, ignored when `enable` is `false`.
+---
+--- With TCP keep-alive enabled, idle is the time (in seconds) the connection needs to remain idle before TCP starts sending keep-alive probes. intvl is the time (in seconds) between individual keep-alive probes. TCP will drop the connection after sending cnt probes without getting any replies from the peer, then the handle is destroyed with a UV_ETIMEDOUT error passed to the corresponding callback.
+--- @param enable boolean
+--- @param delay integer?
+--- @param intvl integer?
+--- @param cnt integer?
+--- @return 0? success
+--- @return string? err
+--- @return uv.error_name? err_name
+function uv_tcp_t:keepalive_ex(enable, delay, intvl, cnt) end
+
 --- Enable / disable simultaneous asynchronous accept requests that are queued by
 --- the operating system when listening for new TCP connections.
 ---
@@ -2595,6 +2620,43 @@ function uv.udp_open(udp, fd) end
 --- @return string? err
 --- @return uv.error_name? err_name
 function uv_udp_t:open(fd) end
+
+--- Opens an existing file descriptor or Windows SOCKET as a UDP handle.
+---
+--- Unix only: The only requirement of the sock argument is that it follows the
+--- datagram contract (works in unconnected mode, supports sendmsg()/recvmsg(),
+--- etc). In other words, other datagram-type sockets like raw sockets or netlink
+--- sockets can also be passed to this function.
+---
+--- The file descriptor is set to non-blocking mode.
+---
+--- Note: The passed file descriptor or SOCKET is not checked for its type, but
+--- it's required that it represents a valid datagram socket.
+--- @param udp uv.uv_udp_t
+--- @param fd integer
+--- @param flags integer|{ reuseaddr: boolean?, reuseport: boolean? }?
+--- @return 0? success
+--- @return string? err
+--- @return uv.error_name? err_name
+function uv.udp_open_ex(udp, fd, flags) end
+
+--- Opens an existing file descriptor or Windows SOCKET as a UDP handle.
+---
+--- Unix only: The only requirement of the sock argument is that it follows the
+--- datagram contract (works in unconnected mode, supports sendmsg()/recvmsg(),
+--- etc). In other words, other datagram-type sockets like raw sockets or netlink
+--- sockets can also be passed to this function.
+---
+--- The file descriptor is set to non-blocking mode.
+---
+--- Note: The passed file descriptor or SOCKET is not checked for its type, but
+--- it's required that it represents a valid datagram socket.
+--- @param fd integer
+--- @param flags integer|{ reuseaddr: boolean?, reuseport: boolean? }?
+--- @return 0? success
+--- @return string? err
+--- @return uv.error_name? err_name
+function uv_udp_t:open_ex(fd, flags) end
 
 --- Bind the UDP handle to an IP address and port. Any `flags` are set with a table
 --- with fields `reuseaddr` or `ipv6only` equal to `true` or `false`.
@@ -3311,6 +3373,7 @@ function uv.fs_scandir_next(fs) end
 --- @field bavail integer
 --- @field files integer
 --- @field ffree integer
+--- @field frsize integer?
 
 --- Equivalent to `stat(2)`.
 --- @param path string
