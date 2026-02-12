@@ -419,6 +419,7 @@ local types = {
     { 'bavail', 'integer' },
     { 'files', 'integer' },
     { 'ffree', 'integer' },
+    { 'frsize', opt('integer') },
   }),
 
   ['getrusage.result.time'] = table({
@@ -2220,6 +2221,23 @@ local doc = {
           returns = success_ret,
         },
         {
+          name = 'tcp_keepalive_ex',
+          method_form = 'tcp:keepalive_ex(enable, [delay], [intvl], [cnt])',
+          desc = [[
+            Enable / disable TCP keep-alive with all socket options: TCP_KEEPIDLE, TCP_KEEPINTVL and TCP_KEEPCNT. `delay` is the value for TCP_KEEPIDLE, `intvl` is the value for TCP_KEEPINTVL, `cnt` is the value for TCP_KEEPCNT, ignored when `enable` is `false`.
+
+            With TCP keep-alive enabled, idle is the time (in seconds) the connection needs to remain idle before TCP starts sending keep-alive probes. intvl is the time (in seconds) between individual keep-alive probes. TCP will drop the connection after sending cnt probes without getting any replies from the peer, then the handle is destroyed with a UV_ETIMEDOUT error passed to the corresponding callback.
+          ]],
+          params = {
+            { name = 'tcp', type = 'uv_tcp_t' },
+            { name = 'enable', type = 'boolean' },
+            { name = 'delay', type = opt_int },
+            { name = 'intvl', type = opt_int },
+            { name = 'cnt', type = opt_int },
+          },
+          returns = success_ret,
+        },
+        {
           name = 'tcp_simultaneous_accepts',
           method_form = 'tcp:simultaneous_accepts(enable)',
           desc = [[
@@ -2845,6 +2863,35 @@ local doc = {
           params = {
             { name = 'udp', type = 'uv_udp_t' },
             { name = 'fd', type = 'integer' },
+          },
+          returns = success_ret,
+        },
+        {
+          name = 'udp_open_ex',
+          method_form = 'udp:open_ex(fd, [flags])',
+          desc = [[
+            Opens an existing file descriptor or Windows SOCKET as a UDP handle.
+
+            Unix only: The only requirement of the sock argument is that it follows the
+            datagram contract (works in unconnected mode, supports sendmsg()/recvmsg(),
+            etc). In other words, other datagram-type sockets like raw sockets or netlink
+            sockets can also be passed to this function.
+
+            The file descriptor is set to non-blocking mode.
+
+            Note: The passed file descriptor or SOCKET is not checked for its type, but
+            it's required that it represents a valid datagram socket.
+          ]],
+          params = {
+            { name = 'udp', type = 'uv_udp_t' },
+            { name = 'fd', type = 'integer' },
+            {
+              name = 'flags',
+              type = opt(union('integer', table({
+                { 'reuseaddr', opt_bool },
+                { 'reuseport', opt_bool },
+              }))),
+            },
           },
           returns = success_ret,
         },

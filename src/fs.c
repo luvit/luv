@@ -228,6 +228,10 @@ static void luv_push_statfs_table(lua_State* L, const uv_statfs_t* s) {
   lua_setfield(L, -2, "files");
   lua_pushinteger(L, s->f_ffree);
   lua_setfield(L, -2, "ffree");
+#if LUV_UV_VERSION_GEQ(1, 52, 0)
+  lua_pushinteger(L, s->f_frsize);
+  lua_setfield(L, -2, "frsize");
+#endif
 };
 #endif
 

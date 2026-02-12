@@ -310,6 +310,12 @@ return require('lib/tap')(function (test)
     assert(stat.bavail>0)
   end, "1.31.0")
 
+  test("fs.statfs frsize", function (print, p, expect, uv)
+    local stat = assert(uv.fs_statfs("."))
+    p(stat)
+    assert(stat.frsize ~= nil)
+  end, "1.52.0")
+
   test("fs.statfs async", function (print, p, expect, uv)
     assert(uv.fs_statfs(".", expect(function (err, stat)
       assert(not err, err)

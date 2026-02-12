@@ -347,6 +347,10 @@ static int luv_constants(lua_State* L) {
   lua_pushinteger(L, UV_PIPE_NO_TRUNCATE);
   lua_setfield(L, -2, "PIPE_NO_TRUNCATE");
 #endif
+#if LUV_UV_VERSION_GEQ(1, 49, 0)
+  lua_pushinteger(L, UV_UDP_REUSEPORT);
+  lua_setfield(L, -2, "UDP_REUSEPORT");
+#endif
 
 #if LUV_UV_VERSION_GEQ(1, 2, 0)
   lua_pushinteger(L, UV_TTY_MODE_NORMAL);

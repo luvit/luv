@@ -1715,6 +1715,23 @@ ignored when enable is `false`.
 
 **Returns:** `0` or `fail`
 
+### `uv.tcp_keepalive_ex(tcp, enable, [delay], [intvl], [cnt])`
+
+> method form `tcp:keepalive_ex(enable, [delay], [intvl], [cnt])`
+
+**Parameters:**
+- `tcp`: `uv_tcp_t userdata`
+- `enable`: `boolean`
+- `delay`: `integer` or `nil`
+- `intvl`: `integer` or `nil`
+- `cnt`: `integer` or `nil`
+
+Enable / disable TCP keep-alive with all socket options: TCP_KEEPIDLE, TCP_KEEPINTVL and TCP_KEEPCNT. `delay` is the value for TCP_KEEPIDLE, `intvl` is the value for TCP_KEEPINTVL, `cnt` is the value for TCP_KEEPCNT, ignored when `enable` is `false`.
+
+With TCP keep-alive enabled, idle is the time (in seconds) the connection needs to remain idle before TCP starts sending keep-alive probes. intvl is the time (in seconds) between individual keep-alive probes. TCP will drop the connection after sending cnt probes without getting any replies from the peer, then the handle is destroyed with a UV_ETIMEDOUT error passed to the corresponding callback.
+
+**Returns:** `0` or `fail`
+
 ### `uv.tcp_simultaneous_accepts(tcp, enable)`
 
 > method form `tcp:simultaneous_accepts(enable)`
@@ -2289,6 +2306,31 @@ Returns the handle's send queue count.
 **Parameters:**
 - `udp`: `uv_udp_t userdata`
 - `fd`: `integer`
+
+Opens an existing file descriptor or Windows SOCKET as a UDP handle.
+
+Unix only: The only requirement of the sock argument is that it follows the
+datagram contract (works in unconnected mode, supports sendmsg()/recvmsg(),
+etc). In other words, other datagram-type sockets like raw sockets or netlink
+sockets can also be passed to this function.
+
+The file descriptor is set to non-blocking mode.
+
+Note: The passed file descriptor or SOCKET is not checked for its type, but
+it's required that it represents a valid datagram socket.
+
+**Returns:** `0` or `fail`
+
+### `uv.udp_open_ex(udp, fd, [flags])`
+
+> method form `udp:open_ex(fd, [flags])`
+
+**Parameters:**
+- `udp`: `uv_udp_t userdata`
+- `fd`: `integer`
+- `flags`: `table` or `integer` or `nil`
+  - `reuseaddr`: `boolean` or `nil`
+  - `reuseport`: `boolean` or `nil`
 
 Opens an existing file descriptor or Windows SOCKET as a UDP handle.
 
@@ -3514,6 +3556,7 @@ Closes a directory stream returned by a successful `uv.fs_opendir()` call.
     - `bavail`: `integer`
     - `files`: `integer`
     - `ffree`: `integer`
+    - `frsize`: `integer` or `nil`
 
 Equivalent to `statfs(2)`.
 
@@ -3525,6 +3568,7 @@ Equivalent to `statfs(2)`.
 - `bavail`: `integer`
 - `files`: `integer`
 - `ffree`: `integer`
+- `frsize`: `integer` or `nil`
 
 **Returns (async version):** `uv_fs_t userdata`
 
