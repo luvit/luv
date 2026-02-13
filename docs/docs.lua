@@ -2210,23 +2210,8 @@ local doc = {
           name = 'tcp_keepalive',
           method_form = 'tcp:keepalive(enable, [delay])',
           desc = [[
-            Enable / disable TCP keep-alive. `delay` is the initial delay in seconds,
+            Enable / disable TCP keep-alive. `delay` is the initial delay in seconds, `intvl` is the time in seconds between individual keep-alive probes, and `cnt` is the number of probes to send before assuming the connection is dead.
             ignored when enable is `false`.
-          ]],
-          params = {
-            { name = 'tcp', type = 'uv_tcp_t' },
-            { name = 'enable', type = 'boolean' },
-            { name = 'delay', type = opt_int },
-          },
-          returns = success_ret,
-        },
-        {
-          name = 'tcp_keepalive_ex',
-          method_form = 'tcp:keepalive_ex(enable, [delay], [intvl], [cnt])',
-          desc = [[
-            Enable / disable TCP keep-alive with all socket options: TCP_KEEPIDLE, TCP_KEEPINTVL and TCP_KEEPCNT. `delay` is the value for TCP_KEEPIDLE, `intvl` is the value for TCP_KEEPINTVL, `cnt` is the value for TCP_KEEPCNT, ignored when `enable` is `false`.
-
-            With TCP keep-alive enabled, idle is the time (in seconds) the connection needs to remain idle before TCP starts sending keep-alive probes. intvl is the time (in seconds) between individual keep-alive probes. TCP will drop the connection after sending cnt probes without getting any replies from the peer, then the handle is destroyed with a UV_ETIMEDOUT error passed to the corresponding callback.
           ]],
           params = {
             { name = 'tcp', type = 'uv_tcp_t' },
@@ -2847,28 +2832,6 @@ local doc = {
         {
           name = 'udp_open',
           method_form = 'udp:open(fd)',
-          desc = [[
-            Opens an existing file descriptor or Windows SOCKET as a UDP handle.
-
-            Unix only: The only requirement of the sock argument is that it follows the
-            datagram contract (works in unconnected mode, supports sendmsg()/recvmsg(),
-            etc). In other words, other datagram-type sockets like raw sockets or netlink
-            sockets can also be passed to this function.
-
-            The file descriptor is set to non-blocking mode.
-
-            Note: The passed file descriptor or SOCKET is not checked for its type, but
-            it's required that it represents a valid datagram socket.
-          ]],
-          params = {
-            { name = 'udp', type = 'uv_udp_t' },
-            { name = 'fd', type = 'integer' },
-          },
-          returns = success_ret,
-        },
-        {
-          name = 'udp_open_ex',
-          method_form = 'udp:open_ex(fd, [flags])',
           desc = [[
             Opens an existing file descriptor or Windows SOCKET as a UDP handle.
 

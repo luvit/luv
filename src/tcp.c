@@ -82,31 +82,23 @@ static int luv_tcp_keepalive(lua_State* L) {
   unsigned int delay = 0;
   luaL_checktype(L, 2, LUA_TBOOLEAN);
   enable = lua_toboolean(L, 2);
-  if (enable) {
-    delay = luaL_checkinteger(L, 3);
-  }
-  ret = uv_tcp_keepalive(handle, enable, delay);
-  return luv_result(L, ret);
-}
-
-#if LUV_UV_VERSION_GEQ(1, 52, 0)
-static int luv_tcp_keepalive_ex(lua_State* L) {
-  uv_tcp_t* handle = luv_check_tcp(L, 1);
-  int ret, enable;
-  unsigned int delay = 0;
+  #if LUV_UV_VERSION_GEQ(1, 52, 0)
   unsigned int intvl = 1; // defaults chosen in uv_tcp_keepalive on libuv 1.52.0
   unsigned int cnt = 10; // defaults chosen in uv_tcp_keepalive on libuv 1.52.0
-  luaL_checktype(L, 2, LUA_TBOOLEAN);
-  enable = lua_toboolean(L, 2);
   if (enable) {
     delay = luaL_checkinteger(L, 3);
     intvl = luaL_optinteger(L, 4, intvl);
     cnt = luaL_optinteger(L, 5, cnt);
   }
   ret = uv_tcp_keepalive_ex(handle, enable, delay, intvl, cnt);
+  #else
+  if (enable) {
+    delay = luaL_checkinteger(L, 3);
+  }
+  ret = uv_tcp_keepalive(handle, enable, delay);
+  #endif
   return luv_result(L, ret);
 }
-#endif
 
 static int luv_tcp_simultaneous_accepts(lua_State* L) {
   uv_tcp_t* handle = luv_check_tcp(L, 1);

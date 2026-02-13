@@ -126,15 +126,9 @@ static int luv_udp_get_send_queue_count(lua_State* L) {
 static int luv_udp_open(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
   uv_os_sock_t sock = luaL_checkinteger(L, 2);
-  int ret = uv_udp_open(handle, sock);
-  return luv_result(L, ret);
-}
-
-#if LUV_UV_VERSION_GEQ(1, 52, 0)
-static int luv_udp_open_ex(lua_State* L) {
-  uv_udp_t* handle = luv_check_udp(L, 1);
-  uv_os_sock_t sock = luaL_checkinteger(L, 2);
+  #if LUV_UV_VERSION_GEQ(1, 52, 0)
   unsigned int flags = 0;
+
   if (!lua_isnoneornil(L, 3)) {
     if (lua_isinteger(L, 3)) {
       flags = (unsigned int)lua_tointeger(L, 3);
@@ -151,9 +145,11 @@ static int luv_udp_open_ex(lua_State* L) {
   }
 
   int ret = uv_udp_open_ex(handle, sock, flags);
+  #else
+  int ret = uv_udp_open(handle, sock);
+  #endif
   return luv_result(L, ret);
 }
-#endif
 
 static int luv_udp_bind(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);

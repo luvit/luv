@@ -1701,23 +1701,9 @@ Enable / disable Nagle's algorithm.
 
 **Returns:** `0` or `fail`
 
-### `uv.tcp_keepalive(tcp, enable, [delay])`
+### `uv.tcp_keepalive(tcp, enable, [delay], [intvl], [cnt])`
 
 > method form `tcp:keepalive(enable, [delay])`
-
-**Parameters:**
-- `tcp`: `uv_tcp_t userdata`
-- `enable`: `boolean`
-- `delay`: `integer` or `nil`
-
-Enable / disable TCP keep-alive. `delay` is the initial delay in seconds,
-ignored when enable is `false`.
-
-**Returns:** `0` or `fail`
-
-### `uv.tcp_keepalive_ex(tcp, enable, [delay], [intvl], [cnt])`
-
-> method form `tcp:keepalive_ex(enable, [delay], [intvl], [cnt])`
 
 **Parameters:**
 - `tcp`: `uv_tcp_t userdata`
@@ -1726,9 +1712,8 @@ ignored when enable is `false`.
 - `intvl`: `integer` or `nil`
 - `cnt`: `integer` or `nil`
 
-Enable / disable TCP keep-alive with all socket options: TCP_KEEPIDLE, TCP_KEEPINTVL and TCP_KEEPCNT. `delay` is the value for TCP_KEEPIDLE, `intvl` is the value for TCP_KEEPINTVL, `cnt` is the value for TCP_KEEPCNT, ignored when `enable` is `false`.
-
-With TCP keep-alive enabled, idle is the time (in seconds) the connection needs to remain idle before TCP starts sending keep-alive probes. intvl is the time (in seconds) between individual keep-alive probes. TCP will drop the connection after sending cnt probes without getting any replies from the peer, then the handle is destroyed with a UV_ETIMEDOUT error passed to the corresponding callback.
+Enable / disable TCP keep-alive. `delay` is the initial delay in seconds, `intvl` is the time in seconds between individual keep-alive probes, and `cnt` is the number of probes to send before assuming the connection is dead.
+ignored when enable is `false`.
 
 **Returns:** `0` or `fail`
 
@@ -2299,31 +2284,9 @@ Returns the handle's send queue count.
 
 **Returns:** `integer`
 
-### `uv.udp_open(udp, fd)`
+### `uv.udp_open(udp, fd, [flags])`
 
 > method form `udp:open(fd)`
-
-**Parameters:**
-- `udp`: `uv_udp_t userdata`
-- `fd`: `integer`
-
-Opens an existing file descriptor or Windows SOCKET as a UDP handle.
-
-Unix only: The only requirement of the sock argument is that it follows the
-datagram contract (works in unconnected mode, supports sendmsg()/recvmsg(),
-etc). In other words, other datagram-type sockets like raw sockets or netlink
-sockets can also be passed to this function.
-
-The file descriptor is set to non-blocking mode.
-
-Note: The passed file descriptor or SOCKET is not checked for its type, but
-it's required that it represents a valid datagram socket.
-
-**Returns:** `0` or `fail`
-
-### `uv.udp_open_ex(udp, fd, [flags])`
-
-> method form `udp:open_ex(fd, [flags])`
 
 **Parameters:**
 - `udp`: `uv_udp_t userdata`
