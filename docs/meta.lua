@@ -1882,28 +1882,8 @@ function uv.tcp_nodelay(tcp, enable) end
 --- @return uv.error_name? err_name
 function uv_tcp_t:nodelay(enable) end
 
---- Enable / disable TCP keep-alive. `delay` is the initial delay in seconds,
+--- Enable / disable TCP keep-alive. `delay` is the initial delay in seconds, `intvl` is the time in seconds between individual keep-alive probes, and `cnt` is the number of probes to send before assuming the connection is dead.
 --- ignored when enable is `false`.
---- @param tcp uv.uv_tcp_t
---- @param enable boolean
---- @param delay integer?
---- @return 0? success
---- @return string? err
---- @return uv.error_name? err_name
-function uv.tcp_keepalive(tcp, enable, delay) end
-
---- Enable / disable TCP keep-alive. `delay` is the initial delay in seconds,
---- ignored when enable is `false`.
---- @param enable boolean
---- @param delay integer?
---- @return 0? success
---- @return string? err
---- @return uv.error_name? err_name
-function uv_tcp_t:keepalive(enable, delay) end
-
---- Enable / disable TCP keep-alive with all socket options: TCP_KEEPIDLE, TCP_KEEPINTVL and TCP_KEEPCNT. `delay` is the value for TCP_KEEPIDLE, `intvl` is the value for TCP_KEEPINTVL, `cnt` is the value for TCP_KEEPCNT, ignored when `enable` is `false`.
----
---- With TCP keep-alive enabled, idle is the time (in seconds) the connection needs to remain idle before TCP starts sending keep-alive probes. intvl is the time (in seconds) between individual keep-alive probes. TCP will drop the connection after sending cnt probes without getting any replies from the peer, then the handle is destroyed with a UV_ETIMEDOUT error passed to the corresponding callback.
 --- @param tcp uv.uv_tcp_t
 --- @param enable boolean
 --- @param delay integer?
@@ -1912,11 +1892,10 @@ function uv_tcp_t:keepalive(enable, delay) end
 --- @return 0? success
 --- @return string? err
 --- @return uv.error_name? err_name
-function uv.tcp_keepalive_ex(tcp, enable, delay, intvl, cnt) end
+function uv.tcp_keepalive(tcp, enable, delay, intvl, cnt) end
 
---- Enable / disable TCP keep-alive with all socket options: TCP_KEEPIDLE, TCP_KEEPINTVL and TCP_KEEPCNT. `delay` is the value for TCP_KEEPIDLE, `intvl` is the value for TCP_KEEPINTVL, `cnt` is the value for TCP_KEEPCNT, ignored when `enable` is `false`.
----
---- With TCP keep-alive enabled, idle is the time (in seconds) the connection needs to remain idle before TCP starts sending keep-alive probes. intvl is the time (in seconds) between individual keep-alive probes. TCP will drop the connection after sending cnt probes without getting any replies from the peer, then the handle is destroyed with a UV_ETIMEDOUT error passed to the corresponding callback.
+--- Enable / disable TCP keep-alive. `delay` is the initial delay in seconds, `intvl` is the time in seconds between individual keep-alive probes, and `cnt` is the number of probes to send before assuming the connection is dead.
+--- ignored when enable is `false`.
 --- @param enable boolean
 --- @param delay integer?
 --- @param intvl integer?
@@ -1924,7 +1903,7 @@ function uv.tcp_keepalive_ex(tcp, enable, delay, intvl, cnt) end
 --- @return 0? success
 --- @return string? err
 --- @return uv.error_name? err_name
-function uv_tcp_t:keepalive_ex(enable, delay, intvl, cnt) end
+function uv_tcp_t:keepalive(enable, delay, intvl, cnt) end
 
 --- Enable / disable simultaneous asynchronous accept requests that are queued by
 --- the operating system when listening for new TCP connections.
@@ -2599,46 +2578,11 @@ function uv_udp_t:get_send_queue_count() end
 --- it's required that it represents a valid datagram socket.
 --- @param udp uv.uv_udp_t
 --- @param fd integer
---- @return 0? success
---- @return string? err
---- @return uv.error_name? err_name
-function uv.udp_open(udp, fd) end
-
---- Opens an existing file descriptor or Windows SOCKET as a UDP handle.
----
---- Unix only: The only requirement of the sock argument is that it follows the
---- datagram contract (works in unconnected mode, supports sendmsg()/recvmsg(),
---- etc). In other words, other datagram-type sockets like raw sockets or netlink
---- sockets can also be passed to this function.
----
---- The file descriptor is set to non-blocking mode.
----
---- Note: The passed file descriptor or SOCKET is not checked for its type, but
---- it's required that it represents a valid datagram socket.
---- @param fd integer
---- @return 0? success
---- @return string? err
---- @return uv.error_name? err_name
-function uv_udp_t:open(fd) end
-
---- Opens an existing file descriptor or Windows SOCKET as a UDP handle.
----
---- Unix only: The only requirement of the sock argument is that it follows the
---- datagram contract (works in unconnected mode, supports sendmsg()/recvmsg(),
---- etc). In other words, other datagram-type sockets like raw sockets or netlink
---- sockets can also be passed to this function.
----
---- The file descriptor is set to non-blocking mode.
----
---- Note: The passed file descriptor or SOCKET is not checked for its type, but
---- it's required that it represents a valid datagram socket.
---- @param udp uv.uv_udp_t
---- @param fd integer
 --- @param flags integer|{ reuseaddr: boolean?, reuseport: boolean? }?
 --- @return 0? success
 --- @return string? err
 --- @return uv.error_name? err_name
-function uv.udp_open_ex(udp, fd, flags) end
+function uv.udp_open(udp, fd, flags) end
 
 --- Opens an existing file descriptor or Windows SOCKET as a UDP handle.
 ---
@@ -2656,7 +2600,7 @@ function uv.udp_open_ex(udp, fd, flags) end
 --- @return 0? success
 --- @return string? err
 --- @return uv.error_name? err_name
-function uv_udp_t:open_ex(fd, flags) end
+function uv_udp_t:open(fd, flags) end
 
 --- Bind the UDP handle to an IP address and port. Any `flags` are set with a table
 --- with fields `reuseaddr` or `ipv6only` equal to `true` or `false`.

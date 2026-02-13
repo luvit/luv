@@ -164,9 +164,6 @@ static const luaL_Reg luv_functions[] = {
   {"tcp_open", luv_tcp_open},
   {"tcp_nodelay", luv_tcp_nodelay},
   {"tcp_keepalive", luv_tcp_keepalive},
-#if LUV_UV_VERSION_GEQ(1, 52, 0)
-  {"tcp_keepalive_ex", luv_tcp_keepalive_ex},
-#endif
   {"tcp_simultaneous_accepts", luv_tcp_simultaneous_accepts},
   {"tcp_bind", luv_tcp_bind},
   {"tcp_getpeername", luv_tcp_getpeername},
@@ -218,9 +215,6 @@ static const luaL_Reg luv_functions[] = {
   {"udp_get_send_queue_size", luv_udp_get_send_queue_size},
   {"udp_get_send_queue_count", luv_udp_get_send_queue_count},
   {"udp_open", luv_udp_open},
-#if LUV_UV_VERSION_GEQ(1, 52, 0)
-  {"udp_open_ex", luv_udp_open_ex},
-#endif
   {"udp_bind", luv_udp_bind},
   {"udp_getsockname", luv_udp_getsockname},
   {"udp_set_membership", luv_udp_set_membership},
@@ -562,9 +556,6 @@ static const luaL_Reg luv_tcp_methods[] = {
   {"open", luv_tcp_open},
   {"nodelay", luv_tcp_nodelay},
   {"keepalive", luv_tcp_keepalive},
-#if LUV_UV_VERSION_GEQ(1, 52, 0)
-  {"keepalive_ex", luv_tcp_keepalive_ex},
-#endif
   {"simultaneous_accepts", luv_tcp_simultaneous_accepts},
   {"bind", luv_tcp_bind},
   {"getpeername", luv_tcp_getpeername},
@@ -599,9 +590,6 @@ static const luaL_Reg luv_udp_methods[] = {
   {"get_send_queue_size", luv_udp_get_send_queue_size},
   {"get_send_queue_count", luv_udp_get_send_queue_count},
   {"open", luv_udp_open},
-#if LUV_UV_VERSION_GEQ(1, 52, 0)
-  {"open_ex", luv_udp_open_ex},
-#endif
   {"bind", luv_udp_bind},
   {"getsockname", luv_udp_getsockname},
   {"set_membership", luv_udp_set_membership},
