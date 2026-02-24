@@ -543,6 +543,8 @@ static int luv_fs_read(lua_State* L) {
     offset = luaL_optinteger(L, 3, offset);
     ref = luv_check_continuation(L, 4);
   }
+  if (len < 0)
+    return luaL_error(L, "Length must be non-negative");
   data = (char*)malloc(len);
   if (!data) {
     luaL_unref(L, LUA_REGISTRYINDEX, ref);

@@ -44,6 +44,11 @@ static int luv_new_async(lua_State* L) {
   }
   data = luv_setup_handle(L, ctx);
   data->extra = (luv_thread_arg_t*)malloc(sizeof(luv_thread_arg_t));
+  if (!data->extra) {
+    handle->data = data;
+    uv_close((uv_handle_t*)handle, luv_handle_free);
+    return luaL_error(L, "Failed to allocate async args");
+  }
   data->extra_gc = free;
   memset(data->extra, 0, sizeof(luv_thread_arg_t));
   handle->data = data;

@@ -4281,7 +4281,9 @@ function uv.gettimeofday() end
 --- `internal`, and `mac`.
 ---
 --- See [Constants][] for supported address `family` output values.
---- @return table<string, uv.interface_addresses.addresses> addresses
+--- @return table<string, uv.interface_addresses.addresses>? addresses
+--- @return string? err
+--- @return uv.error_name? err_name
 function uv.interface_addresses() end
 
 --- IPv6-capable implementation of `if_indextoname(3)`.

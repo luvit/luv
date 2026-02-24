@@ -142,6 +142,8 @@ static void parse_sockaddr(lua_State* L, struct sockaddr_storage* address) {
     struct sockaddr_in6* addrin6 = (struct sockaddr_in6*)address;
     uv_inet_ntop(AF_INET6, &(addrin6->sin6_addr), ip, INET6_ADDRSTRLEN);
     port = ntohs(addrin6->sin6_port);
+  } else {
+    ip[0] = '\0';
   }
 
   lua_pushstring(L, luv_af_num_to_string(addr->sa_family));

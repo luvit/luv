@@ -4529,21 +4529,19 @@ local doc = {
 
             See [Constants][] for supported address `family` output values.
           ]],
-          returns = {
-            {
-              dict(
-                'string',
-                table({
-                  { 'ip', 'string' },
-                  { 'family', 'string' },
-                  { 'netmask', 'string' },
-                  { 'internal', 'boolean' },
-                  { 'mac', 'string' },
-                })
-              ),
-              'addresses',
-            },
-          },
+          returns = ret_or_fail(
+            dict(
+              'string',
+              table({
+                { 'ip', 'string' },
+                { 'family', 'string' },
+                { 'netmask', 'string' },
+                { 'internal', 'boolean' },
+                { 'mac', 'string' },
+              })
+            ),
+            'addresses'
+          ),
         },
         {
           name = 'if_indextoname',

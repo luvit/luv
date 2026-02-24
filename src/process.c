@@ -64,7 +64,7 @@ static int sparse_rawlen(lua_State* L, int tbl) {
   tbl = lua_absindex(L, tbl);
 
   lua_pushnil(L);
-  while (lua_next(L, -2)) {
+  while (lua_next(L, tbl)) {
     if (lua_type(L, -2) == LUA_TNUMBER) {
       int idx = lua_tonumber(L, -2);
       if (floor(idx) == idx && idx >= 1) {
@@ -198,6 +198,11 @@ static int luv_spawn(lua_State* L) {
     }
     for (i = 0; i < len; ++i) {
       lua_rawgeti(L, -1, i + 1);
+      if (!lua_isstring(L, -1)) {
+        luv_clean_options(L, &options, args_refs);
+        return luaL_argerror(L, 2, "env table entries must be strings");
+      }
+
       options.env[i] = (char*)lua_tostring(L, -1);
       lua_pop(L, 1);
     }

@@ -95,6 +95,16 @@ static int luv_thread_arg_set(lua_State* L, luv_thread_arg_t* args, int idx, int
       {
         const char* p = lua_tolstring(L, i, &arg->val.str.len);
         arg->val.str.base = malloc(arg->val.str.len);
+        if (!arg->val.str.base) {
+          for (int j = 0; j < i - idx; j++) {
+            luv_val_t* arg = args->argv + j;
+            if (arg->type == LUA_TSTRING && arg->ref[side] == LUA_NOREF) {
+              free((void*)arg->val.str.base);
+            }
+          }
+
+          return luaL_error(L, "Failed to allocate thread arg string");
+        }
         memcpy((void*)arg->val.str.base, p, arg->val.str.len);
       } else {
         arg->val.str.base = lua_tolstring(L, i, &arg->val.str.len);
@@ -159,7 +169,7 @@ static void luv_thread_arg_clear(lua_State* L, luv_thread_arg_t* args, int flags
           lua_rawgeti(L, LUA_REGISTRYINDEX, arg->ref[side]);
           lua_pushnil(L);
           lua_setmetatable(L, -2);
-          lua_pop(L, -1);
+          lua_pop(L, 1);
         }
         luaL_unref(L, LUA_REGISTRYINDEX, arg->ref[side]);
         arg->ref[side] = LUA_NOREF;
@@ -390,6 +400,7 @@ static int luv_new_thread(lua_State* L) {
   luv_thread_dumped(L, cbidx);
   len = lua_rawlen(L, -1);
   code = malloc(len);
+  if (!code) return luaL_error(L, "Failed to allocate thread code buffer");
   memcpy(code, lua_tostring(L, -1), len);
 
   thread = (luv_thread_t*)lua_newuserdata(L, sizeof(*thread));
@@ -405,7 +416,6 @@ static int luv_new_thread(lua_State* L) {
   if (thread->argc < 0) {
     return luv_thread_arg_error(L);
   }
-  thread->len = len;
 
   thread->notify.data = thread;
   thread->ref = LUA_NOREF;

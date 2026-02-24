@@ -4208,7 +4208,7 @@ is an array of address information where fields are `ip`, `family`, `netmask`,
 
 See [Constants][] for supported address `family` output values.
 
-**Returns:** `table`
+**Returns:** `table` or `fail`
 - `[string]`: `table`
   - `ip`: `string`
   - `family`: `string`

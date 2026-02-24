@@ -136,8 +136,24 @@ static lua_State* luv_work_acquire_vm(luv_work_vms_t* vms)
     lua_setglobal(L, "_THREAD");
 
     uv_mutex_lock(&vms->vm_mutex);
+    if (vms->idx_vms >= vms->nvms) {
+      vms->nvms *= 2;
+
+      lua_State **new_vms= realloc(vms->vms, sizeof(lua_State*) * vms->nvms);
+      if (!new_vms) {
+        uv_mutex_unlock(&vms->vm_mutex);
+        return L; // we failed to realloc, so we will leak this vm, but we have no choice at this point
+      }
+      vms->vms = new_vms;
+
+      for (unsigned int i = vms->idx_vms; i < vms->nvms; i++) {
+        vms->vms[i] = NULL;
+      }
+    }
+
     vms->vms[vms->idx_vms] = L;
     vms->idx_vms += 1;
+    
     uv_mutex_unlock(&vms->vm_mutex);
   }
   return L;
@@ -205,6 +221,7 @@ static int luv_new_work(lua_State* L) {
   luv_thread_dumped(L, 1);
   len = lua_rawlen(L, -1);
   code = malloc(len);
+  if (!code) return luaL_error(L, "Failed to allocate work code buffer");
   memcpy(code, lua_tostring(L, -1), len);
   lua_pop(L, 1);
 
@@ -314,6 +331,11 @@ static void luv_work_init(lua_State* L) {
   }
 
   vms->vms = (lua_State**)calloc(nvms, sizeof(lua_State*));
+  if (!vms->vms) {
+    fprintf(stderr, "*** threadpool not works\n");
+    fprintf(stderr, "Error to allocate thread pool vm array\n");
+    abort();
+  }
   vms->nvms = nvms;
   vms->idx_vms = 0;
 

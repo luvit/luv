@@ -65,12 +65,26 @@ static uv_buf_t* luv_prep_bufs(lua_State* L, int index, size_t *count, int **ref
   }
   *count = cnt;
   bufs = (uv_buf_t*)malloc(sizeof(uv_buf_t) * *count);
+  if (!bufs) luaL_error(L, "Failed to allocate buffer array");
   int *refs_array = NULL;
-  if (refs)
+  if (refs) {
     refs_array = (int*)malloc(sizeof(int) * (*count + 1));
+    if (!refs_array) {
+      free(bufs);
+      luaL_error(L, "Failed to allocate refs array");
+    }
+  }
   for (i = 0; i < *count; ++i) {
     lua_rawgeti(L, index, i + 1);
     if (!lua_isstring(L, -1)) {
+      /* free already-accumulated refs and heap allocations before throwing */
+      if (refs_array) {
+        size_t j;
+        for (j = 0; j < i; ++j)
+          luaL_unref(L, LUA_REGISTRYINDEX, refs_array[j]);
+        free(refs_array);
+      }
+      free(bufs);
       luaL_argerror(L, index, lua_pushfstring(L, "expected table of strings, found %s in the table", luaL_typename(L, -1)));
       return NULL;
     }
@@ -105,6 +119,7 @@ static uv_buf_t* luv_check_bufs(lua_State* L, int index, size_t* count, luv_req_
   else if (lua_isstring(L, index)) {
     *count = 1;
     bufs = (uv_buf_t*)malloc(sizeof(uv_buf_t));
+    if (!bufs) luaL_error(L, "Failed to allocate buffer");
     luv_prep_buf(L, index, bufs);
     lua_pushvalue(L, index);
     req_data->data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
@@ -125,6 +140,7 @@ static uv_buf_t* luv_check_bufs_noref(lua_State* L, int index, size_t* count) {
   else if (lua_isstring(L, index)) {
     *count = 1;
     bufs = (uv_buf_t*)malloc(sizeof(uv_buf_t));
+    if (!bufs) luaL_error(L, "Failed to allocate buffer");
     luv_prep_buf(L, index, bufs);
   }
   else {
@@ -290,7 +306,8 @@ static int luv_interface_addresses(lua_State* L) {
   char ip[INET6_ADDRSTRLEN];
   char netmask[INET6_ADDRSTRLEN];
 
-  uv_interface_addresses(&interfaces, &count);
+  int ret = uv_interface_addresses(&interfaces, &count);
+  if (ret < 0) return luv_error(L, ret);
 
   lua_newtable(L);
 
@@ -494,7 +511,14 @@ static int luv_os_getenv(lua_State* L) {
   const char* name = luaL_checkstring(L, 1);
   size_t size = luaL_optinteger(L, 2, LUAL_BUFFERSIZE);
   char *buff = malloc(size);
+  if (!buff) return luaL_error(L, "Failed to allocate env buffer");
   int ret = uv_os_getenv(name, buff, &size);
+  if (ret == UV_ENOBUFS) {
+    /* size has been updated with the required length; reallocate and retry */
+    buff = realloc(buff, size);
+    if (!buff) return luaL_error(L, "Failed to allocate env buffer");
+    ret = uv_os_getenv(name, buff, &size);
+  }
   if (ret == 0) {
     lua_pushlstring(L, buff, size);
     ret = 1;
@@ -550,7 +574,7 @@ static int luv_if_indextoname(lua_State* L) {
   size_t scoped_addr_len = sizeof(scoped_addr);
   unsigned int ifindex = (unsigned int)luaL_checkinteger(L, 1);
 
-  int ret = uv_if_indextoname(ifindex - 1, scoped_addr, &scoped_addr_len);
+  int ret = uv_if_indextoname(ifindex, scoped_addr, &scoped_addr_len);
   if (ret == 0) {
     lua_pushlstring(L, scoped_addr, scoped_addr_len);
     ret = 1;
@@ -565,7 +589,7 @@ static int luv_if_indextoiid(lua_State* L) {
   size_t interface_id_len = sizeof(interface_id);
   unsigned int ifindex = (unsigned int)luaL_checkinteger(L, 1);
 
-  int ret = uv_if_indextoiid(ifindex - 1, interface_id, &interface_id_len);
+  int ret = uv_if_indextoiid(ifindex, interface_id, &interface_id_len);
   if (ret == 0) {
     lua_pushlstring(L, interface_id, interface_id_len);
     ret = 1;
@@ -683,14 +707,17 @@ static int luv_os_environ(lua_State* L) {
 #endif
 
 static int luv_sleep(lua_State* L) {
-  unsigned int msec = luaL_checkinteger(L, 1);
+  int msec = luaL_checkinteger(L, 1);
+  if (msec < 0)
+    msec = 0;
+
 #if LUV_UV_VERSION_GEQ(1, 34, 0)
-  uv_sleep(msec);
+  uv_sleep((unsigned int)msec);
 #else
 #ifdef _WIN32
-  Sleep(msec);
+  Sleep((unsigned int)msec);
 #else
-  usleep(msec * 1000);
+  usleep((unsigned int)msec * 1000);
 #endif
 #endif
   return 0;
@@ -824,7 +851,7 @@ static int luv_utf16_to_wtf8(lua_State *L) {
   sz = uv_utf16_length_as_wtf8(utf16, utf16_len);
   /* The wtf8_ptr must contain an extra space for an extra NUL after the result */
   wtf8 = malloc(sz + 1);
-  if (wtf8 == NULL) return luaL_error(L, "failed to allocate %zu bytes", sz + 1);
+  if (wtf8 == NULL) return luaL_error(L, "out of memory");
   /* Note: On success, *sz will not be modified */
   ret = uv_utf16_to_wtf8(utf16, utf16_len, &wtf8, &sz);
   if (ret == 0) {
@@ -852,7 +879,7 @@ static int luv_wtf8_to_utf16(lua_State *L) {
   const char* wtf8 = luaL_checklstring(L, 1, &sz);
   ssize_t ssz = uv_wtf8_length_as_utf16(wtf8);
   utf16 = malloc(ssz * 2);
-  if (utf16 == NULL) return luaL_error(L, "failed to allocate %zu bytes", ssz * 2);
+  if (utf16 == NULL) return luaL_error(L, "out of memory");
   uv_wtf8_to_utf16(wtf8, utf16, ssz);
   /* The returned string includes a NUL terminator, but we use Lua style string */
   lua_pushlstring(L, (const char*)utf16, (ssz-1) * 2);

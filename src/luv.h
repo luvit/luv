@@ -93,7 +93,7 @@ typedef int (*luv_CFcpcall) (lua_State* L, lua_CFunction func, void* ud, int fla
 /* Default implementation of event callback */
 LUALIB_API int luv_cfpcall(lua_State* L, int nargs, int nresult, int flags);
 
-/* Default implementation of thread entory function */
+/* Default implementation of thread entry function */
 LUALIB_API int luv_cfcpcall(lua_State* L, lua_CFunction func, void* ud, int flags);
 
 typedef struct {

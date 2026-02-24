@@ -18,9 +18,12 @@
 
 static void* luv_newuserdata(lua_State* L, size_t sz) {
   void* handle = malloc(sz);
-  if (handle) {
-    *(void**)lua_newuserdata(L, sizeof(void*)) = handle;
+  if (!handle) {
+    luaL_error(L, "out of memory");
+    return NULL; // unreachable
   }
+
+  *(void**)lua_newuserdata(L, sizeof(void*)) = handle;
   return handle;
 }
 
