@@ -1,4 +1,4 @@
-# This is a copy of CMake's builtin FindLua to get support for Lua 5.4
+# This is a copy of CMake's builtin FindLua to get support for Lua 5.5
 # on earlier CMake versions.
 
 # Distributed under the OSI-approved BSD 3-Clause License.  See accompanying
@@ -51,7 +51,7 @@ unset(_lua_append_versions)
 
 # this is a function only to have all the variables inside go away automatically
 function(_lua_get_versions)
-    set(LUA_VERSIONS5 5.4 5.3 5.2 5.1 5.0)
+    set(LUA_VERSIONS5 5.5 5.4 5.3 5.2 5.1 5.0)
 
     if (Lua_FIND_VERSION_EXACT)
         if (Lua_FIND_VERSION_COUNT GREATER 1)
@@ -121,10 +121,10 @@ function(_lua_get_header_version)
   file(STRINGS "${_hdr_file}" lua_version_strings
        REGEX "^#define[ \t]+LUA_(RELEASE[ \t]+\"Lua [0-9]|VERSION([ \t]+\"Lua [0-9]|_[MR])).*")
 
-  string(REGEX REPLACE ".*;#define[ \t]+LUA_VERSION_MAJOR[ \t]+\"([0-9])\"[ \t]*;.*" "\\1" LUA_VERSION_MAJOR ";${lua_version_strings};")
+  string(REGEX REPLACE ".*;#define[ \t]+LUA_VERSION_MAJOR(_N)?[ \t]+\"?([0-9])\"?[ \t]*;.*" "\\2" LUA_VERSION_MAJOR ";${lua_version_strings};")
   if (LUA_VERSION_MAJOR MATCHES "^[0-9]+$")
-    string(REGEX REPLACE ".*;#define[ \t]+LUA_VERSION_MINOR[ \t]+\"([0-9])\"[ \t]*;.*" "\\1" LUA_VERSION_MINOR ";${lua_version_strings};")
-    string(REGEX REPLACE ".*;#define[ \t]+LUA_VERSION_RELEASE[ \t]+\"([0-9])\"[ \t]*;.*" "\\1" LUA_VERSION_PATCH ";${lua_version_strings};")
+    string(REGEX REPLACE ".*;#define[ \t]+LUA_VERSION_MINOR(_N)?[ \t]+\"?([0-9])\"?[ \t]*;.*" "\\2" LUA_VERSION_MINOR ";${lua_version_strings};")
+    string(REGEX REPLACE ".*;#define[ \t]+LUA_VERSION_RELEASE(_N)?[ \t]+\"?([0-9])\"?[ \t]*;.*" "\\2" LUA_VERSION_PATCH ";${lua_version_strings};")
     set(LUA_VERSION_STRING "${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}.${LUA_VERSION_PATCH}")
   else ()
     string(REGEX REPLACE ".*;#define[ \t]+LUA_RELEASE[ \t]+\"Lua ([0-9.]+)\"[ \t]*;.*" "\\1" LUA_VERSION_STRING ";${lua_version_strings};")
