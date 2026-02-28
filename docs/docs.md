@@ -1703,7 +1703,7 @@ Enable / disable Nagle's algorithm.
 
 ### `uv.tcp_keepalive(tcp, enable, [delay], [intvl], [cnt])`
 
-> method form `tcp:keepalive(enable, [delay])`
+> method form `tcp:keepalive(enable, [delay], [intvl], [cnt])`
 
 **Parameters:**
 - `tcp`: `uv_tcp_t userdata`
@@ -1716,6 +1716,8 @@ Enable / disable TCP keep-alive. `delay` is the initial delay in seconds, `intvl
 ignored when enable is `false`.
 
 **Returns:** `0` or `fail`
+
+**Note**: `intvl` and `cnt` are only supported with Libuv >= 1.52.0.
 
 ### `uv.tcp_simultaneous_accepts(tcp, enable)`
 
@@ -2286,7 +2288,7 @@ Returns the handle's send queue count.
 
 ### `uv.udp_open(udp, fd, [flags])`
 
-> method form `udp:open(fd)`
+> method form `udp:open(fd, [flags])`
 
 **Parameters:**
 - `udp`: `uv_udp_t userdata`
@@ -2308,6 +2310,8 @@ Note: The passed file descriptor or SOCKET is not checked for its type, but
 it's required that it represents a valid datagram socket.
 
 **Returns:** `0` or `fail`
+
+**Note**: `flags` is only supported with Libuv >= 1.52.0.
 
 ### `uv.udp_bind(udp, host, port, [flags])`
 

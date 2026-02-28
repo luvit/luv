@@ -2208,7 +2208,7 @@ local doc = {
         },
         {
           name = 'tcp_keepalive',
-          method_form = 'tcp:keepalive(enable, [delay])',
+          method_form = 'tcp:keepalive(enable, [delay], [intvl], [cnt])',
           desc = [[
             Enable / disable TCP keep-alive. `delay` is the initial delay in seconds, `intvl` is the time in seconds between individual keep-alive probes, and `cnt` is the number of probes to send before assuming the connection is dead.
             ignored when enable is `false`.
@@ -2221,6 +2221,11 @@ local doc = {
             { name = 'cnt', type = opt_int },
           },
           returns = success_ret,
+          notes = {
+            [[
+              `intvl` and `cnt` are only supported with Libuv >= 1.52.0.
+            ]],
+          },
         },
         {
           name = 'tcp_simultaneous_accepts',
@@ -2831,7 +2836,7 @@ local doc = {
         },
         {
           name = 'udp_open',
-          method_form = 'udp:open(fd)',
+          method_form = 'udp:open(fd, [flags])',
           desc = [[
             Opens an existing file descriptor or Windows SOCKET as a UDP handle.
 
@@ -2857,6 +2862,11 @@ local doc = {
             },
           },
           returns = success_ret,
+          notes = {
+            [[
+              `flags` is only supported with Libuv >= 1.52.0.
+            ]],
+          },
         },
         {
           name = 'udp_bind',

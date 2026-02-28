@@ -1884,6 +1884,8 @@ function uv_tcp_t:nodelay(enable) end
 
 --- Enable / disable TCP keep-alive. `delay` is the initial delay in seconds, `intvl` is the time in seconds between individual keep-alive probes, and `cnt` is the number of probes to send before assuming the connection is dead.
 --- ignored when enable is `false`.
+--- **Note**:
+--- `intvl` and `cnt` are only supported with Libuv >= 1.52.0.
 --- @param tcp uv.uv_tcp_t
 --- @param enable boolean
 --- @param delay integer?
@@ -1896,6 +1898,8 @@ function uv.tcp_keepalive(tcp, enable, delay, intvl, cnt) end
 
 --- Enable / disable TCP keep-alive. `delay` is the initial delay in seconds, `intvl` is the time in seconds between individual keep-alive probes, and `cnt` is the number of probes to send before assuming the connection is dead.
 --- ignored when enable is `false`.
+--- **Note**:
+--- `intvl` and `cnt` are only supported with Libuv >= 1.52.0.
 --- @param enable boolean
 --- @param delay integer?
 --- @param intvl integer?
@@ -2576,6 +2580,8 @@ function uv_udp_t:get_send_queue_count() end
 ---
 --- Note: The passed file descriptor or SOCKET is not checked for its type, but
 --- it's required that it represents a valid datagram socket.
+--- **Note**:
+--- `flags` is only supported with Libuv >= 1.52.0.
 --- @param udp uv.uv_udp_t
 --- @param fd integer
 --- @param flags integer|{ reuseaddr: boolean?, reuseport: boolean? }?
@@ -2595,6 +2601,8 @@ function uv.udp_open(udp, fd, flags) end
 ---
 --- Note: The passed file descriptor or SOCKET is not checked for its type, but
 --- it's required that it represents a valid datagram socket.
+--- **Note**:
+--- `flags` is only supported with Libuv >= 1.52.0.
 --- @param fd integer
 --- @param flags integer|{ reuseaddr: boolean?, reuseport: boolean? }?
 --- @return 0? success
