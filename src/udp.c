@@ -175,6 +175,16 @@ static int luv_udp_bind(lua_State* L) {
     lua_getfield(L, 4, "ipv6only");
     if (lua_toboolean(L, -1)) flags |= UV_UDP_IPV6ONLY;
     lua_pop(L, 1);
+#if LUV_UV_VERSION_GEQ(1, 42, 0)
+    lua_getfield(L, 4, "linux_recverr");
+    if (lua_toboolean(L, -1)) flags |= UV_UDP_LINUX_RECVERR;
+    lua_pop(L, 1);
+#endif
+#if LUV_UV_VERSION_GEQ(1, 49, 0)
+    lua_getfield(L, 4, "reuseport");
+    if (lua_toboolean(L, -1)) flags |= UV_UDP_REUSEPORT;
+    lua_pop(L, 1);
+#endif
   }
   ret = uv_udp_bind(handle, (struct sockaddr*)&addr, flags);
   return luv_result(L, ret);

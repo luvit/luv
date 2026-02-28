@@ -2863,7 +2863,31 @@ local doc = {
           method_form = 'udp:bind(host, port, [flags])',
           desc = [[
             Bind the UDP handle to an IP address and port. Any `flags` are set with a table
-            with fields `reuseaddr` or `ipv6only` equal to `true` or `false`.
+            with fields `reuseaddr`, `ipv6only`, `linux_recverr`, `reuseport` equal to `true` or `false`.
+
+            - `reuseaddr`: Indicates if SO_REUSEADDR will be set when binding the handle.
+              This sets the SO_REUSEPORT socket flag on the BSDs (except for
+              DragonFlyBSD), OS X, and other platforms where SO_REUSEPORTs don't
+              have the capability of load balancing, as the opposite of what
+              `reuseport` would do. On other Unix platforms, it sets the
+              SO_REUSEADDR flag. What that means is that multiple threads or
+              processes can bind to the same address without error (provided
+              they all set the flag) but only the last one to bind will receive
+              any traffic, in effect "stealing" the port from the previous listener.
+            - `ipv6only`: Disables dual stack mode.
+            - `linux_recverr`: Indicates if IP_RECVERR/IPV6_RECVERR will be set when binding the handle.
+              This sets IP_RECVERR for IPv4 and IPV6_RECVERR for IPv6 UDP sockets on
+              Linux. This stops the Linux kernel from suppressing some ICMP error messages
+              and enables full ICMP error reporting for faster failover.
+              This flag is no-op on platforms other than Linux.
+            - `reuseport`: Indicates if SO_REUSEPORT will be set when binding the handle.
+              This sets the SO_REUSEPORT socket option on supported platforms.
+              Unlike `reuseaddr`, this flag will make multiple threads or
+              processes that are binding to the same address and port "share"
+              the port, which means incoming datagrams are distributed across
+              the receiving sockets among threads or processes.
+              This flag is available only on Linux 3.9+, DragonFlyBSD 3.6+,
+              FreeBSD 12.0+, Solaris 11.4, and AIX 7.2.5+ for now.
           ]],
           params = {
             { name = 'udp', type = 'uv_udp_t' },
@@ -2874,10 +2898,18 @@ local doc = {
               type = opt(table({
                 { 'ipv6only', opt_bool },
                 { 'reuseaddr', opt_bool },
+                { 'linux_recverr', opt_bool },
+                { 'reuseport', opt_bool },
               })),
             },
           },
           returns = success_ret,
+          notes = {
+            [[
+              The flag `linux_recverr` is only supported with Libuv >= 1.42.0.
+              The flag `reuseport` is only supported with Libuv >= 1.49.0.
+            ]],
+          },
         },
         {
           name = 'udp_getsockname',
