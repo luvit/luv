@@ -54,8 +54,8 @@ static luv_handle_t* luv_setup_handle(lua_State* L, luv_ctx_t* ctx) {
   data->extra = NULL;
   data->extra_gc = NULL;
 
-  // record data in ht_ref
-  lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->ht_ref);
+  // record data in handle registry
+  lua_getfield(L, LUA_REGISTRYINDEX, luv_handle_key);
   lua_pushboolean(L, 1);
   lua_rawsetp(L, -2, data);
   lua_pop(L, 1);

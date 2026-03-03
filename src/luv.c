@@ -797,7 +797,7 @@ LUALIB_API luv_ctx_t* luv_context(lua_State* L) {
     lua_rawset(L, LUA_REGISTRYINDEX);
     // create table to contain internal handle
     lua_newtable(L);
-    ctx->ht_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+    lua_setfield(L, LUA_REGISTRYINDEX, luv_handle_key);
   } else {
     ctx = (luv_ctx_t*)lua_touserdata(L, -1);
   }

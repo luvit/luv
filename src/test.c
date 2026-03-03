@@ -104,7 +104,7 @@ static void walk_cb(uv_handle_t* handle, void* arg) {
   luv_handle_t* data = (luv_handle_t*)handle->data;
 
   // Skip foreign handles (shared event loop)
-  lua_rawgeti(L, LUA_REGISTRYINDEX, ctx->ht_ref);
+  lua_getfield(L, LUA_REGISTRYINDEX, luv_handle_key);
   lua_rawgetp(L, -1, data);
 
 #if LUV_UV_VERSION_GEQ(1, 19, 0)
