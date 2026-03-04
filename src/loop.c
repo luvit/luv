@@ -95,10 +95,18 @@ static int luv_update_time(lua_State* L) {
 }
 
 static void luv_walk_cb(uv_handle_t* handle, void* arg) {
+  // This function expects to be passed a lua_State* with a callback function
+  // at index 1 and the handle registry table at index 2. Libuv always calls
+  // this function synchronously in uv_walk, so we can rely on the Lua state
+  // from the caller of luv_walk instead of dispatching to the loop's main
+  // thread both to avoid the xmove and to allow tracebacks to pass through
+  // luv_walk.
+
   lua_State* L = (lua_State*)arg;
   luv_handle_t* data = (luv_handle_t*)handle->data;
 
-  // Skip foreign handles (shared event loop)
+  // check if registry[luv_handle_key][data] is not nil, which will only be true
+  // if the data refers to a valid luv_handle_t* that is still in use.
   lua_rawgetp(L, 2, data);
   if (lua_isnil(L, -1)) {
     lua_pop(L, 1);
@@ -112,6 +120,10 @@ static void luv_walk_cb(uv_handle_t* handle, void* arg) {
   luv_find_handle(L, data);      // Get the userdata
   uv_handle_t **udata = (uv_handle_t**)lua_touserdata(L, -1);
   if (udata == NULL || *udata != handle) {
+    // This will only happen if someone forged a uv_handle_t* that points to a
+    // uv_handle_t* created by luv. This is very unlikely, but if data does
+    // happen to be unintentionally pointer-like we should avoid treating it
+    // as valid.
     lua_pop(L, 2); // Pop the function and the userdata
     return;
   }
@@ -120,9 +132,9 @@ static void luv_walk_cb(uv_handle_t* handle, void* arg) {
 }
 
 static int luv_walk(lua_State* L) {
-  luaL_checktype(L, 1, LUA_TFUNCTION);
-  lua_settop(L, 1);
-  lua_getfield(L, LUA_REGISTRYINDEX, luv_handle_key);
+  luaL_checktype(L, 1, LUA_TFUNCTION);                // Ensure index 1 is a function
+  lua_settop(L, 1);                                   // Remove any extra arguments
+  lua_getfield(L, LUA_REGISTRYINDEX, luv_handle_key); // Place the handle registry table at index 2
   uv_walk(luv_loop(L), luv_walk_cb, L);
   return 0;
 }
