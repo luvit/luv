@@ -137,14 +137,15 @@ static lua_State* luv_work_acquire_vm(luv_work_vms_t* vms)
 
     uv_mutex_lock(&vms->vm_mutex);
     if (vms->idx_vms >= vms->nvms) {
-      vms->nvms *= 2;
+      unsigned int new_nvms = vms->nvms * 2;
 
-      lua_State **new_vms= realloc(vms->vms, sizeof(lua_State*) * vms->nvms);
+      lua_State **new_vms= realloc(vms->vms, sizeof(lua_State*) * new_nvms);
       if (!new_vms) {
         uv_mutex_unlock(&vms->vm_mutex);
         return L; // we failed to realloc, so we will leak this vm, but we have no choice at this point
       }
       vms->vms = new_vms;
+      vms->nvms = new_nvms;
 
       for (unsigned int i = vms->idx_vms; i < vms->nvms; i++) {
         vms->vms[i] = NULL;
