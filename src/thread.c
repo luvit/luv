@@ -238,10 +238,15 @@ static int luv_thread_arg_error(lua_State *L) {
     lua_typename(L, type), pos);
 }
 
-// Based on code from lstrlib.c in Lua 5.4
+// Based on code from lstrlib.c in Lua 5.5
 //
 // luaL_buffinit might push stuff onto the stack, so it is called after
 // lua_dump to ensure that the function to dump is still on the top of the stack.
+//
+// In Lua 5.5 lua_dump restores the stack to its state before lua_dump was called,
+// so we must call luaL_pushresult before lua_dump returns. Since this behavior
+// is the most strict, we target this behavior on all versions by mimicing the
+// behavior where the writer is called an extra time with b = NULL.
 //
 // Note: The luaL_buffinit call is done within the thread_dump function instead of
 // before the lua_dump call in luv_thread_dumped because that plays nicer with
@@ -253,6 +258,7 @@ static int luv_thread_arg_error(lua_State *L) {
 struct luv_thread_Writer {
   int init;
   luaL_Buffer B;
+  int slot;
 };
 
 static int thread_dump (lua_State *L, const void *b, size_t size, void *ud) {
@@ -261,10 +267,15 @@ static int thread_dump (lua_State *L, const void *b, size_t size, void *ud) {
     state->init = 1;
     luaL_buffinit(L, &state->B);
   }
-  // Starting with Lua 5.5.0, lua_dump calls this function with b == NULL to signal
-  // the end of the dump. We don't have to worry about that, though, because size will
-  // also be zero in that case and luaL_addlstring is a no-op when size is zero.
-  luaL_addlstring(&state->B, (const char *)b, size);
+
+  // In versions below Lua 5.5 we mimic the Lua 5.5 behavior of passing NULL to
+  // indicate the dump is finished and place the result in our reserved slot.
+  if (b == NULL) {
+    luaL_pushresult(&state->B);
+    lua_replace(L, state->slot);
+  } else {
+    luaL_addlstring(&state->B, (const char *)b, size);
+  }
   return 0;
 }
 
@@ -272,7 +283,7 @@ static int luv_thread_dumped(lua_State* L, int idx) {
   if (lua_isstring(L, idx)) {
     lua_pushvalue(L, idx);
   } else {
-    int ret, top;
+    int ret;
     struct luv_thread_Writer state;
     state.init = 0;
 
@@ -289,22 +300,37 @@ static int luv_thread_dumped(lua_State* L, int idx) {
     //   they wish (we know they will never touch our placeholder).
     // - Move the result of luaL_pushresult to our placeholder's index and set it as
     //   the top before returning
+
+    // Starting in Lua 5.5 both lua_dump and luaL_Buffer use an arbitrary amount of
+    // stack space so we must reserve a slot for the result that we know will be free.
     lua_pushnil(L);
-    top = lua_gettop(L);
+    state.slot = lua_gettop(L);
 
     // lua_dump needs the function at the top of the stack
     luaL_checktype(L, idx, LUA_TFUNCTION);
     lua_pushvalue(L, idx);
-    ret = lua_dump(L, thread_dump, &state, 1);
-    if (ret==0) {
-      luaL_pushresult(&state.B);
-      // Move the result to our placeholder index and pop off whatever remains from
-      // the lua_dump call.
-      lua_replace(L, top);
-      lua_settop(L, top);
-    } else
+
+    // Starting in Lua 5.5.0, lua_dump calls the writer one final time with NULL to 
+    // signal the end of the dump. However, it also changes the behavior of lua_dump
+    // to both modify the stack and restore the stack to its original state before
+    // returning, so we must finish using the luaL_Buffer *inside* the lua_dump call
+    // to ensure that the luaL_Buffer's stack state is valid.
+#if LUA_VERSION_NUM >= 505
+    ret = lua_dump(L, thread_dump, &state, 0);
+#else
+    ret = lua_dump(L, thread_dump, &state, 0);
+    // The dump finished successfully, call with NULL to push the final result onto the stack
+    if (ret == LUA_OK)
+      ret = thread_dump(L, NULL, 0, &state);
+#endif
+    if (ret != 0)
       luaL_error(L, "Error: unable to dump given function");
+
+    // Remove anything left on the stack by the luaL_Buffer and lua_dump, and the function 
+    // we pushed to dump. The top of the stack is now the string of bytecode.
+    lua_settop(L, state.slot);
   }
+
   return 1;
 }
 
