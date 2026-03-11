@@ -8,7 +8,7 @@ skipped=()
 skipped+=(uv_os_get_passwd2 uv_os_get_group uv_os_free_group)
 
 # false positives
-skipped+=(uv_thread_create uv_thread_create_ex)
+skipped+=(uv_thread_create uv_thread_create_ex uv_tcp_keepalive_ex uv_udp_open_ex)
 
 # intentionally not bound
 skipped+=(uv_replace_allocator uv_library_shutdown)
