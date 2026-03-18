@@ -4268,14 +4268,48 @@ function uv.getgid() end
 --- Sets the user ID of the process with the integer `id`.
 --- **Note**:
 --- This is not a libuv function and is not supported on Windows.
+--- **Warning**: When dropping privileges from root, calling `setuid()` alone is
+--- not sufficient — supplementary group IDs are not affected by `setuid()` or
+--- `setgid()` and must be dropped separately. Failure to do so is a security
+--- vulnerability (CERT POS36-C). `uv.setuid()` rejects root-to-non-root
+--- transitions until both primary group privileges and supplementary groups
+--- have already been dropped. The correct order is: `uv.setgroups({})`
+--- (or `uv.initgroups(user, gid)`), then `uv.setgid(gid)`, then
+--- `uv.setuid(uid)` (must be last, as it is irreversible).
 --- @param id integer
 function uv.setuid(id) end
 
 --- Sets the group ID of the process with the integer `id`.
 --- **Note**:
 --- This is not a libuv function and is not supported on Windows.
+--- **Warning**: When dropping privileges, supplementary groups must be dropped
+--- before calling `setgid()` and `setuid()`. See the security warning in
+--- `uv.setuid()` for the correct privilege-dropping sequence.
 --- @param id integer
 function uv.setgid(id) end
+
+--- Returns a table containing the list of supplementary group IDs for the process.
+--- **Note**:
+--- This is not a libuv function and is not supported on Windows.
+--- @return table
+function uv.getgroups() end
+
+--- Sets the supplementary group IDs for the process. Pass an empty table `{}` to
+--- drop all supplementary groups. Requires appropriate privileges (typically root).
+--- **Note**:
+--- This is not a libuv function and is not supported on Windows.
+--- @param groups table
+function uv.setgroups(groups) end
+
+--- Initializes the supplementary group access list. Sets the supplementary group
+--- IDs based on the group database (e.g., `/etc/group`) for the given `user`,
+--- plus the specified base `group` ID. Requires appropriate privileges (typically
+--- root).
+--- **Note**:
+--- This is not a libuv function and is not supported on Windows.
+--- @param user string
+--- @param group integer
+function uv.initgroups(user, group) end
 
 --- Returns a current high-resolution time in nanoseconds as a number. This is
 --- relative to an arbitrary time in the past. It is not related to the time of day
@@ -4619,4 +4653,3 @@ function uv.wtf8_to_utf16(wtf8) end
 --- @class uv.uv_work_t : uv.uv_req_t
 
 --- @class uv.uv_write_t : uv.uv_req_t
-

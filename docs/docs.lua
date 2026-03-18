@@ -4461,6 +4461,7 @@ local doc = {
           },
           notes = {
             'This is not a libuv function and is not supported on Windows.',
+            'When dropping privileges from root, calling `setuid()` alone is not sufficient — supplementary group IDs are not affected by `setuid()` or `setgid()` and must be dropped separately. Failure to do so is a security vulnerability (CERT POS36-C). `uv.setuid()` rejects root-to-non-root transitions until both primary group privileges and supplementary groups have already been dropped. The correct order is: `uv.setgroups({})` (or `uv.initgroups(user, gid)`), then `uv.setgid(gid)`, then `uv.setuid(uid)` (must be last, as it is irreversible).',
           },
         },
         {
@@ -4468,6 +4469,36 @@ local doc = {
           desc = 'Sets the group ID of the process with the integer `id`.',
           params = {
             { name = 'id', type = 'integer' },
+          },
+          notes = {
+            'This is not a libuv function and is not supported on Windows.',
+            'When dropping privileges, supplementary groups must be dropped before calling `setgid()` and `setuid()`. See the security warning in `uv.setuid()` for the correct privilege-dropping sequence.',
+          },
+        },
+        {
+          name = 'getgroups',
+          desc = 'Returns a table containing the list of supplementary group IDs for the process.',
+          returns = 'table',
+          notes = {
+            'This is not a libuv function and is not supported on Windows.',
+          },
+        },
+        {
+          name = 'setgroups',
+          desc = 'Sets the supplementary group IDs for the process. Pass an empty table `{}` to drop all supplementary groups. Requires appropriate privileges (typically root).',
+          params = {
+            { name = 'groups', type = 'table' },
+          },
+          notes = {
+            'This is not a libuv function and is not supported on Windows.',
+          },
+        },
+        {
+          name = 'initgroups',
+          desc = 'Initializes the supplementary group access list. Sets the supplementary group IDs based on the group database (e.g., `/etc/group`) for the given `user`, plus the specified base `group` ID. Requires appropriate privileges (typically root).',
+          params = {
+            { name = 'user', type = 'string' },
+            { name = 'group', type = 'integer' },
           },
           notes = {
             'This is not a libuv function and is not supported on Windows.',
