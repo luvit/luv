@@ -477,7 +477,33 @@ static int luv_getgid(lua_State* L){
 
 static int luv_setuid(lua_State* L){
   int uid = luaL_checkinteger(L, 1);
-  int r = setuid(uid);
+  int r;
+
+  /* POS36-C safety check: when dropping privileges from root to an
+     unprivileged user, supplementary groups must be dropped first.
+     See: https://wiki.sei.cmu.edu/confluence/display/c/POS36-C */
+  if (geteuid() == 0 && uid != 0) {
+    if (getgid() == 0 || getegid() == 0) {
+      return luaL_error(L,
+        "Cannot setuid before dropping group privileges "
+        "(POS36-C security check). Call uv.setgid() before "
+        "dropping privileges with uv.setuid().");
+    }
+
+    int ngroups = getgroups(0, NULL);
+    if (ngroups == -1) {
+      return luaL_error(L, "Error getting number of groups");
+    }
+
+    if (ngroups > 0) {
+      return luaL_error(L,
+        "Cannot setuid while supplementary groups are still set "
+        "(POS36-C security check). Call uv.setgroups({}) or "
+        "uv.initgroups() before dropping privileges with uv.setuid().");
+    }
+  }
+
+  r = setuid(uid);
   if (-1 == r) {
     luaL_error(L, "Error setting UID");
   }

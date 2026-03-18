@@ -4461,6 +4461,7 @@ local doc = {
           },
           notes = {
             'This is not a libuv function and is not supported on Windows.',
+            'When dropping privileges from root, calling `setuid()` alone is not sufficient — supplementary group IDs are not affected by `setuid()` or `setgid()` and must be dropped separately. Failure to do so is a security vulnerability (CERT POS36-C). `uv.setuid()` rejects root-to-non-root transitions until both primary group privileges and supplementary groups have already been dropped. The correct order is: `uv.setgroups({})` (or `uv.initgroups(user, gid)`), then `uv.setgid(gid)`, then `uv.setuid(uid)` (must be last, as it is irreversible).',
           },
         },
         {
@@ -4471,6 +4472,7 @@ local doc = {
           },
           notes = {
             'This is not a libuv function and is not supported on Windows.',
+            'When dropping privileges, supplementary groups must be dropped before calling `setgid()` and `setuid()`. See the security warning in `uv.setuid()` for the correct privilege-dropping sequence.',
           },
         },
         {

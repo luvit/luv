@@ -1,6 +1,24 @@
 return require('lib/tap')(function (test)
 
   local isWindows = require('lib/utils').isWindows
+  local privilege_drop_child_code = string.dump(function ()
+    local uv = require('luv')
+    local target_id = 1
+    local groups
+
+    assert(uv.getuid() == 0, "child must start as root")
+
+    uv.setgroups({})
+    uv.setgid(target_id)
+    uv.setuid(target_id)
+
+    groups = uv.getgroups()
+    assert(uv.getuid() == target_id)
+    assert(uv.getgid() == target_id)
+    assert(#groups == 0)
+
+    io.write(string.format("dropped:%d:%d:%d\n", uv.getuid(), uv.getgid(), #groups))
+  end)
 
   test("test disable_stdio_inheritance", function (print, p, expect, uv)
     uv.disable_stdio_inheritance()
@@ -145,5 +163,42 @@ return require('lib/tap')(function (test)
     assert(handle:get_pid() == pid)
     handle:kill("sigterm")
   end, "1.19.0")
+
+  test("spawned child can drop privileges in POS36-C order", function (print, p, expect, uv)
+    local child, pid
+    local input, output
+
+    if isWindows or not uv.getuid or uv.getuid() ~= 0 then
+      print("skipping: requires Unix root privileges")
+      return
+    end
+
+    input = uv.new_pipe(false)
+    output = uv.new_pipe(false)
+
+    child, pid = assert(uv.spawn(uv.exepath(), {
+      args = {"-"},
+      stdio = {input, output, 2},
+    }, expect(function (code, signal)
+      p("exit", {pid = pid, code = code, signal = signal})
+      assert(code == 0)
+      assert(signal == 0)
+      uv.close(input)
+      uv.close(output)
+      uv.close(child)
+    end)))
+
+    uv.read_start(output, expect(function (err, chunk)
+      assert(not err, err)
+      if chunk then
+        p(chunk)
+        assert(chunk == "dropped:1:1:0\n")
+        uv.read_stop(output)
+      end
+    end, 1))
+
+    uv.write(input, privilege_drop_child_code)
+    uv.shutdown(input)
+  end)
 
 end)

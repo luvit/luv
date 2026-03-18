@@ -4146,6 +4146,20 @@ Sets the user ID of the process with the integer `id`.
 
 **Note**: This is not a libuv function and is not supported on Windows.
 
+**Warning**: When dropping privileges from root, calling `setuid()` alone is not
+sufficient — supplementary group IDs are not affected by `setuid()` or `setgid()`
+and must be dropped separately. Failure to do so is a security vulnerability
+([CERT POS36-C](https://wiki.sei.cmu.edu/confluence/display/c/POS36-C.+Observe+correct+revocation+order+while+relinquishing+privileges)).
+`uv.setuid()` enforces this by rejecting root-to-non-root transitions until both
+the primary group privileges and supplementary groups have already been dropped.
+The correct order for dropping privileges is:
+
+```lua
+uv.setgroups({})  -- or uv.initgroups(user, gid)
+uv.setgid(gid)
+uv.setuid(uid)    -- must be last (irreversible)
+```
+
 ### `uv.setgid(id)`
 
 **Parameters:**
@@ -4156,6 +4170,10 @@ Sets the group ID of the process with the integer `id`.
 **Returns:** Nothing.
 
 **Note**: This is not a libuv function and is not supported on Windows.
+
+**Warning**: When dropping privileges, supplementary groups must be dropped
+before calling `setgid()` and `setuid()`. See the security warning in
+[`uv.setuid()`](#uvsetuidid) for the correct privilege-dropping sequence.
 
 ### `uv.getgroups()`
 
@@ -4551,4 +4569,3 @@ Convert WTF-8 string in `wtf8` to UTF-16 (or UCS-2) string. The endianness of th
 [libuv documentation page]: http://docs.libuv.org/
 [libuv API documentation]: http://docs.libuv.org/en/v1.x/api.html
 [error constants]: https://docs.libuv.org/en/v1.x/errors.html#error-constants
-

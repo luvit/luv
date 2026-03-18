@@ -304,4 +304,28 @@ return require('lib/tap')(function (test)
     assert(type(uv.initgroups) == "function")
   end)
 
+  test("uv.setuid POS36-C safety check", function(print, p, expect, uv)
+    if not uv.setuid or not uv.getuid then
+      print("skipping: uv.setuid or uv.getuid not available (Windows?)")
+      return
+    end
+    -- When not running as root, setuid to our own uid should succeed
+    -- (the POS36-C check only blocks root->non-root transitions)
+    local uid = uv.getuid()
+    if uid ~= 0 then
+      -- Non-root: setuid to own uid should work without issues
+      uv.setuid(uid)
+      print("non-root setuid to own uid succeeded (no POS36-C block expected)")
+    else
+      -- Root: setuid to non-root before dropping gid/groups should fail
+      local ok, err = pcall(uv.setuid, 65534)
+      if not ok then
+        assert(string.find(err, "POS36-C"), "expected POS36-C error, got: " .. tostring(err))
+        print("POS36-C safety check correctly blocked unsafe setuid ordering")
+      else
+        error("expected POS36-C safety check to block root->non-root setuid")
+      end
+    end
+  end)
+
 end)
