@@ -4474,6 +4474,35 @@ local doc = {
           },
         },
         {
+          name = 'getgroups',
+          desc = 'Returns a table containing the list of supplementary group IDs for the process.',
+          returns = 'table',
+          notes = {
+            'This is not a libuv function and is not supported on Windows.',
+          },
+        },
+        {
+          name = 'setgroups',
+          desc = 'Sets the supplementary group IDs for the process. Pass an empty table `{}` to drop all supplementary groups. Requires appropriate privileges (typically root).',
+          params = {
+            { name = 'groups', type = 'table' },
+          },
+          notes = {
+            'This is not a libuv function and is not supported on Windows.',
+          },
+        },
+        {
+          name = 'initgroups',
+          desc = 'Initializes the supplementary group access list. Sets the supplementary group IDs based on the group database (e.g., `/etc/group`) for the given `user`, plus the specified base `group` ID. Requires appropriate privileges (typically root).',
+          params = {
+            { name = 'user', type = 'string' },
+            { name = 'group', type = 'integer' },
+          },
+          notes = {
+            'This is not a libuv function and is not supported on Windows.',
+          },
+        },
+        {
           name = 'hrtime',
           desc = [[
             Returns a current high-resolution time in nanoseconds as a number. This is

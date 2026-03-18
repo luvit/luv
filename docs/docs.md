@@ -4157,6 +4157,41 @@ Sets the group ID of the process with the integer `id`.
 
 **Note**: This is not a libuv function and is not supported on Windows.
 
+### `uv.getgroups()`
+
+Returns a table containing the list of supplementary group IDs for the process.
+
+**Returns:** `table` (array of `integer` group IDs)
+
+**Note**: This is not a libuv function and is not supported on Windows.
+
+### `uv.setgroups(groups)`
+
+**Parameters:**
+- `groups`: `table` (array of `integer` group IDs)
+
+Sets the supplementary group IDs for the process. Pass an empty table `{}` to
+drop all supplementary groups. Requires appropriate privileges (typically root).
+
+**Returns:** Nothing.
+
+**Note**: This is not a libuv function and is not supported on Windows.
+
+### `uv.initgroups(user, group)`
+
+**Parameters:**
+- `user`: `string`
+- `group`: `integer`
+
+Initializes the supplementary group access list. Sets the supplementary group
+IDs based on the group database (e.g., `/etc/group`) for the given `user`,
+plus the specified base `group` ID. Requires appropriate privileges (typically
+root).
+
+**Returns:** Nothing.
+
+**Note**: This is not a libuv function and is not supported on Windows.
+
 ### `uv.hrtime()`
 
 Returns a current high-resolution time in nanoseconds as a number. This is

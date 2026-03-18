@@ -262,4 +262,46 @@ return require('lib/tap')(function (test)
     assert(uv.utf16_length_as_wtf8("") == 0)
   end, "1.49.0")
 
+  test("uv.getgroups", function(print, p, expect, uv)
+    if not uv.getgroups then
+      print("skipping: uv.getgroups not available (Windows?)")
+      return
+    end
+    local groups = uv.getgroups()
+    p("supplementary groups", groups)
+    assert(type(groups) == "table")
+    for i, gid in ipairs(groups) do
+      assert(type(gid) == "number", "group ID must be a number")
+    end
+  end)
+
+  test("uv.setgroups", function(print, p, expect, uv)
+    if not uv.setgroups then
+      print("skipping: uv.setgroups not available (Windows?)")
+      return
+    end
+    -- setgroups requires root, so we just verify the function exists
+    -- and accepts a table argument
+    assert(type(uv.setgroups) == "function")
+    -- Only test actual setgroups if running as root
+    if uv.getuid and uv.getuid() == 0 then
+      local groups = uv.getgroups()
+      -- Round-trip: set the current groups back
+      uv.setgroups(groups)
+      local groups2 = uv.getgroups()
+      assert(#groups == #groups2, "group count mismatch after round-trip")
+    else
+      print("skipping setgroups round-trip: not running as root")
+    end
+  end)
+
+  test("uv.initgroups", function(print, p, expect, uv)
+    if not uv.initgroups then
+      print("skipping: uv.initgroups not available (Windows?)")
+      return
+    end
+    -- initgroups requires root, so we just verify the function exists
+    assert(type(uv.initgroups) == "function")
+  end)
+
 end)

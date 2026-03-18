@@ -4277,6 +4277,29 @@ function uv.setuid(id) end
 --- @param id integer
 function uv.setgid(id) end
 
+--- Returns a table containing the list of supplementary group IDs for the process.
+--- **Note**:
+--- This is not a libuv function and is not supported on Windows.
+--- @return table
+function uv.getgroups() end
+
+--- Sets the supplementary group IDs for the process. Pass an empty table `{}` to
+--- drop all supplementary groups. Requires appropriate privileges (typically root).
+--- **Note**:
+--- This is not a libuv function and is not supported on Windows.
+--- @param groups table
+function uv.setgroups(groups) end
+
+--- Initializes the supplementary group access list. Sets the supplementary group
+--- IDs based on the group database (e.g., `/etc/group`) for the given `user`,
+--- plus the specified base `group` ID. Requires appropriate privileges (typically
+--- root).
+--- **Note**:
+--- This is not a libuv function and is not supported on Windows.
+--- @param user string
+--- @param group integer
+function uv.initgroups(user, group) end
+
 --- Returns a current high-resolution time in nanoseconds as a number. This is
 --- relative to an arbitrary time in the past. It is not related to the time of day
 --- and therefore not subject to clock drift. The primary use is for measuring
