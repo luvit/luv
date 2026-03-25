@@ -533,7 +533,7 @@ static int luv_getgroups(lua_State* L) {
   if (ngroups > 0) {
     groups = (gid_t*)malloc(ngroups * sizeof(gid_t));
   }
-  if (ngroups > 0 && !groups) {
+  if (!groups) {
     return luaL_error(L, "Error allocating memory for groups");
   }
 
@@ -559,6 +559,10 @@ static int luv_setgroups(lua_State* L) {
 
   luaL_checktype(L, 1, LUA_TTABLE);
   ngroups = lua_rawlen(L, 1);
+
+  if (ngroups < 1) {
+    return 0;
+  }
 
   groups = (gid_t*)malloc(ngroups * sizeof(gid_t));
   if (!groups && ngroups > 0) {
