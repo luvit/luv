@@ -633,7 +633,9 @@ function uv_handle_t:has_ref() end
 --- Gets or sets the size of the send buffer that the operating system uses for the
 --- socket.
 ---
---- If `size` is omitted (or `0`), this will return the current send buffer size; otherwise, this will use `size` to set the new send buffer size.
+--- If `size` is omitted (or `0`), this will return the current send
+--- buffer size; otherwise, this will use `size` to set the new send
+--- buffer size.
 ---
 --- This function works for TCP, pipe and UDP handles on Unix and for TCP and UDP
 --- handles on Windows.
@@ -650,7 +652,9 @@ function uv.send_buffer_size(handle, size) end
 --- Gets or sets the size of the send buffer that the operating system uses for the
 --- socket.
 ---
---- If `size` is omitted (or `0`), this will return the current send buffer size; otherwise, this will use `size` to set the new send buffer size.
+--- If `size` is omitted (or `0`), this will return the current send
+--- buffer size; otherwise, this will use `size` to set the new send
+--- buffer size.
 ---
 --- This function works for TCP, pipe and UDP handles on Unix and for TCP and UDP
 --- handles on Windows.
@@ -666,7 +670,9 @@ function uv_handle_t:send_buffer_size(size) end
 --- Gets or sets the size of the receive buffer that the operating system uses for
 --- the socket.
 ---
---- If `size` is omitted (or `0`), this will return the current send buffer size; otherwise, this will use `size` to set the new send buffer size.
+--- If `size` is omitted (or `0`), this will return the current send
+--- buffer size; otherwise, this will use `size` to set the new send
+--- buffer size.
 ---
 --- This function works for TCP, pipe and UDP handles on Unix and for TCP and UDP
 --- handles on Windows.
@@ -683,7 +689,9 @@ function uv.recv_buffer_size(handle, size) end
 --- Gets or sets the size of the receive buffer that the operating system uses for
 --- the socket.
 ---
---- If `size` is omitted (or `0`), this will return the current send buffer size; otherwise, this will use `size` to set the new send buffer size.
+--- If `size` is omitted (or `0`), this will return the current send
+--- buffer size; otherwise, this will use `size` to set the new send
+--- buffer size.
 ---
 --- This function works for TCP, pipe and UDP handles on Unix and for TCP and UDP
 --- handles on Windows.
@@ -1299,7 +1307,8 @@ function uv.signal_start(signal, signame, callback) end
 --- @return uv.error_name? err_name
 function uv_signal_t:start(signame, callback) end
 
---- Same functionality as `uv.signal_start()` but the signal handler is reset the moment the signal is received.
+--- Same functionality as `uv.signal_start()` but the signal handler is
+--- reset the moment the signal is received.
 ---
 --- See [Constants][] for supported `signame` input and output values.
 --- @param signal uv.uv_signal_t
@@ -1310,7 +1319,8 @@ function uv_signal_t:start(signame, callback) end
 --- @return uv.error_name? err_name
 function uv.signal_start_oneshot(signal, signame, callback) end
 
---- Same functionality as `uv.signal_start()` but the signal handler is reset the moment the signal is received.
+--- Same functionality as `uv.signal_start()` but the signal handler is
+--- reset the moment the signal is received.
 ---
 --- See [Constants][] for supported `signame` input and output values.
 --- @param signame string|integer
@@ -1744,7 +1754,8 @@ function uv.try_write(stream, data) end
 --- @return uv.error_name? err_name
 function uv_stream_t:try_write(data) end
 
---- Like `uv.write2()`, but with the properties of `uv.try_write()`. Not supported on Windows, where it returns `UV_EAGAIN`.
+--- Like `uv.write2()`, but with the properties of `uv.try_write()`. Not
+--- supported on Windows, where it returns `UV_EAGAIN`.
 ---
 --- Will return number of bytes written (can be less than the supplied buffer size).
 --- @param stream uv.uv_stream_t
@@ -1755,7 +1766,8 @@ function uv_stream_t:try_write(data) end
 --- @return uv.error_name? err_name
 function uv.try_write2(stream, data, send_handle) end
 
---- Like `uv.write2()`, but with the properties of `uv.try_write()`. Not supported on Windows, where it returns `UV_EAGAIN`.
+--- Like `uv.write2()`, but with the properties of `uv.try_write()`. Not
+--- supported on Windows, where it returns `UV_EAGAIN`.
 ---
 --- Will return number of bytes written (can be less than the supplied buffer size).
 --- @param data uv.buffer
@@ -1850,7 +1862,8 @@ function uv.new_tcp(flags) end
 
 --- Open an existing file descriptor or SOCKET as a TCP handle.
 --- **Note**:
---- The passed file descriptor or SOCKET is not checked for its type, but it's required that it represents a valid stream socket.
+--- The passed file descriptor or SOCKET is not checked for its type,
+--- but it's required that it represents a valid stream socket.
 --- @param tcp uv.uv_tcp_t
 --- @param sock integer
 --- @return 0? success
@@ -1860,7 +1873,8 @@ function uv.tcp_open(tcp, sock) end
 
 --- Open an existing file descriptor or SOCKET as a TCP handle.
 --- **Note**:
---- The passed file descriptor or SOCKET is not checked for its type, but it's required that it represents a valid stream socket.
+--- The passed file descriptor or SOCKET is not checked for its type,
+--- but it's required that it represents a valid stream socket.
 --- @param sock integer
 --- @return 0? success
 --- @return string? err
@@ -1882,7 +1896,10 @@ function uv.tcp_nodelay(tcp, enable) end
 --- @return uv.error_name? err_name
 function uv_tcp_t:nodelay(enable) end
 
---- Enable / disable TCP keep-alive. `delay` is the initial delay in seconds, `intvl` is the time in seconds between individual keep-alive probes, and `cnt` is the number of probes to send before assuming the connection is dead.
+--- Enable / disable TCP keep-alive. `delay` is the initial delay in
+--- seconds, `intvl` is the time in seconds between individual
+--- keep-alive probes, and `cnt` is the number of probes to send before
+--- assuming the connection is dead.
 --- ignored when enable is `false`.
 --- **Note**:
 --- `intvl` and `cnt` are only supported with Libuv >= 1.52.0.
@@ -1896,7 +1913,10 @@ function uv_tcp_t:nodelay(enable) end
 --- @return uv.error_name? err_name
 function uv.tcp_keepalive(tcp, enable, delay, intvl, cnt) end
 
---- Enable / disable TCP keep-alive. `delay` is the initial delay in seconds, `intvl` is the time in seconds between individual keep-alive probes, and `cnt` is the number of probes to send before assuming the connection is dead.
+--- Enable / disable TCP keep-alive. `delay` is the initial delay in
+--- seconds, `intvl` is the time in seconds between individual
+--- keep-alive probes, and `cnt` is the number of probes to send before
+--- assuming the connection is dead.
 --- ignored when enable is `false`.
 --- **Note**:
 --- `intvl` and `cnt` are only supported with Libuv >= 1.52.0.
@@ -2070,14 +2090,21 @@ function uv.tcp_close_reset(tcp, callback) end
 --- @return uv.error_name? err_name
 function uv_tcp_t:close_reset(callback) end
 
---- Create a pair of connected sockets with the specified properties. The resulting handles can be passed to `uv.tcp_open`, used with `uv.spawn`, or for any other purpose.
+--- Create a pair of connected sockets with the specified properties.
+--- The resulting handles can be passed to `uv.tcp_open`, used with
+--- `uv.spawn`, or for any other purpose.
 ---
 --- See [Constants][] for supported `socktype` input values.
 ---
---- When `protocol` is set to 0 or nil, it will be automatically chosen based on the socket's domain and type. When `protocol` is specified as a string, it will be looked up using the `getprotobyname(3)` function (examples: `"ip"`, `"icmp"`, `"tcp"`, `"udp"`, etc).
+--- When `protocol` is set to 0 or nil, it will be automatically chosen
+--- based on the socket's domain and type. When `protocol` is specified
+--- as a string, it will be looked up using the `getprotobyname(3)`
+--- function (examples: `"ip"`, `"icmp"`, `"tcp"`, `"udp"`, etc).
 ---
 --- Flags:
----  - `nonblock`: Opens the specified socket handle for `OVERLAPPED` or `FIONBIO`/`O_NONBLOCK` I/O usage. This is recommended for handles that will be used by libuv, and not usually recommended otherwise.
+---  - `nonblock`: Opens the specified socket handle for `OVERLAPPED` or
+---  `FIONBIO`/`O_NONBLOCK` I/O usage. This is recommended for handles
+---  that will be used by libuv, and not usually recommended otherwise.
 ---
 --- Equivalent to `socketpair(2)` with a domain of `AF_UNIX`.
 --- Example
@@ -2111,7 +2138,8 @@ function uv.socketpair(socktype, protocol, flags1, flags2) end
 ---
 --- > [`uv_handle_t`][] and [`uv_stream_t`][] functions also apply.
 ---
---- Pipe handles provide an abstraction over local domain sockets on Unix and named pipes on Windows.
+--- Pipe handles provide an abstraction over local domain sockets on
+--- Unix and named pipes on Windows.
 ---
 --- ```lua
 --- local pipe = uv.new_pipe(false)
@@ -2296,10 +2324,14 @@ function uv_pipe_t:chmod(flags) end
 --- (file descriptor)
 --- @field write integer
 
---- Create a pair of connected pipe handles. Data may be written to the `write` fd and read from the `read` fd. The resulting handles can be passed to `pipe_open`, used with `spawn`, or for any other purpose.
+--- Create a pair of connected pipe handles. Data may be written to the
+--- `write` fd and read from the `read` fd. The resulting handles can be
+--- passed to `pipe_open`, used with `spawn`, or for any other purpose.
 ---
 --- Flags:
----  - `nonblock`: Opens the specified socket handle for `OVERLAPPED` or `FIONBIO`/`O_NONBLOCK` I/O usage. This is recommended for handles that will be used by libuv, and not usually recommended otherwise.
+---  - `nonblock`: Opens the specified socket handle for `OVERLAPPED` or
+---  `FIONBIO`/`O_NONBLOCK` I/O usage. This is recommended for handles
+---  that will be used by libuv, and not usually recommended otherwise.
 ---
 --- Equivalent to `pipe(2)` with the `O_CLOEXEC` flag set.
 --- Example
@@ -2335,7 +2367,8 @@ function uv.pipe(read_flags, write_flags) end
 --- - If `type(flags)` is `nil`, it use default value `0`.
 --- - Returns `EINVAL` for unsupported flags without performing the bind operation.
 ---
---- Supports Linux abstract namespace sockets. namelen must include the leading '\0' byte but not the trailing nul byte.
+--- Supports Linux abstract namespace sockets. namelen must include the
+--- leading '\0' byte but not the trailing nul byte.
 --- **Note**:
 --- 1. Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes,
 --- typically between 92 and 108 bytes.
@@ -2357,7 +2390,8 @@ function uv.pipe_bind2(pipe, name, flags) end
 --- - If `type(flags)` is `nil`, it use default value `0`.
 --- - Returns `EINVAL` for unsupported flags without performing the bind operation.
 ---
---- Supports Linux abstract namespace sockets. namelen must include the leading '\0' byte but not the trailing nul byte.
+--- Supports Linux abstract namespace sockets. namelen must include the
+--- leading '\0' byte but not the trailing nul byte.
 --- **Note**:
 --- 1. Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes,
 --- typically between 92 and 108 bytes.
@@ -2378,7 +2412,8 @@ function uv_pipe_t:bind2(name, flags) end
 --- - If `type(flags)` is `nil`, it use default value `0`.
 --- - Returns `EINVAL` for unsupported flags without performing the bind operation.
 ---
---- Supports Linux abstract namespace sockets. namelen must include the leading nul byte but not the trailing nul byte.
+--- Supports Linux abstract namespace sockets. namelen must include the
+--- leading nul byte but not the trailing nul byte.
 --- **Note**:
 --- 1. Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes,
 --- typically between 92 and 108 bytes.
@@ -2401,7 +2436,8 @@ function uv.pipe_connect2(pipe, name, flags, callback) end
 --- - If `type(flags)` is `nil`, it use default value `0`.
 --- - Returns `EINVAL` for unsupported flags without performing the bind operation.
 ---
---- Supports Linux abstract namespace sockets. namelen must include the leading nul byte but not the trailing nul byte.
+--- Supports Linux abstract namespace sockets. namelen must include the
+--- leading nul byte but not the trailing nul byte.
 --- **Note**:
 --- 1. Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes,
 --- typically between 92 and 108 bytes.
@@ -2451,7 +2487,8 @@ local uv_tty_t = {}
 --- This lets libuv put the tty in non-blocking mode without affecting other
 --- processes that share the tty.
 ---
---- This function is not thread safe on systems that don’t support ioctl TIOCGPTN or TIOCPTYGNAME, for instance OpenBSD and Solaris.
+--- This function is not thread safe on systems that don’t support ioctl
+--- TIOCGPTN or TIOCPTYGNAME, for instance OpenBSD and Solaris.
 --- **Note**:
 --- If reopening the TTY fails, libuv falls back to blocking writes.
 --- @param fd integer
@@ -3190,10 +3227,16 @@ function uv_fs_poll_t:getpath() end
 
 --- # File system operations
 ---
---- Most file system functions can operate synchronously or asynchronously. When a synchronous version is called (by omitting a callback), the function will
---- immediately return the results of the FS call. When an asynchronous version is
---- called (by providing a callback), the function will immediately return a
---- `uv_fs_t userdata` and asynchronously execute its callback; if an error is encountered, the first and only argument passed to the callback will be the `err` error string; if the operation completes successfully, the first argument will be `nil` and the remaining arguments will be the results of the FS call.
+--- Most file system functions can operate synchronously or
+--- asynchronously. When a synchronous version is called (by omitting
+--- a callback), the function will immediately return the results of the
+--- FS call. When an asynchronous version is called (by providing
+--- a callback), the function will immediately return a `uv_fs_t
+--- userdata` and asynchronously execute its callback; if an error is
+--- encountered, the first and only argument passed to the callback will
+--- be the `err` error string; if the operation completes successfully,
+--- the first argument will be `nil` and the remaining arguments will be
+--- the results of the FS call.
 ---
 --- Synchronous and asynchronous versions of `readFile` (with naive error handling)
 --- are implemented below as an example:
@@ -4213,13 +4256,17 @@ function uv.getrusage() end
 --- @return uv.error_name? err_name
 function uv.getrusage_thread() end
 
---- Returns an estimate of the default amount of parallelism a program should use. Always returns a non-zero value.
+--- Returns an estimate of the default amount of parallelism a program
+--- should use. Always returns a non-zero value.
 ---
---- On Linux, inspects the calling thread’s CPU affinity mask to determine if it has been pinned to specific CPUs.
+--- On Linux, inspects the calling thread’s CPU affinity mask to
+--- determine if it has been pinned to specific CPUs.
 ---
---- On Windows, the available parallelism may be underreported on systems with more than 64 logical CPUs.
+--- On Windows, the available parallelism may be underreported on
+--- systems with more than 64 logical CPUs.
 ---
---- On other platforms, reports the number of CPUs that the operating system considers to be online.
+--- On other platforms, reports the number of CPUs that the operating
+--- system considers to be online.
 --- @return integer
 function uv.available_parallelism() end
 
@@ -4235,7 +4282,8 @@ function uv.available_parallelism() end
 --- @field idle integer
 --- @field irq integer
 
---- Returns information about the CPU(s) on the system as a table of tables for each
+--- Returns information about the CPU(s) on the system as a table of
+--- tables for each
 --- CPU found.
 --- @return table<integer, uv.cpu_info.cpu_info>? cpu_info
 --- @return string? err
@@ -4268,23 +4316,26 @@ function uv.getgid() end
 --- Sets the user ID of the process with the integer `id`.
 --- **Note**:
 --- This is not a libuv function and is not supported on Windows.
---- **Warning**: When dropping privileges from root, calling `setuid()` alone is
---- not sufficient — supplementary group IDs are not affected by `setuid()` or
---- `setgid()` and must be dropped separately. Failure to do so is a security
---- vulnerability (CERT POS36-C). `uv.setuid()` rejects root-to-non-root
---- transitions until both primary group privileges and supplementary groups
---- have already been dropped. The correct order is: `uv.setgroups({})`
---- (or `uv.initgroups(user, gid)`), then `uv.setgid(gid)`, then
---- `uv.setuid(uid)` (must be last, as it is irreversible).
+--- **Note**:
+--- When dropping privileges from root, calling `setuid()` alone is not
+--- sufficient — supplementary group IDs are not affected by `setuid()`
+--- or `setgid()` and must be dropped separately. Failure to do so is
+--- a security vulnerability (CERT POS36-C). `uv.setuid()` rejects
+--- root-to-non-root transitions until both primary group privileges and
+--- supplementary groups have already been dropped. The correct order
+--- is: `uv.setgroups({})` (or `uv.initgroups(user, gid)`), then
+--- `uv.setgid(gid)`, then `uv.setuid(uid)` (must be last, as it is
+--- irreversible).
 --- @param id integer
 function uv.setuid(id) end
 
 --- Sets the group ID of the process with the integer `id`.
 --- **Note**:
 --- This is not a libuv function and is not supported on Windows.
---- **Warning**: When dropping privileges, supplementary groups must be dropped
---- before calling `setgid()` and `setuid()`. See the security warning in
---- `uv.setuid()` for the correct privilege-dropping sequence.
+--- **Note**:
+--- When dropping privileges, supplementary groups must be dropped
+--- before calling `setgid()` and `setuid()`. See the security warning
+--- in `uv.setuid()` for the correct privilege-dropping sequence.
 --- @param id integer
 function uv.setgid(id) end
 
@@ -4294,17 +4345,18 @@ function uv.setgid(id) end
 --- @return table
 function uv.getgroups() end
 
---- Sets the supplementary group IDs for the process. Pass an empty table `{}` to
---- drop all supplementary groups. Requires appropriate privileges (typically root).
+--- Sets the supplementary group IDs for the process. Pass an empty
+--- table `{}` to drop all supplementary groups. Requires appropriate
+--- privileges (typically root).
 --- **Note**:
 --- This is not a libuv function and is not supported on Windows.
 --- @param groups table
 function uv.setgroups(groups) end
 
---- Initializes the supplementary group access list. Sets the supplementary group
---- IDs based on the group database (e.g., `/etc/group`) for the given `user`,
---- plus the specified base `group` ID. Requires appropriate privileges (typically
---- root).
+--- Initializes the supplementary group access list. Sets the
+--- supplementary group IDs based on the group database (e.g.,
+--- `/etc/group`) for the given `user`, plus the specified base `group`
+--- ID. Requires appropriate privileges (typically root).
 --- **Note**:
 --- This is not a libuv function and is not supported on Windows.
 --- @param user string
@@ -4541,7 +4593,11 @@ function uv.os_setpriority(pid, priority) end
 --- @overload fun(len: integer, flags: 0|{}?, callback: fun(err: string?, bytes: string?)): 0?, string?, uv.error_name?
 function uv.random(len, flags) end
 
---- Returns the libuv error message and error name (both in string form, see [`err` and `name` in Error Handling](#error-handling)) equivalent to the given platform dependent error code: POSIX error codes on Unix (the ones stored in errno), and Win32 error codes on Windows (those returned by GetLastError() or WSAGetLastError()).
+--- Returns the libuv error message and error name (both in string form,
+--- see [`err` and `name` in Error Handling](#error-handling))
+--- equivalent to the given platform dependent error code: POSIX error
+--- codes on Unix (the ones stored in errno), and Win32 error codes on
+--- Windows (those returned by GetLastError() or WSAGetLastError()).
 --- @param errcode integer
 --- @return string? message
 --- @return string? name
@@ -4576,30 +4632,40 @@ function uv.metrics_info() end
 
 --- # String manipulation functions
 ---
---- These string utilities are needed internally for dealing with Windows, and are exported to allow clients to work uniformly with this data when the libuv API is not complete.
+--- These string utilities are needed internally for dealing with
+--- Windows, and are exported to allow clients to work uniformly with
+--- this data when the libuv API is not complete.
 ---
 --- **Notes**:
 ---
 --- 1. New in luv version 1.49.0.
 --- 2. See [the WTF-8 spec](https://simonsapin.github.io/wtf-8/) for information about WTF-8.
---- 3. Luv uses Lua-style strings, which means that all inputs and return values (UTF-8 or UTF-16 strings) do not include a NUL terminator.
+--- 3. Luv uses Lua-style strings, which means that all inputs and
+--- return values (UTF-8 or UTF-16 strings) do not include a NUL
+--- terminator.
 
 --- Get the length (in bytes) of a UTF-16 (or UCS-2) string `utf16` value after converting it to WTF-8.
 --- @param utf16 string
 --- @return integer
 function uv.utf16_length_as_wtf8(utf16) end
 
---- Convert UTF-16 (or UCS-2) string `utf16` to WTF-8 string. The endianness of the UTF-16 (or UCS-2) string is assumed to be the same as the native endianness of the platform.
+--- Convert UTF-16 (or UCS-2) string `utf16` to WTF-8 string. The
+--- endianness of the UTF-16 (or UCS-2) string is assumed to be the same
+--- as the native endianness of the platform.
 --- @param utf16 string
 --- @return string
 function uv.utf16_to_wtf8(utf16) end
 
---- Get the length (in UTF-16 code units) of a WTF-8 `wtf8` value after converting it to UTF-16 (or UCS-2). Note: The number of bytes needed for a UTF-16 (or UCS-2) string is `<number of code units> * 2`.
+--- Get the length (in UTF-16 code units) of a WTF-8 `wtf8` value after
+--- converting it to UTF-16 (or UCS-2). Note: The number of bytes needed
+--- for a UTF-16 (or UCS-2) string is `<number of code units> * 2`.
 --- @param wtf8 string
 --- @return integer
 function uv.wtf8_length_as_utf16(wtf8) end
 
---- Convert WTF-8 string in `wtf8` to UTF-16 (or UCS-2) string. The endianness of the UTF-16 (or UCS-2) string will be the same as the native endianness of the platform.
+--- Convert WTF-8 string in `wtf8` to UTF-16 (or UCS-2) string. The
+--- endianness of the UTF-16 (or UCS-2) string will be the same as the
+--- native endianness of the platform.
 --- @param wtf8 string
 --- @return string
 function uv.wtf8_to_utf16(wtf8) end
@@ -4653,3 +4719,4 @@ function uv.wtf8_to_utf16(wtf8) end
 --- @class uv.uv_work_t : uv.uv_req_t
 
 --- @class uv.uv_write_t : uv.uv_req_t
+

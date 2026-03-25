@@ -649,7 +649,8 @@ See [Reference counting][].
 Gets or sets the size of the send buffer that the operating system uses for the
 socket.
 
-If `size` is omitted (or `0`), this will return the current send buffer size; otherwise, this will use `size` to set the new send buffer size.
+If `size` is omitted (or `0`), this will return the current send buffer size;
+otherwise, this will use `size` to set the new send buffer size.
 
 This function works for TCP, pipe and UDP handles on Unix and for TCP and UDP
 handles on Windows.
@@ -672,7 +673,8 @@ original set value.
 Gets or sets the size of the receive buffer that the operating system uses for
 the socket.
 
-If `size` is omitted (or `0`), this will return the current send buffer size; otherwise, this will use `size` to set the new send buffer size.
+If `size` is omitted (or `0`), this will return the current send buffer size;
+otherwise, this will use `size` to set the new send buffer size.
 
 This function works for TCP, pipe and UDP handles on Unix and for TCP and UDP
 handles on Windows.
@@ -711,8 +713,9 @@ control of the file descriptor so any change to it may lead to malfunction.
 **Parameters:**
 - `handle`: `userdata` for sub-type of `uv_handle_t`
 
-Returns the name of the struct for a given handle (e.g. `"pipe"` for `uv_pipe_t`)
-and the libuv enum integer for the handle's type (`uv_handle_type`).
+Returns the name of the struct for a given handle (e.g. `"pipe"` for
+`uv_pipe_t`) and the libuv enum integer for the handle's type
+(`uv_handle_type`).
 
 **Returns:** `string`, `integer`
 
@@ -852,7 +855,8 @@ Get the timer repeat value.
 **Parameters:**
 - `timer`: `uv_timer_t userdata`
 
-Get the timer due value or 0 if it has expired. The time is relative to `uv.now()`.
+Get the timer due value or 0 if it has expired. The time is relative to
+`uv.now()`.
 
 **Returns:** `integer`
 
@@ -1125,9 +1129,9 @@ The socket is set to non-blocking mode.
 Starts polling the file descriptor. `events` are: `"r"`, `"w"`, `"rw"`, `"d"`,
 `"rd"`, `"wd"`, `"rwd"`, `"p"`, `"rp"`, `"wp"`, `"rwp"`, `"dp"`, `"rdp"`,
 `"wdp"`, or `"rwdp"` where `r` is `READABLE`, `w` is `WRITABLE`, `d` is
-`DISCONNECT`, and `p` is `PRIORITIZED`. As soon as an event is detected
-the callback will be called with status set to 0, and the detected events set on
-the events field.
+`DISCONNECT`, and `p` is `PRIORITIZED`. As soon as an event is detected the
+callback will be called with status set to 0, and the detected events set on the
+events field.
 
 The user should not close the socket while the handle is active. If the user
 does that anyway, the callback may be called reporting an error status, but this
@@ -1233,7 +1237,8 @@ See [Constants][] for supported `signame` input and output values.
 - `callback`: `callable`
   - `signame`: `string`
 
-Same functionality as `uv.signal_start()` but the signal handler is reset the moment the signal is received.
+Same functionality as `uv.signal_start()` but the signal handler is reset the
+moment the signal is received.
 
 See [Constants][] for supported `signame` input and output values.
 
@@ -1279,16 +1284,14 @@ a better job on Windows than it does on Unix.
 **Parameters:**
 - `path`: `string`
 - `options`: `table`
-  - `args`: `string[]` or `nil`
-    Command line arguments as a list of strings. The first
-    string should *not* be the path to the program, since that is already
+  - `args`: `string[]` or `nil` Command line arguments as a list of strings. The
+    first string should *not* be the path to the program, since that is already
     provided via `path`. On Windows, this uses CreateProcess which concatenates
-    the arguments into a string. This can cause some strange errors
-    (see `options.verbatim` below for Windows).
-  - `stdio`: `table` or `nil`
-    Set the file descriptors that will be made available to
-    the child process. The convention is that the first entries are stdin, stdout,
-    and stderr.
+    the arguments into a string. This can cause some strange errors (see
+    `options.verbatim` below for Windows).
+  - `stdio`: `table` or `nil` Set the file descriptors that will be made
+    available to the child process. The convention is that the first entries are
+    stdin, stdout, and stderr.
 
     The entries can take many shapes.
     - If `integer`, then the child process inherits that same zero-indexed
@@ -1297,31 +1300,28 @@ a better job on Windows than it does on Unix.
       or inherited stream depending if the stream has a valid fd.
     - If `nil`, means to ignore that fd in the child process.
 
-    **Note**: On Windows, file descriptors after the third are
-    available to the child process only if the child processes uses the MSVCRT
-    runtime.
-    - `[1, 2, 3, ..., n]`: `integer` or `userdata` for sub-type of `uv_stream_t` or `nil`
-  - `env`: `string[]` or `nil`
-    Set environment variables for the new process.
+    **Note**: On Windows, file descriptors after the third are available to the
+    child process only if the child processes uses the MSVCRT runtime.
+    - `[1, 2, 3, ..., n]`: `integer` or `userdata` for sub-type of `uv_stream_t`
+      or `nil`
+  - `env`: `string[]` or `nil` Set environment variables for the new process.
     Each entry should be a string in the form of `NAME=VALUE`.
-  - `cwd`: `string` or `nil` Set the current working directory for the sub-process.
+  - `cwd`: `string` or `nil` Set the current working directory for the
+    sub-process.
   - `uid`: `string` or `nil` Set the child process' user id.
   - `gid`: `string` or `nil` Set the child process' group id.
-  - `verbatim`: `boolean` or `nil`
-    If true, do not wrap any arguments in quotes, or
-    perform any other escaping, when converting the argument list into a command
-    line string. This option is only meaningful on Windows systems. On Unix it is
-    silently ignored.
-  - `detached`: `boolean` or `nil`
-    If true, spawn the child process in a detached state -
-    this will make it a process group leader, and will effectively enable the
-    child to keep running after the parent exits. Note that the child process
-    will still keep the parent's event loop alive unless the parent process calls
-    `uv.unref()` on the child's process handle.
-  - `hide`: `boolean` or `nil`
-    If true, hide the subprocess console window that would
-    normally be created. This option is only meaningful on Windows systems. On
+  - `verbatim`: `boolean` or `nil` If true, do not wrap any arguments in quotes,
+    or perform any other escaping, when converting the argument list into
+    a command line string. This option is only meaningful on Windows systems. On
     Unix it is silently ignored.
+  - `detached`: `boolean` or `nil` If true, spawn the child process in
+    a detached state - this will make it a process group leader, and will
+    effectively enable the child to keep running after the parent exits. Note
+    that the child process will still keep the parent's event loop alive unless
+    the parent process calls `uv.unref()` on the child's process handle.
+  - `hide`: `boolean` or `nil` If true, hide the subprocess console window that
+    would normally be created. This option is only meaningful on Windows
+    systems. On Unix it is silently ignored.
 - `on_exit`: `callable`
   - `code`: `integer`
   - `signal`: `integer`
@@ -1382,7 +1382,8 @@ end)
 
 When the child process exits, `on_exit` is called with an exit code and signal.
 
-**Returns:** `uv_process_t userdata` or `nil`, `integer` or `string`, `uv.error_name` or `nil`
+**Returns:** `uv_process_t userdata` or `nil`, `integer` or `string`,
+`uv.error_name` or `nil`
 
 ### `uv.process_kill(process, [signame])`
 
@@ -1593,7 +1594,8 @@ Will return number of bytes written (can be less than the supplied buffer size).
 - `data`: `buffer`
 - `send_handle`: `userdata` for sub-type of `uv_stream_t`
 
-Like `uv.write2()`, but with the properties of `uv.try_write()`. Not supported on Windows, where it returns `UV_EAGAIN`.
+Like `uv.write2()`, but with the properties of `uv.try_write()`. Not supported
+on Windows, where it returns `UV_EAGAIN`.
 
 Will return number of bytes written (can be less than the supplied buffer size).
 
@@ -1687,7 +1689,8 @@ Open an existing file descriptor or SOCKET as a TCP handle.
 
 **Returns:** `0` or `fail`
 
-**Note**: The passed file descriptor or SOCKET is not checked for its type, but it's required that it represents a valid stream socket.
+**Note**: The passed file descriptor or SOCKET is not checked for its type, but
+it's required that it represents a valid stream socket.
 
 ### `uv.tcp_nodelay(tcp, enable)`
 
@@ -1712,7 +1715,9 @@ Enable / disable Nagle's algorithm.
 - `intvl`: `integer` or `nil`
 - `cnt`: `integer` or `nil`
 
-Enable / disable TCP keep-alive. `delay` is the initial delay in seconds, `intvl` is the time in seconds between individual keep-alive probes, and `cnt` is the number of probes to send before assuming the connection is dead.
+Enable / disable TCP keep-alive. `delay` is the initial delay in seconds,
+`intvl` is the time in seconds between individual keep-alive probes, and `cnt`
+is the number of probes to send before assuming the connection is dead.
 ignored when enable is `false`.
 
 **Returns:** `0` or `fail`
@@ -1847,14 +1852,21 @@ and `uv.tcp_close_reset()` calls is not allowed.
 - `flags2`: `table` or `nil`
   - `nonblock`: `boolean` (default: `false`)
 
-Create a pair of connected sockets with the specified properties. The resulting handles can be passed to `uv.tcp_open`, used with `uv.spawn`, or for any other purpose.
+Create a pair of connected sockets with the specified properties. The resulting
+handles can be passed to `uv.tcp_open`, used with `uv.spawn`, or for any other
+purpose.
 
 See [Constants][] for supported `socktype` input values.
 
-When `protocol` is set to 0 or nil, it will be automatically chosen based on the socket's domain and type. When `protocol` is specified as a string, it will be looked up using the `getprotobyname(3)` function (examples: `"ip"`, `"icmp"`, `"tcp"`, `"udp"`, etc).
+When `protocol` is set to 0 or nil, it will be automatically chosen based on the
+socket's domain and type. When `protocol` is specified as a string, it will be
+looked up using the `getprotobyname(3)` function (examples: `"ip"`, `"icmp"`,
+`"tcp"`, `"udp"`, etc).
 
 Flags:
- - `nonblock`: Opens the specified socket handle for `OVERLAPPED` or `FIONBIO`/`O_NONBLOCK` I/O usage. This is recommended for handles that will be used by libuv, and not usually recommended otherwise.
+ - `nonblock`: Opens the specified socket handle for `OVERLAPPED` or
+   `FIONBIO`/`O_NONBLOCK` I/O usage. This is recommended for handles that will
+   be used by libuv, and not usually recommended otherwise.
 
 Equivalent to `socketpair(2)` with a domain of `AF_UNIX`.
 
@@ -1883,7 +1895,8 @@ end)
 
 > [`uv_handle_t`][] and [`uv_stream_t`][] functions also apply.
 
-Pipe handles provide an abstraction over local domain sockets on Unix and named pipes on Windows.
+Pipe handles provide an abstraction over local domain sockets on Unix and named
+pipes on Windows.
 
 ```lua
 local pipe = uv.new_pipe(false)
@@ -2041,10 +2054,14 @@ where `r` is `READABLE` and `w` is `WRITABLE`. This function is blocking.
 - `write_flags`: `table` or `nil`
   - `nonblock`: `boolean` (default: `false`)
 
-Create a pair of connected pipe handles. Data may be written to the `write` fd and read from the `read` fd. The resulting handles can be passed to `pipe_open`, used with `spawn`, or for any other purpose.
+Create a pair of connected pipe handles. Data may be written to the `write` fd
+and read from the `read` fd. The resulting handles can be passed to `pipe_open`,
+used with `spawn`, or for any other purpose.
 
 Flags:
- - `nonblock`: Opens the specified socket handle for `OVERLAPPED` or `FIONBIO`/`O_NONBLOCK` I/O usage. This is recommended for handles that will be used by libuv, and not usually recommended otherwise.
+ - `nonblock`: Opens the specified socket handle for `OVERLAPPED` or
+   `FIONBIO`/`O_NONBLOCK` I/O usage. This is recommended for handles that will
+   be used by libuv, and not usually recommended otherwise.
 
 Equivalent to `pipe(2)` with the `O_CLOEXEC` flag set.
 
@@ -2087,7 +2104,8 @@ Bind the pipe to a file path (Unix) or a name (Windows).
 - If `type(flags)` is `nil`, it use default value `0`.
 - Returns `EINVAL` for unsupported flags without performing the bind operation.
 
-Supports Linux abstract namespace sockets. namelen must include the leading '\0' byte but not the trailing nul byte.
+Supports Linux abstract namespace sockets. namelen must include the leading '\0'
+byte but not the trailing nul byte.
 
 **Returns:** `0` or `fail`
 
@@ -2116,7 +2134,8 @@ Connect to the Unix domain socket or the named pipe.
 - If `type(flags)` is `nil`, it use default value `0`.
 - Returns `EINVAL` for unsupported flags without performing the bind operation.
 
-Supports Linux abstract namespace sockets. namelen must include the leading nul byte but not the trailing nul byte.
+Supports Linux abstract namespace sockets. namelen must include the leading nul
+byte but not the trailing nul byte.
 
 **Returns:** `uv_connect_t userdata` or `fail`
 
@@ -2167,7 +2186,8 @@ ttyname_r(3), open it, and use it if the passed file descriptor refers to a TTY.
 This lets libuv put the tty in non-blocking mode without affecting other
 processes that share the tty.
 
-This function is not thread safe on systems that don’t support ioctl TIOCGPTN or TIOCPTYGNAME, for instance OpenBSD and Solaris.
+This function is not thread safe on systems that don’t support ioctl TIOCGPTN or
+TIOCPTYGNAME, for instance OpenBSD and Solaris.
 
 **Returns:** `uv_tty_t userdata` or `fail`
 
@@ -2328,30 +2348,29 @@ it's required that it represents a valid datagram socket.
   - `reuseport`: `boolean` or `nil`
 
 Bind the UDP handle to an IP address and port. Any `flags` are set with a table
-with fields `reuseaddr`, `ipv6only`, `linux_recverr`, `reuseport` equal to `true` or `false`.
+with fields `reuseaddr`, `ipv6only`, `linux_recverr`, `reuseport` equal to
+`true` or `false`.
 
 - `reuseaddr`: Indicates if SO_REUSEADDR will be set when binding the handle.
-  This sets the SO_REUSEPORT socket flag on the BSDs (except for
-  DragonFlyBSD), OS X, and other platforms where SO_REUSEPORTs don't
-  have the capability of load balancing, as the opposite of what
-  `reuseport` would do. On other Unix platforms, it sets the
-  SO_REUSEADDR flag. What that means is that multiple threads or
-  processes can bind to the same address without error (provided
-  they all set the flag) but only the last one to bind will receive
-  any traffic, in effect "stealing" the port from the previous listener.
+  This sets the SO_REUSEPORT socket flag on the BSDs (except for DragonFlyBSD),
+  OS X, and other platforms where SO_REUSEPORTs don't have the capability of
+  load balancing, as the opposite of what `reuseport` would do. On other Unix
+  platforms, it sets the SO_REUSEADDR flag. What that means is that multiple
+  threads or processes can bind to the same address without error (provided they
+  all set the flag) but only the last one to bind will receive any traffic, in
+  effect "stealing" the port from the previous listener.
 - `ipv6only`: Disables dual stack mode.
-- `linux_recverr`: Indicates if IP_RECVERR/IPV6_RECVERR will be set when binding the handle.
-  This sets IP_RECVERR for IPv4 and IPV6_RECVERR for IPv6 UDP sockets on
-  Linux. This stops the Linux kernel from suppressing some ICMP error messages
-  and enables full ICMP error reporting for faster failover.
-  This flag is no-op on platforms other than Linux.
+- `linux_recverr`: Indicates if IP_RECVERR/IPV6_RECVERR will be set when binding
+  the handle. This sets IP_RECVERR for IPv4 and IPV6_RECVERR for IPv6 UDP
+  sockets on Linux. This stops the Linux kernel from suppressing some ICMP error
+  messages and enables full ICMP error reporting for faster failover. This flag
+  is no-op on platforms other than Linux.
 - `reuseport`: Indicates if SO_REUSEPORT will be set when binding the handle.
-  This sets the SO_REUSEPORT socket option on supported platforms.
-  Unlike `reuseaddr`, this flag will make multiple threads or
-  processes that are binding to the same address and port "share"
-  the port, which means incoming datagrams are distributed across
-  the receiving sockets among threads or processes.
-  This flag is available only on Linux 3.9+, DragonFlyBSD 3.6+,
+  This sets the SO_REUSEPORT socket option on supported platforms. Unlike
+  `reuseaddr`, this flag will make multiple threads or processes that are
+  binding to the same address and port "share" the port, which means incoming
+  datagrams are distributed across the receiving sockets among threads or
+  processes. This flag is available only on Linux 3.9+, DragonFlyBSD 3.6+,
   FreeBSD 12.0+, Solaris 11.4, and AIX 7.2.5+ for now.
 
 **Returns:** `0` or `fail`
@@ -2403,9 +2422,11 @@ the string `"leave"` or `"join"`.
 
 **Returns:** `0` or `fail`
 
-### `uv.udp_set_source_membership(udp, multicast_addr, [interface_addr], source_addr, membership)`
+### `uv.udp_set_source_membership(udp, multicast_addr, [interface_addr],
+source_addr, membership)`
 
-> method form `udp:set_source_membership(multicast_addr, interface_addr, source_addr, membership)`
+> method form `udp:set_source_membership(multicast_addr, interface_addr,
+> source_addr, membership)`
 
 **Parameters:**
 - `udp`: `uv_udp_t userdata`
@@ -2414,9 +2435,10 @@ the string `"leave"` or `"join"`.
 - `source_addr`: `string`
 - `membership`: `string`
 
-Set membership for a source-specific multicast group. `multicast_addr` is multicast
-address to set membership for. `interface_addr` is interface address. `source_addr`
-is source address. `membership` can be the string `"leave"` or `"join"`.
+Set membership for a source-specific multicast group. `multicast_addr` is
+multicast address to set membership for. `interface_addr` is interface address.
+`source_addr` is source address. `membership` can be the string `"leave"` or
+`"join"`.
 
 **Returns:** `0` or `fail`
 
@@ -2744,10 +2766,14 @@ Get the path being monitored by the handle.
 
 [File system operations]: #file-system-operations
 
-Most file system functions can operate synchronously or asynchronously. When a synchronous version is called (by omitting a callback), the function will
+Most file system functions can operate synchronously or asynchronously. When
+a synchronous version is called (by omitting a callback), the function will
 immediately return the results of the FS call. When an asynchronous version is
-called (by providing a callback), the function will immediately return a
-`uv_fs_t userdata` and asynchronously execute its callback; if an error is encountered, the first and only argument passed to the callback will be the `err` error string; if the operation completes successfully, the first argument will be `nil` and the remaining arguments will be the results of the FS call.
+called (by providing a callback), the function will immediately return
+a `uv_fs_t userdata` and asynchronously execute its callback; if an error is
+encountered, the first and only argument passed to the callback will be the
+`err` error string; if the operation completes successfully, the first argument
+will be `nil` and the remaining arguments will be the results of the FS call.
 
 Synchronous and asynchronous versions of `readFile` (with naive error handling)
 are implemented below as an example:
@@ -2835,9 +2861,11 @@ not supported.
 
 Equivalent to `preadv(2)`. Returns any data. An empty string indicates EOF.
 
-If `offset` is nil or omitted, it will default to `-1`, which indicates 'use and update the current file offset.'
+If `offset` is nil or omitted, it will default to `-1`, which indicates 'use and
+update the current file offset.'
 
-**Note:** When `offset` is >= 0, the current file offset will not be updated by the read.
+**Note:** When `offset` is >= 0, the current file offset will not be updated by
+the read.
 
 **Returns (sync version):** `string` or `fail`
 
@@ -2869,9 +2897,11 @@ Equivalent to `unlink(2)`.
 
 Equivalent to `pwritev(2)`. Returns the number of bytes written.
 
-If `offset` is nil or omitted, it will default to `-1`, which indicates 'use and update the current file offset.'
+If `offset` is nil or omitted, it will default to `-1`, which indicates 'use and
+update the current file offset.'
 
-**Note:** When `offset` is >= 0, the current file offset will not be updated by the write.
+**Note:** When `offset` is >= 0, the current file offset will not be updated by
+the write.
 
 **Returns (sync version):** `integer` or `fail`
 
@@ -3237,7 +3267,8 @@ Limited equivalent to `sendfile(2)`. Returns the number of bytes written.
 
 **Parameters:**
 - `path`: `string`
-- `mode`: `string` (a combination of the `'r'`, `'w'` and `'x'` characters denoting the symbolic mode as per `chmod(1)`)
+- `mode`: `string` (a combination of the `'r'`, `'w'` and `'x'` characters
+  denoting the symbolic mode as per `chmod(1)`)
 - `callback`: `callable` or `nil` (async if provided, sync if `nil`)
   - `err`: `nil` or `string`
   - `permission`: `boolean` or `nil`
@@ -3294,10 +3325,12 @@ Equivalent to `utime(2)`.
 
 See [Constants][] for supported FS Modification Time constants.
 
-Passing `"now"` or `uv.constants.FS_UTIME_NOW` as the atime or mtime sets the timestamp to the
+Passing `"now"` or `uv.constants.FS_UTIME_NOW` as the atime or mtime sets the
+timestamp to the
 current time.
 
-Passing `nil`, `"omit"`, or `uv.constants.FS_UTIME_OMIT` as the atime or mtime leaves the timestamp
+Passing `nil`, `"omit"`, or `uv.constants.FS_UTIME_OMIT` as the atime or mtime
+leaves the timestamp
 untouched.
 
 **Returns (sync version):** `boolean` or `fail`
@@ -3318,10 +3351,12 @@ Equivalent to `futimes(3)`.
 
 See [Constants][] for supported FS Modification Time constants.
 
-Passing `"now"` or `uv.constants.FS_UTIME_NOW` as the atime or mtime sets the timestamp to the
+Passing `"now"` or `uv.constants.FS_UTIME_NOW` as the atime or mtime sets the
+timestamp to the
 current time.
 
-Passing `nil`, `"omit"`, or `uv.constants.FS_UTIME_OMIT` as the atime or mtime leaves the timestamp
+Passing `nil`, `"omit"`, or `uv.constants.FS_UTIME_OMIT` as the atime or mtime
+leaves the timestamp
 untouched.
 
 **Returns (sync version):** `boolean` or `fail`
@@ -3342,11 +3377,11 @@ Equivalent to `lutimes(3)`.
 
 See [Constants][] for supported FS Modification Time constants.
 
-Passing `"now"` or `uv.constants.FS_UTIME_NOW` as the atime or mtime sets the timestamp to the
-current time.
+Passing `"now"` or `uv.constants.FS_UTIME_NOW` as the atime or mtime sets the
+timestamp to the current time.
 
-Passing `nil`, `"omit"`, or `uv.constants.FS_UTIME_OMIT` as the atime or mtime leaves the timestamp
-untouched.
+Passing `nil`, `"omit"`, or `uv.constants.FS_UTIME_OMIT` as the atime or mtime
+leaves the timestamp untouched.
 
 **Returns (sync version):** `boolean` or `fail`
 
@@ -3379,7 +3414,8 @@ Equivalent to `link(2)`.
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
-Equivalent to `symlink(2)`. If the `flags` parameter is omitted, then the 3rd parameter will be treated as the `callback`.
+Equivalent to `symlink(2)`. If the `flags` parameter is omitted, then the 3rd
+parameter will be treated as the `callback`.
 
 **Returns (sync version):** `boolean` or `fail`
 
@@ -3474,7 +3510,8 @@ Equivalent to `lchown(2)`.
   - `err`: `nil` or `string`
   - `success`: `boolean` or `nil`
 
-Copies a file from path to new_path. If the `flags` parameter is omitted, then the 3rd parameter will be treated as the `callback`.
+Copies a file from path to new_path. If the `flags` parameter is omitted, then
+the 3rd parameter will be treated as the `callback`.
 
 **Returns (sync version):** `boolean` or `fail`
 
@@ -3601,8 +3638,8 @@ work:queue(1, 2)
   - `...`: `threadargs` returned from `work_callback`
 
 Creates and initializes a new `luv_work_ctx_t` (not `uv_work_t`).
-`work_callback` is a Lua function or a string containing Lua code or bytecode dumped from a function.
-Returns the Lua userdata wrapping it.
+`work_callback` is a Lua function or a string containing Lua code or bytecode
+dumped from a function. Returns the Lua userdata wrapping it.
 
 **Returns:** `luv_work_ctx_t userdata`
 
@@ -3712,9 +3749,10 @@ Libuv provides cross-platform implementations for multiple threading and
 
 Creates and initializes a `luv_thread_t` (not `uv_thread_t`). Returns the Lua
 userdata wrapping it and asynchronously executes `entry`, which can be either
-a Lua function or a string containing Lua code or bytecode dumped from a function. Additional arguments `...`
-are passed to the `entry` function and an optional `options` table may be
-provided. Currently accepted `option` fields are `stack_size`.
+a Lua function or a string containing Lua code or bytecode dumped from
+a function. Additional arguments `...` are passed to the `entry` function and an
+optional `options` table may be provided. Currently accepted `option` fields are
+`stack_size`.
 
 **Returns:** `luv_thread_t userdata` or `fail`
 
@@ -3905,7 +3943,8 @@ The initial value must be a non-negative integer.
 
 **Returns:** `luv_sem_t userdata` or `fail`
 
-**Note**: A semaphore must be shared between threads, any `uv.sem_wait()` on a single thread that blocks will deadlock.
+**Note**: A semaphore must be shared between threads, any `uv.sem_wait()` on
+a single thread that blocks will deadlock.
 
 ### `uv.sem_post(sem)`
 
@@ -3941,10 +3980,11 @@ the call is interrupted by a signal.
 **Parameters:**
 - `sem`: `luv_sem_t userdata`
 
-The same as `uv.sem_wait()` but returns immediately if the semaphore is not available.
+The same as `uv.sem_wait()` but returns immediately if the semaphore is not
+available.
 
-If the semaphore's value was decremented then `true` is returned, otherwise the semaphore
-has a value of zero and `false` is returned.
+If the semaphore's value was decremented then `true` is returned, otherwise the
+semaphore has a value of zero and `false` is returned.
 
 **Returns:** `boolean`
 
@@ -4082,13 +4122,17 @@ with zeroes).
 
 ### `uv.available_parallelism()`
 
-Returns an estimate of the default amount of parallelism a program should use. Always returns a non-zero value.
+Returns an estimate of the default amount of parallelism a program should use.
+Always returns a non-zero value.
 
-On Linux, inspects the calling thread’s CPU affinity mask to determine if it has been pinned to specific CPUs.
+On Linux, inspects the calling thread’s CPU affinity mask to determine if it has
+been pinned to specific CPUs.
 
-On Windows, the available parallelism may be underreported on systems with more than 64 logical CPUs.
+On Windows, the available parallelism may be underreported on systems with more
+than 64 logical CPUs.
 
-On other platforms, reports the number of CPUs that the operating system considers to be online.
+On other platforms, reports the number of CPUs that the operating system
+considers to be online.
 
 **Returns:** `integer`
 
@@ -4146,19 +4190,14 @@ Sets the user ID of the process with the integer `id`.
 
 **Note**: This is not a libuv function and is not supported on Windows.
 
-**Warning**: When dropping privileges from root, calling `setuid()` alone is not
-sufficient — supplementary group IDs are not affected by `setuid()` or `setgid()`
-and must be dropped separately. Failure to do so is a security vulnerability
-([CERT POS36-C](https://wiki.sei.cmu.edu/confluence/display/c/POS36-C.+Observe+correct+revocation+order+while+relinquishing+privileges)).
-`uv.setuid()` enforces this by rejecting root-to-non-root transitions until both
-the primary group privileges and supplementary groups have already been dropped.
-The correct order for dropping privileges is:
-
-```lua
-uv.setgroups({})  -- or uv.initgroups(user, gid)
-uv.setgid(gid)
-uv.setuid(uid)    -- must be last (irreversible)
-```
+**Note**: When dropping privileges from root, calling `setuid()` alone is not
+sufficient — supplementary group IDs are not affected by `setuid()` or
+`setgid()` and must be dropped separately. Failure to do so is a security
+vulnerability (CERT POS36-C). `uv.setuid()` rejects root-to-non-root transitions
+until both primary group privileges and supplementary groups have already been
+dropped. The correct order is: `uv.setgroups({})` (or `uv.initgroups(user,
+gid)`), then `uv.setgid(gid)`, then `uv.setuid(uid)` (must be last, as it is
+irreversible).
 
 ### `uv.setgid(id)`
 
@@ -4171,22 +4210,22 @@ Sets the group ID of the process with the integer `id`.
 
 **Note**: This is not a libuv function and is not supported on Windows.
 
-**Warning**: When dropping privileges, supplementary groups must be dropped
-before calling `setgid()` and `setuid()`. See the security warning in
-[`uv.setuid()`](#uvsetuidid) for the correct privilege-dropping sequence.
+**Note**: When dropping privileges, supplementary groups must be dropped before
+calling `setgid()` and `setuid()`. See the security warning in `uv.setuid()` for
+the correct privilege-dropping sequence.
 
 ### `uv.getgroups()`
 
 Returns a table containing the list of supplementary group IDs for the process.
 
-**Returns:** `table` (array of `integer` group IDs)
+**Returns:** `table`
 
 **Note**: This is not a libuv function and is not supported on Windows.
 
 ### `uv.setgroups(groups)`
 
 **Parameters:**
-- `groups`: `table` (array of `integer` group IDs)
+- `groups`: `table`
 
 Sets the supplementary group IDs for the process. Pass an empty table `{}` to
 drop all supplementary groups. Requires appropriate privileges (typically root).
@@ -4202,9 +4241,8 @@ drop all supplementary groups. Requires appropriate privileges (typically root).
 - `group`: `integer`
 
 Initializes the supplementary group access list. Sets the supplementary group
-IDs based on the group database (e.g., `/etc/group`) for the given `user`,
-plus the specified base `group` ID. Requires appropriate privileges (typically
-root).
+IDs based on the group database (e.g., `/etc/group`) for the given `user`, plus
+the specified base `group` ID. Requires appropriate privileges (typically root).
 
 **Returns:** Nothing.
 
@@ -4482,7 +4520,11 @@ low on entropy.
 **Parameters:**
 - `errcode`: `integer`
 
-Returns the libuv error message and error name (both in string form, see [`err` and `name` in Error Handling](#error-handling)) equivalent to the given platform dependent error code: POSIX error codes on Unix (the ones stored in errno), and Win32 error codes on Windows (those returned by GetLastError() or WSAGetLastError()).
+Returns the libuv error message and error name (both in string form, see [`err`
+and `name` in Error Handling](#error-handling)) equivalent to the given platform
+dependent error code: POSIX error codes on Unix (the ones stored in errno), and
+Win32 error codes on Windows (those returned by GetLastError() or
+WSAGetLastError()).
 
 **Returns:** `string, string` or `nil`
 
@@ -4517,20 +4559,25 @@ metrics counters.
 
 ## String manipulation functions
 
-These string utilities are needed internally for dealing with Windows, and are exported to allow clients to work uniformly with this data when the libuv API is not complete.
+These string utilities are needed internally for dealing with Windows, and are
+exported to allow clients to work uniformly with this data when the libuv API is
+not complete.
 
 **Notes**:
 
 1. New in luv version 1.49.0.
-2. See [the WTF-8 spec](https://simonsapin.github.io/wtf-8/) for information about WTF-8.
-3. Luv uses Lua-style strings, which means that all inputs and return values (UTF-8 or UTF-16 strings) do not include a NUL terminator.
+2. See [the WTF-8 spec](https://simonsapin.github.io/wtf-8/) for information
+   about WTF-8.
+3. Luv uses Lua-style strings, which means that all inputs and return values
+   (UTF-8 or UTF-16 strings) do not include a NUL terminator.
 
 ### `uv.utf16_length_as_wtf8(utf16)`
 
 **Parameters:**
 - `utf16`: `string`
 
-Get the length (in bytes) of a UTF-16 (or UCS-2) string `utf16` value after converting it to WTF-8.
+Get the length (in bytes) of a UTF-16 (or UCS-2) string `utf16` value after
+converting it to WTF-8.
 
 **Returns:** `integer`
 
@@ -4539,7 +4586,9 @@ Get the length (in bytes) of a UTF-16 (or UCS-2) string `utf16` value after conv
 **Parameters:**
 - `utf16`: `string`
 
-Convert UTF-16 (or UCS-2) string `utf16` to WTF-8 string. The endianness of the UTF-16 (or UCS-2) string is assumed to be the same as the native endianness of the platform.
+Convert UTF-16 (or UCS-2) string `utf16` to WTF-8 string. The endianness of the
+UTF-16 (or UCS-2) string is assumed to be the same as the native endianness of
+the platform.
 
 **Returns:** `string`
 
@@ -4548,7 +4597,9 @@ Convert UTF-16 (or UCS-2) string `utf16` to WTF-8 string. The endianness of the 
 **Parameters:**
 - `wtf8`: `string`
 
-Get the length (in UTF-16 code units) of a WTF-8 `wtf8` value after converting it to UTF-16 (or UCS-2). Note: The number of bytes needed for a UTF-16 (or UCS-2) string is `<number of code units> * 2`.
+Get the length (in UTF-16 code units) of a WTF-8 `wtf8` value after converting
+it to UTF-16 (or UCS-2). Note: The number of bytes needed for a UTF-16 (or
+UCS-2) string is `<number of code units> * 2`.
 
 **Returns:** `integer`
 
@@ -4557,7 +4608,9 @@ Get the length (in UTF-16 code units) of a WTF-8 `wtf8` value after converting i
 **Parameters:**
 - `wtf8`: `string`
 
-Convert WTF-8 string in `wtf8` to UTF-16 (or UCS-2) string. The endianness of the UTF-16 (or UCS-2) string will be the same as the native endianness of the platform.
+Convert WTF-8 string in `wtf8` to UTF-16 (or UCS-2) string. The endianness of
+the UTF-16 (or UCS-2) string will be the same as the native endianness of the
+platform.
 
 **Returns:** `string`
 
@@ -4569,3 +4622,4 @@ Convert WTF-8 string in `wtf8` to UTF-16 (or UCS-2) string. The endianness of th
 [libuv documentation page]: http://docs.libuv.org/
 [libuv API documentation]: http://docs.libuv.org/en/v1.x/api.html
 [error constants]: https://docs.libuv.org/en/v1.x/errors.html#error-constants
+
