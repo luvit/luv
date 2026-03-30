@@ -260,13 +260,6 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
   }
 
   if (req->result < 0) {
-    if (req->fs_type == UV_FS_SCANDIR) {
-      // We need to unref the luv_fs_scandir_t userdata to allow it to be garbage collected.
-      // The scandir callback can only be called once, so we now know that the
-      // req can be safely garbage collected.
-      luaL_unref(L, LUA_REGISTRYINDEX, data->data_ref);
-      data->data_ref = LUA_NOREF;
-    }
     lua_pushnil(L);
     if (fs_req_has_dest_path(req)) {
       lua_rawgeti(L, LUA_REGISTRYINDEX, data->data_ref);
@@ -356,11 +349,6 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
       // We want to return this instead of the uv_req_t because the
       // luv_fs_scandir_t userdata has a gc method.
       lua_rawgeti(L, LUA_REGISTRYINDEX, data->data_ref);
-      // We now want to unref the userdata to allow it to be garbage collected.
-      // The scandir callback can only be called once, so we now know that the
-      // req can be safely garbage collected.
-      luaL_unref(L, LUA_REGISTRYINDEX, data->data_ref);
-      data->data_ref = LUA_NOREF;
       return 1;
 
 #if LUV_UV_VERSION_GEQ(1, 28, 0)
@@ -438,6 +426,15 @@ static void luv_fs_cb(uv_fs_t* req) {
   }
   if (req->fs_type == UV_FS_SCANDIR) {
     luv_fulfill_req(L, data, nargs);
+    // Regardless of whether or not we errored, we need to unref the
+    // luv_fs_scandir_t userdata to allow it to be garbage collected.
+    // The scandir callback can only be called once, so we now know that
+    // the req can be safely garbage collected.
+    //
+    // Crucially, this needs to happen after the fulfill_req call to ensure
+    // it doesn't get garbage collected beforehand.
+    luaL_unref(L, LUA_REGISTRYINDEX, data->data_ref);
+    data->data_ref = LUA_NOREF;
   }
   else {
     // cleanup the uv_fs_t before the callback is called to avoid
