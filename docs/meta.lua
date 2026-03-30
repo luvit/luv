@@ -4255,27 +4255,19 @@ function uv.getpid() end
 
 --- Returns the user ID of the process.
 --- **Note**:
---- This is not a libuv function and is not supported on Windows.
+--- This is not a libuv function and does not exist when targeting Windows.
+--- **Warning**:
+--- Deprecated. Use `uv.os_get_passwd()` instead.
 --- @return integer
 function uv.getuid() end
 
 --- Returns the group ID of the process.
 --- **Note**:
---- This is not a libuv function and is not supported on Windows.
+--- This is not a libuv function and does not exist when targeting Windows.
+--- **Warning**:
+--- Deprecated. Use `uv.os_get_passwd()` instead.
 --- @return integer
 function uv.getgid() end
-
---- Sets the user ID of the process with the integer `id`.
---- **Note**:
---- This is not a libuv function and is not supported on Windows.
---- @param id integer
-function uv.setuid(id) end
-
---- Sets the group ID of the process with the integer `id`.
---- **Note**:
---- This is not a libuv function and is not supported on Windows.
---- @param id integer
-function uv.setgid(id) end
 
 --- Returns a current high-resolution time in nanoseconds as a number. This is
 --- relative to an arbitrary time in the past. It is not related to the time of day

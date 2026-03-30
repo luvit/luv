@@ -473,24 +473,6 @@ static int luv_getgid(lua_State* L){
   return 1;
 }
 
-static int luv_setuid(lua_State* L){
-  int uid = luaL_checkinteger(L, 1);
-  int r = setuid(uid);
-  if (-1 == r) {
-    luaL_error(L, "Error setting UID");
-  }
-  return 0;
-}
-
-static int luv_setgid(lua_State* L){
-  int gid = luaL_checkinteger(L, 1);
-  int r = setgid(gid);
-  if (-1 == r) {
-    luaL_error(L, "Error setting GID");
-  }
-  return 0;
-}
-
 #if LUV_UV_VERSION_GEQ(1, 8, 0)
 static int luv_print_all_handles(lua_State* L){
   luv_ctx_t* ctx = luv_context(L);
