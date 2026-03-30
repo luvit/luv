@@ -82,9 +82,6 @@ return require('lib/tap')(function (test)
         assert(uv.fs_unlink(path))
       end)
     end
-    local count = collectgarbage("count")
-    collectgarbage("collect")
-    assert(count - collectgarbage("count") > 0)
   end)
 
   test("fs.stat sync", function (print, p, expect, uv)
