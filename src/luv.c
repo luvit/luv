@@ -859,6 +859,12 @@ static int loop_gc(lua_State *L) {
   while (uv_loop_close(loop)) {
     uv_run(loop, UV_RUN_DEFAULT);
   }
+  // Set the loop to NULL to allow for multiple calls
+  // of luaopen_luv, e.g. requiring 'luv', then setting
+  // package.loaded['luv'] to nil, and then requiring 'luv' again.
+  // The context lives as long as the Lua state, so it's
+  // possible it could be around for multiple loops.
+  ctx->loop = NULL;
   return 0;
 }
 
