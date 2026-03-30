@@ -374,9 +374,6 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
       return 1;
     }
     case UV_FS_READDIR: {
-      luaL_unref(L, LUA_REGISTRYINDEX, data->data_ref);
-      data->data_ref = LUA_NOREF;
-
       if(req->result > 0) {
         size_t i;
         uv_dir_t *dir = (uv_dir_t*)req->ptr;
@@ -388,6 +385,8 @@ static int push_fs_result(lua_State* L, uv_fs_t* req) {
       } else
         lua_pushnil(L);
 
+      luaL_unref(L, LUA_REGISTRYINDEX, data->data_ref);
+      data->data_ref = LUA_NOREF;
       return 1;
     }
     case UV_FS_CLOSEDIR:
