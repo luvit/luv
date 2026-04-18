@@ -519,8 +519,7 @@ static int luv_strcaseequal(const char *s1, const char *s2) {
     s1++;
     s2++;
   }
-  if (*s1 != *s2)
-    return 0;
+  return *s1 == *s2;
 }
 
 static int luv_sig_string_to_num(const char* string) {
