@@ -115,7 +115,7 @@ static int luv_spawn(lua_State* L) {
   // collected between now and when they are used in uv_spawn.
   // However, we don't need to ref args[0] since we don't pop that
   // from the stack. Note: args_refs is a LUA_NOREF-terminated array
-  // when it is non-NULL 
+  // when it is non-NULL
   if (len > 1) {
     args_refs = (int*)malloc(len * sizeof(int));
     if (args_refs)
@@ -309,7 +309,9 @@ static int luv_parse_signal(lua_State* L, int slot) {
     return lua_tonumber(L, slot);
   }
   if (lua_isstring(L, slot)) {
-    return luv_sig_string_to_num(lua_tostring(L, slot));
+    int signum = luv_sig_string_to_num(lua_tostring(L, slot));
+    luaL_argcheck(L, signum, slot, "Invalid Signal name");
+    return signum;
   }
   return SIGTERM;
 }
