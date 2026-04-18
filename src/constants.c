@@ -501,112 +501,134 @@ static const char* luv_sock_num_to_string(const int num) {
   return NULL;
 }
 
+static int luv_isalpha(int c) {
+  return ('a' <= c && c <= 'z')
+      || ('A' <= c && c <= 'Z');
+}
+
+static int luv_tolower(int c) {
+  if (luv_isalpha(c))
+    return c | 0x20;
+  return c;
+}
+
+static int luv_strcaseequal(const char *s1, const char *s2) {
+  while (*s1 && *s2) {
+    if (luv_tolower(*s1) != luv_tolower(*s2))
+      return 0;
+    s1++;
+    s2++;
+  }
+  if (*s1 != *s2)
+    return 0;
+}
+
 static int luv_sig_string_to_num(const char* string) {
   if (!string) return 0;
 #ifdef SIGHUP
-  if (strcmp(string, "sighup") == 0) return SIGHUP;
+  if (luv_strcaseequal(string, "sighup")) return SIGHUP;
 #endif
 #ifdef SIGINT
-  if (strcmp(string, "sigint") == 0) return SIGINT;
+  if (luv_strcaseequal(string, "sigint")) return SIGINT;
 #endif
 #ifdef SIGQUIT
-  if (strcmp(string, "sigquit") == 0) return SIGQUIT;
+  if (luv_strcaseequal(string, "sigquit")) return SIGQUIT;
 #endif
 #ifdef SIGILL
-  if (strcmp(string, "sigill") == 0) return SIGILL;
+  if (luv_strcaseequal(string, "sigill")) return SIGILL;
 #endif
 #ifdef SIGTRAP
-  if (strcmp(string, "sigtrap") == 0) return SIGTRAP;
+  if (luv_strcaseequal(string, "sigtrap")) return SIGTRAP;
 #endif
 #ifdef SIGABRT
-  if (strcmp(string, "sigabrt") == 0) return SIGABRT;
+  if (luv_strcaseequal(string, "sigabrt")) return SIGABRT;
 #endif
 #ifdef SIGIOT
-  if (strcmp(string, "sigiot") == 0) return SIGIOT;
+  if (luv_strcaseequal(string, "sigiot")) return SIGIOT;
 #endif
 #ifdef SIGBUS
-  if (strcmp(string, "sigbus") == 0) return SIGBUS;
+  if (luv_strcaseequal(string, "sigbus")) return SIGBUS;
 #endif
 #ifdef SIGFPE
-  if (strcmp(string, "sigfpe") == 0) return SIGFPE;
+  if (luv_strcaseequal(string, "sigfpe")) return SIGFPE;
 #endif
 #ifdef SIGKILL
-  if (strcmp(string, "sigkill") == 0) return SIGKILL;
+  if (luv_strcaseequal(string, "sigkill")) return SIGKILL;
 #endif
 #ifdef SIGUSR1
-  if (strcmp(string, "sigusr1") == 0) return SIGUSR1;
+  if (luv_strcaseequal(string, "sigusr1")) return SIGUSR1;
 #endif
 #ifdef SIGSEGV
-  if (strcmp(string, "sigsegv") == 0) return SIGSEGV;
+  if (luv_strcaseequal(string, "sigsegv")) return SIGSEGV;
 #endif
 #ifdef SIGUSR2
-  if (strcmp(string, "sigusr2") == 0) return SIGUSR2;
+  if (luv_strcaseequal(string, "sigusr2")) return SIGUSR2;
 #endif
 #ifdef SIGPIPE
-  if (strcmp(string, "sigpipe") == 0) return SIGPIPE;
+  if (luv_strcaseequal(string, "sigpipe")) return SIGPIPE;
 #endif
 #ifdef SIGALRM
-  if (strcmp(string, "sigalrm") == 0) return SIGALRM;
+  if (luv_strcaseequal(string, "sigalrm")) return SIGALRM;
 #endif
 #ifdef SIGTERM
-  if (strcmp(string, "sigterm") == 0) return SIGTERM;
+  if (luv_strcaseequal(string, "sigterm")) return SIGTERM;
 #endif
 #ifdef SIGCHLD
-  if (strcmp(string, "sigchld") == 0) return SIGCHLD;
+  if (luv_strcaseequal(string, "sigchld")) return SIGCHLD;
 #endif
 #ifdef SIGSTKFLT
-  if (strcmp(string, "sigstkflt") == 0) return SIGSTKFLT;
+  if (luv_strcaseequal(string, "sigstkflt")) return SIGSTKFLT;
 #endif
 #ifdef SIGCONT
-  if (strcmp(string, "sigcont") == 0) return SIGCONT;
+  if (luv_strcaseequal(string, "sigcont")) return SIGCONT;
 #endif
 #ifdef SIGSTOP
-  if (strcmp(string, "sigstop") == 0) return SIGSTOP;
+  if (luv_strcaseequal(string, "sigstop")) return SIGSTOP;
 #endif
 #ifdef SIGTSTP
-  if (strcmp(string, "sigtstp") == 0) return SIGTSTP;
+  if (luv_strcaseequal(string, "sigtstp")) return SIGTSTP;
 #endif
 #ifdef SIGBREAK
-  if (strcmp(string, "sigbreak") == 0) return SIGBREAK;
+  if (luv_strcaseequal(string, "sigbreak")) return SIGBREAK;
 #endif
 #ifdef SIGTTIN
-  if (strcmp(string, "sigttin") == 0) return SIGTTIN;
+  if (luv_strcaseequal(string, "sigttin")) return SIGTTIN;
 #endif
 #ifdef SIGTTOU
-  if (strcmp(string, "sigttou") == 0) return SIGTTOU;
+  if (luv_strcaseequal(string, "sigttou")) return SIGTTOU;
 #endif
 #ifdef SIGURG
-  if (strcmp(string, "sigurg") == 0) return SIGURG;
+  if (luv_strcaseequal(string, "sigurg")) return SIGURG;
 #endif
 #ifdef SIGXCPU
-  if (strcmp(string, "sigxcpu") == 0) return SIGXCPU;
+  if (luv_strcaseequal(string, "sigxcpu")) return SIGXCPU;
 #endif
 #ifdef SIGXFSZ
-  if (strcmp(string, "sigxfsz") == 0) return SIGXFSZ;
+  if (luv_strcaseequal(string, "sigxfsz")) return SIGXFSZ;
 #endif
 #ifdef SIGVTALRM
-  if (strcmp(string, "sigvtalrm") == 0) return SIGVTALRM;
+  if (luv_strcaseequal(string, "sigvtalrm")) return SIGVTALRM;
 #endif
 #ifdef SIGPROF
-  if (strcmp(string, "sigprof") == 0) return SIGPROF;
+  if (luv_strcaseequal(string, "sigprof")) return SIGPROF;
 #endif
 #ifdef SIGWINCH
-  if (strcmp(string, "sigwinch") == 0) return SIGWINCH;
+  if (luv_strcaseequal(string, "sigwinch")) return SIGWINCH;
 #endif
 #ifdef SIGIO
-  if (strcmp(string, "sigio") == 0) return SIGIO;
+  if (luv_strcaseequal(string, "sigio")) return SIGIO;
 #endif
 #ifdef SIGPOLL
-  if (strcmp(string, "sigpoll") == 0) return SIGPOLL;
+  if (luv_strcaseequal(string, "sigpoll")) return SIGPOLL;
 #endif
 #ifdef SIGLOST
-  if (strcmp(string, "siglost") == 0) return SIGLOST;
+  if (luv_strcaseequal(string, "siglost")) return SIGLOST;
 #endif
 #ifdef SIGPWR
-  if (strcmp(string, "sigpwr") == 0) return SIGPWR;
+  if (luv_strcaseequal(string, "sigpwr")) return SIGPWR;
 #endif
 #ifdef SIGSYS
-  if (strcmp(string, "sigsys") == 0) return SIGSYS;
+  if (luv_strcaseequal(string, "sigsys")) return SIGSYS;
 #endif
   return 0;
 }
