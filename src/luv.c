@@ -332,6 +332,9 @@ static const luaL_Reg luv_functions[] = {
   {"setuid", luv_setuid},
   {"getgid", luv_getgid},
   {"setgid", luv_setgid},
+  {"getgroups", luv_getgroups},
+  {"setgroups", luv_setgroups},
+  {"initgroups", luv_initgroups},
 #endif
   {"getrusage", luv_getrusage},
 #if LUV_UV_VERSION_GEQ(1, 50, 0)

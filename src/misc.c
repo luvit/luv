@@ -18,6 +18,8 @@
 #include "luv.h"
 #ifdef _WIN32
 #include <process.h>
+#else
+#include <grp.h>
 #endif
 
 static int luv_guess_handle(lua_State* L) {
@@ -475,7 +477,33 @@ static int luv_getgid(lua_State* L){
 
 static int luv_setuid(lua_State* L){
   int uid = luaL_checkinteger(L, 1);
-  int r = setuid(uid);
+  int r;
+
+  /* POS36-C safety check: when dropping privileges from root to an
+     unprivileged user, supplementary groups must be dropped first.
+     See: https://wiki.sei.cmu.edu/confluence/display/c/POS36-C */
+  if (geteuid() == 0 && uid != 0) {
+    if (getgid() == 0 || getegid() == 0) {
+      return luaL_error(L,
+        "Cannot setuid before dropping group privileges "
+        "(POS36-C security check). Call uv.setgid() before "
+        "dropping privileges with uv.setuid().");
+    }
+
+    int ngroups = getgroups(0, NULL);
+    if (ngroups == -1) {
+      return luaL_error(L, "Error getting number of groups");
+    }
+
+    if (ngroups > 0) {
+      return luaL_error(L,
+        "Cannot setuid while supplementary groups are still set "
+        "(POS36-C security check). Call uv.setgroups({}) or "
+        "uv.initgroups() before dropping privileges with uv.setuid().");
+    }
+  }
+
+  r = setuid(uid);
   if (-1 == r) {
     luaL_error(L, "Error setting UID");
   }
@@ -488,6 +516,86 @@ static int luv_setgid(lua_State* L){
   if (-1 == r) {
     luaL_error(L, "Error setting GID");
   }
+  return 0;
+}
+
+static int luv_getgroups(lua_State* L) {
+  int ngroups, i;
+  gid_t* groups;
+
+  /* First call to get the number of groups */
+  ngroups = getgroups(0, NULL);
+  if (ngroups == -1) {
+    return luaL_error(L, "Error getting number of groups");
+  }
+
+  groups = NULL;
+  if (ngroups > 0) {
+    groups = (gid_t*)malloc(ngroups * sizeof(gid_t));
+  }
+  if (!groups) {
+    return luaL_error(L, "Error allocating memory for groups");
+  }
+
+  ngroups = getgroups(ngroups, groups);
+  if (ngroups == -1) {
+    free(groups);
+    return luaL_error(L, "Error getting groups");
+  }
+
+  lua_createtable(L, ngroups, 0);
+  for (i = 0; i < ngroups; i++) {
+    lua_pushinteger(L, groups[i]);
+    lua_rawseti(L, -2, i + 1);
+  }
+
+  free(groups);
+  return 1;
+}
+
+static int luv_setgroups(lua_State* L) {
+  int ngroups, i;
+  gid_t* groups;
+
+  luaL_checktype(L, 1, LUA_TTABLE);
+  ngroups = lua_rawlen(L, 1);
+
+  if (ngroups < 1) {
+    return 0;
+  }
+
+  groups = (gid_t*)malloc(ngroups * sizeof(gid_t));
+  if (!groups && ngroups > 0) {
+    return luaL_error(L, "Error allocating memory for groups");
+  }
+
+  for (i = 0; i < ngroups; i++) {
+    lua_rawgeti(L, 1, i + 1);
+    if (!lua_isnumber(L, -1)) {
+      free(groups);
+      return luaL_argerror(L, 1, "groups table entries must be integers");
+    }
+    groups[i] = (gid_t)lua_tointeger(L, -1);
+    lua_pop(L, 1);
+  }
+
+  if (setgroups(ngroups, groups) == -1) {
+    free(groups);
+    return luaL_error(L, "Error setting groups");
+  }
+
+  free(groups);
+  return 0;
+}
+
+static int luv_initgroups(lua_State* L) {
+  const char* user = luaL_checkstring(L, 1);
+  gid_t group = (gid_t)luaL_checkinteger(L, 2);
+
+  if (initgroups(user, group) == -1) {
+    return luaL_error(L, "Error initializing groups for user '%s'", user);
+  }
+
   return 0;
 }
 
