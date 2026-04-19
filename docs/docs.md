@@ -4125,7 +4125,9 @@ Returns the user ID of the process.
 
 **Returns:** `integer`
 
-**Note**: This is not a libuv function and is not supported on Windows.
+**Note**: This is not a libuv function and does not exist when targeting Windows.
+
+**Warning**: Deprecated. Use `uv.os_get_passwd()` instead.
 
 ### `uv.getgid()`
 
@@ -4133,29 +4135,9 @@ Returns the group ID of the process.
 
 **Returns:** `integer`
 
-**Note**: This is not a libuv function and is not supported on Windows.
+**Note**: This is not a libuv function and does not exist when targeting Windows.
 
-### `uv.setuid(id)`
-
-**Parameters:**
-- `id`: `integer`
-
-Sets the user ID of the process with the integer `id`.
-
-**Returns:** Nothing.
-
-**Note**: This is not a libuv function and is not supported on Windows.
-
-### `uv.setgid(id)`
-
-**Parameters:**
-- `id`: `integer`
-
-Sets the group ID of the process with the integer `id`.
-
-**Returns:** Nothing.
-
-**Note**: This is not a libuv function and is not supported on Windows.
+**Warning**: Deprecated. Use `uv.os_get_passwd()` instead.
 
 ### `uv.hrtime()`
 

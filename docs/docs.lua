@@ -4442,7 +4442,12 @@ local doc = {
           desc = 'Returns the user ID of the process.',
           returns = 'integer',
           notes = {
-            'This is not a libuv function and is not supported on Windows.',
+            'This is not a libuv function and does not exist when targeting Windows.',
+          },
+          warnings = {
+            [[
+              Deprecated. Use `uv.os_get_passwd()` instead.
+            ]],
           },
         },
         {
@@ -4450,27 +4455,12 @@ local doc = {
           desc = 'Returns the group ID of the process.',
           returns = 'integer',
           notes = {
-            'This is not a libuv function and is not supported on Windows.',
+            'This is not a libuv function and does not exist when targeting Windows.',
           },
-        },
-        {
-          name = 'setuid',
-          desc = 'Sets the user ID of the process with the integer `id`.',
-          params = {
-            { name = 'id', type = 'integer' },
-          },
-          notes = {
-            'This is not a libuv function and is not supported on Windows.',
-          },
-        },
-        {
-          name = 'setgid',
-          desc = 'Sets the group ID of the process with the integer `id`.',
-          params = {
-            { name = 'id', type = 'integer' },
-          },
-          notes = {
-            'This is not a libuv function and is not supported on Windows.',
+          warnings = {
+            [[
+              Deprecated. Use `uv.os_get_passwd()` instead.
+            ]],
           },
         },
         {
