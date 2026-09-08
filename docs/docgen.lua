@@ -404,7 +404,7 @@ do -- doc
     local args = {} --- @type string[]
     for _, param in ipairs(func.params or {}) do
       local nm = param.name
-      if isoptional(param.type) then
+      if param.optional or isoptional(param.type) then
         nm = '[' .. nm .. ']'
       end
       args[#args + 1] = nm
@@ -538,7 +538,7 @@ do -- meta
   local function sig(func, method)
     local args = {} --- @type string[]
     for i, param in ipairs(func.params or {}) do
-      if not (func.returns_async and param.name == 'callback' and i == #func.params) and (not method or i > 1) then
+      if not method or i > 1 then
         args[#args + 1] = id(param.name)
       end
     end
@@ -617,19 +617,22 @@ do -- meta
   --- @param out file*
   --- @param func Doc.Func
   --- @param x string|Doc.Func.Return[]
-  local function write_async_overload(out, func, x)
+  --- @param method? {class: string, name: string}
+  local function write_async_overload(out, func, x, method)
     if type(x) == 'string' then
       x = { { x } }
     end
 
     out:write('--- @overload fun(')
     local args = {} --- @type string[]
-    for _, arg in ipairs(func.params) do
+    for i, arg in ipairs(func.params) do
       local ty = arg.type
       if arg.name == 'callback' then
         ty = remove_nil(ty)
       end
-      args[#args + 1] = ('%s: %s'):format(id(arg.name), Meta.ty(ty))
+      -- Both LuaLS and EmmyLua recognize an explicit receiver named self.
+      local name = method and i == 1 and 'self' or id(arg.name)
+      args[#args + 1] = ('%s: %s'):format(name, Meta.ty(ty))
     end
     out:write(table.concat(args, ', '), '): ')
 
@@ -763,8 +766,10 @@ do -- meta
     if func.params then
       for i, param in ipairs(func.params) do
         local is_async_callback_param = func.returns_async and param.name == 'callback'
-        if not (is_async_callback_param and i == #func.params) and (not method or i > 1) then
-          out:write('--- @param ', id(param.name), ' ', is_async_callback_param and 'nil' or Meta.ty(param.type))
+        if not method or i > 1 then
+          -- LuaLS needs '?' to enforce the type of a nil-only parameter.
+          local name = id(param.name) .. (is_async_callback_param and '?' or '')
+          out:write('--- @param ', name, ' ', is_async_callback_param and 'nil' or Meta.ty(param.type))
           if param.desc then
             if param.desc:match('\n') then
               write_comment(out, param.desc)
@@ -779,7 +784,13 @@ do -- meta
 
     write_return(out, func.returns or func.returns_sync)
     if func.returns_async then
-      write_async_overload(out, func, func.returns_async)
+      write_async_overload(out, func, func.returns_async, method)
+    end
+    for _, overload in ipairs(func.overloads or {}) do
+      if method then
+        overload = overload:gsub('^fun%([^:]+:', 'fun(self:')
+      end
+      out:write('--- @overload ', overload, '\n')
     end
 
     out:write(sig(func, method), '\n\n')
@@ -805,7 +816,8 @@ do -- meta
     end
 
     for _, constant in ipairs(doc.constants or {}) do
-      out:write(("uv.constants.%s = '%s'\n"):format(constant[1], constant[2]))
+      -- Values vary by platform; the lowercase strings are input aliases.
+      out:write(('--- @type %s\nuv.constants.%s = nil\n'):format(constant[3] or 'integer', constant[1]))
     end
 
     for name, alias in spairs(doc.aliases or {}) do
