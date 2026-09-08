@@ -39,6 +39,7 @@
 --- @field type Doc.Type
 --- @field desc? string
 --- @field default? string
+--- @field optional? boolean Omission shifts later arguments; nil is not a placeholder.
 
 --- @alias Doc.Func.Return [Doc.Type, string]
 
@@ -57,6 +58,7 @@
 --- @field warnings? string[]
 --- @field example? string
 --- @field method_form? string
+--- @field overloads? string[] LuaCATS signatures, including the receiver for methods.
 --- @field see? string
 
 --- @class (exact) Doc
@@ -66,7 +68,7 @@
 --- @field class? string
 --- @field sections? Doc[]
 --- @field funcs? Doc.Func[]
---- @field constants? [string,string][]
+--- @field constants? [string,string,string?][] Name, string alias, numeric type (default: integer).
 --- @field aliases? table<string,[string,string][]>
 
 --- @param ... Doc.Type
@@ -324,8 +326,8 @@ local constants = {
     { 'TTY_MODE_RAW_VT', 'raw_vt' },
   },
   fs_utime = {
-    { 'FS_UTIME_NOW', 'now' },
-    { 'FS_UTIME_OMIT', 'omit' },
+    { 'FS_UTIME_NOW', 'now', 'number' },
+    { 'FS_UTIME_OMIT', 'omit', 'number' },
   },
 }
 
@@ -367,7 +369,7 @@ local types = {
   luv_thread_t = cls('userdata'),
   luv_sem_t = cls('userdata'),
 
-  threadargs = union('number', 'boolean', 'string', 'userdata'),
+  threadargs = opt(union('number', 'boolean', 'string', 'userdata')),
 
   buffer = union('string', 'string[]'),
 
@@ -408,7 +410,7 @@ local types = {
     { 'mtime', 'fs_stat.result.time' },
     { 'ctime', 'fs_stat.result.time' },
     { 'birthtime', 'fs_stat.result.time' },
-    { 'type', 'string' },
+    { 'type', opt_str },
   }),
 
   ['fs_statfs.result'] = table({
@@ -593,7 +595,7 @@ local doc = {
 
         However, luv also superficially exposes libuv constants in a Lua table at
         `uv.constants` where its keys are uppercase constant names and their associated
-        values are integers defined internally by libuv. The values from this table may
+        values are numbers defined internally by libuv. The values from this table may
         be supported as function arguments, but their use may not change the output
         type. For example:
 
@@ -1824,13 +1826,13 @@ local doc = {
                 },
                 {
                   'uid',
-                  opt_str,
+                  opt_int,
                   nil,
                   "Set the child process' user id.",
                 },
                 {
                   'gid',
-                  opt_str,
+                  opt_int,
                   nil,
                   "Set the child process' group id.",
                 },
@@ -1867,11 +1869,13 @@ local doc = {
                     Unix it is silently ignored.
                   ]],
                 },
+                { 'hide_console', opt_bool, nil, 'Hide the subprocess console window on Windows.' },
+                { 'hide_gui', opt_bool, nil, 'Hide the subprocess GUI window on Windows.' },
               }),
             },
             {
               name = 'on_exit',
-              type = fun({ { 'code', 'integer' }, { 'signal', 'integer' } }),
+              type = opt(fun({ { 'code', 'integer' }, { 'signal', 'integer' } })),
             },
           },
           returns = {
@@ -2268,7 +2272,7 @@ local doc = {
             {
               name = 'flags',
               type = opt(table({
-                { 'ipv6only', 'boolean' },
+                { 'ipv6only', opt_bool },
               })),
             },
           },
@@ -2302,13 +2306,13 @@ local doc = {
         },
         {
           name = 'tcp_connect',
-          method_form = 'tcp:connect(host, port, callback)',
+          method_form = 'tcp:connect(host, port, [callback])',
           desc = 'Establish an IPv4 or IPv6 TCP connection.',
           params = {
             { name = 'tcp', type = 'uv_tcp_t' },
             { name = 'host', type = 'string' },
             { name = 'port', type = 'integer' },
-            cb_err(),
+            cb_err(nil, true),
           },
           returns = ret_or_fail('uv_connect_t', 'connect'),
           example = [[
@@ -2327,6 +2331,7 @@ local doc = {
           params = {
             { name = 'tcp', type = 'uv_tcp_t' },
           },
+          returns = 'integer',
         },
         {
           name = 'tcp_close_reset',
@@ -2362,11 +2367,11 @@ local doc = {
             { name = 'protocol', type = opt(union('string', 'integer')), default = '0' },
             {
               name = 'flags1',
-              type = opt(table({ { 'nonblock', 'boolean', 'false' } })),
+              type = opt(table({ { 'nonblock', opt_bool, 'false' } })),
             },
             {
               name = 'flags2',
-              type = opt(table({ { 'nonblock', 'boolean', 'false' } })),
+              type = opt(table({ { 'nonblock', opt_bool, 'false' } })),
             },
           },
           returns = {
@@ -2565,11 +2570,11 @@ local doc = {
           params = {
             {
               name = 'read_flags',
-              type = opt(table({ { 'nonblock', 'boolean', 'false' } })),
+              type = opt(table({ { 'nonblock', opt_bool, 'false' } })),
             },
             {
               name = 'write_flags',
-              type = opt(table({ { 'nonblock', 'boolean', 'false' } })),
+              type = opt(table({ { 'nonblock', opt_bool, 'false' } })),
             },
           },
           returns = ret_or_fail(
@@ -2808,10 +2813,10 @@ local doc = {
           params = {
             {
               name = 'flags',
-              type = opt(table({
-                { 'family', opt_str },
+              type = opt(union('string', 'integer', table({
+                { 'family', opt(union('string', 'integer')) },
                 { 'mmsgs', opt_int, '1' },
-              })),
+              }))),
             },
           },
           returns = ret_or_fail('uv_udp_t', 'udp'),
@@ -3037,20 +3042,23 @@ local doc = {
         },
         {
           name = 'udp_send',
-          method_form = 'udp:send(data, host, port, callback)',
+          method_form = 'udp:send(data, host, port, [callback])',
           desc = [[
             Send data over the UDP socket. If the socket has not previously been bound
             with `uv.udp_bind()` it will be bound to `0.0.0.0` (the "all interfaces" IPv4
             address) and a random port number.
+
+            `host` and `port` must be provided together. For a connected socket, pass
+            explicit `nil` for both.
           ]],
           params = {
             { name = 'udp', type = 'uv_udp_t' },
             { name = 'data', type = 'buffer' },
-            { name = 'host', type = 'string' },
-            { name = 'port', type = 'integer' },
-            cb_err(),
+            { name = 'host', type = opt_str },
+            { name = 'port', type = opt_int },
+            cb_err(nil, true),
           },
-          returns = ret_or_fail('uv_udp_send_t', 'send'),
+          returns = success_ret,
         },
         {
           name = 'udp_try_send',
@@ -3058,12 +3066,15 @@ local doc = {
           desc = [[
             Same as `uv.udp_send()`, but won't queue a send request if it can't be
             completed immediately.
+
+            `host` and `port` must be provided together. For a connected socket, pass
+            explicit `nil` for both.
           ]],
           params = {
             { name = 'udp', type = 'uv_udp_t' },
             { name = 'data', type = 'buffer' },
-            { name = 'host', type = 'string' },
-            { name = 'port', type = 'integer' },
+            { name = 'host', type = opt_str },
+            { name = 'port', type = opt_int },
           },
           returns = ret_or_fail('integer', 'bytes_sent'),
         },
@@ -3095,12 +3106,11 @@ local doc = {
                 'integer',
                 table({
                   { 'data', 'buffer' },
-                  { 'addr', table({ { 'ip', 'string' }, { 'port', 'integer' } }) },
+                  { 'addr', opt(table({ { 'ip', 'string' }, { 'port', 'integer' } })) },
                 })
               ),
             },
             { name = 'flags', type = opt(union('0', table())) },
-            { name = 'port', type = 'integer' },
           },
           returns = ret_or_fail('integer', 'messages_sent'),
           example = [[
@@ -3167,15 +3177,19 @@ local doc = {
           method_form = 'udp:connect(host, port)',
           desc = [[
             Associate the UDP handle to a remote address and port, so every message sent by
-            this handle is automatically sent to that destination. Calling this function
-            with a NULL addr disconnects the handle. Trying to call `uv.udp_connect()` on an
-            already connected handle will result in an `EISCONN` error. Trying to disconnect
-            a handle that is not connected will return an `ENOTCONN` error.
+            this handle is automatically sent to that destination.
+
+            `host` and `port` must be provided together. Pass explicit `nil` for both to
+            disconnect the handle.
+
+            Trying to call `uv.udp_connect()` on an already connected handle will result in
+            an `EISCONN` error. Trying to disconnect a handle that is not connected will
+            return an `ENOTCONN` error.
           ]],
           params = {
             { name = 'udp', type = 'uv_udp_t' },
-            { name = 'host', type = 'string' },
-            { name = 'port', type = 'integer' },
+            { name = 'host', type = opt_str },
+            { name = 'port', type = opt_int },
           },
           returns = success_ret,
         },
@@ -3362,7 +3376,7 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_open',
@@ -3382,7 +3396,7 @@ local doc = {
             async_cb({ { 'fd', opt_int } }),
           },
           returns_sync = ret_or_fail('integer', 'fd'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
           notes = {
             [[
                 On Windows, libuv uses `CreateFileW` and thus the file is always
@@ -3407,7 +3421,10 @@ local doc = {
             async_cb({ { 'data', opt_str } }),
           },
           returns_sync = ret_or_fail('string', 'data'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
+          overloads = {
+            'fun(fd: integer, size: integer, callback: fun(err: string?, data: string?)): uv.uv_fs_t?, string?, uv.error_name?',
+          },
         },
         {
           name = 'fs_unlink',
@@ -3417,7 +3434,7 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_write',
@@ -3435,7 +3452,10 @@ local doc = {
             async_cb({ { 'bytes', opt_int } }),
           },
           returns_sync = ret_or_fail('integer', 'bytes_written'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
+          overloads = {
+            'fun(fd: integer, data: uv.buffer, callback: fun(err: string?, bytes: integer?)): uv.uv_fs_t?, string?, uv.error_name?',
+          },
         },
         {
           name = 'fs_mkdir',
@@ -3450,7 +3470,7 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_mkdtemp',
@@ -3460,7 +3480,7 @@ local doc = {
             async_cb({ { 'path', opt_str } }),
           },
           returns_sync = ret_or_fail('string', 'path'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_mkstemp',
@@ -3478,7 +3498,7 @@ local doc = {
             { opt('uv.error_name'), 'err_name' },
           },
           returns_sync_doc = '`integer, string` or `fail`',
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_rmdir',
@@ -3488,7 +3508,7 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_scandir',
@@ -3521,7 +3541,7 @@ local doc = {
           },
           returns = {
             { opt_str, 'name' },
-            { 'string', 'type or err' },
+            { opt_str, 'type or err' },
             { opt('uv.error_name'), 'err_name' },
           },
           returns_doc = '`string, string` or `nil` or `fail`',
@@ -3535,7 +3555,7 @@ local doc = {
             async_cb({ { 'stat', opt('fs_stat.result') } }),
           },
           returns_sync = ret_or_fail('fs_stat.result', 'stat'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_fstat',
@@ -3545,7 +3565,7 @@ local doc = {
             async_cb({ { 'stat', opt('fs_stat.result') } }),
           },
           returns_sync = ret_or_fail('fs_stat.result', 'stat'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_lstat',
@@ -3555,7 +3575,7 @@ local doc = {
             async_cb({ { 'stat', opt('fs_stat.result') } }),
           },
           returns_sync = ret_or_fail('fs_stat.result', 'stat'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_rename',
@@ -3566,7 +3586,7 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_fsync',
@@ -3576,7 +3596,7 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_fdatasync',
@@ -3586,7 +3606,7 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_ftruncate',
@@ -3597,7 +3617,7 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_sendfile',
@@ -3612,7 +3632,7 @@ local doc = {
             async_cb({ { 'bytes', opt_int } }),
           },
           returns_sync = ret_or_fail('integer', 'bytes'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_access',
@@ -3625,7 +3645,7 @@ local doc = {
             { name = 'path', type = 'string' },
             {
               name = 'mode',
-              type = 'string',
+              type = union('string', 'integer'),
               desc = "(a combination of the `'r'`, `'w'` and `'x'` characters denoting the symbolic mode as per `chmod(1)`)",
             },
             async_cb({ { 'permission', opt_bool } }),
@@ -3646,7 +3666,7 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_fchmod',
@@ -3657,7 +3677,7 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_utime',
@@ -3679,7 +3699,7 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_futime',
@@ -3701,7 +3721,7 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_lutime',
@@ -3723,7 +3743,7 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_link',
@@ -3734,7 +3754,7 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_symlink',
@@ -3758,7 +3778,10 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
+          overloads = {
+            'fun(path: string, new_path: string, callback: fun(err: string?, success: boolean?)): uv.uv_fs_t?, string?, uv.error_name?',
+          },
         },
         {
           name = 'fs_readlink',
@@ -3768,7 +3791,7 @@ local doc = {
             async_cb({ { 'path', opt_str } }),
           },
           returns_sync = ret_or_fail('string', 'path'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_realpath',
@@ -3778,7 +3801,7 @@ local doc = {
             async_cb({ { 'path', opt_str } }),
           },
           returns_sync = ret_or_fail('string', 'path'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_chown',
@@ -3790,7 +3813,7 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_fchown',
@@ -3802,19 +3825,19 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_lchown',
           desc = 'Equivalent to `lchown(2)`.',
           params = {
-            { name = 'fd', type = 'integer' },
+            { name = 'path', type = 'string' },
             { name = 'uid', type = 'integer' },
             { name = 'gid', type = 'integer' },
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_copyfile',
@@ -3838,7 +3861,10 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
+          overloads = {
+            'fun(path: string, new_path: string, callback: fun(err: string?, success: boolean?)): uv.uv_fs_t?, string?, uv.error_name?',
+          },
         },
         {
           name = 'fs_opendir',
@@ -3853,7 +3879,7 @@ local doc = {
             { name = 'entries', type = opt_int },
           },
           returns_sync = ret_or_fail('luv_dir_t', 'dir'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_readdir',
@@ -3869,15 +3895,15 @@ local doc = {
             async_cb({
               {
                 'entries',
-                opt(dict('integer', table({ { 'name', 'string' }, { 'type', 'string' } }))),
+                opt(dict('integer', table({ { 'name', 'string' }, { 'type', opt_str } }))),
               },
             }),
           },
           returns_sync = ret_or_fail(
-            dict('integer', table({ { 'name', 'string' }, { 'type', 'string ' } })),
+            dict('integer', table({ { 'name', 'string' }, { 'type', opt_str } })),
             'entries'
           ),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_closedir',
@@ -3888,7 +3914,7 @@ local doc = {
             async_cb(),
           },
           returns_sync = ret_or_fail('boolean', 'success'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
         {
           name = 'fs_statfs',
@@ -3898,7 +3924,7 @@ local doc = {
             async_cb({ { 'stat', opt('fs_statfs.result') } }),
           },
           returns_sync = ret_or_fail('fs_statfs.result', 'stat'),
-          returns_async = 'uv_fs_t',
+          returns_async = ret_or_fail('uv_fs_t', 'req'),
         },
       },
     },
@@ -4061,14 +4087,18 @@ local doc = {
           params = {
             {
               name = 'options',
-              type = opt(table({
+              optional = true,
+              type = table({
                 { 'stack_size', opt_int },
-              })),
+              }),
             },
             { name = 'entry', type = 'function|string' },
             { name = '...', type = 'threadargs', desc = 'passed to `entry`' },
           },
           returns = ret_or_fail('luv_thread_t', 'thread'),
+          overloads = {
+            'fun(entry: function|string, ...: uv.threadargs): uv.luv_thread_t?, string?, uv.error_name?',
+          },
           notes = {
             'unsafe, please make sure the thread end of life before Lua state close.',
           },
@@ -4111,8 +4141,7 @@ local doc = {
             { name = 'affinity', type = dict('integer', 'boolean') },
             { name = 'get_old_affinity', type = opt_bool },
           },
-          -- TODO: can also return boolean
-          returns = ret_or_fail(dict('integer', 'boolean'), 'affinity'),
+          returns = ret_or_fail(union(dict('integer', 'boolean'), 'boolean'), 'affinity or success'),
         },
         {
           name = 'thread_getaffinity',
@@ -4574,13 +4603,13 @@ local doc = {
           returns = ret_or_fail(
             dict(
               'string',
-              table({
+              dict('integer', table({
                 { 'ip', 'string' },
                 { 'family', 'string' },
                 { 'netmask', 'string' },
                 { 'internal', 'boolean' },
                 { 'mac', 'string' },
-              })
+              }))
             ),
             'addresses'
           ),
@@ -4613,22 +4642,17 @@ local doc = {
         {
           name = 'os_uname',
           desc = 'Returns system information.',
-          returns = {
-            {
-              table({
-                { 'sysname', 'string' },
-                { 'release', 'string' },
-                { 'version', 'string' },
-                { 'machine', 'string' },
-              }),
-              'info',
-            },
-          },
+          returns = ret_or_fail(table({
+            { 'sysname', 'string' },
+            { 'release', 'string' },
+            { 'version', 'string' },
+            { 'machine', 'string' },
+          }), 'info'),
         },
         {
           name = 'os_gethostname',
           desc = 'Returns the hostname.',
-          returns = 'string',
+          returns = ret_or_fail('string', 'hostname'),
         },
         {
           name = 'os_getenv',
@@ -4673,7 +4697,7 @@ local doc = {
             Returns all environmental variables as a dynamic table of names associated with
             their corresponding values.
           ]],
-          returns = 'table',
+          returns = ret_or_fail(dict('string', 'string'), 'env'),
           warnings = { 'This function is not thread-safe.' },
         },
         {
@@ -4800,16 +4824,11 @@ local doc = {
             `uv.prepare_start`) in order to make sure there are no inconsistencies with the
             metrics counters.
           ]],
-          returns = {
-            {
-              table({
-                { 'loop_count', 'number' },
-                { 'events', 'integer' },
-                { 'events_waiting', 'number' },
-              }),
-              'info',
-            },
-          },
+          returns = ret_or_fail(table({
+            { 'loop_count', 'integer' },
+            { 'events', 'integer' },
+            { 'events_waiting', 'integer' },
+          }), 'info'),
         },
       },
     },
@@ -4841,7 +4860,7 @@ local doc = {
           params = {
             { name = 'utf16', type = 'string' },
           },
-          returns = 'string',
+          returns = ret_or_fail('string', 'wtf8'),
         },
         {
           name = 'wtf8_length_as_utf16',
