@@ -979,6 +979,13 @@ static luv_dir_t* luv_check_dir(lua_State* L, int idx) {
   return dir;
 }
 
+// closedir frees dir->handle, so it must not be passed to libuv afterwards
+static luv_dir_t* luv_check_open_dir(lua_State* L, int idx) {
+  luv_dir_t* dir = luv_check_dir(L, idx);
+  luaL_argcheck(L, dir->dirents_ref != LUA_NOREF, idx, "dir is closed");
+  return dir;
+}
+
 static int luv_fs_opendir(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
   const char* path = luaL_checkstring(L, 1);
@@ -997,7 +1004,7 @@ static int luv_fs_opendir(lua_State* L) {
 static int luv_fs_readdir(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
   uv_fs_t *req;
-  luv_dir_t* dir = luv_check_dir(L, 1);
+  luv_dir_t* dir = luv_check_open_dir(L, 1);
   int ref = luv_check_continuation(L, 2);
 
   req = (uv_fs_t*)lua_newuserdata(L, uv_req_size(UV_FS));
@@ -1012,7 +1019,7 @@ static int luv_fs_readdir(lua_State* L) {
 
 static int luv_fs_closedir(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
-  luv_dir_t* dir = luv_check_dir(L, 1);
+  luv_dir_t* dir = luv_check_open_dir(L, 1);
   int ref = luv_check_continuation(L, 2);
 
   luaL_unref(L, LUA_REGISTRYINDEX, dir->dirents_ref);
