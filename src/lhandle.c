@@ -113,7 +113,9 @@ static void luv_unref_handle(lua_State* L, luv_handle_t* data) {
   luaL_unref(L, LUA_REGISTRYINDEX, data->ref);
   data->ref = LUA_NOREF;
   luaL_unref(L, LUA_REGISTRYINDEX, data->callbacks[0]);
+  data->callbacks[0] = LUA_NOREF;
   luaL_unref(L, LUA_REGISTRYINDEX, data->callbacks[1]);
+  data->callbacks[1] = LUA_NOREF;
 }
 
 static void luv_find_handle(lua_State* L, luv_handle_t* data) {
