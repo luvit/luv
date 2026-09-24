@@ -18,6 +18,7 @@
 
 typedef struct {
   uv_thread_t handle;
+  int detached;
   char* code;
   int len;
   int argc;
@@ -381,8 +382,10 @@ static void luv_thread_cb(void* varg) {
 
 static void luv_thread_notify_close_cb(uv_handle_t *handle) {
   luv_thread_t *thread = handle->data;
-  if (thread->handle != 0)
+  if (thread->handle != 0) {
     uv_thread_join(&thread->handle);
+    thread->handle = 0;
+  }
 
   luaL_unref(thread->L, LUA_REGISTRYINDEX, thread->ref);
   thread->ref = LUA_NOREF;
@@ -570,9 +573,13 @@ static int luv_thread_setpriority(lua_State* L) {
 #if LUV_UV_VERSION_GEQ(1, 50, 0)
 static int luv_thread_detach(lua_State *L) {
   luv_thread_t* tid = luv_check_thread(L, 1);
-  int ret = uv_thread_detach(&tid->handle);
-  if (ret < 0) return luv_error(L, ret);
-  tid->handle = 0;
+  if (tid->detached) return luv_error(L, UV_EINVAL);
+  if (tid->handle != 0) {
+    int ret = uv_thread_detach(&tid->handle);
+    if (ret < 0) return luv_error(L, ret);
+    tid->handle = 0;
+    tid->detached = 1;
+  }
   lua_pushboolean(L, 1);
   return 1;
 }
@@ -595,9 +602,12 @@ static int luv_thread_setname(lua_State *L) {
 
 static int luv_thread_join(lua_State* L) {
   luv_thread_t* tid = luv_check_thread(L, 1);
-  int ret = uv_thread_join(&tid->handle);
-  if (ret < 0) return luv_error(L, ret);
-  tid->handle = 0;
+  if (tid->detached) return luv_error(L, UV_EINVAL);
+  if (tid->handle != 0) {
+    int ret = uv_thread_join(&tid->handle);
+    if (ret < 0) return luv_error(L, ret);
+    tid->handle = 0;
+  }
   lua_pushboolean(L, 1);
   return 1;
 }
