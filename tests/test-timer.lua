@@ -115,4 +115,21 @@ return require('lib/tap')(function (test)
     assert(huge_timer:get_due_in()==0xffff)
   end, "1.40.0")
 
+  test("start after close does not double unref callback", function(print, p, expect, uv)
+    local owner = uv.new_timer()
+    local closed = uv.new_timer()
+    closed:start(1000, 0, function() end)
+    closed:close()
+    uv.run()
+
+    owner:start(0, 0, expect(function()
+      owner:close()
+    end))
+
+    local ret, err = closed:start(0, 0, function()
+      error("callback of closed timer was called")
+    end)
+    assert(ret == nil and err:match("^EINVAL"), err)
+  end, "1.32.0")
+
 end)
