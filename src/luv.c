@@ -329,9 +329,7 @@ static const luaL_Reg luv_functions[] = {
   {"getpid", luv_getpid},
 #ifndef _WIN32
   {"getuid", luv_getuid},
-  {"setuid", luv_setuid},
   {"getgid", luv_getgid},
-  {"setgid", luv_setgid},
 #endif
   {"getrusage", luv_getrusage},
 #if LUV_UV_VERSION_GEQ(1, 50, 0)
