@@ -130,6 +130,6 @@ return require('lib/tap')(function (test)
       error("callback of closed timer was called")
     end)
     assert(ret == nil and err:match("^EINVAL"), err)
-  end)
+  end, "1.32.0")
 
 end)
