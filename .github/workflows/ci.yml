@@ -60,6 +60,7 @@ jobs:
       WITH_LUA_ENGINE: Lua
       CC: clang
       CXX: clang++
+      TSAN_OPTIONS: suppressions=${{ github.workspace }}/.ci/tsan.supp
     steps:
     - uses: actions/checkout@v2
       with:

@@ -1,0 +1,56 @@
+# ThreadSanitizer suppressions
+#
+# Usage (see .github/workflows/ci.yml, clang-tsan job):
+#   TSAN_OPTIONS="suppressions=$PWD/.ci/tsan.supp" make test
+
+# Benign teardown race between uv_async_send() and the free of the uv_async_t.
+#
+# What TSan prints (ubuntu-latest, clang-tsan):
+#
+#   Write of size 8 by main thread:
+#     #0 free
+#     #1 luaL_alloc ... luaM_free_ ... freeobj ... sweep2old   (Lua GC)
+#   Previous read of size 8 by thread T14:
+#     #0 uv__async_notify   deps/libuv/src/unix/async.c:91
+#     #1 uv_async_send      deps/libuv/src/uv-common.c:980
+#     #2 luv_thread_cb      src/thread.c:379
+#
+# The read is `handle->loop` inside uv__async_notify(), i.e. of a field that is
+# only ever written by uv_async_init() before the worker thread is created.
+#
+# What makes it safe is libuv's busy counter: uv_async_send() decrements it
+# *after* the uv__async_notify() call, and uv__async_close() only returns from
+# uv__async_spin() - and luv only drops the registry reference that keeps the
+# userdata alive, letting the GC free it - once that counter is back to zero.
+# The read therefore always completes before the free.
+#
+# TSan cannot see that ordering:
+#
+#  * libuv <= 1.52 used a pair of sequentially consistent atomics for it
+#    (uv_async_send(): `atomic_fetch_add(&handle->u.fd, -1)` after the read;
+#    uv__async_spin(): `atomic_load(&handle->u.fd)`), which yields a
+#    happens-before edge and kept this report away.  That is why luvit/luv
+#    master (libuv 1.52.1) passes clang-tsan.
+#
+#  * libuv 1.53.0 folded the pending flag and the busy counter into a single
+#    `pending` word in uv-common.c and made the busy-counter accesses relaxed
+#    (see the "Atomic helpers for the async pending field" comment:
+#    "uv__pending_load and uv__pending_fetch_add are relaxed").  Only the
+#    pending *bit* is seq_cst (uv__pending_cas / uv__pending_fetch_or); that
+#    orders sender -> callback, which is all libuv itself needs, but nothing
+#    orders the callback side back with the sender's `handle->loop` read.
+#
+# luv reaches this path from the "thread - detach" case of
+# tests/test-thread.lua, where the uv_async_t lives inside the uv_thread
+# userdata and is freed by the GC on the loop thread.  The window is small
+# (uv_async_send() has to still be unwinding while the loop thread runs
+# uv__async_close), so the report is intermittent - it is what made clang-tsan
+# fail on the libuv 1.53.0 bump.
+#
+# Note this is *not* the suppression upstream libuv ships in its own
+# tsansupp.txt (that one is only race:pthread_barrier_destroy): libuv's tests
+# never free a uv_async_t while uv_async_send() is concurrently in flight.
+#
+# Remove this entry once libuv makes the busy counter / handle access ordering
+# visible to ThreadSanitizer.
+race:uv__async_notify
