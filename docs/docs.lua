@@ -905,6 +905,26 @@ local doc = {
             { 'integer', 'enum' },
           },
         },
+        {
+          name = 'write_nwritten',
+          method_form = 'req:nwritten()',
+          desc = [[
+            Returns the number of bytes written by a write request. Only valid
+            when called from within the write callback (`uv_write_cb`).
+
+            This is primarily useful when a write has been cancelled with
+            `uv.cancel()` and the callback receives an `ECANCELED` error, to
+            determine how many bytes were actually written before the
+            cancellation took effect.
+          ]],
+          params = {
+            { name = 'req', type = 'uv_req_t' },
+          },
+          returns = {
+            { 'integer', 'nwritten' },
+          },
+          since = '1.53.0',
+        },
       },
     },
     {

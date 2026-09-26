@@ -72,6 +72,9 @@ static const luaL_Reg luv_functions[] = {
 #if LUV_UV_VERSION_GEQ(1, 19, 0)
   {"req_get_type", luv_req_get_type},
 #endif
+#if LUV_UV_VERSION_GEQ(1, 53, 0)
+  {"write_nwritten", luv_write_nwritten},
+#endif
 
   // handle.c
   {"is_active", luv_is_active},
@@ -690,6 +693,9 @@ static const luaL_Reg luv_req_methods[] = {
   {"cancel", luv_cancel},
 #if LUV_UV_VERSION_GEQ(1, 19, 0)
   {"get_type", luv_req_get_type},
+#endif
+#if LUV_UV_VERSION_GEQ(1, 53, 0)
+  {"nwritten", luv_write_nwritten},
 #endif
   {NULL, NULL}
 };

@@ -55,3 +55,11 @@ static int luv_req_get_type(lua_State* L) {
   return 2;
 }
 #endif
+
+#if LUV_UV_VERSION_GEQ(1, 53, 0)
+static int luv_write_nwritten(lua_State* L) {
+  uv_write_t* req = (uv_write_t*)luv_check_req(L, 1);
+  lua_pushinteger(L, uv_write_nwritten(req));
+  return 1;
+}
+#endif
