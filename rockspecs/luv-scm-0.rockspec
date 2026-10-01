@@ -82,6 +82,7 @@ build = {
             'Dbghelp';
             "Ole32";
             "Shell32";
+            "Synchronization";
           };
         };
       };

@@ -531,6 +531,27 @@ and the libuv enum integer for the request's type (`uv_req_type`).
 
 **Returns:** `string`, `integer`
 
+### `uv.write_nwritten(req)`
+
+> method form `req:nwritten()`
+
+**Parameters:**
+- `req`: `uv_write_t userdata`
+
+Returns the number of bytes written by a `uv_write_t` request. Only
+valid when called from within the write callback (`uv_write_cb`).
+
+This is primarily useful when a write has been cancelled with
+`uv.cancel()` and the callback receives an `ECANCELED` error, to
+determine how many bytes were actually written before the
+cancellation took effect.
+
+Raises an error if `req` is not a write request (`uv_write_t`).
+
+**Returns:** `integer`
+
+**Note**: New in libuv version 1.53.0.
+
 ## `uv_handle_t` — Base handle
 
 [`uv_handle_t`]: #uv_handle_t--base-handle
