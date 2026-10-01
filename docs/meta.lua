@@ -562,26 +562,33 @@ function uv.req_get_type(req) end
 --- @return integer enum
 function uv_req_t:get_type() end
 
---- Returns the number of bytes written by a write request. Only valid
---- when called from within the write callback (`uv_write_cb`).
+--- Returns the number of bytes written by a `uv_write_t` request. Only
+--- valid when called from within the write callback (`uv_write_cb`).
 ---
 --- This is primarily useful when a write has been cancelled with
 --- `uv.cancel()` and the callback receives an `ECANCELED` error, to
 --- determine how many bytes were actually written before the
 --- cancellation took effect.
---- @param req uv.uv_req_t
+---
+--- Raises an error if `req` is not a write request (`uv_write_t`).
+--- @param req uv.uv_write_t
 --- @return integer nwritten
 function uv.write_nwritten(req) end
 
---- Returns the number of bytes written by a write request. Only valid
---- when called from within the write callback (`uv_write_cb`).
+--- @class uv.uv_write_t : uv.uv_req_t
+local uv_write_t = {}
+
+--- Returns the number of bytes written by a `uv_write_t` request. Only
+--- valid when called from within the write callback (`uv_write_cb`).
 ---
 --- This is primarily useful when a write has been cancelled with
 --- `uv.cancel()` and the callback receives an `ECANCELED` error, to
 --- determine how many bytes were actually written before the
 --- cancellation took effect.
+---
+--- Raises an error if `req` is not a write request (`uv_write_t`).
 --- @return integer nwritten
-function uv_req_t:nwritten() end
+function uv_write_t:nwritten() end
 
 
 --- # `uv_handle_t` - Base handle
@@ -4775,6 +4782,4 @@ function uv.wtf8_to_utf16(wtf8) end
 --- @class uv.uv_udp_send_t : uv.uv_req_t
 
 --- @class uv.uv_work_t : uv.uv_req_t
-
---- @class uv.uv_write_t : uv.uv_req_t
 

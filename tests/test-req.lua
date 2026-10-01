@@ -57,4 +57,21 @@ return require('lib/tap')(function (test)
       end)))
     end)))
   end, "1.53.0")
+
+  test("write_nwritten rejects non-write requests", function (print, p, expect, uv)
+    -- `req` is still pending here, so it is a valid uv_req_t userdata with data
+    -- set, but it is not a uv_write_t. Reading the write-specific field off it
+    -- would read garbage, so this has to raise instead.
+    local req = uv.fs_stat(".", expect(function (err)
+      assert(not err, err)
+    end))
+
+    local ok, err = pcall(uv.write_nwritten, req)
+    assert(not ok, "expected uv.write_nwritten to raise, got " .. tostring(err))
+    assert(tostring(err):match("Expected uv_write_t"), err)
+
+    ok, err = pcall(function () return req:nwritten() end)
+    assert(not ok, "expected req:nwritten() to raise, got " .. tostring(err))
+    assert(tostring(err):match("Expected uv_write_t"), err)
+  end, "1.53.0")
 end)

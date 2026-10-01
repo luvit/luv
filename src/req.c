@@ -58,8 +58,11 @@ static int luv_req_get_type(lua_State* L) {
 
 #if LUV_UV_VERSION_GEQ(1, 53, 0)
 static int luv_write_nwritten(lua_State* L) {
-  uv_write_t* req = (uv_write_t*)luv_check_req(L, 1);
-  lua_pushinteger(L, uv_write_nwritten(req));
+  uv_req_t* req = luv_check_req(L, 1);
+  // uv_write_nwritten() reads a uv_write_t field, so reject anything that is not
+  // actually a write request instead of reading past the end of its userdata.
+  luaL_argcheck(L, req->type == UV_WRITE, 1, "Expected uv_write_t");
+  lua_pushinteger(L, uv_write_nwritten((uv_write_t*)req));
   return 1;
 }
 #endif
