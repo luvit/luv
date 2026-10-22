@@ -1,5 +1,12 @@
 return require('lib/tap')(function (test)
 
+  -- Exercise allocation cleanup under the suite's ASan/LSan and Valgrind jobs.
+  test("poll constructor initialization failure", function (print, p, expect, uv)
+    local handle, err, code = uv.new_poll(-1)
+    assert(handle == nil)
+    assert(type(err) == "string" and type(code) == "string")
+  end, "1.3.0")
+
   test("get type", function (print, p, expect, uv)
     local pipe = assert(uv.new_pipe())
 

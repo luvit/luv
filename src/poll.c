@@ -22,12 +22,35 @@ static uv_poll_t* luv_check_poll(lua_State* L, int index) {
   return handle;
 }
 
+#ifdef _WIN32
+static void luv_poll_init_failed_cb(uv_handle_t* handle) {
+  free(handle);
+}
+#endif
+
+static void luv_poll_init_failed(uv_poll_t* handle) {
+#ifdef _WIN32
+  // Windows can fail after registering the handle but before initializing
+  // the pending-event fields. Let libuv remove it before freeing its memory.
+  if (handle->type == UV_POLL) {
+    handle->submitted_events_1 = 0;
+    handle->submitted_events_2 = 0;
+    handle->data = NULL;
+    uv_close((uv_handle_t*)handle, luv_poll_init_failed_cb);
+    return;
+  }
+#endif
+  free(handle);
+}
+
 static int luv_new_poll(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
   int fd = luaL_checkinteger(L, 1);
   uv_poll_t* handle = (uv_poll_t*)luv_newuserdata(L, uv_handle_size(UV_POLL));
+  handle->type = UV_UNKNOWN_HANDLE;
   int ret = uv_poll_init(ctx->loop, handle, fd);
   if (ret < 0) {
+    luv_poll_init_failed(handle);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
