@@ -27,6 +27,7 @@ static int luv_new_timer(lua_State* L) {
   uv_timer_t* handle = (uv_timer_t*) luv_newuserdata(L, uv_handle_size(UV_TIMER));
   int ret = uv_timer_init(ctx->loop, handle);
   if (ret < 0) {
+    free(handle);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
