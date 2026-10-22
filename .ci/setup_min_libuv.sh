@@ -6,7 +6,7 @@
 
 set -eufxo pipefail
 
-LIBUV_VERSION="1.0.0"
+LIBUV_VERSION="1.7.0"
 LIBUV_BASE="libuv-$LIBUV_VERSION"
 INSTALL_DIR="$HOME/.libuv_min"
 

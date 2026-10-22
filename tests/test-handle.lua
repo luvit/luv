@@ -13,6 +13,12 @@ return require('lib/tap')(function (test)
     assert(type(err) == "string" and type(code) == "string")
   end, "1.3.0")
 
+  test("tty constructor initialization failure", function (print, p, expect, uv)
+    local handle, err, code = uv.new_tty(-1, false)
+    assert(handle == nil)
+    assert(type(err) == "string" and type(code) == "string")
+  end, "1.5.0")
+
   test("get type", function (print, p, expect, uv)
     local pipe = assert(uv.new_pipe())
 
