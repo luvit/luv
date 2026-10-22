@@ -202,6 +202,8 @@ installed you can link `luv` against them.
 
 ##### Linking with shared libuv
 
+Luv requires libuv 1.7.0 or newer.
+
 The default shared library name for libuv is `libuv`. To link against it use:
 
 ```

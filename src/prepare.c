@@ -27,6 +27,7 @@ static int luv_new_prepare(lua_State* L) {
   uv_prepare_t* handle = (uv_prepare_t*)luv_newuserdata(L, uv_handle_size(UV_PREPARE));
   int ret = uv_prepare_init(ctx->loop, handle);
   if (ret < 0) {
+    free(handle);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }

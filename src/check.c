@@ -27,6 +27,7 @@ static int luv_new_check(lua_State* L) {
   uv_check_t* handle = (uv_check_t*)luv_newuserdata(L, uv_handle_size(UV_CHECK));
   int ret = uv_check_init(ctx->loop, handle);
   if (ret < 0) {
+    free(handle);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }

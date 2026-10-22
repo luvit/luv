@@ -25,7 +25,7 @@ static uv_udp_t* luv_check_udp(lua_State* L, int index) {
 static int luv_new_udp(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
   lua_settop(L, 1);
-  uv_udp_t* handle = (uv_udp_t*)luv_newuserdata(L, uv_handle_size(UV_UDP));
+  uv_udp_t* handle;
   int ret;
 #if LUV_UV_VERSION_GEQ(1, 39, 0)
   // TODO: This default can potentially be increased, but it's
@@ -89,11 +89,15 @@ static int luv_new_udp(lua_State* L) {
   if (mmsg_num_msgs > 1)
     flags |= UV_UDP_RECVMMSG;
 #endif
+#endif
+  handle = (uv_udp_t*)luv_newuserdata(L, uv_handle_size(UV_UDP));
+#if LUV_UV_VERSION_GEQ(1, 7, 0)
   ret = uv_udp_init_ex(ctx->loop, handle, flags);
 #else
   ret = uv_udp_init(ctx->loop, handle);
 #endif
   if (ret < 0) {
+    free(handle);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }

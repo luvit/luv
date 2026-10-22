@@ -27,6 +27,7 @@ static int luv_new_idle(lua_State* L) {
   uv_idle_t* handle = (uv_idle_t*)luv_newuserdata(L, uv_handle_size(UV_IDLE));
   int ret = uv_idle_init(ctx->loop, handle);
   if (ret < 0) {
+    free(handle);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }

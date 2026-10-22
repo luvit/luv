@@ -27,13 +27,9 @@ static int luv_new_tcp(lua_State* L) {
   int ret;
   luv_ctx_t* ctx = luv_context(L);
   lua_settop(L, 1);
-  handle = (uv_tcp_t*)luv_newuserdata(L, uv_handle_size(UV_TCP));
 #if LUV_UV_VERSION_GEQ(1, 7, 0)
-  if (lua_isnoneornil(L, 1)) {
-    ret = uv_tcp_init(ctx->loop, handle);
-  }
-  else {
-    unsigned int flags = AF_UNSPEC;
+  unsigned int flags = AF_UNSPEC;
+  if (!lua_isnoneornil(L, 1)) {
     if (lua_isnumber(L, 1)) {
       flags = lua_tointeger(L, 1);
     }
@@ -47,12 +43,16 @@ static int luv_new_tcp(lua_State* L) {
     else {
       luaL_argerror(L, 1, "expected string or integer");
     }
-    ret = uv_tcp_init_ex(ctx->loop, handle, flags);
   }
+#endif
+  handle = (uv_tcp_t*)luv_newuserdata(L, uv_handle_size(UV_TCP));
+#if LUV_UV_VERSION_GEQ(1, 7, 0)
+  ret = uv_tcp_init_ex(ctx->loop, handle, flags);
 #else
   ret = uv_tcp_init(ctx->loop, handle);
 #endif
   if (ret < 0) {
+    free(handle);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }

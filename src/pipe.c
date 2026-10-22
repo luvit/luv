@@ -30,6 +30,7 @@ static int luv_new_pipe(lua_State* L) {
   handle = (uv_pipe_t*)luv_newuserdata(L, uv_handle_size(UV_NAMED_PIPE));
   ret = uv_pipe_init(ctx->loop, handle, ipc);
   if (ret < 0) {
+    free(handle);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
