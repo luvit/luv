@@ -62,8 +62,10 @@ static int luv_new_socket_poll(lua_State* L) {
   luv_ctx_t* ctx = luv_context(L);
   int fd = luaL_checkinteger(L, 1);
   uv_poll_t* handle = (uv_poll_t*)luv_newuserdata(L, uv_handle_size(UV_POLL));
+  handle->type = UV_UNKNOWN_HANDLE;
   int ret = uv_poll_init_socket(ctx->loop, handle, fd);
   if (ret < 0) {
+    luv_poll_init_failed(handle);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
