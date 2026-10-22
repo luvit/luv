@@ -1,4 +1,17 @@
 return require('lib/tap')(function (test)
+  test("tcp constructor invalid family", function (print, p, expect, uv)
+    for _, family in ipairs({"not-a-family", false}) do
+      local ok, err = pcall(uv.new_tcp, family)
+      assert(not ok and type(err) == "string")
+    end
+  end, "1.7.0")
+
+  test("tcp constructor initialization failure", function (print, p, expect, uv)
+    local handle, err, code = uv.new_tcp(-1)
+    assert(handle == nil)
+    assert(type(err) == "string" and code == "EINVAL")
+  end, "1.7.0")
+
   test("basic tcp server and client (ipv4)", function (print, p, expect, uv)
     local server = uv.new_tcp()
     assert(uv.tcp_bind(server, "127.0.0.1", 0))
