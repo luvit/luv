@@ -27,6 +27,7 @@ static int luv_new_signal(lua_State* L) {
   uv_signal_t* handle = (uv_signal_t*)luv_newuserdata(L, uv_handle_size(UV_SIGNAL));
   int ret = uv_signal_init(ctx->loop, handle);
   if (ret < 0) {
+    free(handle);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }
