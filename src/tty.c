@@ -32,6 +32,7 @@ static int luv_new_tty(lua_State* L) {
   handle = (uv_tty_t*)luv_newuserdata(L, uv_handle_size(UV_TTY));
   ret = uv_tty_init(ctx->loop, handle, fd, readable);
   if (ret < 0) {
+    free(handle);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }

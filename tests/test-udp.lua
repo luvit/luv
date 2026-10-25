@@ -1,6 +1,28 @@
 local TEST_PORT = 9123
 
 return require('lib/tap')(function (test)
+  test("udp constructor invalid options", function (print, p, expect, uv)
+    for _, options in ipairs({false, {family = false}}) do
+      local ok, err = pcall(uv.new_udp, options)
+      assert(not ok and type(err) == "string")
+    end
+
+    local options = setmetatable({}, {__index = function () error("invalid options") end})
+    local ok, err = pcall(uv.new_udp, options)
+    assert(not ok and err:match("invalid options"))
+  end, "1.7.0")
+
+  test("udp constructor initialization failure", function (print, p, expect, uv)
+    local handle, err, code = uv.new_udp(-1)
+    assert(handle == nil)
+    assert(type(err) == "string" and code == "EINVAL")
+  end, "1.7.0")
+
+  test("udp constructor invalid mmsgs", function (print, p, expect, uv)
+    local ok, err = pcall(uv.new_udp, {mmsgs = false})
+    assert(not ok and err:match("mmsgs must be integer if set"))
+  end, "1.39.0")
+
   test("basic udp server and client (ipv4)", function (print, p, expect, uv)
     local server = uv.new_udp()
     assert(uv.udp_bind(server, "0.0.0.0", TEST_PORT))

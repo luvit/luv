@@ -28,6 +28,7 @@ static int luv_new_fs_poll(lua_State* L) {
   uv_fs_poll_t* handle = (uv_fs_poll_t*)luv_newuserdata(L, uv_handle_size(UV_FS_POLL));
   int ret = uv_fs_poll_init(ctx->loop, handle);
   if (ret < 0) {
+    free(handle);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }

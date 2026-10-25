@@ -28,6 +28,7 @@ static int luv_new_fs_event(lua_State* L) {
   uv_fs_event_t* handle = (uv_fs_event_t*)luv_newuserdata(L, uv_handle_size(UV_FS_EVENT));
   int ret = uv_fs_event_init(ctx->loop, handle);
   if (ret < 0) {
+    free(handle);
     lua_pop(L, 1);
     return luv_error(L, ret);
   }

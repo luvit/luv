@@ -17,6 +17,12 @@
 #ifndef LUV_H
 #define LUV_H
 #include "uv.h"
+
+/* Failed TTY initialization only removes the handle from the loop in 1.7.0+. */
+#if UV_VERSION_HEX < 0x010700
+#error "luv requires libuv 1.7.0 or newer"
+#endif
+
 #include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
