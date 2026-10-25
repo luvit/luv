@@ -11,6 +11,21 @@ end)
 
 return require('lib/tap')(function (test)
 
+  test("signal name case insensitivity", function(print, p, expect, uv)
+    local signal = uv.new_signal()
+    -- function form
+    assert(uv.signal_start(signal, "sigint", function() end))
+    assert(uv.signal_stop(signal))
+    assert(uv.signal_start(signal, "SIGINT", function() end))
+    assert(uv.signal_stop(signal))
+    -- method form
+    assert(signal:start("sigint", function() end))
+    assert(signal:stop())
+    assert(signal:start("SIGINT", function() end))
+    assert(signal:stop())
+    signal:close()
+  end)
+
   if require('lib/utils').isWindows then return end
 
   test("Catch SIGINT", function (print, p, expect, uv)
