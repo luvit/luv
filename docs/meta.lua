@@ -1365,6 +1365,7 @@ function uv.new_signal() end
 --- Start the handle with the given callback, watching for the given signal.
 ---
 --- See [Constants][] for supported `signame` input and output values.
+--- String `signame` values are case-insensitive.
 --- @param signal uv.uv_signal_t
 --- @param signame string|integer
 --- @param callback fun(signame: string)
@@ -1376,6 +1377,7 @@ function uv.signal_start(signal, signame, callback) end
 --- Start the handle with the given callback, watching for the given signal.
 ---
 --- See [Constants][] for supported `signame` input and output values.
+--- String `signame` values are case-insensitive.
 --- @param signame string|integer
 --- @param callback fun(signame: string)
 --- @return 0? success
@@ -1386,6 +1388,7 @@ function uv_signal_t:start(signame, callback) end
 --- Same functionality as `uv.signal_start()` but the signal handler is reset the moment the signal is received.
 ---
 --- See [Constants][] for supported `signame` input and output values.
+--- String `signame` values are case-insensitive.
 --- @param signal uv.uv_signal_t
 --- @param signame string|integer
 --- @param callback fun(signame: string)
@@ -1397,6 +1400,7 @@ function uv.signal_start_oneshot(signal, signame, callback) end
 --- Same functionality as `uv.signal_start()` but the signal handler is reset the moment the signal is received.
 ---
 --- See [Constants][] for supported `signame` input and output values.
+--- String `signame` values are case-insensitive.
 --- @param signame string|integer
 --- @param callback fun(signame: string)
 --- @return 0? success

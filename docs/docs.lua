@@ -1665,6 +1665,7 @@ local doc = {
             Start the handle with the given callback, watching for the given signal.
 
             See [Constants][] for supported `signame` input and output values.
+            String `signame` values are case-insensitive.
           ]],
           params = {
             { name = 'signal', type = 'uv_signal_t' },
@@ -1683,6 +1684,7 @@ local doc = {
             Same functionality as `uv.signal_start()` but the signal handler is reset the moment the signal is received.
 
             See [Constants][] for supported `signame` input and output values.
+            String `signame` values are case-insensitive.
           ]],
           params = {
             { name = 'signal', type = 'uv_signal_t' },
