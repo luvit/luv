@@ -111,7 +111,7 @@ static int luv_tcp_simultaneous_accepts(lua_State* L) {
 
 static int luv_tcp_bind(lua_State* L) {
   uv_tcp_t* handle = luv_check_tcp(L, 1);
-  const char* host = luaL_checkstring(L, 2);
+  const char* host = luv_check_cstring(L, 2);
   int port = luaL_checkinteger(L, 3);
   unsigned int flags = 0;
   struct sockaddr_storage addr;
@@ -192,7 +192,7 @@ static int luv_write_queue_size(lua_State* L) {
 
 static int luv_tcp_connect(lua_State* L) {
   uv_tcp_t* handle = luv_check_tcp(L, 1);
-  const char* host = luaL_checkstring(L, 2);
+  const char* host = luv_check_cstring(L, 2);
   int port = luaL_checkinteger(L, 3);
   struct sockaddr_storage addr;
   uv_connect_t* req;

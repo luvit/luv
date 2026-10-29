@@ -162,7 +162,7 @@ static int luv_udp_open(lua_State* L) {
 
 static int luv_udp_bind(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
-  const char* host = luaL_checkstring(L, 2);
+  const char* host = luv_check_cstring(L, 2);
   int port = luaL_checkinteger(L, 3);
   unsigned int flags = 0;
   struct sockaddr_storage addr;
@@ -211,8 +211,8 @@ static const char *const luv_membership_opts[] = {
 
 static int luv_udp_set_membership(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
-  const char* multicast_addr = luaL_checkstring(L, 2);
-  const char* interface_addr = lua_isstring(L, 3) ? lua_tostring(L, 3) : NULL;
+  const char* multicast_addr = luv_check_cstring(L, 2);
+  const char* interface_addr = lua_isstring(L, 3) ? luv_check_cstring(L, 3) : NULL;
   luaL_argcheck(L, lua_isstring(L, 3) || lua_isnil(L, 3), 3, "expected string or nil");
   uv_membership membership = (uv_membership)luaL_checkoption(L, 4, NULL, luv_membership_opts);
   int ret = uv_udp_set_membership(handle, multicast_addr, interface_addr, membership);
@@ -222,10 +222,10 @@ static int luv_udp_set_membership(lua_State* L) {
 #if LUV_UV_VERSION_GEQ(1, 32, 0)
 static int luv_udp_set_source_membership(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
-  const char* multicast_addr = luaL_checkstring(L, 2);
-  const char* interface_addr = lua_isstring(L, 3) ? lua_tostring(L, 3) : NULL;
+  const char* multicast_addr = luv_check_cstring(L, 2);
+  const char* interface_addr = lua_isstring(L, 3) ? luv_check_cstring(L, 3) : NULL;
   luaL_argcheck(L, lua_isstring(L, 3) || lua_isnil(L, 3), 3, "expected string or nil");
-  const char* source_addr = luaL_checkstring(L, 4);
+  const char* source_addr = luv_check_cstring(L, 4);
   uv_membership membership = (uv_membership)luaL_checkoption(L, 5, NULL, luv_membership_opts);
   int ret = uv_udp_set_source_membership(handle, multicast_addr, interface_addr, source_addr, membership);
   return luv_result(L, ret);
@@ -251,7 +251,7 @@ static int luv_udp_set_multicast_ttl(lua_State* L) {
 
 static int luv_udp_set_multicast_interface(lua_State* L) {
   uv_udp_t* handle = luv_check_udp(L, 1);
-  const char* interface_addr = luaL_checkstring(L, 2);
+  const char* interface_addr = luv_check_cstring(L, 2);
   int ret = uv_udp_set_multicast_interface(handle, interface_addr);
   return luv_result(L, ret);
 }
@@ -292,9 +292,9 @@ static struct sockaddr* luv_check_addr(lua_State *L, struct sockaddr_storage* ad
   if (host_type == LUA_TNIL && port_type == LUA_TNIL) {
     return NULL;
   }
-  host = lua_tostring(L, hostidx);
-  port = lua_tointeger(L, portidx);
-  if (host_type == LUA_TSTRING && port_type == LUA_TNUMBER) {
+  else if (host_type == LUA_TSTRING && port_type == LUA_TNUMBER) {
+    host = luv_check_cstring(L, hostidx);
+    port = lua_tointeger(L, portidx);
     if (uv_ip4_addr(host, port, (struct sockaddr_in*)addr) &&
         uv_ip6_addr(host, port, (struct sockaddr_in6*)addr)) {
       luaL_error(L, "Invalid IP address or port [%s:%d]", host, port);
@@ -314,7 +314,7 @@ static struct sockaddr* luv_check_addr(lua_State *L, struct sockaddr_storage* ad
     return NULL;
   }
 #else
-  host = luaL_checkstring(L, hostidx);
+  host = luv_check_cstring(L, hostidx);
   port = luaL_checkinteger(L, portidx);
   if (uv_ip4_addr(host, port, (struct sockaddr_in*)addr) &&
       uv_ip6_addr(host, port, (struct sockaddr_in6*)addr)) {

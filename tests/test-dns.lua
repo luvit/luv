@@ -92,6 +92,13 @@ return require('lib/tap')(function (test)
     end)))
   end)
 
+  test("Reject embedded NUL in getaddrinfo string args", function (print, p, expect, uv)
+    local ok, err = pcall(uv.getaddrinfo, "127.0.0.1\0foo", nil, nil)
+    assert(not ok and err:match("string cannot contain embedded NUL bytes"), err)
+    ok, err = pcall(uv.getaddrinfo, nil, "http\0foo", nil)
+    assert(not ok and err:match("string cannot contain embedded NUL bytes"), err)
+  end)
+
   test("Lookup local ipv4 address", function (print, p, expect, uv)
     assert(uv.getnameinfo({
       family = "inet",

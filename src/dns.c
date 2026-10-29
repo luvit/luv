@@ -90,9 +90,9 @@ static int luv_getaddrinfo(lua_State* L) {
   int ret, ref;
   luv_ctx_t* ctx = luv_context(L);
   if (lua_isnoneornil(L, 1)) node = NULL;
-  else node = luaL_checkstring(L, 1);
+  else node = luv_check_cstring(L, 1);
   if (lua_isnoneornil(L, 2)) service = NULL;
-  else service = luaL_checkstring(L, 2);
+  else service = luv_check_cstring(L, 2);
   if (!lua_isnoneornil(L, 3)) luaL_checktype(L, 3, LUA_TTABLE);
   else hints = NULL;
   if (hints) {
@@ -239,6 +239,7 @@ static int luv_getnameinfo(lua_State* L) {
   const char* ip = NULL;
   int flags = 0;
   int ret, ref, port = 0;
+  size_t len;
   luv_ctx_t* ctx = luv_context(L);
 
   luaL_checktype(L, 1, LUA_TTABLE);
@@ -246,7 +247,8 @@ static int luv_getnameinfo(lua_State* L) {
 
   lua_getfield(L, 1, "ip");
   if (lua_isstring(L, -1)) {
-    ip = lua_tostring(L, -1);
+    ip = lua_tolstring(L, -1, &len);
+    if (strlen(ip) != len) luaL_argerror(L, 1, "ip property cannot contain embedded NUL bytes");
   }
   else if (!lua_isnil(L, -1)) {
     luaL_argerror(L, 1, "ip property must be string if set");

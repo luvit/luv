@@ -113,3 +113,10 @@ static int luv_optboolean(lua_State*L, int idx, int val) {
     val = lua_toboolean(L, idx);
   return val;
 }
+
+static const char* luv_check_cstring(lua_State* L, int index) {
+  size_t len;
+  const char* str = luaL_checklstring(L, index, &len);
+  if (len != strlen(str)) luaL_argerror(L, index, "string cannot contain embedded NUL bytes");
+  return str;
+}
