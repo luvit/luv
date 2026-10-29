@@ -3659,10 +3659,10 @@ called in the main loop thread.
 
 [DNS utility functions]: #dns-utility-functions
 
-### `uv.getaddrinfo([host], [service], [hints], [callback])`
+### `uv.getaddrinfo([node], [service], [hints], [callback])`
 
 **Parameters:**
-- `host`: `string` or `nil`
+- `node`: `string` or `nil`
 - `service`: `string` or `nil`
 - `hints`: `table` or `nil`
   - `family`: `string` or `integer` or `nil`

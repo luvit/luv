@@ -3913,15 +3913,15 @@ function luv_work_ctx_t:queue(...) end
 --- socket's domain and type. When `protocol` is specified as a string, it will be
 --- looked up using the `getprotobyname(3)` function. Examples: `"ip"`, `"icmp"`,
 --- `"tcp"`, `"udp"`, etc.
---- @param host string?
+--- @param node string?
 --- @param service string?
 --- @param hints uv.getaddrinfo.hints?
 --- @param callback? nil (async if provided, sync if `nil`)
 --- @return table<integer, uv.address>? addresses
 --- @return string? err
 --- @return uv.error_name? err_name
---- @overload fun(host: string?, service: string?, hints: uv.getaddrinfo.hints?, callback: fun(err: string?, addresses: table<integer, uv.address>?)): uv.uv_getaddrinfo_t?, string?, uv.error_name?
-function uv.getaddrinfo(host, service, hints, callback) end
+--- @overload fun(node: string?, service: string?, hints: uv.getaddrinfo.hints?, callback: fun(err: string?, addresses: table<integer, uv.address>?)): uv.uv_getaddrinfo_t?, string?, uv.error_name?
+function uv.getaddrinfo(node, service, hints, callback) end
 
 --- @class uv.getnameinfo.address
 --- @field ip string?
