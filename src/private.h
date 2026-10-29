@@ -126,6 +126,9 @@ static int luv_arg_type_error(lua_State* L, int index, const char* fmt);
 
 static int luv_optboolean(lua_State*L, int idx, int defaultval);
 
+// Expect a string, and throw an error if the string contains any embedded NUL bytes
+static const char* luv_check_cstring(lua_State* L, int index);
+
 /* From thread.c */
 static lua_State* luv_thread_acquire_vm(void);
 

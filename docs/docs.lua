@@ -4041,7 +4041,7 @@ local doc = {
             `"tcp"`, `"udp"`, etc.
           ]],
           params = {
-            { name = 'host', type = opt_str },
+            { name = 'node', type = opt_str },
             { name = 'service', type = opt_str },
             {
               name = 'hints',
