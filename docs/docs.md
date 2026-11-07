@@ -1772,15 +1772,23 @@ in multi-process setups.
 - `port`: `integer`
 - `flags`: `table` or `nil`
   - `ipv6only`: `boolean` or `nil`
+  - `reuseport`: `boolean` or `nil`
 
 Bind the handle to an host and port. `host` should be an IP address and
-not a domain name. Any `flags` are set with a table with field `ipv6only`
-equal to `true` or `false`.
+not a domain name. Any `flags` are set with a table with fields `ipv6only`
+and `reuseport` equal to `true` or `false`.
 
 When the port is already taken, you can expect to see an `EADDRINUSE` error
 from either `uv.tcp_bind()`, `uv.listen()` or `uv.tcp_connect()`. That is, a
 successful call to this function does not guarantee that the call to `uv.listen()`
 or `uv.tcp_connect()` will succeed as well.
+
+The `reuseport` flag allows multiple sockets to listen to the same address and
+port. It is useful for load balancing incoming connections across multiple
+processes, but it is only supported on a handful of platforms. See [uv_tcp_bind
+flags from libuv documentation](https://docs.libuv.org/en/v1.x/tcp.html#c.uv_tcp_bind).
+Unsupported platforms should receive an `ENOTSUP` error when trying to bind with
+this flag.
 
 Use a port of `0` to let the OS assign an ephemeral port.  You can look it up
 later using `uv.tcp_getsockname()`.
