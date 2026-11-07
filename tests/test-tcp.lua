@@ -71,6 +71,42 @@ return require('lib/tap')(function (test)
     p{client=client,req=req}
   end)
 
+  test("tcp reuseport flag", function (print, p, expect, uv)
+    local server1 = uv.new_tcp()
+    local _, err, errname = server1:bind("127.0.0.1", 0, { reuseport = true })
+    if errname == "ENOTSUP" then
+      p("reuseport unsupported on this platform", errname)
+      server1:close()
+      return
+    end
+    assert(not err, err)
+    assert(server1:listen(1, function () end))
+
+    local port = assert(server1:getsockname()).port
+    p{server1_port=port}
+
+    local server2 = uv.new_tcp()
+    assert(server2:bind("127.0.0.1", port, { reuseport = true }))
+    assert(server2:listen(1, function () end))
+
+    local server3 = uv.new_tcp()
+    assert(server3:bind("127.0.0.1", port))
+    local ok3, err3, errname3 = server3:listen(1, function () end)
+    assert(not ok3, "expected listen without reuseport to fail")
+    assert(errname3 == "EADDRINUSE", errname3)
+
+    local server4 = uv.new_tcp()
+    assert(server4:bind("127.0.0.1", port, { reuseport = false }))
+    local ok4, err4, errname4 = server4:listen(1, function () end)
+    assert(not ok4, "expected listen with reuseport=false to fail")
+    assert(errname4 == "EADDRINUSE", errname4)
+
+    server1:close()
+    server2:close()
+    server3:close()
+    server4:close()
+  end, "1.49.0")
+
   test("tcp echo server and client", function (print, p, expect, uv)
     local server = uv.new_tcp()
     assert(uv.tcp_bind(server, "127.0.0.1", 0))
