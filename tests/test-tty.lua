@@ -13,6 +13,15 @@ end
 return require('lib/tap')(function (test)
 
   test("tty normal", function (print, p, expect, uv)
+    local ok = function(fd)
+      local fdtype = uv.guess_handle(fd)
+      return fdtype == "tty" or fdtype == "pipe"
+    end
+    if not ok(0) or not ok(1) then
+      print("stdin or stdout not a valid type for new_tty, skipping")
+      return
+    end
+
     local stdin = uv.new_tty(0, true)
     local stdout = uv.new_tty(1, false)
 
